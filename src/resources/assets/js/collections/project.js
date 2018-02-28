@@ -1,0 +1,554 @@
+(function (App) {
+    App.Collections.Project = Backbone.PageableCollection.extend({
+        model: App.Models.Project,
+        state: {
+            pageSize: 10
+        },
+        mode: "client" // page entirely on the client side
+    });
+    var SkillsNeededCell = Backgrid.Extension.Select2Cell.extend({
+        // any options specific to `select2` goes here
+        select2Options: {
+            // default is false because Backgrid will save the cell's value
+            // and exit edit mode on enter
+            openOnEnter: false
+        },
+        optionValues: [{
+            values: [
+                ['Construction', 'Construction'],
+                ['Painting', 'Painting'],
+                ['Landscaping', 'Landscaping'],
+                ['Finish Carpentry', 'Finish Carpentry'],
+                ['General Carpentry', 'General Carpentry'],
+                ['Cabinetry', 'Cabinetry']
+            ]
+        }]
+
+    });
+    var StatusCell = Backgrid.Extension.Select2Cell.extend({
+        // any options specific to `select2` goes here
+        select2Options: {
+            // default is false because Backgrid will save the cell's value
+            // and exit edit mode on enter
+            openOnEnter: false
+        },
+        optionValues: [{
+            values: [
+                ['DN-District', 'DN-District'],
+                ['DN-Woodlands', 'DN-Woodlands'],
+                ['NA-District', 'NA-District'],
+                ['NA-Woodlands', 'NA-Woodlands'],
+                ['Approved', 'Approved'],
+                ['Cancelled', 'Cancelled']
+            ]
+        }]
+
+    });
+    var textAreaEditor = Backgrid.Extension.TextareaEditor.extend({
+        className: "modal fade",
+        render: function () {
+            // DH:mod to handle bootstap modal bug
+            this.$el.insertAfter('.wrapper');
+            this.$el.html($(this.template({
+                column: this.column,
+                cols: this.cols,
+                rows: this.rows,
+                content: this.formatter.fromRaw(this.model.get(this.column.get("name")))
+            })));
+
+            this.delegateEvents();
+
+            this.$el.modal(this.modalOptions);
+
+            return this;
+        },
+        /**
+         Event handler. Saves the text in the text area to the model when
+         submitting. When cancelling, if the text area is dirty, a confirmation
+         dialog will pop up. If the user clicks confirm, the text will be saved to
+         the model.
+
+         Triggers a Backbone `backgrid:error` event from the model along with the
+         model, column and the existing value as the parameters if the value
+         cannot be converted.
+
+         @param {Event} e
+         */
+        saveOrCancel: function (e) {
+            if (e && e.type === "submit") {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            var model = this.model;
+            var column = this.column;
+            var val = this.$el.find("textarea").val();
+            var newValue = this.formatter.toRaw(val);
+            console.log('saveOrCancel 194', e.type, model, column, 'val:' + val, 'newValue:' + newValue)
+            if (_.isUndefined(newValue)) {
+                model.trigger("backgrid:error", model, column, val);
+
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+            else if (!e || e.type === "submit" ||
+                (e.type === "hide" &&
+                    newValue !== (this.model.get(this.column.get("name")) || '').replace(/\r/g, '') &&
+                    confirm("Would you like to save your changes?"))) {
+                console.log('saveOrCancel 207', 'event type:' + e.type, 'column name:' + column.get("name"), 'newVal:' + newValue)
+                model.set(column.get("name"), newValue);
+                this.$el.modal("hide");
+            }
+            else if (e.type !== "hide") {
+                console.log('saveOrCancel 212', e.type)
+                //this.$el.modal("hide");
+            }
+        },
+
+        /**
+         Clears the error class on the parent cell.
+         */
+        clearError: _.debounce(function () {
+            if (!_.isUndefined(this.formatter.toRaw(this.$el.find("textarea").val()))) {
+                this.$el.parent().removeClass("error");
+            }
+        }, 150),
+
+        /**
+         Triggers a `backgrid:edited` event along with the cell editor as the
+         parameter after the modal is hidden.
+
+         @param {Event} e
+         */
+        close: function (e) {
+            var model = this.model;
+            // model.trigger("backgrid:edited", model, this.column,
+            //     new Backgrid.Command(e));
+            console.log('after model.trigger')
+        }
+    });
+    var TextareaCell = Backgrid.Extension.TextCell.extend({
+        editor: textAreaEditor,
+        /**
+         Removes the editor and re-render in display mode.
+         */
+        exitEditMode: function () {
+            this.$el.removeClass("error");
+            //this.currentEditor.remove();
+            this.stopListening(this.currentEditor);
+            delete this.currentEditor;
+            this.$el.removeClass("editor");
+            this.render();
+        },
+    });
+    TextareaCell = 'string';
+    // Resizeable columns must have a pixel width defined
+    App.Vars.ProjectsBackgridColumnDefinitions = [
+        {
+            // name is a required parameter, but you don't really want one on a select all column
+            name: "",
+            // Backgrid.Extension.SelectRowCell lets you select individual rows
+            cell: "select-row",
+            // Backgrid.Extension.SelectAllHeaderCell lets you select all the row on a page
+            headerCell: "select-all",
+            resizeable: false,
+            orderable: false,
+            width: "30"
+        },
+        {
+            name: "ProjectID",
+            label: "   ",
+            formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                fromRaw: function (rawValue) {
+                    return '<input type="radio" name="ProjectID" value="' + rawValue + '" />';
+                    //You can use rawValue to custom your html, you can change this value using the name parameter.
+                }
+            }),
+            cell: "html",
+            editable: false,
+            resizeable: false,
+            orderable: false,
+            width: "30"
+        },
+        {
+            name: "Active",
+            label: "Active",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: false,
+            width: "50"
+        },
+        {
+            name: "OriginalRequest",
+            label: "Original Request",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "250"
+        },
+        {
+            name: "ProjectDescription",
+            label: "Project Description",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: false,
+            width: "250"
+        },
+        {
+            name: "Comments",
+            label: "Comments",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "250"
+        },
+        {
+            name: "Status",
+            label: "Status",
+            cell: StatusCell.extend({multiple: true}),
+            resizeable: true,
+            orderable: true,
+            width: "66"
+        },
+        {
+            name: "StatusReason",
+            label: "Status Reason",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "BudgetSources",
+            label: "Budget Sources",
+            cell: App.Vars.budgetSourceCell.extend({multiple: true}),
+            resizeable: true,
+            orderable: true,
+            width: "125"
+        },
+        {
+            name: "ChildFriendly",
+            label: "Child Friendly",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "PrimarySkillNeeded",
+            label: "Primary Skill Needed",
+            cell: SkillsNeededCell.extend({multiple: true}),
+            resizeable: true,
+            orderable: true,
+            width: "150"
+        },
+        {
+            name: "VolunteersNeededEst",
+            label: "Volunteers Needed Est",
+            cell: "integer",
+            resizeable: true,
+            orderable: true,
+            width: "166"
+        },
+        {
+            name: "VolunteersAssigned",
+            label: "Volunteers Assigned",
+            cell: "integer",
+            resizeable: true,
+            orderable: true,
+            width: "145"
+        },
+        {
+            name: "MaterialsNeeded",
+            label: "Materials Needed",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "EstimatedCost",
+            label: "Estimated Cost",
+            cell: "number",
+            resizeable: true,
+            orderable: true,
+            width: "120"
+        },
+        {
+            name: "ActualCost",
+            label: "Actual Cost",
+            cell: "number",
+            resizeable: true,
+            orderable: true,
+            width: "95"
+        },
+        {
+            name: "BudgetAvailableForPC",
+            label: "Budget Available For PC",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "178"
+        },
+        {
+            name: "VolunteersLastYear",
+            label: "Volunteers Last Year",
+            cell: "integer",
+            resizeable: true,
+            orderable: true,
+            width: "153"
+        },
+        {
+            name: "NeedsToBeStartedEarly",
+            label: "Needs To Be Started Early",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "PCSeeBeforeSIA",
+            label: "PCSeeBeforeSIA",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "SpecialEquipmentNeeded",
+            label: "Special Equipment Needed",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "PermitsOrApprovalsNeeded",
+            label: "Permits Or Approvals Needed",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "PrepWorkRequiredBeforeSIA",
+            label: "Prep Work Required Before SIA",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "SetupDayInstructions",
+            label: "Setup Day Instructions",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "SIADayInstructions",
+            label: "SIA Day Instructions",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "Attachments",
+            label: "Attachments",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "100"
+        },
+        {
+            name: "Area",
+            label: "Area",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "PaintOrBarkEstimate",
+            label: "Paint Or Bark Estimate",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "PaintAlreadyOnHand",
+            label: "Paint Already On Hand",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "PaintOrdered",
+            label: "Paint Ordered",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "CostEstimateDone",
+            label: "Cost Estimate Done",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "MaterialListDone",
+            label: "Material List Done",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "BudgetAllocationDone",
+            label: "Budget Allocation Done",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "VolunteerAllocationDone",
+            label: "Volunteer Allocation Done",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "NeedSIATShirtsForPC",
+            label: "Need SIA TShirts For PC",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "ProjectSend",
+            label: "Project Send",
+            cell: App.Vars.sendCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "FinalCompletionStatus",
+            label: "Project Completed",
+            cell: App.Vars.yesNoCell,
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "FinalCompletionAssessment",
+            label: "Final Completion Assessment",
+            cell: TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "255"
+        },
+        {
+            name: "Year",
+            label: "Year",
+            editable: false,
+            cell: Backgrid.IntegerCell.extend({
+                orderSeparator: ''
+            }),
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            renderable: false
+        },
+        {
+            name: "SiteID",
+            label: "SiteID",
+            editable: false,
+            cell: Backgrid.IntegerCell.extend({
+                orderSeparator: ''
+            }),
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            renderable: false
+        },
+        {
+            name: "ContactID",
+            label: "ContactID",
+            editable: false,
+            cell: Backgrid.IntegerCell.extend({
+                orderSeparator: ''
+            }),
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            renderable: false
+        },
+        {
+            name: "SequenceNumber",
+            label: "SequenceNumber",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "50"
+        },
+        {
+            name: "EstimatorID",
+            label: "EstimatorID",
+            editable: false,
+            cell: Backgrid.IntegerCell.extend({
+                orderSeparator: ''
+            }),
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            renderable: false
+        },
+        {
+            name: "ProjectCoordinatorID",
+            label: "ProjectCoordinatorID",
+            editable: false,
+            cell: Backgrid.IntegerCell.extend({
+                orderSeparator: ''
+            }),
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            renderable: false
+        },
+        {
+            name: "created_at",
+            label: "created_at",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            renderable: false
+        },
+        {
+            name: "updated_at,: ",
+            label: "updated_at: ",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            renderable: false
+        }
+    ];
+
+    App.Vars.ProjectsBackgridColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(App.Vars.ProjectsBackgridColumnDefinitions);
+    App.Vars.ProjectsBackgridColumnCollection.setPositions().sort();
+    //console.log('ProjectsBackgridColumnCollection', App.Vars.ProjectsBackgridColumnCollection)
+})(window.App);
