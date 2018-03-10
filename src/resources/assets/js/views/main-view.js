@@ -3,12 +3,12 @@
         siteManagementViewClass: App.Views.SiteManagement,
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
         el: $(".sia-main-app"),
-        initialize: function () {
-            console.log('MainApp', 'initialize')
+        initialize: function (options) {
+            _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
             _.bindAll(this, 'render');
         },
         render: function () {
-            //console.log('appInitialData', appInitialData);
+            _log('App.Views.mainApp.render', 'appInitialData', appInitialData);
             App.Vars.currentSiteID = appInitialData.site.SiteID;
             App.Vars.currentProjectID = appInitialData.project.ProjectID;
             App.Vars.mainAppDoneLoading = false;
@@ -25,8 +25,29 @@
                 model: App.Models.projectModel
             });
             this.siteProjectTabsView.render();
-            App.Vars.mainAppDoneLoading = true;
 
+            // App.Views.volunteerManagementView = this.volunteerManagementView = new App.Views.VolunteerManagement({
+            //     el: this.$('.volunteers-management-view'),
+            //     mainAppEl: this.el,
+            //     collection: App.PageableCollections.volunteersManagementCollection,
+            //     columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
+            //     columnCollection: App.Vars.VolunteersBackgridColumnCollection,
+            //     hideCellCnt: 0
+            // });
+            // //this.volunteerManagementView.render();
+            //
+            // App.Views.contactManagementView = this.contactManagementView = new App.Views.ContactManagement({
+            //     el: this.$('.contacts-management-view'),
+            //     mainAppEl: this.el,
+            //     collection: App.PageableCollections.contactsManagementCollection,
+            //     columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
+            //     columnCollection: App.Vars.ContactsBackgridColumnCollection,
+            //     hideCellCnt: 0
+            // });
+            //this.contactManagementView.render();
+
+            App.Vars.mainAppDoneLoading = true;
+            _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
             return this;
         }
     });

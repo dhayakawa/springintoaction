@@ -14,8 +14,12 @@
 
     use Dhayakawa\SpringIntoAction\Models\Project;
     use Dhayakawa\SpringIntoAction\Models\Site;
+    use Dhayakawa\SpringIntoAction\Models\SiteStatus;
     use Dhayakawa\SpringIntoAction\Models\Volunteer;
+    use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
+    use \Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
     use Dhayakawa\SpringIntoAction\Models\Budget;
+    use Dhayakawa\SpringIntoAction\Controllers\ajaxUploader;
 
     class ProjectsController extends BaseController {
 
@@ -41,19 +45,35 @@
             return view('admin.projects.edit', $request, compact('project'));
         }
 
-        public function store(EditProjectRequest $request) {
+        public function store(Request $request) {
 
             $project = new Project;
             $project->fill($request->only($project->getFillable()));
-            $project->save();
+            $success = $project->save();
 
-            return redirect()->route('projects.index')->with('success_message', 'The project has been successfully saved.');
+            if(!isset($success)) {
+                $response = ['success' => false, 'msg' => 'Project Creation Not Implemented Yet.'];
+            } elseif($success) {
+                $response = ['success' => true, 'msg' => 'Project Creation Succeeded.'];
+            } else {
+                $response = ['success' => false, 'msg' => 'Project Creation Failed.'];
+            }
+
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
         public function update(Request $request, $ProjectID) {
             $project = Project::findOrFail($ProjectID);
 
-            $project->fill($request->only($project->getFillable()));
+            $data = array_map(function ($value) {
+                if(is_array($value)) {
+                    return join(',', $value);
+                }
+
+                return $value;
+            }, $request->only($project->getFillable()));
+            $project->fill($data);
             $success = $project->save();
 
             if($success) {
@@ -80,8 +100,53 @@
             return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
-        public function getSiteProjects($SiteID, $Year) {
-            return $projects = Site::find($SiteID)->projects()->where('Year', $Year)->orderBy('SequenceNumber', 'asc')->get()->toArray();
+        public function batchDestroy(Request $request) {
+            $params       = $request->all();
+            $batchSuccess = true;
+            if(is_array($params['deleteModelIDs'])) {
+                foreach($params['deleteModelIDs'] as $modelID) {
+                    $success = Project::findOrFail($modelID)->delete();
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                    // TODO: figure out relational soft deletes
+                    $model   = ProjectVolunteer::where('project_volunteers.ProjectID', '=', $modelID);
+                    $success = $model->count() ? $model->delete() : true;
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                    $model   = ProjectVolunteerRole::where('project_volunteer_role.ProjectID', '=', $modelID);
+                    $success = $model->count() ? $model->delete() : true;
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                    $model   = Budget::where('budgets.ProjectID', '=', $modelID);
+                    $success = $model->count() ? $model->delete() : true;
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                }
+            } else {
+                $success = false;
+            }
+            $success = $batchSuccess;
+
+            if(!isset($success)) {
+                $response = ['success' => false, 'msg' => 'Project Batch Removal Not Implemented Yet.'];
+            } elseif($success) {
+                $response = ['success' => true, 'msg' => 'Project Batch Removal Succeeded.'];
+            } else {
+                $response = ['success' => false, 'msg' => 'Project Batch Removal Failed.'];
+            }
+
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
+        }
+
+        public function getSiteProjects($SiteStatusID) {
+            return $projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')
+                ->where('site_status.SiteStatusID', $SiteStatusID)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+
         }
 
         public function getLeadVolunteers($ProjectID) {
@@ -140,5 +205,12 @@
             }
 
             return [];
+        }
+
+        public function uploadList(Request $request){
+
+            $aaOptions['upload_dir']    = 'uploads/';
+            $aaOptions['upload_url']    = 'project/list/upload/';
+            $oAjaxUploadHandler         = new ajaxUploader($aaOptions);
         }
     }

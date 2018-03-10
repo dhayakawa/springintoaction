@@ -1,5 +1,8 @@
 (function (App) {
-    App.Collections.Contact = Backbone.PageableCollection.extend({
+    App.Collections.Contact = Backbone.Collection.extend({
+        model: App.Models.Contact
+    });
+    App.PageableCollections.Contact = Backbone.PageableCollection.extend({
         model: App.Models.Contact,
         state: {
             pageSize: 10
@@ -11,10 +14,26 @@
         {
             // name is a required parameter, but you don't really want one on a select all column
             name: "",
+            label: "",
             // Backgrid.Extension.SelectRowCell lets you select individual rows
             cell: "select-row",
             // Backgrid.Extension.SelectAllHeaderCell lets you select all the row on a page
             headerCell: "select-all",
+            resizeable: false,
+            orderable: false,
+            width: "30"
+        },
+        {
+            name: "ContactID",
+            label: "   ",
+            formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                fromRaw: function (rawValue) {
+                    return '<input title="' + rawValue + '" type="radio" name="ContactID" value="' + rawValue + '" />';
+                    //You can use rawValue to custom your html, you can change this value using the name parameter.
+                }
+            }),
+            cell: "html",
+            editable: false,
             resizeable: false,
             orderable: false,
             width: "30"
@@ -74,16 +93,6 @@
             resizeable: true,
             orderable: true,
             width: "250"
-        }, {
-            name: "ContactID",
-            label: "ContactID",
-            editable: false,
-            cell: Backgrid.IntegerCell.extend({
-                orderSeparator: ''
-            }),
-            resizeable: true,
-            orderable: true,
-            width: "250"
         },
         {
             name: "SiteID",
@@ -110,8 +119,5 @@
             width: "250"
         }
     ];
-    App.Vars.ContactsBackgridColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(App.Vars.ContactsBackgridColumnDefinitions);
-    App.Vars.ContactsBackgridColumnCollection.setPositions().sort();
-    //console.log('ContactsBackgridColumnCollection:', App.Vars.ContactsBackgridColumnCollection)
-
+    _log('App.Vars.CollectionsGroup', 'App.Vars.ContactsBackgridColumnDefinitions:', App.Vars.ContactsBackgridColumnDefinitions);
 })(window.App);

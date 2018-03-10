@@ -27,7 +27,7 @@
         showContent: function () {
             this._loadAjaxContent(function () {
                 $('#page-content .action-delete').submit(function () {
-                    return confirm('Are you sure you want to delete this project ?');
+                    return confirm('Are you sure you want to delete this THING ?');
                 });
             });
         },

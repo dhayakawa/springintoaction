@@ -3,7 +3,7 @@
  @class Backgrid.HtmlCell
  @extends Backgrid.Cell
  */
-var HtmlCell = Backgrid.HtmlCell = Backgrid.Cell.extend({
+let HtmlCell = Backgrid.HtmlCell = Backgrid.Cell.extend({
 
     /** @property */
     className: "html-cell",
@@ -14,8 +14,8 @@ var HtmlCell = Backgrid.HtmlCell = Backgrid.Cell.extend({
 
     render: function () {
         this.$el.empty();
-        var rawValue = this.model.get(this.column.get("name"));
-        var formattedValue = this.formatter.fromRaw(rawValue, this.model);
+        let rawValue = this.model.get(this.column.get("name"));
+        let formattedValue = this.formatter.fromRaw(rawValue, this.model);
         this.$el.append(formattedValue);
         this.delegateEvents();
         return this;

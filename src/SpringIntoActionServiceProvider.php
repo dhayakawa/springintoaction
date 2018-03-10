@@ -39,7 +39,8 @@
             $this->publishes([__DIR__ . '/public' => base_path('public/')], 'public');
             $this->publishes([__DIR__ . '/Models' => app_path('Models')], 'models');
             $this->publishes([__DIR__ . '/Menu' => app_path('Menu')], 'menu');
-            $this->publishes([__DIR__ . '/Notifications' => app_path('Notifications')], 'notifications');
+            $this->publishes([__DIR__ . '/migrations' => app_path('migrations')], 'migrations');
+            //$this->publishes([__DIR__ . '/Notifications' => app_path('Notifications')], 'notifications');
             $this->publishes([__DIR__ . '/webpack.mix.js' => base_path('webpack.mix.js')], 'webpack');
 
             // If routes file has been published, load routes from the published file

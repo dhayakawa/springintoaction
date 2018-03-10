@@ -14,7 +14,7 @@
 
     App.Views.Sites = Backbone.View.extend({
         initialize: function () {
-            _.bindAll(this, 'addOne', 'addAll');
+            _.bindAll(this, 'addOne', 'addAll', 'render','changeSelected','setSelectedId');
             this.collection.bind('reset', this.addAll);
         },
         events: {
@@ -25,6 +25,8 @@
                 new App.Views.SiteOption({model: site}).render().el);
         },
         addAll: function () {
+            _log('App.Views.Sites.addAll', 'sites dropdown');
+            this.$el.empty();
             this.collection.each(this.addOne);
         },
         render: function () {
@@ -35,10 +37,11 @@
             this.setSelectedId($(this.el).val());
         },
         setSelectedId: function (SiteID) {
+            _log('App.Views.Sites.setSelectedId.event', 'new site selected', SiteID);
             // fetch new site model
             App.Models.siteModel.url = 'site/' + SiteID;
             App.Models.siteModel.fetch();
-            App.Collections.siteYearsDropDownCollection.url = 'site/year/' + SiteID;
+            App.Collections.siteYearsDropDownCollection.url = 'sitestatus/all/site/years/' + SiteID;
             App.Collections.siteYearsDropDownCollection.fetch({reset: true});
         }
     });
@@ -65,7 +68,7 @@
             "change": "changeSelected"
         },
         addOne: function (site) {
-            var option = new App.Views.SiteYearsOption({model: site});
+            let option = new App.Views.SiteYearsOption({model: site});
             this.optionsView.push(option);
             $(this.el).append(option.render().el);
         },
@@ -81,25 +84,33 @@
             return this;
         },
         changeSelected: function () {
-            var $option = $(this.el).find(':selected');
+            let $option = $(this.el).find(':selected');
 
             this.setSelectedId($option.data('siteid'), $option.data('sitestatusid'), $option.val());
         },
         setSelectedId: function (SiteID, SiteStatusID, Year) {
             if (App.Vars.mainAppDoneLoading) {
+                _log('App.Views.SiteYears.setSelectedId.event', 'new year selected', SiteID, SiteStatusID, Year);
+                window.ajaxWaiting('show','#site-well');
+                window.ajaxWaiting('show','.projects-backgrid-wrapper');
+                window.ajaxWaiting('show','.tab-content.backgrid-wrapper');
                 // fetch new sitestatus
                 App.Models.siteStatusModel.url = 'sitestatus/' + SiteStatusID;
                 App.Models.siteStatusModel.fetch({reset: true});
 
                 // fetch new product collection
-                App.Collections.projectCollection.url = 'projects/' + SiteID + '/' + Year;
-                App.Collections.projectCollection.fetch({
+                App.PageableCollections.projectCollection.url = 'project/list/' + SiteStatusID;
+                App.PageableCollections.projectCollection.fetch({
                     reset: true,
                     success: function (model, response, options) {
                         //console.log('project collection fetch success', model, response, options)
-                        App.Vars.currentProjectID = response[0]['ProjectID'];
-                        App.Models.projectModel.set(response[0])
-
+                        if (!_.isUndefined(response[0])) {
+                            App.Vars.currentProjectID = response[0]['ProjectID'];
+                            App.Models.projectModel.set(response[0])
+                        } else {
+                            window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                        }
+                        window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
                     }
                 });
 
@@ -116,47 +127,89 @@
         template: template('siteTemplate'),
         initialize: function (options) {
             _.bindAll(this, 'update');
+            this.model.on('change', this.render, this);
             this.model.on('set', this.render, this);
-            this.model.on('destroy', this.remove, this); // 3.
         },
         events: {
-            'change input[type="text"]': 'update',
-            'click .edit': 'edit',
-            'click strong': 'showAlert',
-            'click .delete': 'destroy'	/// 1. Binding a Destroy for the listing to click event on delete button..
-        },
-        showAlert: function () {
-            alert('you clicked me');
-        },
-        edit: function () {
-            var newName = prompt("Please enter the new Site Name", this.model.get('SiteName'));
-            if (!newName) return;  // don't do anything if cancel is pressed..
-            this.model.set('name', newName);
-        },
-        destroy: function () {
-            this.model.destroy();  // 2. calling backbone js destroy function to destroy that model object
-        },
-        remove: function () {
-            this.$el.remove();  // 4. Calling Jquery remove function to remove that HTML li tag element..
+            'change input[type="text"]': 'update'
         },
         update: function (e) {
 
-            var attrName = $(e.target).attr('name');
-            var attrValue = $(e.target).val();
+            let attrName = $(e.target).attr('name');
+            let attrValue = $(e.target).val();
             this.model.url = 'site/' + this.model.get('SiteID');
             this.model.save({[attrName]: attrValue},
                 {
                     success: function (model, response, options) {
-                        growl(response.msg, 'success')
+                        growl(response.msg, response.success ? 'success' : 'error');
                     },
                     error: function (model, response, options) {
-                        growl(response.msg, 'success')
+                        growl(response.msg, 'error')
                     }
                 });
         },
         render: function () {
             this.$el.html(this.template(this.model.toJSON()));
             return this;
+        },
+        getModalForm: function () {
+            let template = window.template('siteTemplate');
+
+            let tplVars = {
+                SiteID: '',
+                SiteName: 'test',
+                EquipmentLocation: 'test',
+                DebrisLocation: 'test'
+            };
+            return template(tplVars);
+        },
+        create: function (attributes) {
+            var self = this;
+            window.ajaxWaiting('show', '#site-well');
+            attributes = _.omit(attributes, 'SiteID');
+            _log('App.Views.Site.create', attributes, this.model);
+            let newModel = new App.Models.Site();
+            newModel.url = 'site';
+            newModel.save(attributes,
+                {
+                    success: function (model, response, options) {
+                        window.growl(response.msg, response.success ? 'success' : 'error');
+                        App.Collections.sitesDropDownCollection.url = 'site/list/all';
+                        $.when(
+                            App.Collections.sitesDropDownCollection.fetch({reset: true})
+                        ).then(function () {
+                            //initialize your views here
+                            _log('App.Views.Site.create.event', 'site collection fetch promise done');
+                            window.ajaxWaiting('remove', '#site-well');
+                            App.Views.sitesDropDownView.$el.val(response.new_site_id)
+                            App.Views.sitesDropDownView.$el.trigger('change')
+                        });
+                    },
+                    error: function (model, response, options) {
+                        window.growl(response.msg, 'error')
+                    }
+                });
+        },
+        destroy: function () {
+            var self = this;
+            _log('App.Views.Project.destroy', self.model);
+            self.model.destroy({
+                success: function (model, response, options) {
+                    window.growl(response.msg, response.success ? 'success' : 'error');
+                    App.Collections.sitesDropDownCollection.url = 'site/list/all';
+                    $.when(
+                        App.Collections.sitesDropDownCollection.fetch({reset: true})
+                    ).then(function () {
+                        //initialize your views here
+                        _log('App.Views.Site.destroy.event', 'site collection fetch promise done');
+                        window.ajaxWaiting('remove', '#site-well');
+                        App.Views.sitesDropDownView.$el.trigger('change')
+                    });
+                },
+                error: function (model, response, options) {
+                    window.growl(response.msg, 'error')
+                }
+            });
         }
     });
 
@@ -173,12 +226,12 @@
             'click .delete': 'destroy'	/// 1. Binding a Destroy for the listing to click event on delete button..
         },
         update: function (e) {
-            var $target = $(e.target);
-            var attrType = $target.attr('type');
-            var attrName = $target.attr('name');
-            var attrValue = $target.val();
+            let $target = $(e.target);
+            let attrType = $target.attr('type');
+            let attrName = $target.attr('name');
+            let attrValue = $target.val();
 
-            var selected = $target.is(':checked');
+            let selected = $target.is(':checked');
             if (attrType === 'checkbox') {
                 attrValue = selected ? 1 : 0;
             }
@@ -187,10 +240,10 @@
             this.model.save({[attrName]: attrValue},
                 {
                     success: function (model, response, options) {
-                        growl(response.msg, 'success')
+                        growl(response.msg, response.success ? 'success' : 'error');
                     },
                     error: function (model, response, options) {
-                        growl(response.msg, 'success')
+                        growl(response.msg, 'error')
                     }
                 });
         },
@@ -201,7 +254,7 @@
             this.$el.remove();  // 4. Calling Jquery remove function to remove that HTML li tag element..
         },
         render: function () {
-            var checkedBoxes = {
+            let checkedBoxes = {
                 'ProjectDescriptionCompleteIsChecked': this.model.get('ProjectDescriptionComplete') === 1 ? 'checked' : '',
                 'BudgetEstimationCompleteIsChecked': this.model.get('BudgetEstimationComplete') === 1 ? 'checked' : '',
                 'VolunteerEstimationCompleteIsChecked': this.model.get('VolunteerEstimationComplete') === 1 ? 'checked' : '',
@@ -210,6 +263,7 @@
                 'EstimationCommentsIsChecked': this.model.get('EstimationComments') === 1 ? 'checked' : ''
             };
             this.$el.html(this.template(_.extend(this.model.toJSON(), checkedBoxes)));
+            window.ajaxWaiting('remove', '#site-well');
             return this;
         }
     });

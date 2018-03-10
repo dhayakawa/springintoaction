@@ -3,7 +3,7 @@
     namespace Dhayakawa\SpringIntoAction\Controllers;
 
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
-
+    use Illuminate\Support\Facades\Log;
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Models\Project;
     use Dhayakawa\SpringIntoAction\Models\Site;
@@ -28,64 +28,84 @@
             } catch(\Exception $e) {
                 $sites = [];
                 $site = [];
-                die($e->getMessage());
+                report($e);
             }
             try {
-                $siteStatus = current(Site::find($site['SiteID'])->status->where('Year', $Year)->toArray());
+                $siteStatus = current(Site::find($site['SiteID'])->status()->where('Year', $Year)->orderBy('Year', 'desc')->get()->toArray());
             } catch(\Exception $e) {
                 $siteStatus = [];
-                die($e->getMessage());
+                report($e);
             }
 
             try {
-                $site_years = SiteStatus::select('SiteStatusID','SiteID','Year')->where('SiteID', $site['SiteID'])->orderBy('Year', 'asc')->get()->toArray();
+                $site_years = SiteStatus::select('SiteStatusID','SiteID','Year')->where('SiteID', $site['SiteID'])->orderBy('Year', 'desc')->get()->toArray();
             } catch(\Exception $e) {
                 $site_years = [];
-                die($e->getMessage());
+                report($e);
             }
             try {
-                $projects = Site::find($site['SiteID'])->projects()->where('Year', $Year)->orderBy('SequenceNumber', 'asc')->get()->toArray();
+                $projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')
+                    ->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
                 $project = current($projects);
             } catch(\Exception $e) {
                 $projects = [];
                 $project = [];
-                die($e->getMessage());
+                report($e);
             }
 
             try {
-                $contacts = Site::find($site['SiteID'])->contacts->toArray();
+                $contacts = Site::find($site['SiteID'])->contacts;
+                $contacts = $contacts ? $contacts->toArray() : [];
             } catch(\Exception $e) {
                 $contacts = [];
-                die($e->getMessage());
+                report($e);
             }
-
+            try {
+                $all_contacts = Contact::orderBy('LastName','asc')->get();
+                $all_contacts = $all_contacts ? $all_contacts->toArray() : [];
+            } catch(\Exception $e) {
+                $all_contacts = [];
+                report($e);
+            }
             //die("<pre>" . print_r($projects, 1));
             try {
-                // Gave up on the Eloquent relational model
-                $project_leads = Volunteer::join('project_volunteer_role', 'volunteers.VolunteerID', '=', 'project_volunteer_role.VolunteerID')
-                    ->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')
-                    ->where('project_volunteer_role.ProjectID', $project['ProjectID'])->get()->toArray();
+                $model = new ProjectVolunteerRole();
+
+                $project_leads = $model->getProjectLeads($project['ProjectID']);
 
             } catch(\Exception $e) {
                 $project_leads = [];
+                report($e);
             }
-
             try {
-                $project_volunteers = Project::find($project['ProjectID'])->volunteers->toArray();
+                $project_contacts = Project::find($project['ProjectID'])->contacts;
+                $project_contacts = $project_contacts ? $project_contacts->toArray() : [];
+            } catch(\Exception $e) {
+                $project_contacts = [];
+                report($e);
+            }
+            try {
+                $project_volunteers = Project::find($project['ProjectID'])->volunteers;
+                $project_volunteers = $project_volunteers ? $project_volunteers->toArray() : [];
             } catch(\Exception $e) {
                 $project_volunteers = [];
-                die($e->getMessage());
+                report($e);
             }
             try {
-                $project_budget = Project::find($project['ProjectID'])->budget->toArray();
-                //$project_budget = Project::find($project['ProjectID'])->budget()->toSql();
-                //echo $project['ProjectID'];
-                //die($project_budget);
+                $project_budgets = Project::find($project['ProjectID'])->budgets;
+                $project_budgets = $project_budgets ? $project_budgets->toArray() : [];
             } catch(\Exception $e) {
-                $project_budget = [];
-                die($e->getMessage());
+                $project_budgets = [];
+                report($e);
             }
-            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project','projects', 'sites','project_leads','project_volunteers','project_budget']);
+            try {
+                $volunteers = Volunteer::orderBy('LastName', 'asc')
+                    ->get()->toArray();
+            } catch(\Exception $e) {
+                $volunteers = [];
+                report($e);
+            }
+            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project','projects', 'sites','project_leads','project_volunteers', 'project_contacts','project_budgets','volunteers','all_contacts']);
 
             return view('springintoaction::admin.main.app', $request, compact('appInitialData'));
         }

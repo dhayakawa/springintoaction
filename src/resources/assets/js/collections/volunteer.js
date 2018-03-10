@@ -1,12 +1,18 @@
 (function (App) {
-    App.Collections.Volunteer = Backbone.PageableCollection.extend({
+    App.Collections.Volunteer = Backbone.Collection.extend({
+        model: App.Models.Volunteer
+    });
+
+    App.PageableCollections.Volunteer = Backbone.PageableCollection.extend({
         model: App.Models.Volunteer,
         state: {
             pageSize: 10
         },
         mode: "client" // page entirely on the client side
     });
-    var SkillsCell = Backgrid.Extension.Select2Cell.extend({
+
+    let SkillsCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
         select2Options: {
             // default is false because Backgrid will save the cell's value
@@ -14,16 +20,13 @@
             openOnEnter: false
         },
         optionValues: [{
-            values: [
-                ['Unskilled', 'Unskilled'],
-                ['Fair', 'Fair'],
-                ['Good', 'Good'],
-                ['Excellent', 'Excellent']
-            ]
+            values: App.Models.volunteerModel.getSkillLevelOptions(false)
         }]
 
     });
-    var VolunteerStatusCell = Backgrid.Extension.Select2Cell.extend({
+
+    let VolunteerPrimarySkillCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
         select2Options: {
             // default is false because Backgrid will save the cell's value
@@ -31,14 +34,12 @@
             openOnEnter: false
         },
         optionValues: [{
-            values: [
-                ['Agreed', 'Agreed'],
-                ['Declined', 'Declined']
-            ]
+            values: App.Models.volunteerModel.getPrimarySkillOptions(false)
         }]
 
     });
-    var VolunteerPrimarySkillCell = Backgrid.Extension.Select2Cell.extend({
+    let VolunteerRoleCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
         select2Options: {
             // default is false because Backgrid will save the cell's value
@@ -46,18 +47,19 @@
             openOnEnter: false
         },
         optionValues: [{
-            values: [
-                ['Painting', 'Painting'],
-                ['Landscaping', 'Landscaping'],
-                ['Construction', 'Construction'],
-                ['Electrical', 'Electrical'],
-                ['Cabinetry Finish Work', 'CabinetryFinishWork'],
-                ['Plumbing', 'Plumbing']
-            ]
-        }]
+            values: App.Models.volunteerModel.getRoleOptions(false)
+        }],
+        formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
+            toRaw: function (formattedValue, model) {
+                return formattedValue === null ? [] : _.map(formattedValue, function (v) {
+                    return parseInt(v);
+                })
+            }
+        })
 
     });
-    var VolunteerRoleCell = Backgrid.Extension.Select2Cell.extend({
+    let SchoolCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
         select2Options: {
             // default is false because Backgrid will save the cell's value
@@ -65,76 +67,65 @@
             openOnEnter: false
         },
         optionValues: [{
-            values: [
-                ['Liaison', 'Liaison'],
-                ['Scout', 'Scout'],
-                ['Estimator', 'Estimator'],
-                ['Site Coordinator', 'Site Coordinator'],
-                ['Project Coordinator', 'Project Coordinator'],
-                ['Team Leader', 'Team Leader'],
-                ['Worker', 'Worker']
-            ]
+            values: App.Models.volunteerModel.getSchoolOptions(false)
         }]
 
     });
-    var SchoolCell = Backgrid.Extension.Select2Cell.extend({
+    let AgeRangeCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
         select2Options: {
             // default is false because Backgrid will save the cell's value
             // and exit edit mode on enter
-            openOnEnter: false
+            openOnEnter: false,
+            multiple:true
         },
         optionValues: [{
-            values: [
-                ['PJ Jacobs', 'PJ Jacobs'],
-                ['Roosevelt', 'Roosevelt'],
-                ['McKinley', 'McKinley'],
-                ['Kennedy', 'Kennedy'],
-                ['Madison', 'Madison'],
-                ['SPASH', 'SPASH'],
-                ['Jefferson', 'Jefferson'],
-                ['McDill', 'McDill'],
-                ['Bannach', 'Bannach'],
-                ['Washington', 'Washington'],
-                ['Charles F. Fernandez Center', 'Charles F. Fernandez Center'],
-                ['Ben Franklin', 'Ben Franklin'],
-                ['Plover-Whiting', 'Plover-Whiting'],
-                ['Boston School Forest', 'Boston School Forest'],
-                ['Point of Discovery', 'Point of Discovery']
-            ]
-        }]
+            values: App.Models.volunteerModel.getAgeRangeOptions(false)
+        }],
+        formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
+
+            /**
+             Normalizes raw scalar or array values to an array.
+
+             @member Backgrid.SelectFormatter
+             @param {*} rawValue
+             @param {Backbone.Model} model Used for more complicated formatting
+             @return {Array.<*>}
+             */
+            fromRaw: function (rawValue, model) {
+                if (_.isString(rawValue) && rawValue.match(/,/)) {
+                    rawValue = rawValue.split(',');
+                }
+                return _.isArray(rawValue) ? rawValue : rawValue != null ? [rawValue] : [];
+            }
+        })
 
     });
-    var AgeRangeCell = Backgrid.Extension.Select2Cell.extend({
-        // any options specific to `select2` goes here
-        select2Options: {
-            // default is false because Backgrid will save the cell's value
-            // and exit edit mode on enter
-            openOnEnter: false
-        },
-        optionValues: [{
-            values: [
-                ['Adult 18+-', 'Adult 18+-'],
-                ['Adult 18+-,Child under 12-', 'Adult 18+-,Child under 12-'],
-                ['Child under 12-', 'Child under 12-'],
-                ['Adult 18+-,Youth 12-17-,Child under 1', 'Adult 18+-,Youth 12-17-,Child under 1'],
-                ['Youth 12-17-', 'Youth 12-17-'],
-                ['Adult 18+-,Youth 12-17-', 'Adult 18+-,Youth 12-17-'],
-                ['Youth 12-17-,Child under 12-', 'Youth 12-17-,Child under 12-'],
-                ['Adult (18+)', 'Adult (18+)'],
-                ['Youth (12-17)', 'Youth (12-17)']
-            ]
-        }]
-
-    });
-    App.Vars.VolunteersBackgridColumnDefinitions = [
+    App.Vars.volunteersBackgridColumnDefinitions = [
         {
             // name is a required parameter, but you don't really want one on a select all column
             name: "",
+            label: "",
             // Backgrid.Extension.SelectRowCell lets you select individual rows
             cell: "select-row",
             // Backgrid.Extension.SelectAllHeaderCell lets you select all the row on a page
             headerCell: "select-all",
+            resizeable: false,
+            orderable: false,
+            width: "30"
+        },
+        {
+            name: "VolunteerID",
+            label: "   ",
+            formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                fromRaw: function (rawValue) {
+                    return '<input title="' + rawValue + '" type="radio" name="VolunteerID" value="' + rawValue + '" />';
+                    //You can use rawValue to custom your html, you can change this value using the name parameter.
+                }
+            }),
+            cell: "html",
+            editable: false,
             resizeable: false,
             orderable: false,
             width: "30"
@@ -145,23 +136,17 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: false,
-            width: "50"
-        },
-        {
-            name: "Role",
-            label: "Role",
-            cell: VolunteerRoleCell,
-            resizeable: true,
-            orderable: true,
-            width: "250"
+            width: "50",
+            filterType: "integer"
         },
         {
             name: "Status",
             label: "Status",
-            cell: VolunteerStatusCell,
+            cell: App.Vars.VolunteerStatusCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "LastName",
@@ -169,7 +154,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "FirstName",
@@ -177,7 +163,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "MobilePhoneNumber",
@@ -185,7 +172,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "HomePhoneNumber",
@@ -193,7 +181,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "Email",
@@ -201,7 +190,8 @@
             cell: "email",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "PrimarySkill",
@@ -209,7 +199,8 @@
             cell: VolunteerPrimarySkillCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "Comments",
@@ -225,7 +216,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "AgeRange",
@@ -233,7 +225,8 @@
             cell: AgeRangeCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "LG",
@@ -241,7 +234,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "Family",
@@ -249,7 +243,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "CFE",
@@ -273,7 +268,8 @@
             cell: SkillsCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "Landscaping",
@@ -281,7 +277,8 @@
             cell: SkillsCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "Construction",
@@ -289,7 +286,8 @@
             cell: SkillsCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "Electrical",
@@ -297,7 +295,8 @@
             cell: SkillsCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "CabinetryFinishWork",
@@ -305,7 +304,8 @@
             cell: SkillsCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "Plumbing",
@@ -313,7 +313,8 @@
             cell: SkillsCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "NotesOnYourSkillAssessment",
@@ -337,7 +338,8 @@
             cell: SchoolCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "Equipment",
@@ -361,7 +363,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            filterType: "string"
         },
         {
             name: "AssignmentInformationSendStatus",
@@ -387,7 +390,8 @@
             resizeable: true,
             orderable: true,
             width: "250",
-            renderable: false
+            renderable: false,
+            filterType: "string"
         },
 
         {
@@ -406,18 +410,6 @@
             resizeable: true,
             orderable: true,
             width: "250",
-            renderable: false
-        },
-        {
-            name: "VolunteerID",
-            label: "VolunteerID",
-            editable: false,
-            cell: Backgrid.IntegerCell.extend({
-                orderSeparator: ''
-            }),
-            resizeable: true,
-            orderable: true,
-            width: "50",
             renderable: false
         }, {
             name: "IndividualID",
@@ -466,8 +458,8 @@
             width: "250"
         },
         {
-            name: "updated_at: ",
-            label: "updated_at: ",
+            name: "updated_at",
+            label: "updated_at",
             cell: "string",
             resizeable: true,
             orderable: true,
@@ -476,7 +468,5 @@
 
     ];
 
-    App.Vars.VolunteersBackgridColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(App.Vars.VolunteersBackgridColumnDefinitions);
-    App.Vars.VolunteersBackgridColumnCollection.setPositions().sort();
-    //console.log('VolunteersBackgridColumnCollection:', App.Vars.VolunteersBackgridColumnCollection)
+    _log('App.Vars.CollectionsGroup', 'App.Vars.volunteersBackgridColumnDefinitions:', App.Vars.volunteersBackgridColumnDefinitions);
 })(window.App);

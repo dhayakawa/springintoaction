@@ -1,6 +1,7 @@
 (function (App) {
 
     App.Models.SiteStatus = Backbone.Model.extend({
+        idAttribute: "SiteStatusID",
         url: 'sitestatus',
         defaults: {
             'SiteStatusID': '',

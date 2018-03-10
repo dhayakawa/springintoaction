@@ -1,15 +1,15 @@
 (function ($, Backbone, toastr, ProjectsRouter) {
         // 1. determine the relative path
-        var rootUrl = document.querySelector('body').dataset.rooturl;
+        let rootUrl = document.querySelector('body').dataset.rooturl;
         if (!rootUrl.endsWith('/')) {
             rootUrl += '/';
         }
-        var rootPath = rootUrl.replace('://', '');
-        var index = rootPath.indexOf('/');
+        let rootPath = rootUrl.replace('://', '');
+        let index = rootPath.indexOf('/');
         rootPath = (index !== -1 && index + 1 < rootPath.length) ? rootPath.substr(index) : rootPath = '/';
 
-        var getRelativeUrl = function (url, rootUrl) {
-            var index = url.indexOf(rootUrl);
+        let getRelativeUrl = function (url, rootUrl) {
+            let index = url.indexOf(rootUrl);
             return (index > -1 ? url.substr(index + rootUrl.length) : url);
         };
 
@@ -21,7 +21,7 @@
         });
         // 3. catch clicks on links and dispatch them to the router
         $(document).on('click', 'a:not([data-bypass])', function (evt) {
-            var href = $(this).attr('href');
+            let href = $(this).attr('href');
 
             if (href.length && href.substr(0, 1) != '#') {
                 evt.preventDefault();
@@ -32,16 +32,16 @@
 
         // 5. small hack to detect the correct URL, in case of a redirect
         //  http://stackoverflow.com/questions/9177252/detecting-a-redirect-in-jquery-ajax
-        var xhr;
-        var _orgAjax = jQuery.ajaxSettings.xhr;
+        let xhr;
+        let _orgAjax = jQuery.ajaxSettings.xhr;
         jQuery.ajaxSettings.xhr = function () {
             xhr = _orgAjax();
             return xhr;
         };
         // 6. catch form submissions
         $(document).on('submit', 'form:not([data-bypass])', function (evt) {
-            var $form = $(this);
-            var href = $form.attr('action');
+            let $form = $(this);
+            let href = $form.attr('action');
 
             if (href.length && href.substr(0, 1) != '#') {
                 evt.preventDefault();
@@ -56,8 +56,8 @@
                             // 7. add an error class to the problematic fields
                             // and display a notification toast with a description of the error(s)
                             $form.find('.has-error').removeClass('has-error');
-                            var errors = jqXHR.responseJSON;
-                            var errorsToDisplay = [];
+                            let errors = jqXHR.responseJSON;
+                            let errorsToDisplay = [];
                             $.each(errors, function (key, value) {
                                 $form.find('label[for=' + key + ']').parents('.form-group').addClass('has-error');
                                 errorsToDisplay.push(value[0] || value);
