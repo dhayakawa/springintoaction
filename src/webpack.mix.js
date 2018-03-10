@@ -126,6 +126,16 @@ mix.styles([
     'public/css/backgrid-select2-cell.min.css',
     'public/css/backgrid-text-cell.min.css',
     'public/css/backgrid-select-all.min.css',
-    'public/css/backgrid-filter.css',
-    'public/css/ajax-spinner.css'
+    'public/css/backgrid-filter.css'
 ], 'public/css/packages.css');
+
+mix.copy('public/css/packages.css','packages/dhayakawa/springintoaction/src/public/css/packages.css')
+    .copy('public/css/springintoaction.css','packages/dhayakawa/springintoaction/src/public/css/springintoaction.css')
+    .copy('public/js/springintoaction.main.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.main.js')
+    .copy('public/js/springintoaction.init.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.init.js')
+    .copy('public/js/springintoaction.views.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.views.js')
+    .copy('public/js/springintoaction.collections.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.collections.js')
+    .copy('public/js/springintoaction.models.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.models.js')
+    .copy('public/js/springintoaction.packages.min.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.packages.min.js')
+    .copy('public/js/springintoaction.packages.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.packages.js')
+;
