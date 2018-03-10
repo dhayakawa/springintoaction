@@ -12,12 +12,15 @@
 
     class Budget extends Model {
 
+        use \Illuminate\Database\Eloquent\SoftDeletes;
+
+        protected $dates = ['deleted_at'];
         /**
          * The table associated with the model.
          *
          * @var string
          */
-        protected $table = 'budget';
+        protected $table = 'budgets';
         /**
          * The primary key for the model.
          *

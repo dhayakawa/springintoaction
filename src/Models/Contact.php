@@ -11,6 +11,8 @@
     use Illuminate\Database\Eloquent\Model;
     class Contact extends Model {
 
+        use \Illuminate\Database\Eloquent\SoftDeletes;
+        protected $dates = ['deleted_at'];
         /**
          * The table associated with the model.
          *
@@ -23,7 +25,8 @@
          * @var string
          */
         protected $primaryKey = 'ContactID';
-        protected $fillable = ['SiteID',
+        protected $fillable = [
+            'SiteID',
             'Active',
             'FirstName',
             'LastName',
@@ -32,7 +35,16 @@
             'Phone',
             'ContactType'];
 
-        private $defaultRecordData = [];
+        private $defaultRecordData = [
+            'SiteID'=>0,
+            'Active'=>0,
+            'FirstName'=>'',
+            'LastName' => '',
+            'Title' => '',
+            'Email' => '',
+            'Phone' => '',
+            'ContactType' => ''
+        ];
 
         public function site($defaults = null) {
             return $this->belongsTo('Dhayakawa\SpringIntoAction\Models\Site');//->withTimestamps();

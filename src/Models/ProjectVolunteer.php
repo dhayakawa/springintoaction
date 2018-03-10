@@ -12,6 +12,8 @@
 
     class ProjectVolunteer extends Model {
 
+        use \Illuminate\Database\Eloquent\SoftDeletes;
+        protected $dates = ['deleted_at'];
         /**
          * The table associated with the model.
          *

@@ -34,7 +34,18 @@
          * @return \Illuminate\Http\Response
          */
         public function store(Request $request) {
-            //
+            $model = new Budget;
+            $model->fill($request->only($model->getFillable()));
+            $success = $model->save();
+
+            if($success) {
+                $response = ['success' => true, 'msg' => 'Budget Creation Succeeded.'];
+            } else {
+                $response = ['success' => false, 'msg' => 'Budget Creation Failed.'];
+            }
+
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
         /**
@@ -45,7 +56,17 @@
          * @return \Illuminate\Http\Response
          */
         public function show($id) {
-            //
+            $model  = new Budget;
+            $result = $model->getDefaultRecordData();
+            try {
+                if($model = Budget::findOrFail($id)) {
+                    $result = $model->toArray();
+                }
+            } catch(\Exception $e) {
+                report($e);
+            }
+
+            return $result;
         }
 
         /**
@@ -93,4 +114,5 @@
         public function destroy($id) {
             //
         }
+
     }

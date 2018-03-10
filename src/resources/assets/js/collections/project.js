@@ -1,12 +1,45 @@
 (function (App) {
-    App.Collections.Project = Backbone.PageableCollection.extend({
+    App.PageableCollections.Project = Backbone.PageableCollection.extend({
         model: App.Models.Project,
         state: {
             pageSize: 10
         },
         mode: "client" // page entirely on the client side
     });
-    var SkillsNeededCell = Backgrid.Extension.Select2Cell.extend({
+    let SkillsNeededCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
+        // any options specific to `select2` goes here
+        select2Options: {
+            // default is false because Backgrid will save the cell's value
+            // and exit edit mode on enter
+            openOnEnter: false,
+            multiple: true
+        },
+        optionValues: [{
+            values: App.Models.projectModel.getSkillsNeededOptions(false)
+        }],
+        formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
+
+            /**
+             Normalizes raw scalar or array values to an array.
+
+             @member Backgrid.SelectFormatter
+             @param {*} rawValue
+             @param {Backbone.Model} model Used for more complicated formatting
+             @return {Array.<*>}
+             */
+            fromRaw: function (rawValue, model) {
+                if (_.isString(rawValue) && rawValue.match(/,/)){
+                    rawValue = rawValue.split(',');
+                }
+                return _.isArray(rawValue) ? rawValue : rawValue != null ? [rawValue] : [];
+            }
+        })
+
+    });
+
+    let StatusCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
         select2Options: {
             // default is false because Backgrid will save the cell's value
@@ -14,37 +47,11 @@
             openOnEnter: false
         },
         optionValues: [{
-            values: [
-                ['Construction', 'Construction'],
-                ['Painting', 'Painting'],
-                ['Landscaping', 'Landscaping'],
-                ['Finish Carpentry', 'Finish Carpentry'],
-                ['General Carpentry', 'General Carpentry'],
-                ['Cabinetry', 'Cabinetry']
-            ]
+            values: App.Models.projectModel.getStatusOptions(false)
         }]
 
     });
-    var StatusCell = Backgrid.Extension.Select2Cell.extend({
-        // any options specific to `select2` goes here
-        select2Options: {
-            // default is false because Backgrid will save the cell's value
-            // and exit edit mode on enter
-            openOnEnter: false
-        },
-        optionValues: [{
-            values: [
-                ['DN-District', 'DN-District'],
-                ['DN-Woodlands', 'DN-Woodlands'],
-                ['NA-District', 'NA-District'],
-                ['NA-Woodlands', 'NA-Woodlands'],
-                ['Approved', 'Approved'],
-                ['Cancelled', 'Cancelled']
-            ]
-        }]
-
-    });
-    var textAreaEditor = Backgrid.Extension.TextareaEditor.extend({
+    let textAreaEditor = Backgrid.Extension.TextareaEditor.extend({
         className: "modal fade",
         render: function () {
             // DH:mod to handle bootstap modal bug
@@ -80,11 +87,11 @@
                 e.stopPropagation();
             }
 
-            var model = this.model;
-            var column = this.column;
-            var val = this.$el.find("textarea").val();
-            var newValue = this.formatter.toRaw(val);
-            console.log('saveOrCancel 194', e.type, model, column, 'val:' + val, 'newValue:' + newValue)
+            let model = this.model;
+            let column = this.column;
+            let val = this.$el.find("textarea").val();
+            let newValue = this.formatter.toRaw(val);
+            //console.log('saveOrCancel 194', e.type, model, column, 'val:' + val, 'newValue:' + newValue)
             if (_.isUndefined(newValue)) {
                 model.trigger("backgrid:error", model, column, val);
 
@@ -123,14 +130,17 @@
          @param {Event} e
          */
         close: function (e) {
-            var model = this.model;
+            let model = this.model;
             // model.trigger("backgrid:edited", model, this.column,
             //     new Backgrid.Command(e));
             console.log('after model.trigger')
         }
     });
-    var TextareaCell = Backgrid.Extension.TextCell.extend({
-        editor: textAreaEditor,
+    let TextareaCell = Backgrid.Extension.TextCell.extend({
+        attributes: function () {
+            return { 'data-toggle':'popover','data-trigger':'hover'}
+        },
+        //editor: textAreaEditor,
         /**
          Removes the editor and re-render in display mode.
          */
@@ -143,26 +153,29 @@
             this.render();
         },
     });
-    TextareaCell = 'string';
+    // Override until the textarea cell works
+    //TextareaCell = 'string';
     // Resizeable columns must have a pixel width defined
-    App.Vars.ProjectsBackgridColumnDefinitions = [
+    App.Vars.projectsBackgridColumnDefinitions = [
         {
             // name is a required parameter, but you don't really want one on a select all column
             name: "",
+            label: "",
             // Backgrid.Extension.SelectRowCell lets you select individual rows
             cell: "select-row",
             // Backgrid.Extension.SelectAllHeaderCell lets you select all the row on a page
             headerCell: "select-all",
             resizeable: false,
             orderable: false,
-            width: "30"
+            width: "30",
+            displayOrder: 1
         },
         {
             name: "ProjectID",
             label: "   ",
             formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                 fromRaw: function (rawValue) {
-                    return '<input type="radio" name="ProjectID" value="' + rawValue + '" />';
+                    return '<input title="' + rawValue + '" type="radio" name="ProjectID" value="' + rawValue + '" />';
                     //You can use rawValue to custom your html, you can change this value using the name parameter.
                 }
             }),
@@ -170,7 +183,8 @@
             editable: false,
             resizeable: false,
             orderable: false,
-            width: "30"
+            width: "30",
+            displayOrder: 2
         },
         {
             name: "Active",
@@ -178,7 +192,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: false,
-            width: "50"
+            width: "50",
+            displayOrder: 3
         },
         {
             name: "OriginalRequest",
@@ -186,7 +201,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            displayOrder: 4
         },
         {
             name: "ProjectDescription",
@@ -194,7 +210,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: false,
-            width: "250"
+            width: "250",
+            displayOrder: 5
         },
         {
             name: "Comments",
@@ -202,15 +219,17 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "250"
+            width: "250",
+            displayOrder: 6
         },
         {
             name: "Status",
             label: "Status",
-            cell: StatusCell.extend({multiple: true}),
+            cell: StatusCell,
             resizeable: true,
             orderable: true,
-            width: "66"
+            width: "66",
+            displayOrder: 7
         },
         {
             name: "StatusReason",
@@ -218,15 +237,17 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 8
         },
         {
             name: "BudgetSources",
             label: "Budget Sources",
-            cell: App.Vars.budgetSourceCell.extend({multiple: true}),
+            cell: App.Vars.budgetSourceCell,
             resizeable: true,
             orderable: true,
-            width: "125"
+            width: "125",
+            displayOrder: 9
         },
         {
             name: "ChildFriendly",
@@ -234,7 +255,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 10
         },
         {
             name: "PrimarySkillNeeded",
@@ -242,7 +264,8 @@
             cell: SkillsNeededCell.extend({multiple: true}),
             resizeable: true,
             orderable: true,
-            width: "150"
+            width: "150",
+            displayOrder: 11
         },
         {
             name: "VolunteersNeededEst",
@@ -250,7 +273,8 @@
             cell: "integer",
             resizeable: true,
             orderable: true,
-            width: "166"
+            width: "166",
+            displayOrder: 12
         },
         {
             name: "VolunteersAssigned",
@@ -258,7 +282,8 @@
             cell: "integer",
             resizeable: true,
             orderable: true,
-            width: "145"
+            width: "145",
+            displayOrder: 13
         },
         {
             name: "MaterialsNeeded",
@@ -266,7 +291,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 14
         },
         {
             name: "EstimatedCost",
@@ -274,7 +300,8 @@
             cell: "number",
             resizeable: true,
             orderable: true,
-            width: "120"
+            width: "120",
+            displayOrder: 15
         },
         {
             name: "ActualCost",
@@ -282,7 +309,8 @@
             cell: "number",
             resizeable: true,
             orderable: true,
-            width: "95"
+            width: "95",
+            displayOrder: 16
         },
         {
             name: "BudgetAvailableForPC",
@@ -290,7 +318,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "178"
+            width: "178",
+            displayOrder: 17
         },
         {
             name: "VolunteersLastYear",
@@ -298,7 +327,8 @@
             cell: "integer",
             resizeable: true,
             orderable: true,
-            width: "153"
+            width: "153",
+            displayOrder: 18
         },
         {
             name: "NeedsToBeStartedEarly",
@@ -306,7 +336,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 19
         },
         {
             name: "PCSeeBeforeSIA",
@@ -314,7 +345,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 20
         },
         {
             name: "SpecialEquipmentNeeded",
@@ -322,7 +354,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 21
         },
         {
             name: "PermitsOrApprovalsNeeded",
@@ -330,7 +363,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 22
         },
         {
             name: "PrepWorkRequiredBeforeSIA",
@@ -338,7 +372,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 23
         },
         {
             name: "SetupDayInstructions",
@@ -346,7 +381,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 24
         },
         {
             name: "SIADayInstructions",
@@ -354,7 +390,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 25
         },
         {
             name: "Attachments",
@@ -362,7 +399,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "100"
+            width: "100",
+            displayOrder: 26
         },
         {
             name: "Area",
@@ -370,7 +408,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 27
         },
         {
             name: "PaintOrBarkEstimate",
@@ -378,7 +417,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 28
         },
         {
             name: "PaintAlreadyOnHand",
@@ -386,7 +426,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 29
         },
         {
             name: "PaintOrdered",
@@ -394,7 +435,8 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "255"
+            width: "255",
+            displayOrder: 30
         },
         {
             name: "CostEstimateDone",
@@ -402,7 +444,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 31
         },
         {
             name: "MaterialListDone",
@@ -410,7 +453,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 32
         },
         {
             name: "BudgetAllocationDone",
@@ -418,7 +462,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 33
         },
         {
             name: "VolunteerAllocationDone",
@@ -426,7 +471,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 34
         },
         {
             name: "NeedSIATShirtsForPC",
@@ -434,7 +480,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 35
         },
         {
             name: "ProjectSend",
@@ -442,7 +489,8 @@
             cell: App.Vars.sendCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 36
         },
         {
             name: "FinalCompletionStatus",
@@ -450,7 +498,8 @@
             cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "50",
+            displayOrder: 37
         },
         {
             name: "FinalCompletionAssessment",
@@ -458,43 +507,8 @@
             cell: TextareaCell,
             resizeable: true,
             orderable: true,
-            width: "255"
-        },
-        {
-            name: "Year",
-            label: "Year",
-            editable: false,
-            cell: Backgrid.IntegerCell.extend({
-                orderSeparator: ''
-            }),
-            resizeable: true,
-            orderable: true,
-            width: "50",
-            renderable: false
-        },
-        {
-            name: "SiteID",
-            label: "SiteID",
-            editable: false,
-            cell: Backgrid.IntegerCell.extend({
-                orderSeparator: ''
-            }),
-            resizeable: true,
-            orderable: true,
-            width: "50",
-            renderable: false
-        },
-        {
-            name: "ContactID",
-            label: "ContactID",
-            editable: false,
-            cell: Backgrid.IntegerCell.extend({
-                orderSeparator: ''
-            }),
-            resizeable: true,
-            orderable: true,
-            width: "50",
-            renderable: false
+            width: "255",
+            displayOrder: 38
         },
         {
             name: "SequenceNumber",
@@ -502,53 +516,44 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "50"
-        },
-        {
-            name: "EstimatorID",
-            label: "EstimatorID",
-            editable: false,
-            cell: Backgrid.IntegerCell.extend({
-                orderSeparator: ''
-            }),
-            resizeable: true,
-            orderable: true,
             width: "50",
-            renderable: false
-        },
-        {
-            name: "ProjectCoordinatorID",
-            label: "ProjectCoordinatorID",
-            editable: false,
-            cell: Backgrid.IntegerCell.extend({
-                orderSeparator: ''
-            }),
-            resizeable: true,
-            orderable: true,
-            width: "50",
-            renderable: false
+            displayOrder: 40
         },
         {
             name: "created_at",
             label: "created_at",
             cell: "string",
+            editable: false,
             resizeable: true,
             orderable: true,
             width: "50",
-            renderable: false
+            renderable: true,
+            displayOrder: 41
         },
         {
-            name: "updated_at,: ",
-            label: "updated_at: ",
+            name: "updated_at",
+            label: "updated_at",
             cell: "string",
+            editable: false,
             resizeable: true,
             orderable: true,
             width: "50",
-            renderable: false
+            renderable: true,
+            displayOrder: 42
+        },
+        {
+            name: "deleted_at",
+            label: "deleted_at",
+            cell: "string",
+            editable: false,
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            renderable: true,
+            displayOrder: 43
         }
     ];
 
-    App.Vars.ProjectsBackgridColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(App.Vars.ProjectsBackgridColumnDefinitions);
-    App.Vars.ProjectsBackgridColumnCollection.setPositions().sort();
-    //console.log('ProjectsBackgridColumnCollection', App.Vars.ProjectsBackgridColumnCollection)
+
+    _log('App.Vars.CollectionsGroup', 'App.Vars.projectsBackgridColumnDefinitions', App.Vars.projectsBackgridColumnDefinitions);
 })(window.App);

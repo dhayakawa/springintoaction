@@ -35,7 +35,7 @@
     "backgrid-sizeable-columns": "^0.1.1",
     "backgrid-text-cell": "^0.3.7",
     "requirejs": "^2.3.5",
-    "select2": "^4.0.6-rc.1",
+    "select2": "3.4.5",
     "underscore": "^1.8.3"
   }
 }

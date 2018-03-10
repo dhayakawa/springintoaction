@@ -45,7 +45,17 @@
          * @return \Illuminate\Http\Response
          */
         public function show($id) {
-            //
+            $model  = new Contact;
+            $result = $model->getDefaultRecordData();
+            try {
+                if($model = Contact::findOrFail($id)) {
+                    $result = $model->toArray();
+                }
+            } catch(\Exception $e) {
+                report($e);
+            }
+
+            return $result;
         }
 
         /**

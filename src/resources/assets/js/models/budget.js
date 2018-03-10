@@ -1,15 +1,49 @@
 (function (App) {
     App.Models.Budget = Backbone.Model.extend({
+        idAttribute: "BudgetID",
         url: 'budget',
+        urlRoot: '/budget',
         defaults: {
-            'BudgetID': '',
             'ProjectID': '',
             'BudgetSource': '',
             'BudgetAmount': '',
             'Status': '',
-            'Comments': '',
-            'created_at': '',
-            'updated_at': ''
+            'Comments': ''
+        },
+        getStatusOptions: function (bReturnHtml) {
+            let options = [
+                ['Proposed', 'Proposed'],
+                ['Approved', 'Approved'],
+                ['Paid', 'Paid'],
+                ['Rejected', 'Rejected']
+            ];
+            if (bReturnHtml) {
+                return _.map(options, function (value, key) {
+                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                })
+            } else {
+                return options;
+            }
+        },
+        getSourceOptions: function (bReturnHtml) {
+            let options = [
+                ['PTO', 'PTO'],
+                ['School', 'School'],
+                ['School (OLC funds)', 'School (OLC funds)'],
+                ['District', 'District'],
+                ['Woodlands', 'Woodlands'],
+                ['Grant', 'Grant'],
+                ['CF Grant', 'CF Grant'],
+                ['Thrivent', 'Thrivent'],
+                ['Unknown', 'Unknown']
+            ];
+            if (bReturnHtml) {
+                return _.map(options, function (value, key) {
+                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                })
+            } else {
+                return options;
+            }
         }
     });
 

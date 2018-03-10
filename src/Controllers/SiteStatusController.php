@@ -94,4 +94,16 @@
         public function destroy($id) {
             //
         }
+
+        /**
+         * Data for site years dropdown
+         * @param $SiteID
+         *
+         * @return mixed
+         */
+        public function getAllSiteYears($SiteID) {
+            $site_years = SiteStatus::select('SiteStatusID', 'SiteID', 'Year')->where('SiteID', $SiteID)->orderBy('Year', 'asc')->get()->toArray();
+
+            return $site_years;
+        }
     }

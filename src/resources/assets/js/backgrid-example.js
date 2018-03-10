@@ -3,23 +3,23 @@
  */
 
 // Database server credentials
-var restURL = "https://backgriddemo-rest.herokuapp.com/?territories=";
+let restURL = "https://backgriddemo-rest.herokuapp.com/?territories=";
 
 // Helper functions
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+    let regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
         results = regex.exec(location.search);
     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
-var qs = (function (a) {
+let qs = (function (a) {
     if (a == "") {
         return {};
     }
-    var b = {};
-    for (var i = 0; i < a.length; ++i) {
-        var p = a[i].split('=', 2);
+    let b = {};
+    for (let i = 0; i < a.length; ++i) {
+        let p = a[i].split('=', 2);
         if (p.length == 1) {
             b[p[0]] = "";
         }
@@ -31,7 +31,7 @@ var qs = (function (a) {
 })(window.location.search.substr(1).split('&'));
 
 // Plugin settings
-var pluginSettings = {
+let pluginSettings = {
     // Official backgrid plugins
     "backgrid-paginator": true,
     "backgrid-filter": false,
@@ -47,7 +47,7 @@ var pluginSettings = {
 
 function initSettings() {
     // Check if there are any settings set at all in the GET parameters
-    var params = qs;
+    let params = qs;
 
     if (qs.length === 0) {
         // TODO: Check if there are saved settings
@@ -55,9 +55,9 @@ function initSettings() {
         return;
     }
 
-    var overridden = false;
+    let overridden = false;
     _.each(params, function (query, key) {
-        var value = query === "true";
+        let value = query === "true";
 
         if (_.has(pluginSettings, key)) {
             overridden = true;
@@ -79,7 +79,7 @@ initSettings();
 function setCheckboxValues() {
     // Get all checkboxes and set selected value
     $("#pluginsettings input:checkbox").each(function () {
-        var checkboxValue = $(this).val();
+        let checkboxValue = $(this).val();
 
         if (_.has(pluginSettings, checkboxValue)) {
             $(this).prop('checked', pluginSettings[checkboxValue]);
@@ -90,14 +90,14 @@ function setCheckboxValues() {
 setCheckboxValues();
 
 // Create singleton column collection
-var columnCol;
+let columnCol;
 
 function getColumnCollection() {
     if (columnCol) {
         return columnCol;
     }
 
-    var extraSettings = {
+    let extraSettings = {
         "select-column": {
             nesting: [],
             width: 50,
@@ -148,7 +148,7 @@ function getColumnCollection() {
         }
     };
 
-    var columnDefinition = [{
+    let columnDefinition = [{
         name: "tid", // The key of the model attribute
         label: "ID", // The name to display in the header
         editable: false, // By default every cell in a column is editable, but *ID* shouldn't be
@@ -199,8 +199,8 @@ function getColumnCollection() {
     }
 
     if (pluginSettings["backgrid-grouped-columns"]) {
-        for (var i = 0; i < columnDefinition.length; i++) {
-            var columnDef = columnDefinition[i];
+        for (let i = 0; i < columnDefinition.length; i++) {
+            let columnDef = columnDefinition[i];
             if (_.has(extraSettings, columnDef.name)) {
                 columnDef.nesting = extraSettings[columnDef.name].nesting;
             }
@@ -208,8 +208,8 @@ function getColumnCollection() {
     }
 
     if (pluginSettings["backgrid-sizeable-columns"]) {
-        for (var j = 0; j < columnDefinition.length; j++) {
-            var column = columnDefinition[j];
+        for (let j = 0; j < columnDefinition.length; j++) {
+            let column = columnDefinition[j];
             if (_.has(extraSettings, column.name)) {
                 column.nesting = extraSettings[column.name].nesting;
                 column.resizeable = extraSettings[column.name].resizeable;
@@ -219,22 +219,22 @@ function getColumnCollection() {
     }
 
     if (pluginSettings["backgrid-orderable-columns"]) {
-        for (var j = 0; j < columnDefinition.length; j++) {
-            var columno = columnDefinition[j];
+        for (let j = 0; j < columnDefinition.length; j++) {
+            let columno = columnDefinition[j];
             if (_.has(extraSettings, columno.name)) {
                 columno.orderable = extraSettings[columno.name].orderable;
             }
         }
     }
 
-    var columns = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(columnDefinition);
+    let columns = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(columnDefinition);
     columns.setPositions().sort();
     columnCol = columns;
     return columns;
 }
 
 // Create singleton data collection
-var dataCol;
+let dataCol;
 
 function getDataCollection() {
     if (dataCol) {
@@ -242,7 +242,7 @@ function getDataCollection() {
     }
 
     // Setup data
-    var data = [{
+    let data = [{
         "name": "Afghanistan",
         "url": "http://en.wikipedia.org/wiki/Afghanistan",
         "pop": 25500100,
@@ -461,7 +461,7 @@ function getDataCollection() {
         "tid": 31
     }];
 
-    var dataCollection = (pluginSettings["backgrid-paginator"]) ?
+    let dataCollection = (pluginSettings["backgrid-paginator"]) ?
         new Backbone.PageableCollection(data, {
             state: {
                 pageSize: 15
@@ -474,7 +474,7 @@ function getDataCollection() {
 
 // Render the grid
 function renderGrid(gridContainerId) {
-    var gridObjects = {
+    let gridObjects = {
         elId: gridContainerId
     };
 
@@ -482,13 +482,13 @@ function renderGrid(gridContainerId) {
     $(gridContainerId).empty();
 
     // Get column collection
-    var columnCollection = getColumnCollection();
+    let columnCollection = getColumnCollection();
 
     // Get data collection
-    var dataCollection = getDataCollection();
+    let dataCollection = getDataCollection();
 
     // backgrid-columnmanager enabled?
-    var colManager;
+    let colManager;
     if (pluginSettings["backgrid-columnmanager"]) {
         colManager = new Backgrid.Extension.ColumnManager(columnCollection, {
             initialColumnsVisible: 4,
@@ -499,7 +499,7 @@ function renderGrid(gridContainerId) {
 
     // backgrid-advanced-filter enabled?
     if (pluginSettings["backgrid-advanced-filter"]) {
-        var $info = $("<hr><p><strong>Advanced-filter notes:</strong><br/>" +
+        let $info = $("<hr><p><strong>Advanced-filter notes:</strong><br/>" +
             "Filter will be applied when 'apply' is clicked. The 'save' button will save the filter (session only in this demo) and output the result to the console. " +
             "Please note that the database is hosted through a free heroku/mongolab instance. This means that the initial filter" +
             "action might take a while because the instance might have to spin up when it has been idle for a while. Reference " +
@@ -508,13 +508,13 @@ function renderGrid(gridContainerId) {
 
         // Initialize a client-side filter to filter on the client
         // mode pageable collection's cache.
-        var advancedFilter = gridObjects.advancedFilter = new Backgrid.Extension.AdvancedFilter.Main({
+        let advancedFilter = gridObjects.advancedFilter = new Backgrid.Extension.AdvancedFilter.Main({
             collection: dataCollection,
             columns: columnCollection
         });
 
         // Render the filter
-        var $advancedFilterContainer = $("<div class='advanced-filter-container'></div>").appendTo($(gridContainerId));
+        let $advancedFilterContainer = $("<div class='advanced-filter-container'></div>").appendTo($(gridContainerId));
         $advancedFilterContainer.append(advancedFilter.render().el);
         $advancedFilterContainer.append($info);
 
@@ -526,10 +526,10 @@ function renderGrid(gridContainerId) {
             console.log(" >> Filter export as string: ", filterModel.exportFilter("mongo", true));
         });
 
-        var dataFiltered = false;
+        let dataFiltered = false;
         advancedFilter.on("filter:apply", _.debounce(function (filterId, filterModel) {
-            var requestFilter = filterModel.exportFilter("mongo", true);
-            var encodedFilter = encodeURIComponent(requestFilter);
+            let requestFilter = filterModel.exportFilter("mongo", true);
+            let encodedFilter = encodeURIComponent(requestFilter);
             console.log("Applying filter: ", requestFilter);
 
             // Set opacity of grid while loading
@@ -537,7 +537,7 @@ function renderGrid(gridContainerId) {
 
             $.getJSON(restURL + encodedFilter, function (data) {
                 // Parse data
-                var resultData = [];
+                let resultData = [];
                 _.each(data, function (obj) {
                     delete obj._id;
                     resultData.push(obj);
@@ -565,7 +565,7 @@ function renderGrid(gridContainerId) {
 
                 $.getJSON(restURL + encodeURIComponent("{}"), function (data) {
                     // Parse data
-                    var resultData = [];
+                    let resultData = [];
                     _.each(data, function (obj) {
                         delete obj._id;
                         resultData.push(obj);
@@ -588,38 +588,38 @@ function renderGrid(gridContainerId) {
         // backgrid-filter enabled?
         // Initialize a client-side filter to filter on the client
         // mode pageable collection's cache.
-        var filter = gridObjects.filter = new Backgrid.Extension.ClientSideFilter({
+        let filter = gridObjects.filter = new Backgrid.Extension.ClientSideFilter({
             collection: dataCollection,
             fields: ['name']
         });
 
         // Render the filter
-        var $filterContainer = $("<div id='filter-container'></div>").appendTo($(gridContainerId));
+        let $filterContainer = $("<div id='filter-container'></div>").appendTo($(gridContainerId));
         $filterContainer.append(filter.render().el);
 
         // Add some space to the filter and move it to the right
         $(filter.el).css({float: "right", margin: "20px"});
     }
 
-    var Header = Backgrid.Header;
+    let Header = Backgrid.Header;
     if (pluginSettings["backgrid-grouped-columns"]) {
         Header = Backgrid.Extension.GroupedHeader;
     }
 
     // Initialize a new Grid instance
-    var grid = gridObjects.grid = new Backgrid.Grid({
+    let grid = gridObjects.grid = new Backgrid.Grid({
         header: Header,
         columns: columnCollection,
         collection: dataCollection
     });
 
     // Render the grid
-    var $grid = $("<div></div>").appendTo(gridContainerId).append(grid.render().el);
+    let $grid = $("<div></div>").appendTo(gridContainerId).append(grid.render().el);
 
     // backgrid-paginator enabled?
     if (pluginSettings["backgrid-paginator"]) {
         // Initialize the paginator
-        var paginator = new Backgrid.Extension.Paginator({
+        let paginator = new Backgrid.Extension.Paginator({
             collection: dataCollection
         });
 
@@ -629,7 +629,7 @@ function renderGrid(gridContainerId) {
 
     if (pluginSettings["backgrid-sizeable-columns"] || pluginSettings["backgrid-orderable-columns"]) {
         // Add sizeable columns
-        var sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
+        let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
             collection: dataCollection,
             columns: columnCollection,
             grid: grid
@@ -638,7 +638,7 @@ function renderGrid(gridContainerId) {
 
         if (pluginSettings["backgrid-sizeable-columns"]) {
             // Add resize handlers
-            var sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
+            let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
                 sizeAbleColumns: sizeAbleCol,
                 saveColumnWidth: true
             });
@@ -647,7 +647,7 @@ function renderGrid(gridContainerId) {
 
         if (pluginSettings["backgrid-orderable-columns"]) {
             // Make columns reorderable
-            var orderHandler = new Backgrid.Extension.OrderableColumns({
+            let orderHandler = new Backgrid.Extension.OrderableColumns({
                 grid: grid,
                 sizeAbleColumns: sizeAbleCol
             });
@@ -659,8 +659,8 @@ function renderGrid(gridContainerId) {
 }
 
 // Init
-var gridObjects1 = renderGrid("#grid-container1");
-var gridObjects2 = renderGrid("#grid-container2");
+let gridObjects1 = renderGrid("#grid-container1");
+let gridObjects2 = renderGrid("#grid-container2");
 
 // Watch for changes
 // On change, change query string containing only activated plugins
@@ -670,7 +670,7 @@ $("#pluginsettings input:checkbox").change(function () {
         pluginSettings[$(this).val()] = $(this).prop('checked');
 
         // Create query string
-        var queryString = $.param(pluginSettings);
+        let queryString = $.param(pluginSettings);
 
         // Update query string (will re-render the page) if no pushState is available.
         document.location = "?" + queryString;
@@ -685,9 +685,9 @@ $("#btnClearStored").click(function () {
     localStorage.clear();
 });
 
-var indx = 1;
+let indx = 1;
 $("#btnAddColumn").click(function () {
-    var columns = getColumnCollection();
+    let columns = getColumnCollection();
     columns.add({
         name: "rndm" + indx,
         label: "Rndm #" + indx++,
@@ -701,8 +701,8 @@ $("#btnAddColumn").click(function () {
 });
 
 $("#btnRemoveColumn").click(function () {
-    var columns = getColumnCollection();
-    var rndmColumn = columns.find(function (column) {
+    let columns = getColumnCollection();
+    let rndmColumn = columns.find(function (column) {
         return column.get("name").search("rndm") > -1;
     });
 

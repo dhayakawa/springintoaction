@@ -1,156 +1,116 @@
 (function (App) {
-    App.Views.ProjectLead = Backbone.View.extend({
-        initialize: function (options) {
-            this.options = options;
-            _.bindAll(this, 'update');
-            this.$tabBtnPane = $(this.options.parentViewEl).find('.' + this.options.tab + '.tabButtonPane');
-            this.$tabBtnPanePaginationContainer = this.$tabBtnPane.find('.tab-pagination-controls');
+    App.Views.ProjectLead = App.Views.ProjectTab.fullExtend({
+        getModalForm: function () {
+            let template = window.template('newProjectLeadTemplate');
 
-        },
-        render: function () {
-            var self = this;
-            var Header = Backgrid.Extension.GroupedHeader;
-            var backgrid = new Backgrid.Grid({
-                header: Header,
-                columns: App.Vars.VolunteersBackgridColumnCollection,
-                collection: this.collection
+            let volunteerSelect = new App.Views.Select({
+                el: '',
+                attributes: {id: 'VolunteerID', name: 'selectVolunteerID', class: 'form-control'},
+                buildHTML: true,
+                collection: App.Collections.volunteersCollection,
+                optionValueModelAttrName: 'VolunteerID',
+                optionLabelModelAttrName: ['LastName', 'FirstName']
             });
-
-            // Hide db record foreign key ids
-            var hideCellCnt = 8;
-            var initialColumnsVisible = App.Vars.VolunteersBackgridColumnDefinitions.length - hideCellCnt;
-            var colManager = new Backgrid.Extension.ColumnManager(App.Vars.VolunteersBackgridColumnCollection, {
-                initialColumnsVisible: initialColumnsVisible,
-                saveState: true,
-                saveStateKey: this.options.tab,
-                loadStateOnInit: true
-            });
-            // Add control
-            var colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
-                columnManager: colManager
-            });
-            this.$tabBtnPane.append(colVisibilityControl.render().el);
-            var $grid = this.$el.html(backgrid.render().el);
-
-            var paginator = new Backgrid.Extension.Paginator({
-                collection: this.collection
-            });
-            // Render the paginator
-            this.$tabBtnPanePaginationContainer.html(paginator.render().el);
-
-            // Add sizeable columns
-            var sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
-                collection: this.collection,
-                columns: App.Vars.VolunteersBackgridColumnCollection,
-                grid: backgrid
-            });
-            $grid.find('thead').before(sizeAbleCol.render().el);
-
-            // Add resize handlers
-            var sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
-                sizeAbleColumns: sizeAbleCol,
-                saveColumnWidth: true
-            });
-            $grid.find('thead').before(sizeHandler.render().el);
-
-            // Make columns reorderable
-            var orderHandler = new Backgrid.Extension.OrderableColumns({
-                grid: backgrid,
-                sizeAbleColumns: sizeAbleCol
-            });
-            $grid.find('thead').before(orderHandler.render().el);
-            backgrid.collection.on('backgrid:edited', function (e) {
-                self.update(e);
-            });
-            return this;
-        },
-        update: function (e) {
-
-            App.Models.volunteerModel.save(_.extend({VolunteerID: e.attributes.VolunteerID}, e.changed),
-                {
-                    success: function (model, response, options) {
-                        growl(response.msg, 'success')
-                    },
-                    error: function (model, response, options) {
-                        growl(response.msg, 'success')
-                    }
-                });
+            let tplVars = {
+                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
+                volunteerSelect: volunteerSelect.getHtml(),
+                projectRoleOptions: App.Models.volunteerModel.getRoleOptions(true),
+                statusOptions: App.Models.volunteerModel.getStatusOptions(true)
+            };
+            return template(tplVars);
         }
     });
-    App.Views.Volunteer = Backbone.View.extend({
-        initialize: function (options) {
-            this.options = options;
-            _.bindAll(this, 'update');
-            this.$tabBtnPane = $(this.options.parentViewEl).find('.' + this.options.tab + '.tabButtonPane');
-            this.$tabBtnPanePaginationContainer = this.$tabBtnPane.find('.tab-pagination-controls');
+    App.Views.Volunteer = App.Views.ProjectTab.fullExtend({
+        getModalForm: function () {
+            let template = window.template('addProjectVolunteerTemplate');
+            let form = template({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)});
+            let $gridContainer = $(form);
+            $gridContainer.find('.form-group').append($('<div><div class="backgrid-wrapper"></div><div class="modal-grid-manager-container"><div class="modal-pagination-controls"></div></div></div>'));
+            let gridCollection = App.PageableCollections.unassignedProjectVolunteersCollection;
 
-        },
-        render: function () {
-            var self = this;
-            var Header = Backgrid.Extension.GroupedHeader;
-            var backgrid = new Backgrid.Grid({
-                header: Header,
-                columns: App.Vars.VolunteersBackgridColumnCollection,
-                collection: this.collection
+            App.Views.backGridFiltersPanel = new App.Views.BackGridFiltersPanel({
+                collection: gridCollection,
+                parentEl: $gridContainer
+            });
+
+            $gridContainer.prepend(App.Views.backGridFiltersPanel.render().$el);
+
+            // override default definitions to clean up visible columns for just choosing
+            let gridColumnDefinitions = _.map(App.Vars.volunteersBackgridColumnDefinitions, function (def) {
+                def.editable=false;
+                if (def.name.match(/(ID|_at)$/) || def.label.match(/^Grove/)){
+                    def.renderable = false;
+                }
+                return def;
+            });
+            let backgridColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(gridColumnDefinitions);
+            let Header = Backgrid.Extension.GroupedHeader;
+            this.backgrid = new Backgrid.Grid({
+                //header: Header,
+                columns: gridColumnDefinitions,
+                collection: gridCollection
             });
 
             // Hide db record foreign key ids
-            var hideCellCnt = 8;
-            var initialColumnsVisible = App.Vars.VolunteersBackgridColumnDefinitions.length - hideCellCnt;
-            var colManager = new Backgrid.Extension.ColumnManager(App.Vars.VolunteersBackgridColumnCollection, {
+            let hideCellCnt = 0;//9 + 25;
+            let initialColumnsVisible = gridColumnDefinitions.length - hideCellCnt;
+            let colManager = new Backgrid.Extension.ColumnManager(backgridColumnCollection, {
                 initialColumnsVisible: initialColumnsVisible,
                 saveState: true,
-                saveStateKey: this.options.tab,
+                saveStateKey: 'volunteer-chooser',
                 loadStateOnInit: true
             });
             // Add control
-            var colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
+            let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
                 columnManager: colManager
             });
-            this.$tabBtnPane.append(colVisibilityControl.render().el);
-            var $grid = this.$el.html(backgrid.render().el);
+            $gridContainer.find('.backgrid-wrapper').html(this.backgrid.render().el);
 
-            var paginator = new Backgrid.Extension.Paginator({
-                collection: this.collection
+            let paginator = new Backgrid.Extension.Paginator({
+                collection: gridCollection
             });
+
             // Render the paginator
-            this.$tabBtnPanePaginationContainer.html(paginator.render().el);
+            $gridContainer.find('.modal-pagination-controls').html(paginator.render().el);
 
-            // Add sizeable columns
-            var sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
-                collection: this.collection,
-                columns: App.Vars.VolunteersBackgridColumnCollection,
-                grid: backgrid
+            //Add sizeable columns
+            let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
+                collection: gridCollection,
+                columns: backgridColumnCollection,
+                grid: this.backgrid
             });
-            $grid.find('thead').before(sizeAbleCol.render().el);
+            $gridContainer.find('thead').before(sizeAbleCol.render().el);
 
-            // Add resize handlers
-            var sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
+            //Add resize handlers
+            let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
                 sizeAbleColumns: sizeAbleCol,
-                saveColumnWidth: true
+                saveColumnWidth: false
             });
-            $grid.find('thead').before(sizeHandler.render().el);
+            $gridContainer.find('thead').before(sizeHandler.render().el);
 
-            // Make columns reorderable
-            var orderHandler = new Backgrid.Extension.OrderableColumns({
-                grid: backgrid,
+            //Make columns reorderable
+            let orderHandler = new Backgrid.Extension.OrderableColumns({
+                grid: this.backgrid,
                 sizeAbleColumns: sizeAbleCol
             });
-            $grid.find('thead').before(orderHandler.render().el);
-            backgrid.collection.on('backgrid:edited', function (e) {
-                self.update(e);
-            });
-            return this;
+            $gridContainer.find('thead').before(orderHandler.render().el);
+            $('#sia-modal .modal-dialog').css('width', '98%');
+            return $gridContainer;
         },
-        update: function (e) {
-
-            App.Models.projectLeadModel.save(_.extend({VolunteerID: e.attributes.VolunteerID}, e.changed),
+        create: function (attributes) {
+            let self = this;
+            let model = App.Models.projectVolunteerModel.clone().clear({silent: true});
+            model.url = 'volunteer/batch/store';
+            _log('App.Views.Volunteer.create', attributes, model);
+            model.save(attributes,
                 {
                     success: function (model, response, options) {
-                        growl(response.msg, 'success')
+                        window.growl(response.msg, response.success ? 'success' : 'error');
+                        self.collection.url = 'project/volunteers/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        self.collection.fetch({reset: true});
                     },
                     error: function (model, response, options) {
-                        growl(response.msg, 'success')
+                        window.growl(response.msg, 'error')
                     }
                 });
         }

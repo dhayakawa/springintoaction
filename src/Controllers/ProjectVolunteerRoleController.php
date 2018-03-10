@@ -46,7 +46,15 @@
          * @return \Illuminate\Http\Response
          */
         public function show($id) {
-            //
+            $model  = new ProjectVolunteerRole;
+            $result = $model->getDefaultRecordData();
+            try {
+                $result = $model->getProjectLead($id);
+            } catch(\Exception $e) {
+                report($e);
+            }
+
+            return $result;
         }
 
         /**
@@ -94,5 +102,16 @@
          */
         public function destroy($id) {
             //
+        }
+
+        public function getProjectLeads($ProjectID){
+            $model = new ProjectVolunteerRole();
+            return $model->getProjectLeads($ProjectID);
+        }
+
+        public function getAllProjectLeads() {
+            $model = new ProjectVolunteerRole();
+
+            return $model->getAllProjectLeads();
         }
     }

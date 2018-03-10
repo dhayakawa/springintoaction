@@ -2,6 +2,7 @@
 
     namespace Dhayakawa\SpringIntoAction\Controllers;
 
+    use Illuminate\Support\Facades\DB;
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Models\Site;
@@ -35,7 +36,29 @@
          * @return \Illuminate\Http\Response
          */
         public function store(Request $request) {
-            //
+            $site = new Site;
+            $site->fill($request->only($site->getFillable()));
+            $success = $site->save();
+
+            if($success){
+                $siteStatus = new SiteStatus;
+                $defaults = $siteStatus->getDefaultRecordData();
+                $defaults['SiteID'] = $site->SiteID;
+
+                $siteStatus->fill($defaults);
+                $success = $siteStatus->save();
+            }
+
+            if(!isset($success)) {
+                $response = ['success' => false, 'msg' => 'Site Creation Not Implemented Yet.'];
+            } elseif($success) {
+                $response = ['success' => true, 'msg' => 'Site Creation Succeeded.', 'new_site_id' => $site->SiteID, 'new_site_status_id'=> $siteStatus->SiteStatusID];
+            } else {
+                $response = ['success' => false, 'msg' => 'Site Creation Failed.'];
+            }
+
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
         /**
@@ -92,12 +115,21 @@
          *
          * @return \Illuminate\Http\Response
          */
-        public function destroy($id) {
-            //
+        public function destroy(Request $request, $id) {
+            $success = Site::findOrFail($id)->delete();
+
+            if($success) {
+                $response = ['success' => true, 'msg' => 'Site Delete Succeeded.'];
+            } else {
+                $response = ['success' => false, 'msg' => 'Site Delete Failed.'];
+            }
+
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
-        public function getStatusYears($SiteID){
-            $site_years = SiteStatus::select('SiteStatusID','SiteID', 'Year')->where('SiteID', $SiteID)->orderBy('Year', 'asc')->get()->toArray();
-            return $site_years;
+        public function getSites(){
+            return Site::orderBy('SiteName', 'asc')
+                ->get()->toArray();
         }
     }
