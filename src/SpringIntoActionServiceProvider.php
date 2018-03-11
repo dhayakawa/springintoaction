@@ -45,8 +45,10 @@
 
             // If routes file has been published, load routes from the published file
             if(is_file(base_path('routes/springintoaction.php'))) {
+                $this->loadRoutesFrom(base_path('routes/boilerplate.php'));
                 $this->loadRoutesFrom(base_path('routes/springintoaction.php'));
             } else {
+                $this->loadRoutesFrom(__DIR__ . '/routes/boilerplate.php');
                 $this->loadRoutesFrom(__DIR__ . '/routes/springintoaction.php');
             }
 
