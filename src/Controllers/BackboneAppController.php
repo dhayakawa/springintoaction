@@ -17,6 +17,15 @@
 
         use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+        /**
+         * Create a new controller instance.
+         *
+         * @return void
+         */
+        public function __construct() {
+            $this->middleware('auth');
+        }
+
         protected function view($view, $request, array $data = array()) {
 
             $data['parentLayout'] = $request->ajax() ? 'springintoaction::admin.layouts.ajaxcontent' : 'boilerplate::layout.index';

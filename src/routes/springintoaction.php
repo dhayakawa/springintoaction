@@ -36,6 +36,7 @@
     //});
 
     Route::group(array_merge($adminDefault, ['middleware' => ['web', 'auth', 'ability:admin,backend_access']]), function () {
+        //Route::get('/', ['as' => 'sia.home', 'uses' => 'SpringIntoActionMainAppController@index']);
         Route::resource('sia', 'SpringIntoActionMainAppController');
 
         //Route::resource('projects', 'ProjectsController');

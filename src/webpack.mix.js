@@ -129,6 +129,7 @@ mix.styles([
     'public/css/backgrid-filter.css'
 ], 'public/css/packages.css');
 
+// This builds the composer assets
 mix.copy('public/css/packages.css','packages/dhayakawa/springintoaction/src/public/css/packages.css')
     .copy('public/css/springintoaction.css','packages/dhayakawa/springintoaction/src/public/css/springintoaction.css')
     .copy('public/js/springintoaction.main.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.main.js')
