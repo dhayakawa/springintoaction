@@ -11,7 +11,7 @@
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
 
     use Illuminate\Http\Request;
-
+    use Illuminate\Support\Facades\DB;
     use Dhayakawa\SpringIntoAction\Models\Project;
     use Dhayakawa\SpringIntoAction\Models\Site;
     use Dhayakawa\SpringIntoAction\Models\SiteStatus;
@@ -54,6 +54,10 @@
             if(!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Project Creation Not Implemented Yet.'];
             } elseif($success) {
+                if($project->SiteStatusID) {
+                    // Rebuild SequenceNumber order
+                    DB::select('call `spring_into_action`.resequence_projects(?)', array($project->SiteStatusID));
+                }
                 $response = ['success' => true, 'msg' => 'Project Creation Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Project Creation Failed.'];
@@ -66,6 +70,7 @@
         public function update(Request $request, $ProjectID) {
             $project = Project::findOrFail($ProjectID);
 
+            // Assumes if field value is an array that we need to format for multi-select drop down values
             $data = array_map(function ($value) {
                 if(is_array($value)) {
                     return join(',', $value);
@@ -77,6 +82,10 @@
             $success = $project->save();
 
             if($success) {
+                if($project->SiteStatusID) {
+                    // Rebuild SequenceNumber order
+                    DB::select('call `spring_into_action`.resequence_projects(?)', array($project->SiteStatusID));
+                }
                 $response = ['success' => true, 'msg' => 'Project Update Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Project Update Failed.'];

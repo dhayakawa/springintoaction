@@ -581,23 +581,12 @@
         },
         {
             name: "SequenceNumber",
-            label: "SequenceNumber",
-            cell: "string",
+            label: "Sequence Number",
+            cell: "integer",
             resizeable: true,
             orderable: true,
             width: "50",
             displayOrder: 40
-        },
-        {
-            name: "created_at",
-            label: "created_at",
-            cell: "string",
-            editable: false,
-            resizeable: true,
-            orderable: true,
-            width: "50",
-            renderable: true,
-            displayOrder: 41
         },
         {
             name: "updated_at",
@@ -609,18 +598,8 @@
             width: "50",
             renderable: true,
             displayOrder: 42
-        },
-        {
-            name: "deleted_at",
-            label: "deleted_at",
-            cell: "string",
-            editable: false,
-            resizeable: true,
-            orderable: true,
-            width: "50",
-            renderable: true,
-            displayOrder: 43
         }
+
     ];
 
 

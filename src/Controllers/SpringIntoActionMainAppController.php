@@ -3,6 +3,7 @@
     namespace Dhayakawa\SpringIntoAction\Controllers;
 
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
+    //use Illuminate\Support\Facades\Config;
     use Illuminate\Support\Facades\Log;
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Models\Project;
@@ -18,7 +19,7 @@
     class SpringIntoActionMainAppController extends BaseController {
 
         public function index(Request $request) {
-
+            //\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, Config::all()]);
             $year = $request->input('year');
             $Year = $year ?: date('Y');
 

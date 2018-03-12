@@ -5,7 +5,7 @@
         'namespace' => 'Sebastienheyd\Boilerplate\Controllers'
     ];
 
-    Route::group(array_merge($default, ['middleware' => ['web']]), function () {
+    Route::group(array_merge($default, ['middleware' => ['web', 'boilerplatelocale']]), function () {
 
         // Login Routes...
         Route::get('login', ['as' => 'login', 'uses' => 'Auth\LoginController@showLoginForm']);
@@ -27,9 +27,9 @@
 
     });
 
-    Route::group(array_merge($default, ['middleware' => ['web', 'auth', 'ability:admin,backend_access']]), function () {
-
+    Route::group(array_merge($default, ['middleware' => ['web', 'boilerplatelocale', 'auth', 'ability:admin,backend_access']]), function () {
         Route::get('/', ['as' => 'boilerplate.home', 'uses' => '\Dhayakawa\SpringIntoAction\Controllers\SpringIntoActionMainAppController@index']);
+        //Route::get('/', ['as' => 'boilerplate.home', 'uses' => 'HomeController@index']);
         Route::resource('roles', 'Users\RolesController');
         Route::resource('users', 'Users\UsersController');
         Route::any('users/dt', ['as' => 'users.datatable', 'uses' => 'Users\UsersController@datatable']);

@@ -2,7 +2,7 @@
     App.Views.ProjectGridManagerContainerToolbar = Backbone.View.extend({
         template: template('projectGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
-            _.bindAll(this, 'render', 'initializeFileUploadObj','addGridRow','deleteCheckedRows','clearStoredColumnState');
+            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState');
         },
         events: {
             'click #btnAddProject': 'addGridRow',
@@ -21,7 +21,7 @@
                 dataType: 'json',
                 done: function (e, data) {
                     let self = this
-                    console.log(this,  data)
+                    console.log(this, data)
                     $('#file_progress_' + self.id).fadeTo(0, 'slow');
                     $('#file_' + self.id).val('')
                     $('#file_chosen_' + self.id).empty()
@@ -69,12 +69,12 @@
         },
         deleteCheckedRows: function (e) {
             e.preventDefault();
-            if ($(e.target).hasClass('disabled')){
+            if ($(e.target).hasClass('disabled')) {
                 growl('Please check a box to delete a project.');
                 return;
             }
             bootbox.confirm("Do you really want to delete the checked projects?", function (bConfirmed) {
-                if (bConfirmed){
+                if (bConfirmed) {
                     let selectedModels = App.Views.projectsView.backgrid.getSelectedModels();
                     // clear or else the previously selected models remain as undefined
                     App.Views.projectsView.backgrid.clearSelectedModels();
@@ -87,7 +87,7 @@
                 }
             });
         },
-        clearStoredColumnState(e){
+        clearStoredColumnState(e) {
             e.preventDefault();
             growl('Resetting project columns. Please wait while the page refreshes.', 'success');
             localStorage.removeItem('backgrid-colmgr-site-projects');
@@ -98,7 +98,7 @@
     App.Views.Projects = Backbone.View.extend({
         initialize: function (options) {
             this.options = options;
-            _.bindAll(this, 'render','update','getModalForm');
+            _.bindAll(this, 'render', 'update', 'getModalForm');
             this.rowBgColor = 'lightYellow';
             //this.collection.bind('reset', this.render, this);
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
@@ -151,7 +151,7 @@
 
             // Render the paginator
             this.projectGridManagerContainerToolbar.$el.find('.project-pagination-controls').html(paginator.render().el);
-            _log('App.Views.Projects.render', '$gridContainer', $gridContainer,'$gridContainer.find(\'thead\')',$gridContainer.find('thead'));
+            _log('App.Views.Projects.render', '$gridContainer', $gridContainer, '$gridContainer.find(\'thead\')', $gridContainer.find('thead'));
             //Add sizeable columns
             let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
                 collection: this.collection,
@@ -194,7 +194,7 @@
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
             // Show a popup of the text that has been truncated
             $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').popover({
-                placement:'auto right',
+                placement: 'auto right',
                 padding: 0,
                 container: 'body',
                 content: function () {
@@ -202,7 +202,7 @@
                 }
             });
             // hide popover if it is not overflown
-            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover',function () {
+            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
                 let element = this;
 
                 let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
@@ -236,7 +236,7 @@
 
             if (App.Vars.mainAppDoneLoading && ProjectID && $('.site-projects-tabs').data('project-id') != ProjectID) {
                 window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
-                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector, 'last chosen ProjectID:'+$('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:'+ProjectID);
+                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector, 'last chosen ProjectID:' + $('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:' + ProjectID);
                 // Refresh tabs on new row select
                 App.Models.projectModel.url = '/admin/project/' + ProjectID;
                 App.Models.projectModel.fetch({reset: true});
@@ -244,21 +244,41 @@
 
         },
         update: function (e) {
-            if (!_.isEmpty(e.changed)){
+            let self = this;
+            if (!_.isEmpty(e.changed)) {
+                let bFetchCollection = false;
+                if (_.findKey(e.changed, 'SequenceNumber') !== 'undefined') {
+                    // Fetch reordered list
+                    bFetchCollection = true;
+                    window.ajaxWaiting('show', '.projects-backgrid-wrapper');
+                }
                 //'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector
-                _log('App.Views.Projects.update.event', e,'updating project model:'+ e.attributes.ProjectID,e);
+                _log('App.Views.Projects.update.event', e, 'updating project model id:' + e.attributes.ProjectID);
                 App.Models.projectModel.url = '/admin/project/' + e.attributes.ProjectID;
                 App.Models.projectModel.save(_.extend({ProjectID: e.attributes.ProjectID}, e.changed),
                     {
                         success: function (model, response, options) {
+                            if (bFetchCollection) {
+                                response.msg = response.msg + ' The re-sequenced list is being refreshed.'
+                            }
                             growl(response.msg, response.success ? 'success' : 'error');
+                            if (bFetchCollection) {
+
+                                self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
+                                $.when(
+                                    self.collection.fetch({reset: true})
+                                ).then(function () {
+                                    //initialize your views here
+                                    _log('App.Views.Project.update.event', 'SequenceNumber updated. project collection fetch promise done');
+                                    window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                                });
+                            }
                         },
                         error: function (model, response, options) {
                             growl(response.msg, 'error')
                         }
                     });
             }
-
         },
         getModalForm: function () {
             let template = window.template('newProjectTemplate');
@@ -289,12 +309,12 @@
             var self = this;
             window.ajaxWaiting('show', '.projects-backgrid-wrapper');
             // Set the sequence to the end if it was left empty
-            if (_.isEmpty(attributes['SequenceNumber'])){
+            if (_.isEmpty(attributes['SequenceNumber'])) {
                 attributes['SequenceNumber'] = App.PageableCollections.projectCollection.fullCollection.length;
             }
             // Need to add some default values to the attributes array for fields we do not show in the create form
             attributes['Attachments'] = '';
-            _log('App.Views.Project.create',  attributes, this.model, App.PageableCollections.projectCollection);
+            _log('App.Views.Project.create', attributes, this.model, App.PageableCollections.projectCollection);
             let newModel = new App.Models.Project();
             newModel.url = '/admin/project';
             newModel.save(attributes,
