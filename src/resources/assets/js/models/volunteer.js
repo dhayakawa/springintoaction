@@ -1,10 +1,9 @@
 (function (App) {
     App.Models.Volunteer = Backbone.Model.extend({
         idAttribute: "VolunteerID",
-        url: 'volunteer',
+        url: '/admin/volunteer',
         defaults: {
-            'VolunteerID': '',
-            'Active': '',
+            'Active': 1,
             'LastName': '',
             'FirstName': '',
             'MobilePhoneNumber': '',
@@ -41,9 +40,7 @@
             'Equipment': '',
             'TeamLeaderWilling': '',
             'Church': '',
-            'AssignmentInformationSendStatus': '',
-            'created_at': '',
-            'updated_at': ''
+            'AssignmentInformationSendStatus': ''
         },
         getStatusOptions: function (bReturnHtml) {
             let options = [
@@ -114,7 +111,7 @@
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;

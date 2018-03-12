@@ -154,21 +154,37 @@
         public function batchDestroy(Request $request) {
             $params       = $request->all();
             $batchSuccess = true;
-            if(is_array($params['VolunteerIDs'])) {
-                foreach($params['VolunteerIDs'] as $volunteerID) {
-                    $model   = ProjectVolunteer::where('VolunteerID', '=', $volunteerID)->where('ProjectID', '=', $params['ProjectID']);
-                    $success = $model->delete();
-                    if(!$success) {
-                        $batchSuccess = false;
+            $failMsg = '';
+            if(is_array($params['deleteModelIDs'])) {
+                foreach($params['deleteModelIDs'] as $modelID) {
+                    $model   = ProjectVolunteerRole::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $params['ProjectRoleID']);
+                    if($model->get()->count()) {
+                        $success = $model->delete();
+                    } else {
+                        $success = true;
                     }
-                    $model   = ProjectVolunteerRole::where('VolunteerID', '=', $volunteerID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $params['ProjectRoleID']);
-                    $success = $model->delete();
                     if(!$success) {
                         $batchSuccess = false;
+                        $failMsg .= ' Project Volunteer Role failed. ';
+                    }
+
+                    // Only remove from project volunteers if there are no other roles available
+                    $projectVolunteerRoleModel = ProjectVolunteerRole::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID']);
+                    $projectVolunteerModel = ProjectVolunteer::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID']);
+                    if($projectVolunteerRoleModel->get()->count() === 0 && $projectVolunteerModel->get()->count()) {
+                        $success = $model->delete();
+                    } else {
+                        $success = true;
+                    }
+
+                    if(!$success) {
+                        $batchSuccess = false;
+                        $failMsg      .= ' Project Volunteer failed. ';
                     }
                 }
             } else {
                 $success = false;
+                $failMsg = ' Oops. Nothing was sent to be deleted. If this keeps happening, tell David Hayakawa.';
             }
             $success = $batchSuccess;
 
@@ -177,7 +193,7 @@
             } elseif($success) {
                 $response = ['success' => true, 'msg' => 'Project Volunteer Batch Removal Succeeded.'];
             } else {
-                $response = ['success' => false, 'msg' => 'Project Volunteer Batch Removal Failed.'];
+                $response = ['success' => false, 'msg' => 'Project Volunteer Batch Removal Failed.' . $failMsg];
             }
 
 
@@ -198,23 +214,8 @@
 
         public function getUnassigned($SiteID, $Year) {
 
-            $sql = "SELECT volunteers.* FROM volunteers
-                      left JOIN
-                    (SELECT pv.*
-                    FROM project_volunteers pv
-                    WHERE pv.ProjectID NOT IN (
-                    SELECT pv.ProjectID
-                    FROM project_volunteers pv
-                    WHERE pv.ProjectID NOT IN (SELECT `projects`.ProjectID
-                                               FROM `projects`
-                                                 JOIN `site_status`
-                                                   ON `site_status`.`SiteStatusID` = `projects`.`SiteStatusID`
-                                                 INNER JOIN `sites` ON `sites`.`SiteID` = `site_status`.`SiteID`
-                                               WHERE `site_status`.`Year` = ? AND `sites`.`SiteID` = ?))) fakeTable ON fakeTable.VolunteerID = volunteers.VolunteerID
-                    WHERE fakeTable.VolunteerID IS null;";
-            $result = DB::select($sql,[$Year, $SiteID]);
+            $model = new ProjectVolunteer();
 
-
-            return $result;
+            return $model->getUnassigned($SiteID, $Year);
         }
     }

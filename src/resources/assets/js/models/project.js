@@ -1,12 +1,10 @@
 (function (App) {
     App.Models.Project = Backbone.Model.extend({
         idAttribute: "ProjectID",
-        url: 'project',
+        url: '/admin/project',
         defaults: {
-            'ProjectID': '',
             'SiteStatusID': '',
             'Active': '',
-            'ContactID': '',
             'SequenceNumber': '',
             'OriginalRequest': '',
             'ProjectDescription': '',
@@ -42,10 +40,7 @@
             'NeedSIATShirtsForPC': '',
             'ProjectSend': '',
             'FinalCompletionStatus': '',
-            'FinalCompletionAssessment': '',
-            'created_at': '',
-            'updated_at': '',
-            'deleted_at': null
+            'FinalCompletionAssessment': ''
         },
         getStatusOptions: function (bReturnHtml) {
             let options = [

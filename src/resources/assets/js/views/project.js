@@ -69,6 +69,10 @@
         },
         deleteCheckedRows: function (e) {
             e.preventDefault();
+            if ($(e.target).hasClass('disabled')){
+                growl('Please check a box to delete a project.');
+                return;
+            }
             bootbox.confirm("Do you really want to delete the checked projects?", function (bConfirmed) {
                 if (bConfirmed){
                     let selectedModels = App.Views.projectsView.backgrid.getSelectedModels();
@@ -189,7 +193,7 @@
 
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
             // Show a popup of the text that has been truncated
-            $gridContainer.find('td.renderable').popover({
+            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').popover({
                 placement:'auto right',
                 padding: 0,
                 container: 'body',
@@ -198,8 +202,9 @@
                 }
             });
             // hide popover if it is not overflown
-            $gridContainer.find('td.renderable').on('show.bs.popover',function () {
+            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover',function () {
                 let element = this;
+
                 let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
                 if (!bOverflown) {
                     $gridContainer.find('td.renderable').popover('hide')
@@ -233,7 +238,7 @@
                 window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
                 _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector, 'last chosen ProjectID:'+$('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:'+ProjectID);
                 // Refresh tabs on new row select
-                App.Models.projectModel.url = 'project/' + ProjectID;
+                App.Models.projectModel.url = '/admin/project/' + ProjectID;
                 App.Models.projectModel.fetch({reset: true});
             }
 
@@ -242,7 +247,7 @@
             if (!_.isEmpty(e.changed)){
                 //'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector
                 _log('App.Views.Projects.update.event', e,'updating project model:'+ e.attributes.ProjectID,e);
-                App.Models.projectModel.url = 'project/' + e.attributes.ProjectID;
+                App.Models.projectModel.url = '/admin/project/' + e.attributes.ProjectID;
                 App.Models.projectModel.save(_.extend({ProjectID: e.attributes.ProjectID}, e.changed),
                     {
                         success: function (model, response, options) {
@@ -273,7 +278,7 @@
                 primarySkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
                 statusOptions: App.Models.projectModel.getStatusOptions(true),
                 projectSendOptions: App.Models.projectModel.getSendOptions(true),
-                budgetSourceOptions: App.Models.budgetModel.getSourceOptions(true),
+                budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
                 testString: 'test',
                 testNumber: '1',
                 testFloat: '1.00'
@@ -290,13 +295,13 @@
             // Need to add some default values to the attributes array for fields we do not show in the create form
             attributes['Attachments'] = '';
             _log('App.Views.Project.create',  attributes, this.model, App.PageableCollections.projectCollection);
-            let newModel = new App.Models.Budget();
-            newModel.url = 'project';
+            let newModel = new App.Models.Project();
+            newModel.url = '/admin/project';
             newModel.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = 'project/list/' + App.Models.projectModel.get('SiteStatusID');
+                        self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
@@ -321,11 +326,11 @@
             $.ajax({
                 type: "POST",
                 dataType: "json",
-                url: 'project/batch/destroy',
+                url: '/admin/project/batch/destroy',
                 data: attributes,
                 success: function (response) {
                     window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.collection.url = 'project/list/' + App.Models.projectModel.get('SiteStatusID');
+                    self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
                     $.when(
                         self.collection.fetch({reset: true})
                     ).then(function () {

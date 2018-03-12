@@ -2,9 +2,8 @@
 
     App.Models.SiteStatus = Backbone.Model.extend({
         idAttribute: "SiteStatusID",
-        url: 'sitestatus',
+        url: '/admin/sitestatus',
         defaults: {
-            'SiteStatusID': '',
             'SiteID': '',
             'Year': '',
             'ProjectDescriptionComplete': '',
@@ -12,9 +11,7 @@
             'VolunteerEstimationComplete': '',
             'VolunteerAssignmentComplete': '',
             'BudgetActualComplete': '',
-            'EstimationComments': '',
-            'created_at': '',
-            'updated_at': ''
+            'EstimationComments': ''
         },
         getData: function () {
             return this.get('SiteID') + 'is TBD.';

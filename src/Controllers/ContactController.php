@@ -2,6 +2,7 @@
 
     namespace Dhayakawa\SpringIntoAction\Controllers;
 
+    use Dhayakawa\SpringIntoAction\Models\Project;
     use Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Dhayakawa\SpringIntoAction\Models\Contact;
     use Illuminate\Http\Request;

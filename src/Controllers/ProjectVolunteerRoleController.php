@@ -35,7 +35,21 @@
          * @return \Illuminate\Http\Response
          */
         public function store(Request $request) {
-            //
+            $params = $request->all();
+            $model = new ProjectVolunteerRole;
+            $model->fill(['VolunteerID' => $params['selectVolunteerID'], 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID'], 'Status' => $params['Status']]);
+            $success = $model->save();
+
+            if(!isset($success)) {
+                $response = ['success' => false, 'msg' => 'Project Lead Addition Not Implemented Yet.'];
+            } elseif($success) {
+                $response = ['success' => true, 'msg' => 'Project Lead Addition Succeeded.'];
+            } else {
+                $response = ['success' => false, 'msg' => 'Project Lead Addition Failed.'];
+            }
+
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
         /**
@@ -77,15 +91,28 @@
          * @return \Illuminate\Http\Response
          */
         public function update(Request $request, $id) {
+            $batchSuccess = true;
+            $failMsg = '';
+            $params = $request->all();
+            $projectVolunteerRoleModel  = new ProjectVolunteerRole;
+            $projectVolunteerRoleModel->fill(['VolunteerID' => $params['VolunteerID'], 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID'], 'Status' => $params['ProjectVolunteerRoleStatus']]);
+            $success = $projectVolunteerRoleModel->save();
+            if(!$success) {
+                $batchSuccess = false;
+                $failMsg      .= ' Project Volunteer Role update failed. ';
+            }
             $model = Volunteer::findOrFail($id);
-
             $model->fill($request->only($model->getFillable()));
             $success = $model->save();
-
+            if(!$success) {
+                $batchSuccess = false;
+                $failMsg      .= ' Volunteer update failed. ';
+            }
+            $success = $batchSuccess;
             if($success) {
                 $response = ['success' => true, 'msg' => 'Volunteer Update Succeeded.'];
             } else {
-                $response = ['success' => false, 'msg' => 'Volunteer Update Failed.'];
+                $response = ['success' => false, 'msg' => 'Volunteer Update Failed.' . $failMsg];
             }
 
 

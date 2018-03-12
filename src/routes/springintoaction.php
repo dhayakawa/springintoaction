@@ -42,16 +42,11 @@
         //Route::resource('projects', 'ProjectsController');
         Route::put('project/{ProjectID}', ['as' => 'project.update', 'uses' => 'ProjectsController@update']);
         Route::post('project', ['as' => 'project.store', 'uses' => 'ProjectsController@store']);
-        Route::get('project/list/{SiteStatusID}', ['as' => 'project.list', 'uses' => 'ProjectsController@getSiteProjects']);
+        Route::get('project/all/{SiteStatusID}', ['as' => 'project.list', 'uses' => 'ProjectsController@getSiteProjects']);
         Route::get('project/{ProjectID}', ['as' => 'project.get', 'uses' => 'ProjectsController@getProject']);
         Route::post('project/list/upload', ['as' => 'project.upload', 'uses' => 'ProjectsController@uploadList']);
         Route::post('project/batch/destroy', ['as' => 'project.batch.destroy', 'uses' => 'ProjectsController@batchDestroy']);
 
-        // These routes get the arrays for the tabs
-        Route::get('project/budget/{ProjectID}', ['as' => 'project.budget', 'uses' => 'ProjectsController@getBudget']);
-        Route::get('project/contact/{ProjectID}', ['as' => 'project.contact', 'uses' => 'ProjectsController@getContact']);
-        Route::get('project/project_leads/{ProjectID}', ['as' => 'project.project_leads', 'uses' => 'ProjectsController@getLeadVolunteers']);
-        Route::get('project/volunteers/{ProjectID}', ['as' => 'project.volunteers', 'uses' => 'ProjectsController@getVolunteers']);
 
         //Route::resource('site', 'SiteController');
         Route::get('site/{SiteID}', ['as' => 'site', 'uses' => 'SiteController@show']);
@@ -67,32 +62,53 @@
         // Gets list for site years dropdown
         Route::get('sitestatus/all/site/years/{SiteID}', ['as' => 'sitestatus.all.site.years', 'uses' => 'SiteStatusController@getAllSiteYears']);
 
-        //Route::resource('contact', 'ContactController');
-        Route::get('contact/{ContactID}', ['as' => 'contact', 'uses' => 'ContactController@show']);
-        Route::put('contact', ['as' => 'contact.update', 'uses' => 'ContactController@update']);
-        Route::post('contact/{ContactID}', ['as' => 'contact.create', 'uses' => 'ContactController@store']);
-
-        //Route::resource('budget', 'BudgetController');
-        Route::get('budget/{BudgetID}', ['as' => 'budget', 'uses' => 'BudgetController@show']);
-        Route::put('budget/{BudgetID}', ['as' => 'budget.update', 'uses' => 'BudgetController@update']);
-        Route::post('budget', ['as' => 'budget.create', 'uses' => 'BudgetController@store']);
-
         //Route::resource('volunteer', 'VolunteerController');
         Route::get('volunteer/{VolunteerID}', ['as' => 'volunteer', 'uses' => 'VolunteerController@show']);
         Route::get('volunteer/all', ['as' => 'volunteer.all', 'uses' => 'VolunteerController@getAll']);
         Route::put('volunteer/{VolunteerID}', ['as' => 'volunteer.update', 'uses' => 'VolunteerController@update']);
         Route::post('volunteer', ['as' => 'volunteer.create', 'uses' => 'VolunteerController@store']);
 
+        //Route::resource('contact', 'ContactController');
+        Route::get('contact/{ContactID}', ['as' => 'contact', 'uses' => 'ContactController@show']);
+        Route::put('contact', ['as' => 'contact.update', 'uses' => 'ContactController@update']);
+        Route::post('contact', ['as' => 'contact.create', 'uses' => 'ContactController@store']);
+        Route::post('contact/batch/destroy', ['as' => 'contact.batch.destroy', 'uses' => 'ContactController@batchDestroyContacts']);
 
-        Route::post('volunteer/batch/store', ['as' => 'project_volunteer.batch.store', 'uses' => 'ProjectVolunteerController@batchStore']);
-        Route::post('volunteer/batch/destroy', ['as' => 'project_volunteer.batch.destroy', 'uses' => 'ProjectVolunteerController@batchDestroy']);
-        Route::get('project_volunteer/unassigned/{SiteID}/{Year}', ['as' => 'project_volunteer.unassigned', 'uses' => 'ProjectVolunteerController@getUnassigned']);
+        /**
+         * Project Tab routes
+         */
+        // These routes can get the arrays for the tabs
+        Route::get('project/budgets/{ProjectID}', ['as' => 'project.budgets', 'uses' => 'ProjectsController@getBudgets']);
+        Route::get('project/contacts/{ProjectID}', ['as' => 'project.contacts', 'uses' => 'ProjectsController@getContacts']);
+        Route::get('project/project_leads/{ProjectID}', ['as' => 'project.project_leads', 'uses' => 'ProjectsController@getLeadVolunteers']);
+        Route::get('project/volunteers/{ProjectID}', ['as' => 'project.volunteers', 'uses' => 'ProjectsController@getVolunteers']);
 
         //Route::resource('lead_volunteer', 'ProjectVolunteerRoleController');
-        Route::get('project_lead/all', ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getProjectLeads']);
+        Route::get('project_lead/all', ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getAllProjectLeads']);
+        Route::get('project_lead/all/{ProjectID}', ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getProjectLeads']);
         Route::get('project_lead/{VolunteerID}', ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@show']);
         Route::put('project_lead/{VolunteerID}', ['as' => 'project_lead.update', 'uses' => 'ProjectVolunteerRoleController@update']);
         Route::post('project_lead', ['as' => 'project_lead.create', 'uses' => 'ProjectVolunteerRoleController@store']);
-        //Route::post('project_lead/batch/destroy', ['as' => 'project_lead.batch.destroy', 'uses' => 'ProjectVolunteerController@batchDestroy']);
+        Route::post('project_lead/batch/destroy', ['as' => 'project_lead.batch.destroy', 'uses' => 'ProjectVolunteerController@batchDestroy']);
+
+        //Route::resource('budget', 'BudgetController');
+        Route::get('project_budget/{BudgetID}', ['as' => 'project_budget', 'uses' => 'BudgetController@show']);
+        Route::get('project_budget/all/{ProjectID}', ['as' => 'project_budget', 'uses' => 'BudgetController@getProjectBudgets']);
+        Route::put('project_budget/{BudgetID}', ['as' => 'project_budget.update', 'uses' => 'BudgetController@update']);
+        Route::post('project_budget', ['as' => 'project_budget.create', 'uses' => 'BudgetController@store']);
+
+        //Route::resource('project_contact', 'ProjectContactController');
+        Route::get('project_contact/{ProjectContactID}', ['as' => 'project_contact', 'uses' => 'ProjectContactController@show']);
+        Route::get('project_contact/all/{ProjectID}', ['as' => 'project_contact', 'uses' => 'ProjectContactController@getProjectContacts']);
+        Route::put('project_contact/{ProjectContactID}', ['as' => 'project_contact.update', 'uses' => 'ProjectContactController@update']);
+        Route::post('project_contact', ['as' => 'project_contact.create', 'uses' => 'ProjectContactController@store']);
+        Route::post('project_contact/batch/destroy', ['as' => 'project_contact.batch.destroy', 'uses' => 'ProjectContactController@batchDestroyProjectContacts']);
+
+        Route::post('project_volunteer/batch/store', ['as' => 'project_volunteer.batch.store', 'uses' => 'ProjectVolunteerController@batchStore']);
+        Route::post('project_volunteer/batch/destroy', ['as' => 'project_volunteer.batch.destroy', 'uses' => 'ProjectVolunteerController@batchDestroy']);
+        Route::get('project_volunteer/unassigned/{SiteID}/{Year}', ['as' => 'project_volunteer.unassigned', 'uses' => 'ProjectVolunteerController@getUnassigned']);
+        Route::put('project_volunteer/volunteer/{VolunteerID}', ['as' => 'project_volunteer.update', 'uses' => 'VolunteerController@update']);
+        Route::get('project_volunteer/volunteer/{VolunteerID}', ['as' => 'project_volunteer', 'uses' => 'VolunteerController@show']);
+        Route::get('project_volunteer/all/{ProjectID}', ['as' => 'project_volunteer', 'uses' => 'VolunteerController@getProjectVolunteers']);
 
     });

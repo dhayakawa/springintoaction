@@ -39,9 +39,9 @@
         setSelectedId: function (SiteID) {
             _log('App.Views.Sites.setSelectedId.event', 'new site selected', SiteID);
             // fetch new site model
-            App.Models.siteModel.url = 'site/' + SiteID;
+            App.Models.siteModel.url = '/admin/site/' + SiteID;
             App.Models.siteModel.fetch();
-            App.Collections.siteYearsDropDownCollection.url = 'sitestatus/all/site/years/' + SiteID;
+            App.Collections.siteYearsDropDownCollection.url = '/admin/sitestatus/all/site/years/' + SiteID;
             App.Collections.siteYearsDropDownCollection.fetch({reset: true});
         }
     });
@@ -95,11 +95,11 @@
                 window.ajaxWaiting('show','.projects-backgrid-wrapper');
                 window.ajaxWaiting('show','.tab-content.backgrid-wrapper');
                 // fetch new sitestatus
-                App.Models.siteStatusModel.url = 'sitestatus/' + SiteStatusID;
+                App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
                 App.Models.siteStatusModel.fetch({reset: true});
 
                 // fetch new product collection
-                App.PageableCollections.projectCollection.url = 'project/list/' + SiteStatusID;
+                App.PageableCollections.projectCollection.url = '/admin/project/list/' + SiteStatusID;
                 App.PageableCollections.projectCollection.fetch({
                     reset: true,
                     success: function (model, response, options) {
@@ -137,7 +137,7 @@
 
             let attrName = $(e.target).attr('name');
             let attrValue = $(e.target).val();
-            this.model.url = 'site/' + this.model.get('SiteID');
+            this.model.url = '/admin/site/' + this.model.get('SiteID');
             this.model.save({[attrName]: attrValue},
                 {
                     success: function (model, response, options) {
@@ -169,12 +169,12 @@
             attributes = _.omit(attributes, 'SiteID');
             _log('App.Views.Site.create', attributes, this.model);
             let newModel = new App.Models.Site();
-            newModel.url = 'site';
+            newModel.url = '/admin/site';
             newModel.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        App.Collections.sitesDropDownCollection.url = 'site/list/all';
+                        App.Collections.sitesDropDownCollection.url = '/admin/site/list/all';
                         $.when(
                             App.Collections.sitesDropDownCollection.fetch({reset: true})
                         ).then(function () {
@@ -196,7 +196,7 @@
             self.model.destroy({
                 success: function (model, response, options) {
                     window.growl(response.msg, response.success ? 'success' : 'error');
-                    App.Collections.sitesDropDownCollection.url = 'site/list/all';
+                    App.Collections.sitesDropDownCollection.url = '/admin/site/list/all';
                     $.when(
                         App.Collections.sitesDropDownCollection.fetch({reset: true})
                     ).then(function () {
@@ -236,7 +236,7 @@
                 attrValue = selected ? 1 : 0;
             }
             //console.log('attrType:' + attrType, 'selected: ', selected, 'attrName:' + attrName, 'value: ', attrValue);
-            this.model.url = 'site/' + this.model.get('SiteStatusID');
+            this.model.url = '/admin/sitestatus/' + this.model.get('SiteStatusID');
             this.model.save({[attrName]: attrValue},
                 {
                     success: function (model, response, options) {

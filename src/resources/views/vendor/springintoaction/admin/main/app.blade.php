@@ -15,25 +15,40 @@
      */
     var appInitialData = @json($appInitialData);
 
+
     App.Models.siteModel = new App.Models.Site(@json($appInitialData['site']));
     App.Models.siteStatusModel = new App.Models.SiteStatus(@json($appInitialData['siteStatus']));
     App.Models.projectModel = new App.Models.Project(@json($appInitialData['project']));
+    /**
+     * Models for the contacts and volunteer management
+     */
     App.Models.contactModel = new App.Models.Contact(@json(current($appInitialData['contacts'])));
-    App.Models.projectContactModel = new App.Models.Contact(@json(current($appInitialData['project_contacts'])));
     App.Models.volunteerModel = new App.Models.Volunteer(@json(current($appInitialData['project_volunteers'])));
+    /**
+     * For the initial site data load, the project tab models are set to the first item in the array
+     */
+    App.Models.projectContactModel = new App.Models.ProjectContact(@json(current($appInitialData['project_contacts'])));
     App.Models.projectLeadModel = new App.Models.Volunteer(@json(current($appInitialData['project_leads'])));
-    App.Models.budgetModel = new App.Models.Budget(@json(current($appInitialData['project_budgets'])));
+    App.Models.projectBudgetModel = new App.Models.Budget(@json(current($appInitialData['project_budgets'])));
     App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
 
+    /**
+     * Global var defining the project tab models
+     *
+     */
     App.Vars.currentTabModels =
         {
             project_lead: App.Models.projectLeadModel,
-            budget: App.Models.budgetModel,
-            contact: App.Models.contactModel,
-            volunteer: App.Models.volunteerModel
+            project_budget: App.Models.projectBudgetModel,
+            project_contact: App.Models.projectContactModel,
+            project_volunteer: App.Models.volunteerModel
         }
     ;
+
+    /**
+     * Global grid select2 cell definitions used by more than one grid collection
+     */
     App.Vars.yesNoCell = Backgrid.Extension.Select2Cell.extend({
         editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
@@ -68,7 +83,7 @@
             multiple: true
         },
         optionValues: [{
-            values: App.Models.budgetModel.getSourceOptions(false)
+            values: App.Models.projectBudgetModel.getSourceOptions(false)
         }],
         formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
 
@@ -123,22 +138,28 @@
     App.Collections.sitesDropDownCollection = new App.Collections.Site(@json($appInitialData['sites']));
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear(@json($appInitialData['site_years']));
     App.PageableCollections.projectCollection = new App.PageableCollections.Project(@json($appInitialData['projects']));
-    App.PageableCollections.contactsCollection = new App.PageableCollections.Contact(@json($appInitialData['contacts']));
-    App.PageableCollections.volunteersCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_volunteers']));
-    App.PageableCollections.projectLeadCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_leads']));
-    App.PageableCollections.budgetCollection = new App.PageableCollections.Budget(@json($appInitialData['project_budgets']));
-    App.PageableCollections.projectContactCollection = new App.PageableCollections.Contact(@json($appInitialData['project_contacts']));
-    // This is for the drop down
-    App.Collections.volunteersCollection = new App.Collections.Volunteer(@json($appInitialData['volunteers']));
+
+    // project tabs
+    App.PageableCollections.projectLeadsCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_leads']));
+    App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget(@json($appInitialData['project_budgets']));
+    App.PageableCollections.projectContactsCollection = new App.PageableCollections.Contact(@json($appInitialData['project_contacts']));
+    App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_volunteers']));
+
+    // @App.Collections.projectVolunteersCollection- This is for the drop down in the select new project lead form
+    App.Collections.projectVolunteersCollection = new App.Collections.Volunteer(@json($appInitialData['volunteers']));
+    // @App.Collections.contactsManagementCollection- This is for the drop down in the select new project contact form
     App.Collections.contactsManagementCollection = new App.Collections.Contact(@json($appInitialData['all_contacts']));
 
     // This is for the volunteer management view
     App.PageableCollections.volunteersManagementCollection = new App.PageableCollections.Volunteer(@json($appInitialData['volunteers']));
     App.PageableCollections.contactsManagementCollection = new App.PageableCollections.Contact(@json($appInitialData['all_contacts']));
+    // @App.PageableCollections.backGridFiltersPanelCollection - filter for volunteer collection
     App.PageableCollections.backGridFiltersPanelCollection = App.PageableCollections.volunteersManagementCollection;
+    // This is for the project volunteers tab
     App.PageableCollections.unassignedProjectVolunteersCollection = new App.PageableCollections.Volunteer();
-    App.PageableCollections.unassignedProjectVolunteersCollection.url = 'project_volunteer/unassigned/' + App.Models.siteStatusModel.get('SiteID') + '/' + App.Models.siteStatusModel.get('Year');
+    App.PageableCollections.unassignedProjectVolunteersCollection.url = '/admin/project_volunteer/unassigned/' + App.Models.siteStatusModel.get('SiteID') + '/' + App.Models.siteStatusModel.get('Year');
     App.PageableCollections.unassignedProjectVolunteersCollection.fetch({reset: true});
+    // Predefining the view so they exist on load
     App.Views.siteProjectTabsView = {};
     App.Views.projectsView = {};
 </script>
@@ -224,9 +245,9 @@
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active"><a href="#project_lead" aria-controls="project_lead" role="tab" data-toggle="tab">Project Lead Volunteers</a></li>
-                    <li role="presentation"><a href="#budget" aria-controls="budget" role="tab" data-toggle="tab">Budget Allocation</a></li>
-                    <li role="presentation"><a href="#contact" aria-controls="contact" role="tab" data-toggle="tab">Project Site Contacts</a></li>
-                    <li role="presentation"><a href="#volunteer" aria-controls="volunteer" role="tab" data-toggle="tab">Volunteers</a></li>
+                    <li role="presentation"><a href="#project_budget" aria-controls="project_budget" role="tab" data-toggle="tab">Budget Allocation</a></li>
+                    <li role="presentation"><a href="#project_contact" aria-controls="project_contact" role="tab" data-toggle="tab">Project Site Contacts</a></li>
+                    <li role="presentation"><a href="#project_volunteer" aria-controls="project_volunteer" role="tab" data-toggle="tab">Volunteers</a></li>
                 </ul>
 
                 <!-- Tab panes -->
@@ -234,13 +255,13 @@
                     <div role="tabpanel" class="tab-pane active" id="project_lead">
                         <div class="project-leads-backgrid-wrapper"></div>
                     </div>
-                    <div role="tabpanel" class="tab-pane" id="budget">
+                    <div role="tabpanel" class="tab-pane" id="project_budget">
                         <div class="project-budget-backgrid-wrapper"></div>
                     </div>
-                    <div role="tabpanel" class="tab-pane" id="contact">
+                    <div role="tabpanel" class="tab-pane" id="project_contact">
                         <div class="project-contacts-backgrid-wrapper"></div>
                     </div>
-                    <div role="tabpanel" class="tab-pane" id="volunteer">
+                    <div role="tabpanel" class="tab-pane" id="project_volunteer">
                         <div class="project-volunteers-backgrid-wrapper"></div>
                     </div>
                 </div>
@@ -290,6 +311,7 @@
         </div>
     </div>
 </div>
+
 <script id="addProjectVolunteerTemplate" type="text/template">
     <form name="addProjectVolunteer">
         <input type="hidden" name="ProjectID" value="<%= ProjectID %>"/>
@@ -385,7 +407,7 @@
 <script id="projectGridManagerContainerToolbarTemplate" type="text/template">
     <div class="pull-right project-pagination-controls"></div>
     <button id="btnAddProject" type="button" class="btn btn-xs btn-primary">Add Project</button>
-    <button id="btnDeleteCheckedProjects" type="button" class="btn btn-xs btn-danger">Delete Chosen Projects</button>
+    <button id="btnDeleteCheckedProjects" type="button" class="disabled btn btn-xs btn-danger">Delete Chosen Projects</button>
     <button id="btnClearStored" type="button" class="btn btn-xs btn-default">Reset Columns</button>
     <div class="file-upload-container">
         <span id="file_chosen_projects_import" class="pull-right file_chosen"></span>
@@ -407,7 +429,7 @@
     <div data-tab-name="<%= TabName %>" class="<%= TabName %> tabButtonPane" style="display:none">
         <div class="pull-right tab-pagination-controls"></div>
         <button type="button" class="btnTabAdd btn btn-xs btn-primary">Add New <%= btnLabel %></button>
-        <button type="button" class="btnTabDeleteChecked btn btn-xs btn-danger">Delete <%= btnLabel %> Chosen</button>
+        <button type="button" class="btnTabDeleteChecked disabled btn btn-xs btn-danger">Delete <%= btnLabel %> Chosen</button>
         <button type="button" class="btnTabClearStored btn btn-xs btn-default">Reset <%= btnLabel %> Columns</button>
         <div class="columnmanager-visibilitycontrol-container"></div>
     </div>
@@ -469,6 +491,17 @@
             <label for="txtAreaComments">Comments</label>
             <textarea name="Comments" class="form-control" id="txtAreaComments"></textarea>
         </div>
+    </form>
+</script>
+<script id="newProjectContactTemplate" type="text/template">
+    <form name="newContact">
+        <input type="hidden" name="ProjectID" value="<%= ProjectID %>"/>
+        <input type="hidden" name="SiteID" value="<%= SiteID %>"/>
+        <div class="form-group">
+            <label for="ContactID">Site Contact</label>
+            <%= contactsSelect %>
+        </div>
+        <small>If the contact is not in this list, you will need to create a new contact in the Contacts Management panel.</small>
     </form>
 </script>
 <script id="newContactTemplate" type="text/template">

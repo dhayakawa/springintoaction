@@ -2,7 +2,7 @@
     App.Views.ProjectTab = Backbone.View.extend({
         initialize: function (options) {
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy');
+            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy','toggleDeleteBtn');
             this.rowBgColor = 'lightYellow';
             // apparently backgrid is managing the collection reset thing
             //this.collection.bind('reset', this.render, this);
@@ -84,6 +84,11 @@
             this.backgrid.collection.on('backgrid:edited', function (e) {
                 self.update(e);
             });
+            this.backgrid.collection.on('backgrid:selected', function (e) {
+                self.toggleDeleteBtn(e);
+            });
+
+            _log('App.Views.ProjectTab.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
             // Set the current model id on the tab so we can reference it in other views
             $('#' + this.options.tab).data('current-model-id', this.model.get(this.model.idAttribute));
 
@@ -112,7 +117,7 @@
 
             if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') != currentModelID) {
                 // Refresh tabs on new row select
-                this.model.url = self.options.tab + '/' + currentModelID;
+                this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.fetch({reset: true});
             }
 
@@ -121,8 +126,10 @@
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
-                this.model.url = self.options.tab + '/' + currentModelID;
-                this.model.save(_.extend({[self.model.idAttribute]: currentModelID}, e.changed),
+                let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
+                _log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
+                this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
+                this.model.save(attributes ,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
@@ -139,13 +146,20 @@
         create: function (attributes) {
             var self = this;
             _log('App.Views.ProjectTab.create', self.options.tab, attributes, this.model);
-            this.model.url = self.options.tab;
+            this.model.url = '/admin/' + self.options.tab;
             this.model.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = 'project/' + self.options.tab + 's/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
-                        self.collection.fetch({reset: true});
+                        self.collection.url = '/admin/' + self.options.tab + '/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
+
+                        $.when(
+                            self.collection.fetch({reset: true})
+                        ).then(function () {
+                            _log('App.Views.ProjectTab.create.event', self.options.tab + ' collection fetch promise done');
+                            window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                        });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error')
@@ -155,9 +169,15 @@
         getModalForm: function () {
             return '';
         },
+        toggleDeleteBtn: function (e) {
+            var self = this;
+            let selectedModels = self.backgrid.getSelectedModels();
+            _log('App.Views.ProjectTab.toggleDeleteBtn.event', self.options.tab, selectedModels.length, e);
+            let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
+            App.Views.siteProjectTabsView.trigger('toggle-delete-btn', {toggle: toggleState, tab: self.options.tab});
+        },
         destroy: function (attributes) {
             var self = this;
-            e.preventDefault();
 
             bootbox.confirm("Do you really want to delete the checked " + self.options.tab + "s?", function (bConfirmed) {
                 if (bConfirmed) {
@@ -169,11 +189,11 @@
                     $.ajax({
                         type: "POST",
                         dataType: "json",
-                        url: self.options.tab + '/batch/destroy',
+                        url: '/admin/' + self.options.tab + '/batch/destroy',
                         data: attributes,
                         success: function (response) {
                             window.growl(response.msg, response.success ? 'success' : 'error');
-                            self.collection.url = 'project/' + self.options.tab + 's/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                            self.collection.url = '/admin/' + self.options.tab + '/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
                             self.collection.fetch({reset: true});
                         },
                         fail: function (response) {

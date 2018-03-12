@@ -7,7 +7,7 @@
                 el: '',
                 attributes: {id: 'VolunteerID', name: 'selectVolunteerID', class: 'form-control'},
                 buildHTML: true,
-                collection: App.Collections.volunteersCollection,
+                collection: App.Collections.projectVolunteersCollection,
                 optionValueModelAttrName: 'VolunteerID',
                 optionLabelModelAttrName: ['LastName', 'FirstName']
             });
@@ -20,7 +20,7 @@
             return template(tplVars);
         }
     });
-    App.Views.Volunteer = App.Views.ProjectTab.fullExtend({
+    App.Views.ProjectVolunteer = App.Views.ProjectTab.fullExtend({
         getModalForm: function () {
             let template = window.template('addProjectVolunteerTemplate');
             let form = template({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)});
@@ -100,14 +100,21 @@
         create: function (attributes) {
             let self = this;
             let model = App.Models.projectVolunteerModel.clone().clear({silent: true});
-            model.url = 'volunteer/batch/store';
-            _log('App.Views.Volunteer.create', attributes, model);
+            model.url = '/admin/project_volunteer/batch/store';
+            _log('App.Views.ProjectVolunteer.create', attributes, model);
             model.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = 'project/volunteers/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
-                        self.collection.fetch({reset: true});
+                        self.collection.url = '/admin/project_volunteer/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
+
+                        $.when(
+                            self.collection.fetch({reset: true})
+                        ).then(function () {
+                            _log('App.Views.ProjectVolunteer.create.event', 'project_volunteers collection fetch promise done');
+                            window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                        });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error')

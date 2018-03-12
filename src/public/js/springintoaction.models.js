@@ -1,8 +1,7 @@
 (function (App) {
     App.Models.Budget = Backbone.Model.extend({
         idAttribute: "BudgetID",
-        url: 'budget',
-        urlRoot: '/budget',
+        url: '/admin/project_budget',
         defaults: {
             'ProjectID': '',
             'BudgetSource': '',
@@ -53,9 +52,8 @@
 (function (App) {
     App.Models.Contact = Backbone.Model.extend({
         idAttribute: "ContactID",
-        url: 'contact',
+        url: '/admin/contact',
         defaults: {
-            'ContactID': '',
             'SiteID': '',
             'Active': '',
             'FirstName': '',
@@ -63,9 +61,19 @@
             'Title': '',
             'Email': '',
             'Phone': '',
-            'ContactType': '',
-            'created_at': '',
-            'updated_at': ''
+            'ContactType': ''
+        }
+    });
+
+})(window.App);
+
+(function (App) {
+    App.Models.ProjectContact = Backbone.Model.extend({
+        idAttribute: "ProjectContactID",
+        url: '/admin/project_contact',
+        defaults: {
+            'ProjectID': '',
+            'ContactID': ''
         }
     });
 })(window.App);
@@ -73,12 +81,10 @@
 (function (App) {
     App.Models.Project = Backbone.Model.extend({
         idAttribute: "ProjectID",
-        url: 'project',
+        url: '/admin/project',
         defaults: {
-            'ProjectID': '',
             'SiteStatusID': '',
             'Active': '',
-            'ContactID': '',
             'SequenceNumber': '',
             'OriginalRequest': '',
             'ProjectDescription': '',
@@ -114,10 +120,7 @@
             'NeedSIATShirtsForPC': '',
             'ProjectSend': '',
             'FinalCompletionStatus': '',
-            'FinalCompletionAssessment': '',
-            'created_at': '',
-            'updated_at': '',
-            'deleted_at': null
+            'FinalCompletionAssessment': ''
         },
         getStatusOptions: function (bReturnHtml) {
             let options = [
@@ -190,10 +193,9 @@
 
 (function (App) {
     App.Models.ProjectRole = Backbone.Model.extend({
-        url: 'project_role',
+        url: '/admin/project_role',
         idAttribute: "ProjectRoleID",
         defaults: {
-            'ProjectRoleID': '',
             'Role': '',
             'DisplaySequence': ''
         }
@@ -202,10 +204,9 @@
 
 (function (App) {
     App.Models.ProjectVolunteer = Backbone.Model.extend({
-        url: 'project_volunteer',
+        url: '/admin/project_volunteer',
         idAttribute: "ProjectVolunteerID",
         defaults: {
-            'ProjectVolunteerID': '',
             'VolunteerID': '',
             'ProjectID': ''
         }
@@ -215,7 +216,7 @@
 (function (App) {
     App.Models.Site = Backbone.Model.extend({
         idAttribute: "SiteID",
-        url: 'site',
+        url: '/admin/site',
         defaults: {
             'SiteName': '',
             'EquipmentLocation': '',
@@ -246,9 +247,8 @@
 
     App.Models.SiteStatus = Backbone.Model.extend({
         idAttribute: "SiteStatusID",
-        url: 'sitestatus',
+        url: '/admin/sitestatus',
         defaults: {
-            'SiteStatusID': '',
             'SiteID': '',
             'Year': '',
             'ProjectDescriptionComplete': '',
@@ -256,9 +256,7 @@
             'VolunteerEstimationComplete': '',
             'VolunteerAssignmentComplete': '',
             'BudgetActualComplete': '',
-            'EstimationComments': '',
-            'created_at': '',
-            'updated_at': ''
+            'EstimationComments': ''
         },
         getData: function () {
             return this.get('SiteID') + 'is TBD.';
@@ -272,10 +270,9 @@
 (function (App) {
     App.Models.Volunteer = Backbone.Model.extend({
         idAttribute: "VolunteerID",
-        url: 'volunteer',
+        url: '/admin/volunteer',
         defaults: {
-            'VolunteerID': '',
-            'Active': '',
+            'Active': 1,
             'LastName': '',
             'FirstName': '',
             'MobilePhoneNumber': '',
@@ -312,9 +309,7 @@
             'Equipment': '',
             'TeamLeaderWilling': '',
             'Church': '',
-            'AssignmentInformationSendStatus': '',
-            'created_at': '',
-            'updated_at': ''
+            'AssignmentInformationSendStatus': ''
         },
         getStatusOptions: function (bReturnHtml) {
             let options = [
@@ -385,7 +380,7 @@
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
@@ -443,17 +438,14 @@
 
 (function (App) {
     App.Models.ProjectVolunteerRole = Backbone.Model.extend({
-        url: 'project_lead',
+        url: '/admin/project_lead',
         idAttribute: "ProjectVolunteerRoleID",
         defaults: {
-            'ProjectVolunteerRoleID': '',
             'ProjectID': '',
             'VolunteerID': '',
             'ProjectRoleID': '',
             'Comments': '',
-            'Status': '',
-            'created_at': '',
-            'updated_at': ''
+            'Status': ''
         }
     });
 })(window.App);

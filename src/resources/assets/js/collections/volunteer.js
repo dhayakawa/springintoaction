@@ -448,25 +448,31 @@
             resizeable: true,
             orderable: true,
             width: "250"
-        },
-        {
-            name: "created_at",
-            label: "created_at",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "updated_at",
-            label: "updated_at",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
         }
-
     ];
 
+    App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
+    let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email'];
+    _.each(sharedCells,  function (value, key) {
+        let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
+        if (value === 'Status') {
+            cellDefinition.name = 'ProjectVolunteerRoleStatus';
+        }
+        App.Vars.volunteerLeadsBackgridColumnDefinitions.push(cellDefinition);
+        if (value === 'Active'){
+            App.Vars.volunteerLeadsBackgridColumnDefinitions.push({
+                name: "ProjectRoleID",
+                label: "Project Lead Role",
+                cell: VolunteerRoleCell,
+                resizeable: true,
+                orderable: true,
+                width: "250",
+                filterType: "string"
+            });
+        }
+    });
+
+
     _log('App.Vars.CollectionsGroup', 'App.Vars.volunteersBackgridColumnDefinitions:', App.Vars.volunteersBackgridColumnDefinitions);
+    _log('App.Vars.CollectionsGroup', 'App.Vars.volunteerLeadsBackgridColumnDefinitions:', App.Vars.volunteerLeadsBackgridColumnDefinitions);
 })(window.App);

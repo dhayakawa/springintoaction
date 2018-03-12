@@ -29,7 +29,6 @@
         protected $fillable = [
             'SiteStatusID',
             'Active',
-            'ContactID',
             'SequenceNumber',
             'OriginalRequest',
             'ProjectDescription',
@@ -70,10 +69,9 @@
 
 
         private $defaultRecordData = [
-            'ProjectID' => 0,
+            'ProjectID' => null,
             'SiteStatusID' => 0,
             'Active' => 0,
-            'ContactID' => null,
             'SequenceNumber' => 99999,
             'OriginalRequest' => '',
             'ProjectDescription' => '',
@@ -109,9 +107,7 @@
             'NeedSIATShirtsForPC' => 0,
             'ProjectSend' => 'Not Ready',
             'FinalCompletionStatus' => 0,
-            'FinalCompletionAssessment' => '',
-            'created_at' => '',
-            'updated_at' => ''];
+            'FinalCompletionAssessment' => ''];
 
         /**
          * @param null|array $defaults
@@ -127,12 +123,11 @@
         }
 
         public function contacts() {
-            return $this->hasMany('Dhayakawa\SpringIntoAction\Models\Contact');
+            return $this->belongsToMany('Dhayakawa\SpringIntoAction\Models\Contact','project_contacts','ProjectID','ContactID')->as('project_contacts');
         }
 
         public function budgets() {
             return $this->hasMany('Dhayakawa\SpringIntoAction\Models\Budget', 'ProjectID', 'ProjectID');
-            //return $this->hasOne('Dhayakawa\SpringIntoAction\Models\Budget', 'ProjectID','BudgetID');
         }
 
         public function projectVolunteersWithRoles() {

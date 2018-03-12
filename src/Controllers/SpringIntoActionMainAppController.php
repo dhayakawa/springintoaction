@@ -8,6 +8,7 @@
     use Dhayakawa\SpringIntoAction\Models\Project;
     use Dhayakawa\SpringIntoAction\Models\Site;
     use Dhayakawa\SpringIntoAction\Models\SiteStatus;
+    use Dhayakawa\SpringIntoAction\Models\ProjectContact;
     use Dhayakawa\SpringIntoAction\Models\Contact;
     use Dhayakawa\SpringIntoAction\Models\Budget;
     use Dhayakawa\SpringIntoAction\Models\ProjectRole;
@@ -67,10 +68,9 @@
                 $all_contacts = [];
                 report($e);
             }
-            //die("<pre>" . print_r($projects, 1));
+
             try {
                 $model = new ProjectVolunteerRole();
-
                 $project_leads = $model->getProjectLeads($project['ProjectID']);
 
             } catch(\Exception $e) {
@@ -78,15 +78,16 @@
                 report($e);
             }
             try {
-                $project_contacts = Project::find($project['ProjectID'])->contacts;
-                $project_contacts = $project_contacts ? $project_contacts->toArray() : [];
+                $projectContact = new ProjectContact();
+                $project_contacts = $projectContact->getProjectContacts($project['ProjectID']);
+                $project_contacts = $project_contacts ?: [];
             } catch(\Exception $e) {
                 $project_contacts = [];
                 report($e);
             }
             try {
                 $project_volunteers = Project::find($project['ProjectID'])->volunteers;
-                $project_volunteers = $project_volunteers ? $project_volunteers->toArray() : [];
+                $project_volunteers = $project_volunteers ? $project_volunteers : [];
             } catch(\Exception $e) {
                 $project_volunteers = [];
                 report($e);
@@ -105,7 +106,7 @@
                 $volunteers = [];
                 report($e);
             }
-            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project','projects', 'sites','project_leads','project_volunteers', 'project_contacts','project_budgets','volunteers','all_contacts']);
+            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project','projects', 'sites','project_leads', 'project_budgets', 'project_contacts','project_volunteers', 'volunteers','all_contacts']);
 
             return view('springintoaction::admin.main.app', $request, compact('appInitialData'));
         }

@@ -9,6 +9,7 @@
     namespace Dhayakawa\SpringIntoAction\Models;
 
     use Illuminate\Database\Eloquent\Model;
+    use Illuminate\Support\Facades\DB;
 
     class ProjectVolunteer extends Model {
 
@@ -39,5 +40,27 @@
 
         public function updateLeadVolunteer(){
 
+        }
+
+        public function getUnassigned($SiteID, $Year) {
+
+            $sql    = "SELECT volunteers.* FROM volunteers
+                      LEFT JOIN
+                    (SELECT pv.*
+                    FROM project_volunteers pv
+                    WHERE pv.deleted_at IS NULL AND pv.ProjectID NOT IN (
+                    SELECT pv.ProjectID
+                    FROM project_volunteers pv
+                    WHERE pv.deleted_at IS NULL AND pv.ProjectID NOT IN (SELECT `projects`.ProjectID
+                                               FROM `projects`
+                                                 JOIN `site_status`
+                                                   ON `site_status`.`SiteStatusID` = `projects`.`SiteStatusID`
+                                                 INNER JOIN `sites` ON `sites`.`SiteID` = `site_status`.`SiteID`
+                                               WHERE `site_status`.deleted_at IS NULL AND `site_status`.`Year` = ? AND `sites`.deleted_at IS NULL AND `sites`.`SiteID` = ?))) fakeTable ON fakeTable.VolunteerID = volunteers.VolunteerID
+                    WHERE fakeTable.VolunteerID IS NULL;";
+            $result = DB::select($sql, [$Year, $SiteID]);
+
+
+            return $result;
         }
     }

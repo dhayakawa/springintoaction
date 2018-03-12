@@ -61,6 +61,7 @@ mix.scripts([
     .scripts([
         'resources/assets/js/models/budget.js',
         'resources/assets/js/models/contact.js',
+        'resources/assets/js/models/project-contact.js',
         'resources/assets/js/models/project.js',
         'resources/assets/js/models/project-role.js',
         'resources/assets/js/models/project-volunteer.js',
