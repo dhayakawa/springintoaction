@@ -57,19 +57,19 @@
         public function getProjectLead($ProjectVolunteerRoleID) {
             return Volunteer::join('project_volunteer_role', 'volunteers.VolunteerID', '=', 'project_volunteer_role.VolunteerID')
                 ->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')
-                ->where('project_volunteer_role.ProjectVolunteerRoleID', '=', $ProjectVolunteerRoleID)->get()->toArray();
+                ->where('project_volunteer_role.ProjectVolunteerRoleID', '=', $ProjectVolunteerRoleID)->select(['*', 'volunteers.Status as VolunteerStatus', 'project_volunteer_role.Status as ProjectVolunteerRoleStatus'])->whereNull('project_volunteer_role.deleted_at')->get()->toArray();
         }
 
         public function getProjectLeads($ProjectID) {
             return Volunteer::join('project_volunteer_role', 'volunteers.VolunteerID', '=', 'project_volunteer_role.VolunteerID')
                 ->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')
-                ->whereRaw('project_volunteer_role.ProjectID = ? and project_roles.role != \'Worker\'', [$ProjectID])->get()->toArray();
+                ->whereRaw('project_volunteer_role.ProjectID = ? and project_roles.role != \'Worker\'', [$ProjectID])->select(['*', 'volunteers.Status as VolunteerStatus', 'project_volunteer_role.Status as ProjectVolunteerRoleStatus'])->whereNull('project_volunteer_role.deleted_at')->get()->toArray();
         }
 
         public function getAllProjectLeads() {
             return Volunteer::join('project_volunteer_role', 'volunteers.VolunteerID', '=', 'project_volunteer_role.VolunteerID')
                 ->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')
-                ->where('project_roles.role','!=','Worker')->get()->toArray();
+                ->where('project_roles.role','!=','Worker')->select(['*', 'volunteers.Status as VolunteerStatus', 'project_volunteer_role.Status as ProjectVolunteerRoleStatus'])->whereNull('project_volunteer_role.deleted_at')->get()->toArray();
         }
         /**
          * @param null|array $defaults

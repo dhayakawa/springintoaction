@@ -9,7 +9,7 @@ window.App = {
         // Turn on the console logging
         bAllowConsoleOutput: 1,
         bAllowConsoleOutputHiLite: 1,
-        bAllowConsoleVarGroupsOutput: 0
+        bAllowConsoleVarGroupsOutput: 1
     },
     CellEditors: {}
 };

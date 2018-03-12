@@ -4,18 +4,21 @@
         initialize: function (options) {
             let self = this;
             this.parentChildViews = options.parentChildViews;
-            _.bindAll(this, 'toggleProjectTabToolbars', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState');
+            _.bindAll(this, 'toggleProjectTabToolbars', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
             this.options = options;
             this.tabs = $(self.options.parentViewEl).find('.nav-tabs [role="tab"]');
             this.listenTo(App.Views.siteProjectTabsView, 'cleared-child-views', function () {
                 self.remove();
+            });
+            this.listenTo(App.Views.siteProjectTabsView, 'toggle-delete-btn', function (e) {
+                self.toggleDeleteBtn(e);
             });
             this.listenTo(App.Views.siteProjectTabsView, 'tab-toggled', this.toggleProjectTabToolbars);
         },
         events: {
             'click .btnTabAdd': 'addGridRow',
             'click .btnTabDeleteChecked': 'deleteCheckedRows',
-            'click .btnTabClearStored': 'clearStoredColumnState',
+            'click .btnTabClearStored': 'clearStoredColumnState'
         },
         render: function () {
             let self = this;
@@ -61,7 +64,7 @@
 
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
-                    if (tabName === 'volunteer') {
+                    if (tabName === 'project_volunteer') {
                         let formData = $.unserialize(modal.find('form').serialize());
                         let selectedModels = tabView[tabName].backgrid.getSelectedModels();
                         let volunteerIDs = _.map(selectedModels, function (model) {
@@ -82,8 +85,30 @@
             $('#sia-modal').modal('show');
 
         },
+        toggleDeleteBtn: function (e) {
+            let toggle = e.toggle;
+            let tab = e.tab;
+            _log('App.Views.ProjectTabsGridManagerContainerToolbar.toggleDeleteBtn.event', e.toggle, e.tab, e);
+            if (toggle === 'disable') {
+                this.$el.find('.' + tab + '.tabButtonPane .btnTabDeleteChecked').addClass('disabled');
+            } else {
+                this.$el.find('.' + tab + '.tabButtonPane .btnTabDeleteChecked').removeClass('disabled');
+            }
+
+        },
         deleteCheckedRows: function (e) {
             let tabName = $(e.target).parents('.tabButtonPane').data('tab-name');
+
+            if ($(e.target).hasClass('disabled')) {
+                try {
+                    let tabTxt = $('[href="#' + tabName + '"]').html()
+                } catch (e) {
+                    let tabTxt = tabName;
+                }
+                growl('Please check a box to delete items from the ' + tabTxt + ' tab.');
+                return;
+            }
+
             let tabView = _.find(this.parentChildViews, function (val) {
                 return _.has(val, tabName)
             });
@@ -106,10 +131,10 @@
     });
 
     App.Views.SiteProjectTabs = Backbone.View.extend({
-        contactsViewClass: App.Views.Contact,
-        volunteersViewClass: App.Views.Volunteer,
+        projectContactsViewClass: App.Views.ProjectContact,
+        projectVolunteersViewClass: App.Views.ProjectVolunteer,
         projectLeadsViewClass: App.Views.ProjectLead,
-        budgetViewClass: App.Views.Budget,
+        projectBudgetViewClass: App.Views.Budget,
         initialize: function (options) {
             this.options = options;
             this.childViews = [];
@@ -122,56 +147,54 @@
             'clear-child-views': 'removeChildViews'
         },
         render: function () {
-            /**
-             * Handles the buttons below the tabbed grids
-             */
-            App.Views.contactsView = this.contactsView = new this.contactsViewClass({
-                el: this.$('.project-contacts-backgrid-wrapper'),
-                tab: 'contact',
-                mainAppEl: this.options.mainAppEl,
-                parentViewEl: this.el,
-                collection: App.PageableCollections.contactsCollection,
-                columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
-                hideCellCnt: 0//2
-            });
-            this.childViews.push({contact: this.contactsView});
 
-
-            App.Views.volunteersView = this.volunteersView = new this.volunteersViewClass({
-                el: this.$('.project-volunteers-backgrid-wrapper'),
-                tab: 'volunteer',
-                parentViewEl: this.el,
-                mainAppEl: this.options.mainAppEl,
-                collection: App.PageableCollections.volunteersCollection,
-                columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
-                hideCellCnt: 0//8
-            });
-            this.childViews.push({volunteer: this.volunteersView});
-
-
-            App.Views.projectLeadView = this.projectLeadView = new this.projectLeadsViewClass({
+            App.Views.projectLeadsView = this.projectLeadsView = new this.projectLeadsViewClass({
                 el: this.$('.project-leads-backgrid-wrapper'),
                 mainAppEl: this.options.mainAppEl,
                 tab: 'project_lead',
                 parentViewEl: this.el,
-                collection: App.PageableCollections.projectLeadCollection,
-                columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
+                collection: App.PageableCollections.projectLeadsCollection,
+                columnCollectionDefinitions: App.Vars.volunteerLeadsBackgridColumnDefinitions,
                 hideCellCnt: 0//8
             });
-            this.childViews.push({project_lead: this.projectLeadView});
+            this.childViews.push({project_lead: this.projectLeadsView});
 
-
-            App.Views.budgetView = this.budgetView = new this.budgetViewClass({
+            App.Views.projectBudgetView = this.projectBudgetView = new this.projectBudgetViewClass({
                 el: this.$('.project-budget-backgrid-wrapper'),
                 mainAppEl: this.options.mainAppEl,
-                tab: 'budget',
+                tab: 'project_budget',
                 parentViewEl: this.el,
-                collection: App.PageableCollections.budgetCollection,
+                collection: App.PageableCollections.projectBudgetsCollection,
                 columnCollectionDefinitions: App.Vars.BudgetsBackgridColumnDefinitions,
                 hideCellCnt: 0//1
             });
-            this.childViews.push({budget: this.budgetView});
+            this.childViews.push({project_budget: this.projectBudgetView});
 
+            App.Views.projectContactsView = this.projectContactsView = new this.projectContactsViewClass({
+                el: this.$('.project-contacts-backgrid-wrapper'),
+                tab: 'project_contact',
+                mainAppEl: this.options.mainAppEl,
+                parentViewEl: this.el,
+                collection: App.PageableCollections.projectContactsCollection,
+                columnCollectionDefinitions: App.Vars.projectContactsBackgridColumnDefinitions,
+                hideCellCnt: 0//2
+            });
+            this.childViews.push({project_contact: this.projectContactsView});
+
+            App.Views.projectVolunteersView = this.projectVolunteersView = new this.projectVolunteersViewClass({
+                el: this.$('.project-volunteers-backgrid-wrapper'),
+                tab: 'project_volunteer',
+                parentViewEl: this.el,
+                mainAppEl: this.options.mainAppEl,
+                collection: App.PageableCollections.projectVolunteersCollection,
+                columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
+                hideCellCnt: 0//8
+            });
+            this.childViews.push({project_volunteer: this.projectVolunteersView});
+
+            /**
+             * Handles the buttons below the tabbed grids
+             */
             App.Views.projectTabsGridManagerContainerToolbarView = this.projectTabsGridManagerContainerToolbarView = new App.Views.ProjectTabsGridManagerContainerToolbar({
                 parentViewEl: this.el,
                 el: '.project-tabs-grid-manager-container',
@@ -179,10 +202,10 @@
             });
 
             this.projectTabsGridManagerContainerToolbarView.render();
-            this.contactsView.render();
-            this.volunteersView.render();
-            this.projectLeadView.render();
-            this.budgetView.render();
+            this.projectLeadsView.render();
+            this.projectBudgetView.render();
+            this.projectContactsView.render();
+            this.projectVolunteersView.render();
 
             $(this.options.mainAppEl).find('h3.box-title small').html(this.model.get('ProjectDescription'));
             _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + this.model.get('ProjectDescription'), 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
@@ -200,19 +223,16 @@
             if (this.model.hasChanged('ProjectID')) {
                 _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'ProjectID has changed. Fetching new data for tab collections.', this.model.get('ProjectID'));
                 let ProjectID = this.model.get('ProjectID');
-                App.PageableCollections.contactsCollection.url = 'project/contact/' + ProjectID;
-                //App.PageableCollections.contactsCollection.fetch({reset: true});
-                App.PageableCollections.volunteersCollection.url = 'project/volunteers/' + ProjectID;
-                //App.PageableCollections.volunteersCollection.fetch({reset: true});
-                App.PageableCollections.projectLeadCollection.url = 'project/project_leads/' + ProjectID;
-                //App.PageableCollections.projectLeadCollection.fetch({reset: true});
-                App.PageableCollections.budgetCollection.url = 'project/budget/' + ProjectID;
-                //App.PageableCollections.budgetCollection.fetch({reset: true});
+                App.PageableCollections.projectLeadsCollection.url = '/admin/project/project_leads/' + ProjectID;
+                App.PageableCollections.projectBudgetsCollection.url = '/admin/project/budgets/' + ProjectID;
+                App.PageableCollections.projectContactsCollection.url = '/admin/project/contacts/' + ProjectID;
+                App.PageableCollections.projectVolunteersCollection.url = '/admin/project/volunteers/' + ProjectID;
+
                 $.when(
-                    App.PageableCollections.contactsCollection.fetch({reset: true}),
-                    App.PageableCollections.volunteersCollection.fetch({reset: true}),
-                    App.PageableCollections.projectLeadCollection.fetch({reset: true}),
-                    App.PageableCollections.budgetCollection.fetch({reset: true})
+                    App.PageableCollections.projectLeadsCollection.fetch({reset: true}),
+                    App.PageableCollections.projectBudgetsCollection.fetch({reset: true}),
+                    App.PageableCollections.projectContactsCollection.fetch({reset: true}),
+                    App.PageableCollections.projectVolunteersCollection.fetch({reset: true})
                 ).then(function () {
                     //initialize your views here
                     _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'tab collections fetch promise done');
@@ -243,14 +263,12 @@
             _.each(this.childViews, function (view) {
                 view.remove();
             });
+            _log('App.Views.SiteProjectTabs.removeChildViews.event', 'trigger removed-child-views');
             this.trigger('removed-child-views');
-        },
-        remove: function () {
-            _log('App.Views.SiteProjectTabs.remove', 'remove stub');
-            //this.$el.remove();  // 4. Calling Jquery remove function to remove that HTML li tag element..
         },
         notifyProjectTabToolbar: function (e) {
             let clickedTab = $(e.currentTarget).attr('aria-controls');
+            _log('App.Views.SiteProjectTabs.notifyProjectTabToolbar.event', 'trigger tab-toggled');
             this.trigger('tab-toggled', {data: clickedTab});
         }
     });

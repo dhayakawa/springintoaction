@@ -107,7 +107,7 @@
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
-                this.model.url = 'volunteer/' + currentModelID;
+                this.model.url = '/admin/volunteer/' + currentModelID;
                 this.model.save(_.extend({[self.model.idAttribute]: currentModelID}, e.changed),
                     {
                         success: function (model, response, options) {

@@ -15,7 +15,7 @@
             openOnEnter: false
         },
         optionValues: [{
-            values: App.Models.budgetModel.getStatusOptions(false)
+            values: App.Models.projectBudgetModel.getStatusOptions(false)
         }]
 
     });
@@ -194,24 +194,14 @@
             resizeable: true,
             orderable: true,
             width: "250"
-        },
-        {
-            name: "created_at",
-            label: "created_at",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "updated_at",
-            label: "updated_at",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
         }
     ];
+
+    App.Vars.projectContactsBackgridColumnDefinitions = [];
+    _.each(App.Vars.ContactsBackgridColumnDefinitions, function (value, key) {
+        value.editable = false;
+        App.Vars.projectContactsBackgridColumnDefinitions.push(value);
+    });
     _log('App.Vars.CollectionsGroup', 'App.Vars.ContactsBackgridColumnDefinitions:', App.Vars.ContactsBackgridColumnDefinitions);
 })(window.App);
 
@@ -268,11 +258,48 @@
         }]
 
     });
-    let textAreaEditor = Backgrid.Extension.TextareaEditor.extend({
+    let myTextareaEditor = Backgrid.CellEditor.extend({
+
+        /** @property */
+        tagName: "div",
+
+        /** @property */
         className: "modal fade",
+
+        /** @property {function(Object, ?Object=): string} template */
+        template: function (data) {
+            return '<div class="modal-dialog"><div class="modal-content"><form><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h3>' + data.column.get("label") + '</h3></div><div class="modal-body"><textarea cols="' + data.cols + '" rows="' + data.rows + '">' + data.content + '</textarea></div><div class="modal-footer"><input class="btn btn-primary" type="submit" value="Save"/></div></form></div></div>';
+        },
+
+        /** @property */
+        cols: 80,
+
+        /** @property */
+        rows: 10,
+
+        /** @property */
+        events: {
+            "keydown textarea": "clearError",
+            "submit": "saveOrCancel",
+            "hide.bs.modal": "saveOrCancel",
+            "hidden.bs.modal": "close",
+            "shown.bs.modal": "focus"
+        },
+
+        /**
+         @property {Object} modalOptions The options passed to Bootstrap's modal
+         plugin.
+         */
+        modalOptions: {
+            backdrop: false
+        },
+
+        /**
+         Renders a modal form dialog with a textarea, submit button and a close button.
+         */
         render: function () {
-            // DH:mod to handle bootstap modal bug
-            this.$el.insertAfter('.wrapper');
+
+            $('.wrapper').after();
             this.$el.html($(this.template({
                 column: this.column,
                 cols: this.cols,
@@ -286,6 +313,7 @@
 
             return this;
         },
+
         /**
          Event handler. Saves the text in the text area to the model when
          submitting. When cancelling, if the text area is dirty, a confirmation
@@ -299,7 +327,7 @@
          @param {Event} e
          */
         saveOrCancel: function (e) {
-            if (e && e.type === "submit") {
+            if (e && e.type == "submit") {
                 e.preventDefault();
                 e.stopPropagation();
             }
@@ -308,7 +336,7 @@
             let column = this.column;
             let val = this.$el.find("textarea").val();
             let newValue = this.formatter.toRaw(val);
-            //console.log('saveOrCancel 194', e.type, model, column, 'val:' + val, 'newValue:' + newValue)
+
             if (_.isUndefined(newValue)) {
                 model.trigger("backgrid:error", model, column, val);
 
@@ -317,18 +345,15 @@
                     e.stopPropagation();
                 }
             }
-            else if (!e || e.type === "submit" ||
-                (e.type === "hide" &&
+            else if (!e || e.type == "submit" ||
+                (e.type == "hide" &&
                     newValue !== (this.model.get(this.column.get("name")) || '').replace(/\r/g, '') &&
                     confirm("Would you like to save your changes?"))) {
-                console.log('saveOrCancel 207', 'event type:' + e.type, 'column name:' + column.get("name"), 'newVal:' + newValue)
+
                 model.set(column.get("name"), newValue);
                 this.$el.modal("hide");
             }
-            else if (e.type !== "hide") {
-                console.log('saveOrCancel 212', e.type)
-                //this.$el.modal("hide");
-            }
+            else if (e.type != "hide") this.$el.modal("hide");
         },
 
         /**
@@ -348,27 +373,61 @@
          */
         close: function (e) {
             let model = this.model;
-            // model.trigger("backgrid:edited", model, this.column,
-            //     new Backgrid.Command(e));
-            console.log('after model.trigger')
+            model.trigger("backgrid:edited", model, this.column,
+                new Backgrid.Command(e));
+        },
+
+        /**
+         Focuses the textarea when the modal is shown.
+         */
+        focus: function () {
+            this.$el.find("textarea").focus();
         }
+
     });
     let TextareaCell = Backgrid.Extension.TextCell.extend({
         attributes: function () {
             return { 'data-toggle':'popover','data-trigger':'hover'}
         },
-        //editor: textAreaEditor,
+        editor: myTextareaEditor,
         /**
          Removes the editor and re-render in display mode.
          */
         exitEditMode: function () {
             this.$el.removeClass("error");
-            //this.currentEditor.remove();
+            this.currentEditor.remove();
             this.stopListening(this.currentEditor);
             delete this.currentEditor;
             this.$el.removeClass("editor");
             this.render();
         },
+        enterEditMode: function () {
+            let model = this.model;
+            let column = this.column;
+
+            let editable = Backgrid.callByNeed(column.editable(), column, model);
+            if (editable) {
+
+                this.currentEditor = new this.editor({
+                    column: this.column,
+                    model: this.model,
+                    formatter: this.formatter
+                });
+
+                model.trigger("backgrid:edit", model, column, this, this.currentEditor);
+
+                // Need to redundantly undelegate events for Firefox
+                this.undelegateEvents();
+                this.$el.empty();
+                // We need to append to the body instead of the cell to get it to center correctly
+                //this.$el.append(this.currentEditor.$el);
+                $('body').append(this.currentEditor.$el);
+                this.currentEditor.render();
+                this.$el.addClass("editor");
+
+                model.trigger("backgrid:editing", model, column, this, this.currentEditor);
+            }
+        }
     });
     // Override until the textarea cell works
     //TextareaCell = 'string';
@@ -1236,27 +1295,33 @@
             resizeable: true,
             orderable: true,
             width: "250"
-        },
-        {
-            name: "created_at",
-            label: "created_at",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "updated_at",
-            label: "updated_at",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
         }
-
     ];
 
+    App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
+    let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email'];
+    _.each(sharedCells,  function (value, key) {
+        let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
+        if (value === 'Status') {
+            cellDefinition.name = 'ProjectVolunteerRoleStatus';
+        }
+        App.Vars.volunteerLeadsBackgridColumnDefinitions.push(cellDefinition);
+        if (value === 'Active'){
+            App.Vars.volunteerLeadsBackgridColumnDefinitions.push({
+                name: "ProjectRoleID",
+                label: "Project Lead Role",
+                cell: VolunteerRoleCell,
+                resizeable: true,
+                orderable: true,
+                width: "250",
+                filterType: "string"
+            });
+        }
+    });
+
+
     _log('App.Vars.CollectionsGroup', 'App.Vars.volunteersBackgridColumnDefinitions:', App.Vars.volunteersBackgridColumnDefinitions);
+    _log('App.Vars.CollectionsGroup', 'App.Vars.volunteerLeadsBackgridColumnDefinitions:', App.Vars.volunteerLeadsBackgridColumnDefinitions);
 })(window.App);
 
 (function (App) {

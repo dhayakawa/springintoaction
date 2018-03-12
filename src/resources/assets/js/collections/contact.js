@@ -101,23 +101,13 @@
             resizeable: true,
             orderable: true,
             width: "250"
-        },
-        {
-            name: "created_at",
-            label: "created_at",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "updated_at",
-            label: "updated_at",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
         }
     ];
+
+    App.Vars.projectContactsBackgridColumnDefinitions = [];
+    _.each(App.Vars.ContactsBackgridColumnDefinitions, function (value, key) {
+        value.editable = false;
+        App.Vars.projectContactsBackgridColumnDefinitions.push(value);
+    });
     _log('App.Vars.CollectionsGroup', 'App.Vars.ContactsBackgridColumnDefinitions:', App.Vars.ContactsBackgridColumnDefinitions);
 })(window.App);

@@ -42,18 +42,6 @@
   font: normal normal normal 14px/1 FontAwesome;
   content: "\F06E";
 }
-.backgrid-wrapper .backgrid .text-cell .modal.fade .modal-dialog {
-  -webkit-transition: -webkit-transform 0.3s ease-out;
-  transition: -webkit-transform 0.3s ease-out;
-  transition: transform 0.3s ease-out;
-  transition: transform 0.3s ease-out, -webkit-transform 0.3s ease-out;
-  -webkit-transform: translate(0, 50%);
-  transform: translate(0, 50%);
-}
-.backgrid-wrapper .backgrid .text-cell .modal.show .modal-dialog {
-  -webkit-transform: translate(0, 0);
-  transform: translate(0, 0);
-}
 .columnmanager-dropdown-container {
   width: 400px !important;
   overflow-y: auto !important;

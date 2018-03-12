@@ -1,9 +1,8 @@
 (function (App) {
     App.Models.ProjectVolunteer = Backbone.Model.extend({
-        url: 'project_volunteer',
+        url: '/admin/project_volunteer',
         idAttribute: "ProjectVolunteerID",
         defaults: {
-            'ProjectVolunteerID': '',
             'VolunteerID': '',
             'ProjectID': ''
         }

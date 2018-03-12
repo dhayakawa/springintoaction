@@ -15,7 +15,7 @@
             openOnEnter: false
         },
         optionValues: [{
-            values: App.Models.budgetModel.getStatusOptions(false)
+            values: App.Models.projectBudgetModel.getStatusOptions(false)
         }]
 
     });

@@ -1,8 +1,7 @@
 (function (App) {
     App.Models.Budget = Backbone.Model.extend({
         idAttribute: "BudgetID",
-        url: 'budget',
-        urlRoot: '/budget',
+        url: '/admin/project_budget',
         defaults: {
             'ProjectID': '',
             'BudgetSource': '',

@@ -156,12 +156,12 @@
                 ->where('project_volunteer_role.ProjectID', $ProjectID)->get()->toArray();
         }
 
-        public function getBudget($ProjectID) {
+        public function getBudgets($ProjectID) {
             // Need to return an array for the grid
             $result = [];
             try {
-                if($b = Project::find($ProjectID)->budget) {
-                    $result = [$b->toArray()];
+                if($b = Project::find($ProjectID)->budgets) {
+                    $result = $b->toArray();
                 }
             } catch(\Exception $e) {
 
@@ -170,11 +170,11 @@
             return $result;
         }
 
-        public function getContact($ProjectID) {
+        public function getContacts($ProjectID) {
             // Need to return an array for the grid
             try {
-                if($c = Project::find($ProjectID)->contact) {
-                    return [$c->toArray()];
+                if($c = Project::find($ProjectID)->contacts) {
+                    return $c->toArray();
                 }
             } catch(\Exception $e) {
                 return [];

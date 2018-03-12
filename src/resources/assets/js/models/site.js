@@ -1,7 +1,7 @@
 (function (App) {
     App.Models.Site = Backbone.Model.extend({
         idAttribute: "SiteID",
-        url: 'site',
+        url: '/admin/site',
         defaults: {
             'SiteName': '',
             'EquipmentLocation': '',
