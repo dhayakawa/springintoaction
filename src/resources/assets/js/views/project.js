@@ -1,8 +1,13 @@
 (function (App) {
     App.Views.ProjectGridManagerContainerToolbar = Backbone.View.extend({
+
         template: template('projectGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
-            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState');
+            let self = this;
+            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState','toggleDeleteBtn');
+            this.listenTo(App.Views.siteManagementView, 'toggle-delete-btn', function (e) {
+                self.toggleDeleteBtn(e);
+            });
         },
         events: {
             'click #btnAddProject': 'addGridRow',
@@ -20,8 +25,7 @@
                 url: App.Vars.sAjaxFileUploadURL,
                 dataType: 'json',
                 done: function (e, data) {
-                    let self = this
-                    console.log(this, data)
+                    let self = this;
                     $('#file_progress_' + self.id).fadeTo(0, 'slow');
                     $('#file_' + self.id).val('')
                     $('#file_chosen_' + self.id).empty()
@@ -92,13 +96,24 @@
             growl('Resetting project columns. Please wait while the page refreshes.', 'success');
             localStorage.removeItem('backgrid-colmgr-site-projects');
             location.reload();
+        },
+        toggleDeleteBtn: function (e) {
+            let toggle = e.toggle;
+
+            _log('App.Views.ProjectGridManagerContainerToolbar.toggleDeleteBtn.event', e.toggle, e);
+            if (toggle === 'disable') {
+                this.$el.find('#btnDeleteCheckedProjects').addClass('disabled');
+            } else {
+                this.$el.find('#btnDeleteCheckedProjects').removeClass('disabled');
+            }
+
         }
 
     });
     App.Views.Projects = Backbone.View.extend({
         initialize: function (options) {
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'getModalForm');
+            _.bindAll(this, 'render', 'update', 'getModalForm','toggleDeleteBtn');
             this.rowBgColor = 'lightYellow';
             //this.collection.bind('reset', this.render, this);
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
@@ -190,7 +205,9 @@
                 _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:edited', e);
                 self.update(e);
             });
-
+            this.backgrid.collection.on('backgrid:selected', function (e) {
+                self.toggleDeleteBtn(e);
+            });
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
             // Show a popup of the text that has been truncated
             $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').popover({
@@ -363,6 +380,13 @@
                     window.growl(response.msg, 'error')
                 }
             })
-        }
+        },
+        toggleDeleteBtn: function (e) {
+            var self = this;
+            let selectedModels = self.backgrid.getSelectedModels();
+            _log('App.Views.Project.toggleDeleteBtn.event', selectedModels.length, e);
+            let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
+            App.Views.siteManagementView.trigger('toggle-delete-btn', {toggle: toggleState});
+        },
     });
 })(window.App);

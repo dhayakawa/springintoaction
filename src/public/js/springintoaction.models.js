@@ -26,6 +26,7 @@
         },
         getSourceOptions: function (bReturnHtml) {
             let options = [
+                ['',''],
                 ['PTO', 'PTO'],
                 ['School', 'School'],
                 ['School (OLC funds)', 'School (OLC funds)'],

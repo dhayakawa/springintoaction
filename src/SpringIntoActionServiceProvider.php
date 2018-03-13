@@ -70,5 +70,9 @@
             $this->mergeConfigFrom(__DIR__ . '/config/springintoaction/app.php', 'springintoaction.app');
             $this->mergeConfigFrom(__DIR__ . '/config/springintoaction/signup.php', 'springintoaction.signup');
             $this->mergeConfigFrom(__DIR__ . '/config/springintoaction/auth.php', 'springintoaction.auth');
+            config([
+                'boilerplate.app.logo-lg' => config('springintoaction.app.logo-lg', ''),
+                'boilerplate.app.logo-mini' => config('springintoaction.app.logo-mini', ''),
+            ]);
         }
     }
