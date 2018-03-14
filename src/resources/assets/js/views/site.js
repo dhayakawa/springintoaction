@@ -99,7 +99,7 @@
                 App.Models.siteStatusModel.fetch({reset: true});
 
                 // fetch new product collection
-                App.PageableCollections.projectCollection.url = '/admin/project/list/' + SiteStatusID;
+                App.PageableCollections.projectCollection.url = '/admin/project/all/' + SiteStatusID;
                 App.PageableCollections.projectCollection.fetch({
                     reset: true,
                     success: function (model, response, options) {
@@ -111,7 +111,13 @@
                             window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                         }
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                    },
+                    error: function (model, response, options) {
+                        growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     }
+
                 });
 
 
@@ -186,7 +192,8 @@
                         });
                     },
                     error: function (model, response, options) {
-                        window.growl(response.msg, 'error')
+                        window.growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', '#site-well');
                     }
                 });
         },
@@ -207,7 +214,8 @@
                     });
                 },
                 error: function (model, response, options) {
-                    window.growl(response.msg, 'error')
+                    window.growl(response.msg, 'error');
+                    window.ajaxWaiting('remove', '#site-well');
                 }
             });
         }

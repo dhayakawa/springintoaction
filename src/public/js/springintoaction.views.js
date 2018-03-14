@@ -162,7 +162,8 @@
                         });
                     },
                     error: function (model, response, options) {
-                        window.growl(response.msg, 'error')
+                        window.growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     }
                 });
         },
@@ -394,7 +395,8 @@
                         });
                     },
                     error: function (model, response, options) {
-                        window.growl(response.msg, 'error')
+                        window.growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     }
                 });
         }
@@ -598,7 +600,7 @@
             this.projectGridManagerContainerToolbar.$el.find('.file-upload-container').before(colVisibilityControl.render().el);
 
             // Always assumes the first row of the backgrid/collection is the current model
-            App.Vars.currentProjectID = this.collection.at(0).get('ProjectID');
+            App.Vars.currentProjectID = this.collection.length ? this.collection.at(0).get('ProjectID') : null;
 
             // Set the "current project to load the tabbed project data"
             $gridContainer.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
@@ -695,7 +697,8 @@
                             }
                         },
                         error: function (model, response, options) {
-                            growl(response.msg, 'error')
+                            growl(response.msg, 'error');
+                            window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
                         }
                     });
             }
@@ -751,7 +754,8 @@
                         });
                     },
                     error: function (model, response, options) {
-                        window.growl(response.msg, 'error')
+                        window.growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
                     }
                 });
         },
@@ -895,7 +899,7 @@
                 App.Models.siteStatusModel.fetch({reset: true});
 
                 // fetch new product collection
-                App.PageableCollections.projectCollection.url = '/admin/project/list/' + SiteStatusID;
+                App.PageableCollections.projectCollection.url = '/admin/project/all/' + SiteStatusID;
                 App.PageableCollections.projectCollection.fetch({
                     reset: true,
                     success: function (model, response, options) {
@@ -907,7 +911,13 @@
                             window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                         }
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                    },
+                    error: function (model, response, options) {
+                        growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     }
+
                 });
 
 
@@ -982,7 +992,8 @@
                         });
                     },
                     error: function (model, response, options) {
-                        window.growl(response.msg, 'error')
+                        window.growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', '#site-well');
                     }
                 });
         },
@@ -1003,7 +1014,8 @@
                     });
                 },
                 error: function (model, response, options) {
-                    window.growl(response.msg, 'error')
+                    window.growl(response.msg, 'error');
+                    window.ajaxWaiting('remove', '#site-well');
                 }
             });
         }

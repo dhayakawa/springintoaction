@@ -29,8 +29,8 @@
          * @return void
          */
         public function __construct() {
-            $this->middleware('ability:admin,projects_crud', [
-            ]);
+            //$this->middleware('ability:admin,projects_crud', [
+            //]);
         }
 
         public function index(Request $request) {
