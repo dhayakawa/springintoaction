@@ -22,7 +22,7 @@
          * SignUpController constructor.
          */
         public function __construct() {
-            $this->redirectTo = route(config('springintoaction.app.redirectTo', 'springintoaction.home'));
+            $this->redirectTo = route(config('springintoaction.app.redirectTo', 'springintoaction.index'));
             $this->middleware('guest');
         }
 

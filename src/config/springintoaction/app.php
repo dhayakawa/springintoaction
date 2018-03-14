@@ -13,4 +13,5 @@
         'backend_prefix' => 'admin',                    // Backend prefix. Ex: "admin" => "http://..../admin"
         'frontend_prefix' => '',                    // Frontend prefix.
         'redirectTo' => 'springintoaction.index'  // after frontend login
+
     ];

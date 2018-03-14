@@ -2,9 +2,7 @@
 
     namespace Dhayakawa\SpringIntoAction\Controllers\Auth;
 
-    use Illuminate\Routing\Controller as BaseController;
-
-
+    use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Carbon\Carbon;
     use Illuminate\Foundation\Auth\AuthenticatesUsers;
     use Illuminate\Http\Request;
@@ -84,9 +82,14 @@
             $this->clearLoginAttempts($request);
 
             $this->guard()->user()->update(['last_login' => Carbon::now()->toDateTimeString()]);
+            $this->authenticated($request, $this->guard()->user());
 
-            return $this->authenticated($request, $this->guard()->user())
-                ?: redirect()->intended($this->redirectPath());
+            if(!$this->guard()->guest() && !$this->guard()->user()->hasRole('frontend_user')){
+                return redirect()->to('/admin');
+            } else{
+                return redirect()->intended($this->redirectPath());
+            }
+
         }
 
         /**

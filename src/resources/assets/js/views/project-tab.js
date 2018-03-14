@@ -162,7 +162,8 @@
                         });
                     },
                     error: function (model, response, options) {
-                        window.growl(response.msg, 'error')
+                        window.growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     }
                 });
         },
