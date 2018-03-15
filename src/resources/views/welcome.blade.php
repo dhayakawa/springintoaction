@@ -84,7 +84,7 @@
             @if (Route::has('login'))
                 <div class="top-right links">
                     @auth
-                        <a href="{{ url('/home') }}">Home</a>
+                        <a href="{{ url('/') }}">Home</a>
                         <a href="{{ route('logout') }}" class="logout">
                             <span class="hidden-xs">
                                 <span class="fa fa-power-off"></span> {{ __('boilerplate::layout.logout') }}

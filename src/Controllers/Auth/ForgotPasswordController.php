@@ -2,7 +2,7 @@
 
     namespace Dhayakawa\SpringIntoAction\Controllers\Auth;
 
-    use Illuminate\Routing\Controller as BaseController;
+    use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 
     class ForgotPasswordController extends BaseController {
@@ -35,6 +35,6 @@
          * @return \Illuminate\Http\Response
          */
         public function showLinkRequestForm() {
-            return view('springintoaction::auth.passwords.email');
+            return view('springintoaction::frontend.auth.passwords.email');
         }
     }
