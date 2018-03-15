@@ -2,7 +2,7 @@
 
     namespace Dhayakawa\SpringIntoAction\Controllers\Auth;
 
-    use Illuminate\Routing\Controller as BaseController;
+    use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Illuminate\Foundation\Auth\ResetsPasswords;
     use Illuminate\Http\Request;
 
@@ -34,7 +34,7 @@
          * @return void
          */
         public function __construct() {
-            $this->redirectTo = route(config('springintoaction.app.redirectTo', 'springintoaction.home'));
+            $this->redirectTo = route(config('springintoaction.app.redirectTo', 'springintoaction.index'));
             $this->middleware('guest');
         }
 
@@ -49,7 +49,7 @@
          * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
          */
         public function showResetForm(Request $request, $token = null) {
-            return view('springintoaction::auth.passwords.reset')->with(
+            return view('springintoaction::frontend.auth.passwords.reset')->with(
                 ['token' => $token, 'email' => $request->email]
             );
         }
