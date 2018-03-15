@@ -2,7 +2,7 @@
 
     namespace Dhayakawa\SpringIntoAction\Controllers\Auth;
 
-    use Illuminate\Routing\Controller as BaseController;
+    use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Carbon\Carbon;
     use Illuminate\Support\Facades\Validator;
     use Illuminate\Foundation\Auth\RegistersUsers;
