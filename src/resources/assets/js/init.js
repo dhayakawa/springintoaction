@@ -9,7 +9,9 @@ window.App = {
         // Turn on the console logging
         bAllowConsoleOutput: 1,
         bAllowConsoleOutputHiLite: 1,
-        bAllowConsoleVarGroupsOutput: 1
+        bAllowConsoleVarGroupsOutput: 1,
+        rowBgColorSelected: '#e3f6b1',
+        workerRoleID: 4
     },
     CellEditors: {}
 };

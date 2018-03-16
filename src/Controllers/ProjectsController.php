@@ -48,7 +48,19 @@
         public function store(Request $request) {
 
             $project = new Project;
-            $project->fill($request->only($project->getFillable()));
+            $data = array_map(function ($value) {
+                if(is_array($value)) {
+                    return join(',', $value);
+                }
+
+                return $value;
+            }, $request->only($project->getFillable()));
+            array_walk($data, function (&$value, $key) {
+                if(is_string($value)) {
+                    $value = \urldecode($value);
+                }
+            });
+            $project->fill($data);
             $success = $project->save();
 
             if(!isset($success)) {
@@ -78,6 +90,11 @@
 
                 return $value;
             }, $request->only($project->getFillable()));
+            array_walk($data, function (&$value, $key) {
+                if(is_string($value)) {
+                    $value = \urldecode($value);
+                }
+            });
             $project->fill($data);
             $success = $project->save();
 

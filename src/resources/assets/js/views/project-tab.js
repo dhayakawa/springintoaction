@@ -35,7 +35,7 @@
                 trackSize: true,
                 trackOrder: true,
                 trackVisibility: true,
-                saveState: true,
+                saveState: App.Vars.bBackgridColumnManagerSaveState,
                 saveStateKey: 'site-project-tab-' + this.options.tab,
                 loadStateOnInit: true,
                 stateChecking: "loose"

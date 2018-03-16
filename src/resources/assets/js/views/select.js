@@ -36,6 +36,9 @@
                 this.setSelectedValue = !this.buildHTML && !_.isUndefined(options.setSelectedValue) ? options.setSelectedValue : null;
                 this.optionValueModelAttrName = options.optionValueModelAttrName;
                 this.optionLabelModelAttrName = options.optionLabelModelAttrName;
+                if (!_.isUndefined(options.addBlankOption)) {
+                    this.addBlankOption = options.addBlankOption;
+                }
                 if (!_.isUndefined(this.collection)) {
                     this.collection.bind('reset', this.addAll);
                 }
@@ -61,6 +64,9 @@
         },
         render: function () {
             this.addAll();
+            if (this.addBlankOption) {
+                $(this.el).prepend('<option value=""></option>');
+            }
             if (!_.isNull(this.setSelectedValue)) {
                 $(this.el).val(this.setSelectedValue);
             }

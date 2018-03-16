@@ -70,7 +70,13 @@
         public function update(Request $request, $id) {
             $model = SiteStatus::findOrFail($id);
 
-            $model->fill($request->only($model->getFillable()));
+            $data = $request->only($model->getFillable());
+            array_walk($data, function (&$value, $key) {
+                if(is_string($value)) {
+                    $value = \urldecode($value);
+                }
+            });
+            $model->fill($data);
             $success = $model->save();
 
             if($success) {
@@ -102,7 +108,7 @@
          * @return mixed
          */
         public function getAllSiteYears($SiteID) {
-            $site_years = SiteStatus::select('SiteStatusID', 'SiteID', 'Year')->where('SiteID', $SiteID)->orderBy('Year', 'asc')->get()->toArray();
+            $site_years = SiteStatus::select('SiteStatusID', 'SiteID', 'Year')->where('SiteID', $SiteID)->orderBy('Year', 'desc')->get()->toArray();
 
             return $site_years;
         }
