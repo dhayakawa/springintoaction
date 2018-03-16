@@ -1,3 +1,12 @@
 {
-    "/css/springintoaction.css": "/css/springintoaction.css"
+  "/mix.js": "/mix.js",
+  "/css/springintoaction.app.css": "/css/springintoaction.app.css",
+  "/css/springintoaction.packages.css": "/css/springintoaction.packages.css",
+  "/js/springintoaction.packages.js": "/js/springintoaction.packages.js",
+  "/js/springintoaction.packages.min.js": "/js/springintoaction.packages.min.js",
+  "/js/springintoaction.init.js": "/js/springintoaction.init.js",
+  "/js/springintoaction.main.js": "/js/springintoaction.main.js",
+  "/js/springintoaction.models.js": "/js/springintoaction.models.js",
+  "/js/springintoaction.collections.js": "/js/springintoaction.collections.js",
+  "/js/springintoaction.views.js": "/js/springintoaction.views.js"
 }

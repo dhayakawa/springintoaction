@@ -69,15 +69,18 @@
 
         //Route::resource('volunteer', 'VolunteerController');
         Route::get('volunteer/{VolunteerID}', ['as' => 'volunteer', 'uses' => 'VolunteerController@show']);
-        Route::get('volunteer/all', ['as' => 'volunteer.all', 'uses' => 'VolunteerController@getAll']);
+        Route::get('volunteer/list/all', ['as' => 'volunteer.list.all', 'uses' => 'VolunteerController@getAll']);
         Route::put('volunteer/{VolunteerID}', ['as' => 'volunteer.update', 'uses' => 'VolunteerController@update']);
         Route::post('volunteer', ['as' => 'volunteer.create', 'uses' => 'VolunteerController@store']);
+        Route::post('volunteer/list/upload', ['as' => 'project.upload', 'uses' => 'VolunteerController@uploadList']);
 
         //Route::resource('contact', 'ContactController');
         Route::get('contact/{ContactID}', ['as' => 'contact', 'uses' => 'ContactController@show']);
-        Route::put('contact', ['as' => 'contact.update', 'uses' => 'ContactController@update']);
+        Route::get('contact/list/all', ['as' => 'contact.list.all', 'uses' => 'ContactController@getContacts']);
+        Route::put('contact/{ContactID}', ['as' => 'contact.update', 'uses' => 'ContactController@update']);
         Route::post('contact', ['as' => 'contact.create', 'uses' => 'ContactController@store']);
         Route::post('contact/batch/destroy', ['as' => 'contact.batch.destroy', 'uses' => 'ContactController@batchDestroyContacts']);
+        Route::post('contact/list/upload', ['as' => 'project.upload', 'uses' => 'ContactController@uploadList']);
 
         /**
          * Project Tab routes

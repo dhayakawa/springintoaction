@@ -2,6 +2,8 @@
     App.Views.mainApp = Backbone.View.extend({
         siteManagementViewClass: App.Views.SiteManagement,
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
+        contactsManagementViewClass: App.Views.ContactsManagement,
+        volunteersManagementViewClass: App.Views.VolunteersManagement,
         el: $(".sia-main-app"),
         initialize: function (options) {
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
@@ -26,26 +28,29 @@
             });
             this.siteProjectTabsView.render();
 
-            // App.Views.volunteerManagementView = this.volunteerManagementView = new App.Views.VolunteerManagement({
-            //     el: this.$('.volunteers-management-view'),
-            //     mainAppEl: this.el,
-            //     collection: App.PageableCollections.volunteersManagementCollection,
-            //     columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
-            //     columnCollection: App.Vars.VolunteersBackgridColumnCollection,
-            //     hideCellCnt: 0
-            // });
-            // //this.volunteerManagementView.render();
-            //
-            // App.Views.contactManagementView = this.contactManagementView = new App.Views.ContactManagement({
-            //     el: this.$('.contacts-management-view'),
-            //     mainAppEl: this.el,
-            //     collection: App.PageableCollections.contactsManagementCollection,
-            //     columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
-            //     columnCollection: App.Vars.ContactsBackgridColumnCollection,
-            //     hideCellCnt: 0
-            // });
-            //this.contactManagementView.render();
+            App.Views.contactsManagementView = this.contactsManagementView = new this.contactsManagementViewClass({
+                className: 'box box-primary collapsed-box contacts-management-view',
+                viewClassName: 'contacts-management-view',
+                mainAppEl: this.el,
+                modelNameLabel: 'Contact',
+                collection: App.PageableCollections.contactsManagementCollection,
+                columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
+                hideCellCnt: 0
+            });
+            this.$el.append(this.contactsManagementView.render().el);
 
+            App.Views.volunteersManagementView = this.volunteersManagementView = new this.volunteersManagementViewClass({
+                className: 'box box-primary collapsed-box volunteers-management-view',
+                viewClassName: 'volunteers-management-view',
+                mainAppEl: this.el,
+                modelNameLabel: 'Volunteer',
+                collection: App.PageableCollections.volunteersManagementCollection,
+                columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
+                hideCellCnt: 0
+            });
+            this.$el.append(this.volunteersManagementView.render().el);
+
+            _log('App.Views.mainApp.render', 'render', this.$el);
             App.Vars.mainAppDoneLoading = true;
             _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
             return this;

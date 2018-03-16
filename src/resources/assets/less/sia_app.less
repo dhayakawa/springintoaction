@@ -9,7 +9,7 @@
   .projects-backgrid-wrapper {
     border: 0px solid #ddd;
   }
-  .projects-grid-manager-container, .project-tabs-grid-manager-container {
+  .grid-manager-container {
     width:100%;
     .columnmanager-visibilitycontrol-container{
       display: inline-block;
@@ -47,6 +47,14 @@
           // eye icon
           font: normal normal normal 14px/1 FontAwesome;
           content: "\f06e";
+        }
+      }
+    }
+    tbody{
+      tr{
+        background-color: inherit;
+        &:hover{
+          background-color: lightyellow;
         }
       }
     }

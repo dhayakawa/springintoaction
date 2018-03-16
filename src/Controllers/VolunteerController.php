@@ -6,6 +6,7 @@
     use Dhayakawa\SpringIntoAction\Models\Volunteer;
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
     use Illuminate\Http\Request;
+    use Dhayakawa\SpringIntoAction\Controllers\ajaxUploader;
 
     class VolunteerController extends BaseController {
 
@@ -35,7 +36,41 @@
          * @return \Illuminate\Http\Response
          */
         public function store(Request $request) {
-            //
+            $model = new Volunteer;
+            $data  = array_map(function ($value) {
+                if(is_array($value)) {
+                    return join(',', $value);
+                }
+
+                return $value;
+            }, $request->only($model->getFillable()));
+
+            if($data['PreferredSiteID'] === '') {
+                $data['PreferredSiteID'] = 0;
+            }
+            if($data['ResponseID'] === '') {
+                $data['ResponseID'] = 0;
+            }
+            if($data['IndividualID'] === '') {
+                $data['IndividualID'] = 0;
+            }
+            array_walk($data, function (&$value, $key) {
+                if(is_string($value)) {
+                    $value = \urldecode($value);
+                }
+            });
+
+            $model->fill($data);
+            $success = $model->save();
+
+            if($success) {
+                $response = ['success' => true, 'msg' => 'Volunteer Creation Succeeded.'];
+            } else {
+                $response = ['success' => false, 'msg' => 'Volunteer Creation Failed.'];
+            }
+
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
         /**
@@ -73,7 +108,19 @@
         public function update(Request $request, $id) {
             $model = Volunteer::findOrFail($id);
 
-            $model->fill($request->only($model->getFillable()));
+            $data = array_map(function ($value) {
+                if(is_array($value)) {
+                    return join(',', $value);
+                }
+
+                return $value;
+            }, $request->only($model->getFillable()));
+            array_walk($data, function(&$value, $key){
+                if(is_string($value)){
+                    $value = \urldecode($value);
+                }
+            });
+            $model->fill($data);
             $success = $model->save();
 
             if($success) {
@@ -90,22 +137,27 @@
         public function batchDestroy(Request $request) {
             $params       = $request->all();
             $batchSuccess = true;
-            //if(is_array($params['ProjectIDs'])) {
-            //    foreach($params['ProjectIDs'] as $projectID) {
-            //        $success = Project::findOrFail($projectID)->delete();
-            //        if(!$success) {
-            //            $batchSuccess = false;
-            //        }
-            //        $model   = ProjectVolunteerRole::where('ProjectID', '=', $projectID);
-            //        $success = $model->delete();
-            //        if(!$success) {
-            //            $batchSuccess = false;
-            //        }
-            //    }
-            //} else {
-            //    $success = false;
-            //}
-            //$success = $batchSuccess;
+            if(is_array($params['modelIDs'])) {
+                foreach($params['modelIDs'] as $modelID) {
+                    $success = Volunteer::findOrFail($modelID)->delete();
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                    $model   = ProjectVolunteer::where('VolunteerID', '=', $modelID);
+                    $success = $model->delete();
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                    $model   = ProjectVolunteerRole::where('VolunteerID', '=', $modelID);
+                    $success = $model->delete();
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                }
+            } else {
+                $success = false;
+            }
+            $success = $batchSuccess;
 
             if(!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Volunteer Batch Removal Not Implemented Yet.'];
@@ -119,9 +171,11 @@
             return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
-        public function getAll(){
-
+        public function getAll() {
+            return Volunteer::orderBy('LastName', 'asc')
+                ->get()->toArray();
         }
+
         /**
          * Remove the specified resource from storage.
          *
@@ -131,5 +185,12 @@
          */
         public function destroy($id) {
             //
+        }
+
+        public function uploadList(Request $request) {
+
+            $aaOptions['upload_dir'] = 'uploads/';
+            $aaOptions['upload_url'] = 'volunteer/list/upload/';
+            $oAjaxUploadHandler      = new ajaxUploader($aaOptions);
         }
     }

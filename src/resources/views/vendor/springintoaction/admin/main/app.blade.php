@@ -135,6 +135,7 @@
 <script src="{{ asset('/js/springintoaction.collections.js') }}"></script>
 <script>
     App.Vars.sAjaxFileUploadURL = 'project/list/upload';
+    App.Vars.bBackgridColumnManagerSaveState = false;
     App.Collections.sitesDropDownCollection = new App.Collections.Site(@json($appInitialData['sites']));
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear(@json($appInitialData['site_years']));
     App.PageableCollections.projectCollection = new App.PageableCollections.Project(@json($appInitialData['projects']));
@@ -162,6 +163,8 @@
     // Predefining the view so they exist on load
     App.Views.siteProjectTabsView = {};
     App.Views.projectsView = {};
+    App.Views.contactsManagementView = {};
+    App.Views.volunteersManagementView = {};
 </script>
 <script src="{{ asset('/js/springintoaction.views.js') }}"></script>
 <script src="{{ asset('/js/springintoaction.main.js') }}"></script>
@@ -192,8 +195,8 @@
 @endpush
 
 @push('css')
-<link rel="stylesheet" href="{{ asset('/css/packages.css') }}"/>
-<link rel="stylesheet" href="{{ asset('/css/springintoaction.css') }}"/>
+<link rel="stylesheet" href="{{ asset('/css/springintoaction.packages.css') }}"/>
+<link rel="stylesheet" href="{{ asset('/css/springintoaction.app.css') }}"/>
 @endpush
 
 @section('content')
@@ -229,7 +232,7 @@
                 </div>
             </div>
             <div class="box-footer">
-                <div class="projects-grid-manager-container"></div>
+                <div class="projects-grid-manager-container grid-manager-container"></div>
             </div>
         </div>
         <div class="box box-secondary site-projects-tabs">
@@ -267,51 +270,27 @@
                 </div>
             </div>
             <div class="box-footer">
-                <div class="project-tabs-grid-manager-container"></div>
-            </div>
-        </div>
-        <div class="box box-primary collapsed-box volunteers-management-view">
-            <div class="box-header with-border">
-                <h3 class="box-title volunteers-management">Volunteer Management:</h3>
-                <div class="pull-right">
-                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                </div>
-            </div>
-            <div class="box-body">
-                <div class="row">
-                    <div class="volunteers-view col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                        <div class="volunteers-backgrid-wrapper backgrid-wrapper"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="box-footer">
-                <div class="volunteers-grid-manager-container">
-                    <div class="pull-right pagination-controls"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="box box-primary collapsed-box contacts-management-view">
-            <div class="box-header with-border">
-                <h3 class="box-title contacts-management">Contacts Management:</h3>
-                <div class="pull-right">
-                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                </div>
-            </div>
-            <div class="box-body">
-                <div class="row">
-                    <div class="contacts-view col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                        <div class="contacts-backgrid-wrapper backgrid-wrapper"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="box-footer">
-                <div class="contacts-grid-manager-container"></div>
+                <div class="project-tabs-grid-manager-container grid-manager-container"></div>
             </div>
         </div>
     </div>
 </div>
-
+<script id="managementTemplate" type="text/template">
+    <div class="box-header with-border">
+        <h3 class="box-title <%= modelNameLabelLowerCase %>s-management"><%= modelNameLabel %>s Management:</h3>
+        <div class="pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+        </div>
+    </div>
+    <div class="box-body">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="backgrid-wrapper"></div>
+            </div>
+        </div>
+    </div>
+    <div class="box-footer"></div>
+</script>
 <script id="addProjectVolunteerTemplate" type="text/template">
     <form name="addProjectVolunteer">
         <input type="hidden" name="ProjectID" value="<%= ProjectID %>"/>
@@ -404,8 +383,28 @@
         </div>
     </div>
 </script>
-<script id="projectGridManagerContainerToolbarTemplate" type="text/template">
-    <div class="pull-right project-pagination-controls"></div>
+<script id="gridManagerContainerToolbarTemplate" type="text/template">
+    <div class="pull-right pagination-controls"></div>
+    <button  type="button" class="btnAdd btn btn-xs btn-primary">Add <%= modelName %></button>
+    <button type="button" class="disabled btnDeleteChecked btn btn-xs btn-danger">Delete Chosen <%= modelName %>s</button>
+    <button type="button" class="btnClearStored btn btn-xs btn-default">Reset Columns</button>
+    <div class="file-upload-container">
+        <span class="pull-right file_chosen"></span>
+        <div class="btn btn-xs btn-default file-upload">
+            <input class="file-input" type="file" value="" name="import" />
+            <i class="fa fa-plus"></i> Choose <%= modelName %>s CSV File For Import
+        </div>
+        <div class="pull-left file_progress progress">
+            <span class="meter" style="width:0%;">
+                <p class="percent">&nbsp;</p>
+            </span>
+        </div>
+        <input type="hidden" value="" name="import" class="file_import"/>
+
+    </div>
+</script>
+<script id="projectsGridManagerContainerToolbarTemplate" type="text/template">
+    <div class="pull-right projects-pagination-controls"></div>
     <button id="btnAddProject" type="button" class="btn btn-xs btn-primary">Add Project</button>
     <button id="btnDeleteCheckedProjects" type="button" class="disabled btn btn-xs btn-danger">Delete Chosen Projects</button>
     <button id="btnClearStored" type="button" class="btn btn-xs btn-default">Reset Columns</button>
@@ -425,6 +424,7 @@
 
     </div>
 </script>
+
 <script id="projectTabsGridManagerContainerToolbarsTemplate" type="text/template">
     <div data-tab-name="<%= TabName %>" class="<%= TabName %> tabButtonPane" style="display:none">
         <div class="pull-right tab-pagination-controls"></div>
@@ -506,8 +506,10 @@
 </script>
 <script id="newContactTemplate" type="text/template">
     <form name="newContact">
-        <input type="hidden" name="ProjectID" value="<%= ProjectID %>"/>
-        <input type="hidden" name="SiteID" value="<%= SiteID %>"/>
+        <div class="form-group">
+            <label for="selectSite">Site</label>
+            <%= siteSelect %>
+        </div>
         <div class="form-group">
             <label for="inputFirstName">First Name</label>
             <input type="text" name="FirstName" class="form-control" id="inputFirstName" placeholder="First Name"/>
@@ -521,6 +523,10 @@
             <input type="text" name="Title" class="form-control" id="inputTitle" placeholder="Title"/>
         </div>
         <div class="form-group">
+            <label for="ContactType">Contact Type</label>
+            <input type="text" name="ContactType" class="form-control" id="ContactType" placeholder="ContactType"/>
+        </div>
+        <div class="form-group">
             <label for="inputEmail">Email</label>
             <input type="text" name="Email" class="form-control" id="inputEmail" placeholder="Email"/>
         </div>
@@ -532,146 +538,145 @@
 </script>
 <script id="newVolunteerTemplate" type="text/template">
     <form name="newVolunteer">
-        <input type="hidden" name="ProjectID" value="<%= ProjectID %>"/>
         <div class="form-group">
             <label for="inputFirstName">First Name</label>
-            <input type="text" name="FirstName" class="form-control" id="inputFirstName" placeholder="First Name"/>
+            <input type="text" name="FirstName" class="form-control" id="inputFirstName" placeholder="First Name" value="<%= testString %>"/>
         </div>
         <div class="form-group">
             <label for="inputLastName">Last Name</label>
-            <input type="text" name="LastName" class="form-control" id="inputLastName" placeholder="Last Name"/>
+            <input type="text" name="LastName" class="form-control" id="inputLastName" placeholder="Last Name" value="<%= testString %>"/>
         </div>
         <div class="form-group">
             <label for="inputMobilePhoneNumber">Mobile Phone Number</label>
-            <input type="text" name="MobilePhoneNumber" class="form-control" id="inputMobilePhoneNumber" placeholder="Mobile Phone Number"/>
+            <input type="text" name="MobilePhoneNumber" class="form-control" id="inputMobilePhoneNumber" placeholder="Mobile Phone Number" value="<%= testString %>"/>
         </div>
         <div class="form-group">
             <label for="inputHomePhoneNumber">Home Phone Number</label>
-            <input type="text" name="HomePhoneNumber" class="form-control" id="inputHomePhoneNumber" placeholder="Home Phone Number"/>
+            <input type="text" name="HomePhoneNumber" class="form-control" id="inputHomePhoneNumber" placeholder="Home Phone Number" value="<%= testString %>"/>
         </div>
         <div class="form-group">
             <label for="inputEmail">Email</label>
-            <input type="text" name="Email" class="form-control" id="inputEmail" placeholder="Email"/>
+            <input type="text" name="Email" class="form-control" id="inputEmail" placeholder="Email" value="<%= testEmail %>"/>
         </div>
         <div class="form-group">
-            <label for="inputPrimarySkill">PrimarySkill</label>
-            <input type="text" name="PrimarySkill" class="form-control" id="inputPrimarySkill" placeholder="PrimarySkill"/>
+            <label for="PrimarySkill">Primary Skill</label>
+            <select name="PrimarySkill" class="form-control" id="PrimarySkill"><%= primarySkillOptions %></select>
         </div>
         <div class="form-group">
-            <label for="inputStatus">Status</label>
-            <input type="text" name="Status" class="form-control" id="inputStatus" placeholder="Status"/>
+            <label for="iStatus">Status</label>
+            <select name="Status" class="form-control" id="Status"><%= statusOptions %></select>
         </div>
         <div class="form-group">
             <label for="txtAreaComments">Comments</label>
-            <textarea name="Comments" class="form-control" id="txtAreaComments"></textarea>
+            <textarea name="Comments" class="form-control" id="txtAreaComments"><%= testString %></textarea>
         </div>
         <div class="form-group">
-            <label for="inputPreferredSiteID">PreferredSiteID</label>
-            <input type="text" name="PreferredSiteID" class="form-control" id="inputPreferredSiteID" placeholder="PreferredSiteID"/>
-        </div>
-        <div class="form-group">
-            <label for="inputDateSubmitted">Grove Date Submitted</label>
-            <input type="text" name="DateSubmitted" class="form-control" id="inputDateSubmitted" placeholder="Grove Date Submitted"/>
-        </div>
-        <div class="form-group">
-            <label for="inputDateModified">Grove Date Modified</label>
-            <input type="text" name="DateModified" class="form-control" id="inputDateModified" placeholder="Grove Date Modified"/>
-        </div>
-        <div class="form-group">
-            <label for="inputResponseID">Grove ResponseID</label>
-            <input type="text" name="ResponseID" class="form-control" id="inputResponseID" placeholder="Grove ResponseID"/>
-        </div>
-        <div class="form-group">
-            <label for="inputConfirmationCode">Grove Confirmation Code</label>
-            <input type="text" name="ConfirmationCode" class="form-control" id="inputConfirmationCode" placeholder="Grove Confirmation Code"/>
-        </div>
-        <div class="form-group">
-            <label for="inputIndividualID">Grove IndividualID</label>
-            <input type="text" name="IndividualID" class="form-control" id="inputIndividualID" placeholder="Grove IndividualID"/>
-        </div>
-        <div class="form-group">
-            <label for="inputEnteredFirstName">Grove EnteredFirstName</label>
-            <input type="text" name="EnteredFirstName" class="form-control" id="inputEnteredFirstName" placeholder="Grove EnteredFirstName"/>
-        </div>
-        <div class="form-group">
-            <label for="inputEnteredLastName">Grove EnteredLastName</label>
-            <input type="text" name="EnteredLastName" class="form-control" id="inputEnteredLastName" placeholder="Grove EnteredLastName"/>
+            <label for="PreferredSiteID">Preferred Site</label>
+            <%= siteSelect %>
         </div>
         <div class="form-group">
             <label for="inputContactPhone">Contact Phone</label>
-            <input type="text" name="ContactPhone" class="form-control" id="inputContactPhone" placeholder="Contact Phone"/>
+            <input type="text" name="ContactPhone" class="form-control" id="inputContactPhone" placeholder="Contact Phone" value="<%= testString %>"/>
         </div>
         <div class="form-group">
-            <label for="inputAgeRange">Age Range</label>
-            <input type="text" name="AgeRange" class="form-control" id="inputAgeRange" placeholder="AgeRange"/>
+            <label for="AgeRange">Age Range</label>
+            <select name="AgeRange[]" class="form-control" id="AgeRange" multiple><%= ageRangeOptions %></select>
         </div>
         <div class="form-group">
             <label for="inputLG">Life Group</label>
-            <input type="text" name="LG" class="form-control" id="inputLG" placeholder="Life Group"/>
+            <input type="text" name="LG" class="form-control" id="inputLG" placeholder="Life Group" value="<%= testString %>"/>
         </div>
         <div class="form-group">
             <label for="inputFamily">Family</label>
-            <input type="text" name="Family" class="form-control" id="inputFamily" placeholder="Family"/>
+            <input type="text" name="Family" class="form-control" id="inputFamily" placeholder="Family" value="<%= testString %>"/>
         </div>
         <div class="form-group">
             <label for="inputCFE">CFE</label>
-            <input type="text" name="CFE" class="form-control" id="inputCFE" placeholder="CFE"/>
+            <input type="text" name="CFE" class="form-control" id="inputCFE" placeholder="CFE" value="<%= testString %>"/>
         </div>
         <div class="form-group">
             <label for="inputCFP">CFP</label>
-            <input type="text" name="CFP" class="form-control" id="inputCFP" placeholder="CFP"/>
+            <input type="text" name="CFP" class="form-control" id="inputCFP" placeholder="CFP" value="<%= testString %>"/>
         </div>
         <div class="form-group">
-            <label for="inputPainting">Painting</label>
-            <input type="text" name="Painting" class="form-control" id="inputPainting" placeholder="Painting"/>
+            <label for="Painting">Painting</label>
+            <select name="Painting" class="form-control" id="Painting"><%= skillLevelOptions %></select>
         </div>
         <div class="form-group">
-            <label for="inputLandscaping">Landscaping</label>
-            <input type="text" name="Landscaping" class="form-control" id="inputLandscaping" placeholder="Landscaping"/>
+            <label for="Landscaping">Landscaping</label>
+            <select name="Landscaping" class="form-control" id="Landscaping"><%= skillLevelOptions %></select>
         </div>
         <div class="form-group">
-            <label for="inputConstruction">Construction</label>
-            <input type="text" name="Construction" class="form-control" id="inputConstruction" placeholder="Construction"/>
+            <label for="Construction">Construction</label>
+            <select name="Construction" class="form-control" id="Construction"><%= skillLevelOptions %></select>
         </div>
         <div class="form-group">
-            <label for="inputElectrical">Electrical</label>
-            <input type="text" name="Electrical" class="form-control" id="inputElectrical" placeholder="Electrical"/>
+            <label for="Electrical">Electrical</label>
+            <select name="Electrical" class="form-control" id="Electrical"><%= skillLevelOptions %></select>
         </div>
         <div class="form-group">
-            <label for="inputCabinetryFinishWork">Cabinetry Finish Work</label>
-            <input type="text" name="CabinetryFinishWork" class="form-control" id="inputCabinetryFinishWork" placeholder="CabinetryFinishWork"/>
+            <label for="CabinetryFinishWork">Cabinetry Finish Work</label>
+            <select name="CabinetryFinishWork" class="form-control" id="CabinetryFinishWork"><%= skillLevelOptions %></select>
         </div>
         <div class="form-group">
-            <label for="inputPlumbing">Plumbing</label>
-            <input type="text" name="Plumbing" class="form-control" id="inputPlumbing" placeholder="Plumbing"/>
+            <label for="Plumbing">Plumbing</label>
+            <select name="Plumbing" class="form-control" id="Plumbing"><%= skillLevelOptions %></select>
         </div>
         <div class="form-group">
             <label for="inputNotesOnYourSkillAssessment">Notes On Your Skill Assessment</label>
-            <input type="text" name="NotesOnYourSkillAssessment" class="form-control" id="inputNotesOnYourSkillAssessment" placeholder="Notes On Your Skill Assessment"/>
+            <input type="text" name="NotesOnYourSkillAssessment" class="form-control" id="inputNotesOnYourSkillAssessment" placeholder="Notes On Your Skill Assessment" value="<%= testString %>"/>
         </div>
         <div class="form-group">
             <label for="inputPhysicalRestrictions">Physical Restrictions</label>
-            <input type="text" name="PhysicalRestrictions" class="form-control" id="inputPhysicalRestrictions" placeholder="Physical Restrictions"/>
+            <input type="text" name="PhysicalRestrictions" class="form-control" id="inputPhysicalRestrictions" placeholder="Physical Restrictions" value="<%= testString %>"/>
         </div>
         <div class="form-group">
-            <label for="inputSchoolPreference">School Preference</label>
-            <input type="text" name="SchoolPreference" class="form-control" id="inputSchoolPreference" placeholder="School Preference"/>
+            <label for="SchoolPreference">School Preference</label>
+            <select name="SchoolPreference" class="form-control" id="SchoolPreference"><%= schoolPreferenceOptions %></select>
         </div>
         <div class="form-group">
             <label for="inputEquipment">Equipment</label>
-            <input type="text" name="Equipment" class="form-control" id="inputEquipment" placeholder="Equipment"/>
+            <input type="text" name="Equipment" class="form-control" id="inputEquipment" placeholder="Equipment" value="<%= testString %>"/>
         </div>
         <div class="form-group">
-            <label for="inputTeamLeaderWilling">Team Leader Willing</label>
-            <input type="text" name="TeamLeaderWilling" class="form-control" id="inputTeamLeaderWilling" placeholder="Team Leader Willing"/>
+            <label for="TeamLeaderWilling">Team Leader Willing</label>
+            <select name="TeamLeaderWilling" class="form-control" id="TeamLeaderWilling"><%= yesNoOptions %></select>
         </div>
         <div class="form-group">
             <label for="inputChurch">Church</label>
-            <input type="text" name="Church" class="form-control" id="inputChurch" placeholder="Church"/>
+            <input type="text" name="Church" class="form-control" id="inputChurch" placeholder="Church" value="<%= testString %>"/>
         </div>
         <div class="form-group">
-            <label for="inputAssignmentInformationSendStatus">AssignmentInformationSendStatus</label>
-            <input type="text" name="AssignmentInformationSendStatus" class="form-control" id="inputAssignmentInformationSendStatus" placeholder="AssignmentInformationSendStatus"/>
+            <label for="AssignmentInformationSendStatus">AssignmentInformationSendStatus</label>
+            <select name="AssignmentInformationSendStatus" class="form-control" id="AssignmentInformationSendStatus"><%= sendStatusOptions %></select>
+        </div>
+        <div class="form-group">
+            <label for="inputDateSubmitted">Grove Date Submitted</label>
+            <input type="text" name="DateSubmitted" class="form-control" id="inputDateSubmitted" placeholder="Grove Date Submitted" value="<%= testString %>"/>
+        </div>
+        <div class="form-group">
+            <label for="inputDateModified">Grove Date Modified</label>
+            <input type="text" name="DateModified" class="form-control" id="inputDateModified" placeholder="Grove Date Modified" value="<%= testString %>"/>
+        </div>
+        <div class="form-group">
+            <label for="inputResponseID">Grove ResponseID</label>
+            <input type="text" name="ResponseID" class="form-control" id="inputResponseID" placeholder="Grove ResponseID" value="<%= testDBID %>"/>
+        </div>
+        <div class="form-group">
+            <label for="inputConfirmationCode">Grove Confirmation Code</label>
+            <input type="text" name="ConfirmationCode" class="form-control" id="inputConfirmationCode" placeholder="Grove Confirmation Code" value="<%= testString %>"/>
+        </div>
+        <div class="form-group">
+            <label for="inputIndividualID">Grove IndividualID</label>
+            <input type="text" name="IndividualID" class="form-control" id="inputIndividualID" placeholder="Grove IndividualID" value="<%= testDBID %>"/>
+        </div>
+        <div class="form-group">
+            <label for="inputEnteredFirstName">Grove EnteredFirstName</label>
+            <input type="text" name="EnteredFirstName" class="form-control" id="inputEnteredFirstName" placeholder="Grove EnteredFirstName" value="<%= testString %>"/>
+        </div>
+        <div class="form-group">
+            <label for="inputEnteredLastName">Grove EnteredLastName</label>
+            <input type="text" name="EnteredLastName" class="form-control" id="inputEnteredLastName" placeholder="Grove EnteredLastName" value="<%= testString %>"/>
         </div>
     </form>
 </script>

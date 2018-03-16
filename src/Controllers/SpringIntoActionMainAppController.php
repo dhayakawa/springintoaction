@@ -76,7 +76,9 @@
 
             } catch(\Exception $e) {
                 $project_leads = [];
-                report($e);
+                if(!empty($project)) {
+                    report($e);
+                }
             }
             try {
                 $projectContact = new ProjectContact();
@@ -84,21 +86,27 @@
                 $project_contacts = $project_contacts ?: [];
             } catch(\Exception $e) {
                 $project_contacts = [];
-                report($e);
+                if(!empty($project)) {
+                    report($e);
+                }
             }
             try {
                 $project_volunteers = Project::find($project['ProjectID'])->volunteers;
                 $project_volunteers = $project_volunteers ? $project_volunteers : [];
             } catch(\Exception $e) {
                 $project_volunteers = [];
-                report($e);
+                if(!empty($project)) {
+                    report($e);
+                }
             }
             try {
                 $project_budgets = Project::find($project['ProjectID'])->budgets;
                 $project_budgets = $project_budgets ? $project_budgets->toArray() : [];
             } catch(\Exception $e) {
                 $project_budgets = [];
-                report($e);
+                if(!empty($project)) {
+                    report($e);
+                }
             }
             try {
                 $volunteers = Volunteer::orderBy('LastName', 'asc')

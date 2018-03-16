@@ -7,16 +7,13 @@
 .sia-main-app .projects-backgrid-wrapper {
   border: 0px solid #ddd;
 }
-.sia-main-app .projects-grid-manager-container,
-.sia-main-app .project-tabs-grid-manager-container {
+.sia-main-app .grid-manager-container {
   width: 100%;
 }
-.sia-main-app .projects-grid-manager-container .columnmanager-visibilitycontrol-container,
-.sia-main-app .project-tabs-grid-manager-container .columnmanager-visibilitycontrol-container {
+.sia-main-app .grid-manager-container .columnmanager-visibilitycontrol-container {
   display: inline-block;
 }
-.sia-main-app .projects-grid-manager-container .columnmanager-visibilitycontrol,
-.sia-main-app .project-tabs-grid-manager-container .columnmanager-visibilitycontrol {
+.sia-main-app .grid-manager-container .columnmanager-visibilitycontrol {
   display: inline-block;
 }
 .sia-main-app .site-projects-tabs .tab-content {
@@ -41,6 +38,12 @@
 .backgrid-wrapper .backgrid thead th:nth-child(2) button::before {
   font: normal normal normal 14px/1 FontAwesome;
   content: "\F06E";
+}
+.backgrid-wrapper .backgrid tbody tr {
+  background-color: inherit;
+}
+.backgrid-wrapper .backgrid tbody tr:hover {
+  background-color: lightyellow;
 }
 .columnmanager-dropdown-container {
   width: 400px !important;

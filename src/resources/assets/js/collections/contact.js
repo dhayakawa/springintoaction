@@ -9,8 +9,37 @@
         },
         mode: "client" // page entirely on the client side
     });
+    let siteOptions = function () {
+        let options = [];
+        _.each(appInitialData['sites'], function (model) {
+            options.push([model['SiteName'], model['SiteID']]);
+        });
 
-    App.Vars.ContactsBackgridColumnDefinitions = [
+        return options;
+    };
+
+    let SitesCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
+        // any options specific to `select2` goes here
+        select2Options: {
+            // default is false because Backgrid will save the cell's value
+            // and exit edit mode on enter
+            openOnEnter: false,
+            multiple: false
+        },
+        optionValues: [{
+            values: siteOptions()
+        }],
+        formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
+            toRaw: function (formattedValue, model) {
+                return formattedValue === null ? [] : _.map(formattedValue, function (v) {
+                    return parseInt(v);
+                })
+            }
+        })
+
+    });
+    let contactsBackgridColumnDefinitions = [
         {
             // name is a required parameter, but you don't really want one on a select all column
             name: "",
@@ -96,18 +125,28 @@
         },
         {
             name: "SiteID",
-            label: "SiteID",
-            cell: "string",
+            label: "Site",
+            cell: SitesCell,
             resizeable: true,
             orderable: true,
             width: "250"
         }
     ];
+    App.Vars.ContactsBackgridColumnDefinitions = [];
+    _.each(contactsBackgridColumnDefinitions, function (value, key) {
+        value = _.clone(value);
+        if (value.name !== 'ContactID') {
+            value.editable = true;
+        }
+        App.Vars.ContactsBackgridColumnDefinitions.push(value);
+    });
 
     App.Vars.projectContactsBackgridColumnDefinitions = [];
-    _.each(App.Vars.ContactsBackgridColumnDefinitions, function (value, key) {
+    _.each(contactsBackgridColumnDefinitions, function (value, key) {
+        value = _.clone(value);
         value.editable = false;
         App.Vars.projectContactsBackgridColumnDefinitions.push(value);
     });
+
     _log('App.Vars.CollectionsGroup', 'App.Vars.ContactsBackgridColumnDefinitions:', App.Vars.ContactsBackgridColumnDefinitions);
 })(window.App);
