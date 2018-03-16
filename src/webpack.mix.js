@@ -72,13 +72,15 @@ mix.scripts([
     ], 'public/js/springintoaction.models.js')
     .scripts([
         'resources/assets/js/collections/budget.js',
-        'resources/assets/js/collections/contact.js',
+
         'resources/assets/js/collections/project.js',
         'resources/assets/js/collections/site.js',
+        'resources/assets/js/collections/contact.js',
         'resources/assets/js/collections/volunteer.js',
         'resources/assets/js/collections/project-volunteer.js'
     ], 'public/js/springintoaction.collections.js')
     .scripts([
+        'resources/assets/js/views/grid-manager-container-toolbar.js',
         'resources/assets/js/views/project-tab.js',
         'resources/assets/js/views/budget.js',
         'resources/assets/js/views/contact.js',
@@ -101,38 +103,40 @@ mix.scripts([
         'resources/assets/js/routes/route.js',
         'resources/assets/js/sia.js'
     ], 'public/js/springintoaction.main.js')
-    .copy('node_modules/bootstrap/dist/css/bootstrap.min.css.map', 'public/css/bootstrap.min.css.map', false)
-    .copy('node_modules/backgrid/lib/backgrid.min.css', 'public/css/backgrid.min.css', false)
-    .copy('node_modules/backgrid-paginator/backgrid-paginator.min.css', 'public/css/backgrid-paginator.min.css', false)
-    .copy('node_modules/backgrid-columnmanager/lib/Backgrid.ColumnManager.css', 'public/css/Backgrid.ColumnManager.css', false)
-    .copy('node_modules/backgrid-grouped-columns/backgrid-grouped-columns.css', 'public/css/backgrid-grouped-columns.css', false)
-    .copy('node_modules/backgrid-orderable-columns/backgrid-orderable-columns.css', 'public/css/backgrid-orderable-columns.css', false)
-    .copy('node_modules/backgrid-sizeable-columns/backgrid-sizeable-columns.css', 'public/css/backgrid-sizeable-columns.css', false)
-    .copy('node_modules/select2/dist/css/select2.min.css', 'public/css/select2.css', false)
-    .copy('node_modules/backgrid-select2-cell/backgrid-select2-cell.min.css', 'public/css/backgrid-select2-cell.min.css', false)
-    .copy('node_modules/backgrid-text-cell/backgrid-text-cell.min.css', 'public/css/backgrid-text-cell.min.css', false)
-    .copy('node_modules/backgrid-select-all/backgrid-select-all.min.css', 'public/css/backgrid-select-all.min.css', false)
-    .copy('resources/assets/js/jquery-file-upload/css/jquery.fileupload.css', 'public/css/jquery.fileupload.css', false)
-    .copy('node_modules/underscore/underscore-min.map', 'public/js/underscore-min.map', false)
-    .copy('node_modules/backbone/backbone-min.map', 'public/js/backbone-min.map', false)
-    .less('resources/assets/less/sia_app.less', 'public/css/springintoaction.css');
+    // These copies are for local dev only so we can debug styles. uncomment as needed
+    // .copy('node_modules/bootstrap/dist/css/bootstrap.min.css.map', 'public/css/bootstrap.min.css.map', false)
+    // .copy('node_modules/backgrid/lib/backgrid.min.css', 'public/css/backgrid.min.css', false)
+    // .copy('node_modules/backgrid-paginator/backgrid-paginator.min.css', 'public/css/backgrid-paginator.min.css', false)
+    // .copy('node_modules/backgrid-columnmanager/lib/Backgrid.ColumnManager.css', 'public/css/Backgrid.ColumnManager.css', false)
+    // .copy('node_modules/backgrid-grouped-columns/backgrid-grouped-columns.css', 'public/css/backgrid-grouped-columns.css', false)
+    // .copy('node_modules/backgrid-orderable-columns/backgrid-orderable-columns.css', 'public/css/backgrid-orderable-columns.css', false)
+    // .copy('node_modules/backgrid-sizeable-columns/backgrid-sizeable-columns.css', 'public/css/backgrid-sizeable-columns.css', false)
+    // .copy('node_modules/select2/dist/css/select2.min.css', 'public/css/select2.css', false)
+    // .copy('node_modules/backgrid-select2-cell/backgrid-select2-cell.min.css', 'public/css/backgrid-select2-cell.min.css', false)
+    // .copy('node_modules/backgrid-text-cell/backgrid-text-cell.min.css', 'public/css/backgrid-text-cell.min.css', false)
+    // .copy('node_modules/backgrid-select-all/backgrid-select-all.min.css', 'public/css/backgrid-select-all.min.css', false)
+    // .copy('resources/assets/js/jquery-file-upload/css/jquery.fileupload.css', 'public/css/jquery.fileupload.css', false)
+    // .copy('node_modules/underscore/underscore-min.map', 'public/js/underscore-min.map', false)
+    // .copy('node_modules/backbone/backbone-min.map', 'public/js/backbone-min.map', false)
+    // This is not just dev, this is for production
+    .less('resources/assets/less/sia_app.less', 'public/css/springintoaction.app.css');
 mix.styles([
-    'public/css/backgrid.min.css',
-    'public/css/backgrid-paginator.min.css',
-    'public/css/Backgrid.ColumnManager.css',
-    'public/css/backgrid-grouped-columns.css',
-    'public/css/backgrid-orderable-columns.css',
-    'public/css/backgrid-sizeable-columns.css',
-    'public/css/select2.css',
-    'public/css/backgrid-select2-cell.min.css',
-    'public/css/backgrid-text-cell.min.css',
-    'public/css/backgrid-select-all.min.css',
-    'public/css/backgrid-filter.css'
-], 'public/css/packages.css');
+    'node_modules/backgrid/lib/backgrid.min.css',
+    'node_modules/backgrid-paginator/backgrid-paginator.min.css',
+    'node_modules/backgrid-columnmanager/lib/Backgrid.ColumnManager.css',
+    'node_modules/backgrid-grouped-columns/backgrid-grouped-columns.css',
+    'node_modules/backgrid-orderable-columns/backgrid-orderable-columns.css',
+    'node_modules/backgrid-sizeable-columns/backgrid-sizeable-columns.css',
+    'node_modules/select2/dist/css/select2.min.css',
+    'node_modules/backgrid-select2-cell/backgrid-select2-cell.min.css',
+    'node_modules/backgrid-text-cell/backgrid-text-cell.min.css',
+    'node_modules/backgrid-select-all/backgrid-select-all.min.css',
+    'resources/assets/js/jquery-file-upload/css/jquery.fileupload.css'
+], 'public/css/springintoaction.packages.css');
 
-// This builds the composer assets
-mix.copy('public/css/packages.css','packages/dhayakawa/springintoaction/src/public/css/packages.css')
-    .copy('public/css/springintoaction.css','packages/dhayakawa/springintoaction/src/public/css/springintoaction.css')
+// This builds the assets that get committed to github and used by composer/packagist.org
+mix.copy('public/css/springintoaction.packages.css','packages/dhayakawa/springintoaction/src/public/css/springintoaction.packages.css')
+    .copy('public/css/springintoaction.app.css','packages/dhayakawa/springintoaction/src/public/css/springintoaction.app.css')
     .copy('public/js/springintoaction.main.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.main.js')
     .copy('public/js/springintoaction.init.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.init.js')
     .copy('public/js/springintoaction.views.js','packages/dhayakawa/springintoaction/src/public/js/springintoaction.views.js')

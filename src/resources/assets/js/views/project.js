@@ -1,7 +1,6 @@
 (function (App) {
     App.Views.ProjectGridManagerContainerToolbar = Backbone.View.extend({
-
-        template: template('projectGridManagerContainerToolbarTemplate'),
+        template: template('projectsGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
             _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState','toggleDeleteBtn');
@@ -143,7 +142,7 @@
                 trackSize: true,
                 trackOrder: true,
                 trackVisibility: true,
-                saveState: true,
+                saveState: App.Vars.bBackgridColumnManagerSaveState,
                 saveStateKey: 'site-projects',
                 //saveStateKey: 'site-projects-' + App.Models.siteModel.get(App.Models.siteModel.idAttribute) + '-' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute) + '-' + _.uniqueId('-'),
                 loadStateOnInit: true,
@@ -165,7 +164,7 @@
             });
 
             // Render the paginator
-            this.projectGridManagerContainerToolbar.$el.find('.project-pagination-controls').html(paginator.render().el);
+            this.projectGridManagerContainerToolbar.$el.find('.projects-pagination-controls').html(paginator.render().el);
             _log('App.Views.Projects.render', '$gridContainer', $gridContainer, '$gridContainer.find(\'thead\')', $gridContainer.find('thead'));
             //Add sizeable columns
             let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
@@ -388,7 +387,13 @@
             let selectedModels = self.backgrid.getSelectedModels();
             _log('App.Views.Project.toggleDeleteBtn.event', selectedModels.length, e);
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
-            App.Views.siteManagementView.trigger('toggle-delete-btn', {toggle: toggleState});
+            //App.Views.siteManagementView.trigger('toggle-delete-btn', {toggle: toggleState});
+            _log('App.Views.ProjectGridManagerContainerToolbar.toggleDeleteBtn.event', e.toggle, e);
+            if (toggle === 'disable') {
+                this.$el.find('#btnDeleteCheckedProjects').addClass('disabled');
+            } else {
+                this.$el.find('#btnDeleteCheckedProjects').removeClass('disabled');
+            }
         },
     });
 })(window.App);

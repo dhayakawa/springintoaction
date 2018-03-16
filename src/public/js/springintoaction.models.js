@@ -230,6 +230,7 @@
             }
         },
 
+
     });
 
     /**
@@ -282,7 +283,7 @@
             'PrimarySkill': '',
             'Status': '',
             'Comments': '',
-            'ProjectRoleID': 4,
+            'ProjectRoleID': App.Vars.workerRoleID,
             'PreferredSiteID': '',
             'DateSubmitted': '',
             'DateModified': '',
@@ -345,6 +346,7 @@
         },
         getSchoolOptions: function (bReturnHtml) {
             let options = [
+                ['', ''],
                 ['PJ Jacobs', 'PJ Jacobs'],
                 ['Roosevelt', 'Roosevelt'],
                 ['McKinley', 'McKinley'],
@@ -377,7 +379,7 @@
                 ['Site Coordinator', 68],
                 ['Project Coordinator', 3],
                 ['Team Leader', 25],
-                ['Worker', 4]
+                ['Worker', App.Vars.workerRoleID]
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value) {
@@ -389,6 +391,7 @@
         },
         getPrimarySkillOptions: function (bReturnHtml) {
             let options = [
+                ['', ''],
                 ['Painting', 'Painting'],
                 ['Landscaping', 'Landscaping'],
                 ['Construction', 'Construction'],

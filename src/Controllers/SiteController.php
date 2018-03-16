@@ -37,7 +37,13 @@
          */
         public function store(Request $request) {
             $site = new Site;
-            $site->fill($request->only($site->getFillable()));
+            $data = $request->only($site->getFillable());
+            array_walk($data, function (&$value, $key) {
+                if(is_string($value)) {
+                    $value = \urldecode($value);
+                }
+            });
+            $site->fill($data);
             $success = $site->save();
 
             if($success){
@@ -94,7 +100,13 @@
         public function update(Request $request, $id) {
             $model = Site::findOrFail($id);
 
-            $model->fill($request->only($model->getFillable()));
+            $data = $request->only($model->getFillable());
+            array_walk($data, function (&$value, $key) {
+                if(is_string($value)) {
+                    $value = \urldecode($value);
+                }
+            });
+            $model->fill($data);
             $success = $model->save();
 
             if($success) {
