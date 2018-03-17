@@ -316,9 +316,9 @@
                 statusOptions: App.Models.projectModel.getStatusOptions(true),
                 projectSendOptions: App.Models.projectModel.getSendOptions(true),
                 budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
-                testString: 'test',
-                testNumber: '1',
-                testFloat: '1.00'
+                testString: '',
+                testNumber: '0',
+                testFloat: '0.00'
             };
             return template(tplVars);
         },

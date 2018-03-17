@@ -4,6 +4,7 @@
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
         contactsManagementViewClass: App.Views.ContactsManagement,
         volunteersManagementViewClass: App.Views.VolunteersManagement,
+        annualBudgetsManagementViewClass: App.Views.AnnualBudgetsManagement,
         el: $(".sia-main-app"),
         initialize: function (options) {
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
@@ -19,7 +20,6 @@
                 el: this.$('.site-management-view')
             });
             this.siteManagementView.render();
-
 
             App.Views.siteProjectTabsView = this.siteProjectTabsView = new this.siteProjectTabsViewClass({
                 el: this.$('.site-projects-tabs'),
@@ -49,6 +49,17 @@
                 hideCellCnt: 0
             });
             this.$el.append(this.volunteersManagementView.render().el);
+
+            App.Views.annualBudgetsManagementView = this.annualBudgetsManagementView = new this.annualBudgetsManagementViewClass({
+                className: 'box box-primary collapsed-box annualbudgets-management-view',
+                viewClassName: 'annualbudgets-management-view',
+                mainAppEl: this.el,
+                modelNameLabel: 'AnnualBudget',
+                collection: App.Collections.annualBudgetsManagementCollection,
+                columnCollectionDefinitions: App.Vars.annualBudgetsBackgridColumnDefinitions,
+                hideCellCnt: 0
+            });
+            this.$el.append(this.annualBudgetsManagementView.render().el);
 
             _log('App.Views.mainApp.render', 'render', this.$el);
             App.Vars.mainAppDoneLoading = true;

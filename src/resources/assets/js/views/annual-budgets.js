@@ -1,14 +1,15 @@
 (function (App) {
-    App.Views.VolunteersManagement = Backbone.View.extend({
+    App.Views.AnnualBudgetsManagement = Backbone.View.extend({
         template: template('managementTemplate'),
         initialize: function (options) {
             _.bindAll(this, 'render', 'update', 'toggleDeleteBtn', 'getModalForm', 'create', 'highLightRow', 'batchDestroy');
             this.options = options;
+            this.rowBgColor = 'lightYellow';
             this.viewClassName = this.options.viewClassName;
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
             this.modelNameLabel = this.options.modelNameLabel;
             this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
-            this.viewName = 'App.Views.VolunteersManagement';
+            this.viewName = 'App.Views.AnnualBudgetsManagement';
             this.localStorageKey = this.modelNameLabel;
             this.backgridWrapperClassSelector = '.backgrid-wrapper';
             this.paginationControlsSelector = '.pagination-controls';
@@ -18,7 +19,7 @@
             _log(this.viewName + '.initialize', options, this);
         },
         events: {
-            'focusin tbody tr': 'highLightRow'
+
         },
         render: function () {
             let self = this;
@@ -49,34 +50,9 @@
                 saveStateKey: this.localStorageKey,
                 loadStateOnInit: true
             });
-            // Add control
-            let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
-                columnManager: colManager
-            });
 
             let $gridContainer = this.$el.find(this.backgridWrapperClassSelector).html(this.backgrid.render().el);
 
-            this.backGridFiltersPanel = new App.Views.BackGridFiltersPanel({
-                collection: this.collection,
-                parentEl: $gridContainer
-            });
-
-            $gridContainer.prepend(this.backGridFiltersPanel.render().$el);
-
-            this.gridManagerContainerToolbar = new App.Views.GridManagerContainerToolbar({
-                className: this.gridManagerContainerToolbarClassName,
-                parentView: this,
-                localStorageKey: this.localStorageKey,
-                sAjaxFileUploadURL: this.modelNameLabelLowerCase + '/list/upload'
-            });
-            this.$el.find('.box-footer').append(this.gridManagerContainerToolbar.render().el);
-
-            let paginator = new Backgrid.Extension.Paginator({
-                collection: this.collection
-            });
-
-            // Render the paginator
-            this.gridManagerContainerToolbar.$el.find(this.paginationControlsSelector).html(paginator.render().el);
 
             // Add sizeable columns
             let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
@@ -93,27 +69,11 @@
             });
             $gridContainer.find('thead').before(sizeHandler.render().el);
 
-            // Make columns reorderable
-            let orderHandler = new Backgrid.Extension.OrderableColumns({
-                grid: this.backgrid,
-                sizeAbleColumns: sizeAbleCol
-            });
-            $gridContainer.find('thead').before(orderHandler.render().el);
-
-            this.gridManagerContainerToolbar.$el.find('.file-upload-container').before(colVisibilityControl.render().el);
 
             if (this.collection.length) {
                 this.$el.data('current-model-id', this.model.get(this.model.idAttribute));
             }
 
-            // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
-            this.backgrid.collection.on('backgrid:edited', function (e) {
-                _log(self.viewName + '.render', self.modelNameLabelLowerCase + ' backgrid.collection.on backgrid:edited', e);
-                self.update(e);
-            });
-            this.backgrid.collection.on('backgrid:selected', function (e) {
-                self.toggleDeleteBtn(e);
-            });
             window.ajaxWaiting('remove', self.ajaxWaitingSelector);
             // Show a popup of the text that has been truncated
             $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').popover({
@@ -133,6 +93,23 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
+            let annualBudgetAmount = App.Models.annualBudgetModel.get('BudgetAmount');
+            this.annualBudgetView = new App.Views.AnnualBudgetView({
+                className: 'annual-budget-view-contols',
+                model: App.Models.annualBudgetModel
+            });
+            this.$el.find('.box-title').after(this.annualBudgetView.render().el);
+            let totalAmt = 0.00;
+            let totalWoodlandsAmt = 0.00;
+            this.collection.each(function (model) {
+                let amt = parseFloat(model.get('BudgetAmount'));
+                totalAmt += amt;
+                if (_.indexOf(model.get('BudgetSource'), 'Woodlands') !== -1){
+                    totalWoodlandsAmt += amt;
+                }
+            });
+            totalWoodlandsAmt = annualBudgetAmount - totalWoodlandsAmt;
+            this.$el.find('.box-footer').append('<div class="annual-budget-woodlands-total-wrapper"><strong>Woodlands Budget Remaining:</strong>'+parseFloat(totalWoodlandsAmt).toFixed(2)+'</div><div class="annual-budget-total-wrapper"><strong>Total:</strong>'+parseFloat(totalAmt).toFixed(2)+'</div>');
 
             return this;
         },
@@ -180,7 +157,6 @@
             var self = this;
             window.ajaxWaiting('show', this.ajaxWaitingSelector);
             attributes['Active'] = 1;
-
             _log(this.viewName + '.create', attributes, this.model);
             let newModel = new App.Models.Contact();
             newModel.url = '/admin/' + this.modelNameLabelLowerCase;
@@ -208,25 +184,14 @@
             let template = window.template('new' + this.modelNameLabel + 'Template');
             let siteSelect = new App.Views.Select({
                 el: '',
-                attributes: {id: 'PreferredSiteID', name: 'PreferredSiteID', class: 'form-control'},
+                attributes: {id: 'SiteID', name: 'SiteID', class: 'form-control'},
                 buildHTML: true,
                 collection: App.Collections.sitesDropDownCollection,
                 optionValueModelAttrName: 'SiteID',
-                optionLabelModelAttrName: ['SiteName'],
-                addBlankOption:true
+                optionLabelModelAttrName: ['SiteName']
             });
             let tplVars = {
-                testString: '',
-                testEmail: '',
-                testDBID: 0,
-                siteSelect: siteSelect.getHtml(),
-                primarySkillOptions: App.Models.volunteerModel.getPrimarySkillOptions(true),
-                schoolPreferenceOptions: App.Models.volunteerModel.getSchoolOptions(true),
-                statusOptions: App.Models.volunteerModel.getStatusOptions(true),
-                ageRangeOptions: App.Models.volunteerModel.getAgeRangeOptions(true),
-                skillLevelOptions: App.Models.volunteerModel.getSkillLevelOptions(true),
-                yesNoOptions: App.Models.projectModel.getYesNoOptions(true),
-                sendStatusOptions: App.Models.volunteerModel.getSendOptions(true),
+                siteSelect: siteSelect.getHtml()
             };
             return template(tplVars);
         },

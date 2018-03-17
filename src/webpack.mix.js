@@ -59,6 +59,7 @@ mix.scripts([
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js'
 ], 'public/js/springintoaction.packages.min.js')
     .scripts([
+        'resources/assets/js/models/annual-budget.js',
         'resources/assets/js/models/budget.js',
         'resources/assets/js/models/contact.js',
         'resources/assets/js/models/project-contact.js',
@@ -72,7 +73,6 @@ mix.scripts([
     ], 'public/js/springintoaction.models.js')
     .scripts([
         'resources/assets/js/collections/budget.js',
-
         'resources/assets/js/collections/project.js',
         'resources/assets/js/collections/site.js',
         'resources/assets/js/collections/contact.js',
@@ -80,6 +80,8 @@ mix.scripts([
         'resources/assets/js/collections/project-volunteer.js'
     ], 'public/js/springintoaction.collections.js')
     .scripts([
+        'resources/assets/js/views/annual-budget.js',
+        'resources/assets/js/views/annual-budgets.js',
         'resources/assets/js/views/grid-manager-container-toolbar.js',
         'resources/assets/js/views/project-tab.js',
         'resources/assets/js/views/budget.js',
