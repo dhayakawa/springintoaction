@@ -4,6 +4,7 @@
 
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     //use Illuminate\Support\Facades\Config;
+    use Dhayakawa\SpringIntoAction\Models\AnnualBudget;
     use Illuminate\Support\Facades\Log;
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Models\Project;
@@ -115,7 +116,23 @@
                 $volunteers = [];
                 report($e);
             }
-            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project','projects', 'sites','project_leads', 'project_budgets', 'project_contacts','project_volunteers', 'volunteers','all_contacts']);
+            try {
+                $model = new AnnualBudget();
+                $annual_budgets = $model->getBudgets($Year);
+
+            } catch(\Exception $e) {
+                $annual_budgets = [];
+                report($e);
+            }
+            try {
+                $model = new AnnualBudget();
+                $annual_budget = $model->getAnnualBudget($Year);
+
+            } catch(\Exception $e) {
+                $annual_budget = [];
+                report($e);
+            }
+            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project','projects', 'sites','project_leads', 'project_budgets', 'project_contacts','project_volunteers', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets']);
 
             return view('springintoaction::admin.main.app', $request, compact('appInitialData'));
         }

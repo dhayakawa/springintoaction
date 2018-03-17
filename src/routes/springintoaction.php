@@ -72,7 +72,7 @@
         Route::get('volunteer/list/all', ['as' => 'volunteer.list.all', 'uses' => 'VolunteerController@getAll']);
         Route::put('volunteer/{VolunteerID}', ['as' => 'volunteer.update', 'uses' => 'VolunteerController@update']);
         Route::post('volunteer', ['as' => 'volunteer.create', 'uses' => 'VolunteerController@store']);
-        Route::post('volunteer/list/upload', ['as' => 'project.upload', 'uses' => 'VolunteerController@uploadList']);
+        Route::post('volunteer/list/upload', ['as' => 'volunteer.upload', 'uses' => 'VolunteerController@uploadList']);
 
         //Route::resource('contact', 'ContactController');
         Route::get('contact/{ContactID}', ['as' => 'contact', 'uses' => 'ContactController@show']);
@@ -80,7 +80,11 @@
         Route::put('contact/{ContactID}', ['as' => 'contact.update', 'uses' => 'ContactController@update']);
         Route::post('contact', ['as' => 'contact.create', 'uses' => 'ContactController@store']);
         Route::post('contact/batch/destroy', ['as' => 'contact.batch.destroy', 'uses' => 'ContactController@batchDestroyContacts']);
-        Route::post('contact/list/upload', ['as' => 'project.upload', 'uses' => 'ContactController@uploadList']);
+        Route::post('contact/list/upload', ['as' => 'contact.upload', 'uses' => 'ContactController@uploadList']);
+
+        Route::get('annualbudget/{AnnualBudgetID}', ['as' => 'annualbudget', 'uses' => 'AnnualBudgetController@show']);
+        Route::get('annualbudget/list/all', ['as' => 'annualbudget.list.all', 'uses' => 'AnnualBudgetController@getBudgets']);
+        Route::put('annualbudget/{AnnualBudgetID}', ['as' => 'annualbudget.update', 'uses' => 'AnnualBudgetController@update']);
 
         /**
          * Project Tab routes

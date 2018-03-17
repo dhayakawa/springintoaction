@@ -32,7 +32,7 @@
     App.Models.projectBudgetModel = new App.Models.Budget(@json(current($appInitialData['project_budgets'])));
     App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
-
+    App.Models.annualBudgetModel = new App.Models.AnnualBudget(@json(current($appInitialData['annual_budget'])));
     /**
      * Global var defining the project tab models
      *
@@ -154,6 +154,7 @@
     // This is for the volunteer management view
     App.PageableCollections.volunteersManagementCollection = new App.PageableCollections.Volunteer(@json($appInitialData['volunteers']));
     App.PageableCollections.contactsManagementCollection = new App.PageableCollections.Contact(@json($appInitialData['all_contacts']));
+    App.Collections.annualBudgetsManagementCollection = new App.Collections.Budget(@json($appInitialData['annual_budgets']));
     // @App.PageableCollections.backGridFiltersPanelCollection - filter for volunteer collection
     App.PageableCollections.backGridFiltersPanelCollection = App.PageableCollections.volunteersManagementCollection;
     // This is for the project volunteers tab
@@ -275,6 +276,16 @@
         </div>
     </div>
 </div>
+<script id="annualBudgetTemplate" type="text/template">
+    <form name="annualbudget">
+        <strong>Woodlands Annual Budget</strong>&nbsp;
+        <input type="hidden" name="AnnualBudgetID" value="<%= annualBudgetID %>"/>
+        <input name="BudgetAmount" value="<%= budgetAmount %>"/>
+        <input type="hidden" name="Year" value="<%= year %>"/>
+        <button type="button" class="btnUpdate btn btn-xs btn-primary">Update</button>
+    </form>
+
+</script>
 <script id="managementTemplate" type="text/template">
     <div class="box-header with-border">
         <h3 class="box-title <%= modelNameLabelLowerCase %>s-management"><%= modelNameLabel %>s Management:</h3>
@@ -385,13 +396,13 @@
 </script>
 <script id="gridManagerContainerToolbarTemplate" type="text/template">
     <div class="pull-right pagination-controls"></div>
-    <button  type="button" class="btnAdd btn btn-xs btn-primary">Add <%= modelName %></button>
+    <button type="button" class="btnAdd btn btn-xs btn-primary">Add <%= modelName %></button>
     <button type="button" class="disabled btnDeleteChecked btn btn-xs btn-danger">Delete Chosen <%= modelName %>s</button>
     <button type="button" class="btnClearStored btn btn-xs btn-default">Reset Columns</button>
     <div class="file-upload-container">
         <span class="pull-right file_chosen"></span>
         <div class="btn btn-xs btn-default file-upload">
-            <input class="file-input" type="file" value="" name="import" />
+            <input class="file-input" type="file" value="" name="import"/>
             <i class="fa fa-plus"></i> Choose <%= modelName %>s CSV File For Import
         </div>
         <div class="pull-left file_progress progress">
@@ -420,7 +431,7 @@
                                     <p class="percent">&nbsp;</p>
                                 </span>
         </div>
-        <input type="hidden" value="" name="projects_import" id="file_projects_import"  />
+        <input type="hidden" value="" name="projects_import" id="file_projects_import"/>
 
     </div>
 </script>
@@ -699,15 +710,15 @@
         </div>
         <div class="form-group">
             <label for="inputOriginalRequest">Original Request</label>
-            <textarea name="OriginalRequest" class="form-control" id="inputOriginalRequest" ><%= testString %></textarea>
+            <textarea name="OriginalRequest" class="form-control" id="inputOriginalRequest"><%= testString %></textarea>
         </div>
         <div class="form-group">
             <label for="inputProjectDescription">Project Description</label>
-            <textarea name="ProjectDescription" class="form-control" id="inputProjectDescription" ><%= testString %></textarea>
+            <textarea name="ProjectDescription" class="form-control" id="inputProjectDescription"><%= testString %></textarea>
         </div>
         <div class="form-group">
             <label for="inputComments">Comments</label>
-            <textarea name="Comments" class="form-control" id="inputComments" ><%= testString %></textarea>
+            <textarea name="Comments" class="form-control" id="inputComments"><%= testString %></textarea>
         </div>
         <div class="form-group">
             <label for="inputChildFriendly">Child Friendly</label>
@@ -731,7 +742,7 @@
         </div>
         <div class="form-group">
             <label for="inputStatusReason">Status Reason</label>
-            <textarea name="StatusReason" class="form-control" id="inputStatusReason" ><%= testString %></textarea>
+            <textarea name="StatusReason" class="form-control" id="inputStatusReason"><%= testString %></textarea>
         </div>
         <div class="form-group">
             <label for="inputMaterialsNeeded">Materials Needed</label>
@@ -827,7 +838,7 @@
         </div>
         <div class="form-group">
             <label for="inputFinalCompletionAssessment">Final Completion Assessment</label>
-            <textarea name="FinalCompletionAssessment" class="form-control" id="inputFinalCompletionAssessment" ><%= testString %></textarea>
+            <textarea name="FinalCompletionAssessment" class="form-control" id="inputFinalCompletionAssessment"><%= testString %></textarea>
         </div>
     </form>
 </script>

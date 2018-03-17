@@ -9,6 +9,10 @@
     namespace Dhayakawa\SpringIntoAction\Models;
 
     use Illuminate\Database\Eloquent\Model;
+    use Dhayakawa\SpringIntoAction\Models\Project;
+    use Dhayakawa\SpringIntoAction\Models\Site;
+    use Dhayakawa\SpringIntoAction\Models\SiteStatus;
+    use Dhayakawa\SpringIntoAction\Models\Budget;
 
     class AnnualBudget extends Model {
 
@@ -30,5 +34,20 @@
         protected $fillable = ['BudgetAmount',
             'Year'];
 
+        public function getBudgets($Year) {
 
+            $model = Budget::join('projects', 'projects.ProjectID', '=', 'budgets.ProjectID')
+                ->join('site_status', 'site_status.SiteStatusID', '=', 'projects.SiteStatusID')
+                ->join('sites', 'sites.SiteID', '=', 'site_status.SiteID')
+                ->where('site_status.Year', '=', $Year)
+                ->where('sites.Active', '=', 1)
+                ->select(['budgets.*']);
+
+            return $model->get()->toArray();
+
+        }
+
+        public function getAnnualBudget($Year){
+            return AnnualBudget::where('Year','=',$Year)->get()->toArray();
+        }
     }
