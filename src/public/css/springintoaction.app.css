@@ -45,6 +45,28 @@
 .backgrid-wrapper .backgrid tbody tr:hover {
   background-color: lightyellow;
 }
+.annualbudgets-management-view .backgrid thead th:nth-child(2) button::before {
+  content: '';
+}
+.annual-budget-total-wrapper {
+  width: 256px;
+  text-align: right;
+}
+.annual-budget-total-wrapper strong {
+  padding-right: 20px;
+}
+.annual-budget-view-contols {
+  margin-left: 40px;
+  display: inline-block;
+}
+.annual-budget-woodlands-total-wrapper {
+  float: right;
+  width: 400px;
+  text-align: right;
+}
+.annual-budget-woodlands-total-wrapper strong {
+  padding-right: 20px;
+}
 .columnmanager-dropdown-container {
   width: 400px !important;
   overflow-y: auto !important;

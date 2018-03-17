@@ -10,8 +10,8 @@
     border: 0px solid #ddd;
   }
   .grid-manager-container {
-    width:100%;
-    .columnmanager-visibilitycontrol-container{
+    width: 100%;
+    .columnmanager-visibilitycontrol-container {
       display: inline-block;
     }
     .columnmanager-visibilitycontrol {
@@ -50,33 +50,58 @@
         }
       }
     }
-    tbody{
-      tr{
+    tbody {
+      tr {
         background-color: inherit;
-        &:hover{
+        &:hover {
           background-color: lightyellow;
         }
       }
     }
   }
 }
+
+.annualbudgets-management-view .backgrid thead th:nth-child(2) button::before {
+  content: ''
+}
+
+.annual-budget-total-wrapper {
+  width: 256px;
+  text-align: right;
+  strong {
+    padding-right: 20px;
+  }
+}
+.annual-budget-view-contols{
+  margin-left:40px;
+  display:inline-block;
+}
+.annual-budget-woodlands-total-wrapper {
+  float: right;
+  width: 400px;
+  text-align: right;
+  strong {
+    padding-right: 20px;
+  }
+}
+
 // This gets dynamically added to the body
 .columnmanager-dropdown-container {
   width: 400px !important;
   overflow-y: auto !important;
 }
 
-.backgrid-paginator ul{
-  margin:0;
+.backgrid-paginator ul {
+  margin: 0;
 }
 
-.ajax-spinner-overlay{
-  position:absolute;
-  top:0;
-  left:0;
-  z-index:999;
-  width:50px;
-  height:50px;
+.ajax-spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  width: 50px;
+  height: 50px;
   background: rgba(23, 23, 23, 0.51) none repeat scroll 0% 0%;
 }
 
@@ -90,7 +115,7 @@ body.modal-open .wrapper {
 
 .file_progress {
   position: relative;
-  display:inline-block;
+  display: inline-block;
   margin: 2px 0 0 0;
   padding: 0;
   width: 99%;
@@ -128,12 +153,13 @@ body.modal-open .wrapper {
 }
 
 .file-upload-container {
-  display:inline-block;
+  display: inline-block;
   position: absolute;
-  width:450px;
-  height:22px;
+  width: 450px;
+  height: 22px;
   overflow: visible;
 }
+
 div.file-upload {
   position: relative;
   overflow: hidden;
@@ -338,7 +364,7 @@ span.file_chosen {
   }
 }
 
-.navbar-static-top{
+.navbar-static-top {
   /* The image used */
   background-image: url("/images/sia-grass.png");
 
