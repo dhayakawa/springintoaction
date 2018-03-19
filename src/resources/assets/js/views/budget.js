@@ -19,7 +19,7 @@
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project/budget/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        self.collection.url = '/admin/project/budgets/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
                         self.collection.fetch({reset:true});
                     },
                     error: function (model, response, options) {
