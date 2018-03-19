@@ -55,7 +55,14 @@
                 $project = [];
                 report($e);
             }
+            try {
+                $all_projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')
+                    ->where('site_status.Year',$Year)->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            } catch(\Exception $e) {
+                $all_projects = [];
 
+                report($e);
+            }
             try {
                 $contacts = Site::find($site['SiteID'])->contacts;
                 $contacts = $contacts ? $contacts->toArray() : [];
@@ -132,7 +139,7 @@
                 $annual_budget = [];
                 report($e);
             }
-            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project','projects', 'sites','project_leads', 'project_budgets', 'project_contacts','project_volunteers', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets']);
+            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites','project_leads', 'project_budgets', 'project_contacts','project_volunteers', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets']);
 
             return view('springintoaction::admin.main.app', $request, compact('appInitialData'));
         }

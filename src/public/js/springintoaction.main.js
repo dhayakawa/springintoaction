@@ -9,7 +9,7 @@
         },
         index: function () {
             //$(document.body).append("SIA index route has been called..");
-            growl('SIA index route has been called');
+            //growl('SIA index route has been called');
 
         },
 

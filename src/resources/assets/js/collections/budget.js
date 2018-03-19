@@ -94,38 +94,61 @@
     ];
     let projectOptions = function () {
         let options = [];
-        _.each(appInitialData['sites'], function (model) {
-            options.push([model['SiteName'], model['SiteID']]);
+        _.each(appInitialData['all_projects'], function (model) {
+            options.push([model['ProjectDescription'], model['ProjectID']]);
         });
 
         return options;
     };
-
     let ProjectsCell = Backgrid.Extension.Select2Cell.extend({
         editor: App.CellEditors.Select2CellEditor,
-        // any options specific to `select2` goes here
         select2Options: {
             // default is false because Backgrid will save the cell's value
             // and exit edit mode on enter
             openOnEnter: false,
             multiple: false
         },
-        optionValues: [{
-            values: projectOptions()
-        }],
         formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
             toRaw: function (formattedValue, model) {
                 return formattedValue === null ? [] : _.map(formattedValue, function (v) {
                     return parseInt(v);
                 })
             }
-        })
+        }),
+        _optionValues: projectOptions(),
+        updateInterval: 5000,
+        fetching: false,
+        optionValues: [{
+            values: function () {
+                let self = this;
 
+                // Updates the option values in the background periodically to maintain freshness
+                setInterval(function () {
+                    self.fetching = true;
+
+                    $.get("/admin/project/year/list/all").done(function (data) {
+                        self._optionValues = [];
+                        _.each(data, function (model) {
+                            self._optionValues.push([model['ProjectDescription'], model['ProjectID']]);
+                        });
+
+                        self.fetching = false;
+                    });
+                }, self.updateInterval);
+
+                // poor man's semaphore
+                while (self.fetching) {
+                }
+
+                return self._optionValues;
+            }
+        }]
     });
+
     App.Vars.annualBudgetsBackgridColumnDefinitions = [];
     _.each(App.Vars.BudgetsBackgridColumnDefinitions, function (value, key) {
-        if (_.indexOf(['','BudgetID'], value.name) !== -1){
-           return;
+        if (_.indexOf(['', 'BudgetID'], value.name) !== -1) {
+            return;
         }
         value = _.clone(value);
         value.editable = false;
@@ -133,10 +156,10 @@
         if (value.name === 'ProjectID') {
             value.cell = ProjectsCell;
         }
-        if (value.name === 'BudgetSource'){
+        if (value.name === 'BudgetSource') {
             value.width = 100;
         }
-        if (value.name === 'BudgetAmount'){
+        if (value.name === 'BudgetAmount') {
             value.label = 'Budget';
         }
         App.Vars.annualBudgetsBackgridColumnDefinitions.push(value);

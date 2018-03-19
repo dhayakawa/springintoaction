@@ -127,6 +127,9 @@
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
+                if (attributes['ProjectID'] === ''){
+                    attributes['ProjectID'] = App.Vars.currentProjectID;
+                }
                 _log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.save(attributes ,
