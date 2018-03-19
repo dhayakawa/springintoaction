@@ -47,7 +47,8 @@
         //Route::resource('projects', 'ProjectsController');
         Route::put('project/{ProjectID}', ['as' => 'project.update', 'uses' => 'ProjectsController@update']);
         Route::post('project', ['as' => 'project.store', 'uses' => 'ProjectsController@store']);
-        Route::get('project/all/{SiteStatusID}', ['as' => 'projectar.all', 'uses' => 'ProjectsController@getSiteProjects']);
+        Route::get('project/year/list/all', ['as' => 'project.year.list.all', 'uses' => 'ProjectsController@getAllProjects']);
+        Route::get('project/list/all/{SiteStatusID}', ['as' => 'project.list.all', 'uses' => 'ProjectsController@getSiteProjects']);
         Route::get('project/{ProjectID}', ['as' => 'project.get', 'uses' => 'ProjectsController@getProject']);
         Route::post('project/list/upload', ['as' => 'project.upload', 'uses' => 'ProjectsController@uploadList']);
         Route::post('project/batch/destroy', ['as' => 'project.batch.destroy', 'uses' => 'ProjectsController@batchDestroy']);

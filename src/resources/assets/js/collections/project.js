@@ -1,4 +1,7 @@
 (function (App) {
+    App.Collections.Project = Backbone.Collection.extend({
+        model: App.Models.Project
+    });
     App.PageableCollections.Project = Backbone.PageableCollection.extend({
         model: App.Models.Project,
         state: {

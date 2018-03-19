@@ -134,11 +134,12 @@
 </script>
 <script src="{{ asset('/js/springintoaction.collections.js') }}"></script>
 <script>
-    App.Vars.sAjaxFileUploadURL = 'project/list/upload';
+    App.Vars.sAjaxFileUploadURL = '/admin/project/list/upload';
     App.Vars.bBackgridColumnManagerSaveState = false;
     App.Collections.sitesDropDownCollection = new App.Collections.Site(@json($appInitialData['sites']));
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear(@json($appInitialData['site_years']));
     App.PageableCollections.projectCollection = new App.PageableCollections.Project(@json($appInitialData['projects']));
+    App.Collections.allProjectsCollection = new App.Collections.Project(@json($appInitialData['all_projects']));
 
     // project tabs
     App.PageableCollections.projectLeadsCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_leads']));
@@ -283,6 +284,7 @@
         <input name="BudgetAmount" value="<%= budgetAmount %>"/>
         <input type="hidden" name="Year" value="<%= year %>"/>
         <button type="button" class="btnUpdate btn btn-xs btn-primary">Update</button>
+        <button type="button" class="btnRefreshTotals btn btn-xs btn-secondary">Refresh Totals</button>
     </form>
 
 </script>

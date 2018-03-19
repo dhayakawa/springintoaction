@@ -20,6 +20,7 @@
             return this;
         },
         update: function (e) {
+            var self = this;
             e.preventDefault();
             let attrName = 'BudgetAmount';
             let attrValue = this.$el.find('[name="BudgetAmount"]').val();
@@ -28,6 +29,7 @@
                 {
                     success: function (model, response, options) {
                         growl(response.msg, response.success ? 'success' : 'error');
+                        self.trigger('updated');
                     },
                     error: function (model, response, options) {
                         growl(response.msg, 'error')

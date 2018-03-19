@@ -20,6 +20,7 @@
             return this;
         },
         update: function (e) {
+            var self = this;
             e.preventDefault();
             let attrName = 'BudgetAmount';
             let attrValue = this.$el.find('[name="BudgetAmount"]').val();
@@ -28,6 +29,7 @@
                 {
                     success: function (model, response, options) {
                         growl(response.msg, response.success ? 'success' : 'error');
+                        self.trigger('updated');
                     },
                     error: function (model, response, options) {
                         growl(response.msg, 'error')
@@ -41,7 +43,9 @@
     App.Views.AnnualBudgetsManagement = Backbone.View.extend({
         template: template('managementTemplate'),
         initialize: function (options) {
-            _.bindAll(this, 'render', 'update', 'toggleDeleteBtn', 'getModalForm', 'create', 'highLightRow', 'batchDestroy');
+            _.bindAll(this, 'render', 'update', 'toggleDeleteBtn', 'getModalForm', 'create', 'highLightRow', 'batchDestroy', 'refresh');
+            this.model.on('change', this.render, this);
+            this.listenTo(this.annualBudgetView, 'updated', this.refresh);
             this.options = options;
             this.rowBgColor = 'lightYellow';
             this.viewClassName = this.options.viewClassName;
@@ -58,7 +62,7 @@
             _log(this.viewName + '.initialize', options, this);
         },
         events: {
-
+            'click .btnRefreshTotals': 'refresh'
         },
         render: function () {
             let self = this;
@@ -67,9 +71,6 @@
                 modelNameLabelLowerCase: self.modelNameLabelLowerCase
             }));
             this.hideCellCnt = this.options.hideCellCnt;
-            if (this.collection.length) {
-                this.model = this.collection.at(0);
-            }
 
             // I believe we have to re-build this collection every time the view is created or else a js error is thrown when looping through the column elements
             let backgridOrderableColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
@@ -108,10 +109,8 @@
             });
             $gridContainer.find('thead').before(sizeHandler.render().el);
 
+            this.$el.data('current-model-id', this.model.get(this.model.idAttribute));
 
-            if (this.collection.length) {
-                this.$el.data('current-model-id', this.model.get(this.model.idAttribute));
-            }
 
             window.ajaxWaiting('remove', self.ajaxWaitingSelector);
             // Show a popup of the text that has been truncated
@@ -132,10 +131,10 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-            let annualBudgetAmount = App.Models.annualBudgetModel.get('BudgetAmount');
+            let annualBudgetAmount = self.model.get('BudgetAmount');
             this.annualBudgetView = new App.Views.AnnualBudgetView({
                 className: 'annual-budget-view-contols',
-                model: App.Models.annualBudgetModel
+                model: self.model
             });
             this.$el.find('.box-title').after(this.annualBudgetView.render().el);
             let totalAmt = 0.00;
@@ -183,6 +182,7 @@
                         success: function (model, response, options) {
                             _log(self.viewName + '.update', self.modelNameLabelLowerCase + ' save', model, response, options);
                             growl(response.msg, response.success ? 'success' : 'error');
+                            self.refresh(e);
                         },
                         error: function (model, response, options) {
                             console.error(self.viewName + '.update', self.modelNameLabelLowerCase + ' save', model, response, options);
@@ -203,6 +203,7 @@
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
+                        self.model.set(model.attributes);
                         self.collection.url = '/admin/' + self.modelNameLabelLowerCase + '/list/all';
                         $.when(
                             self.collection.fetch({reset: true})
@@ -268,6 +269,20 @@
                 }
             })
         },
+        refresh: function (e) {
+            var self = this;
+            e.preventDefault();
+            window.ajaxWaiting('show', this.ajaxWaitingSelector);
+            self.collection.url = '/admin/annualbudget/list/all';
+            $.when(
+                self.collection.fetch({reset: true})
+            ).then(function () {
+                //initialize your views here
+                _log(self.viewName + '.create.event', self.modelNameLabelLowerCase + ' collection fetch promise done');
+                window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+            });
+        }
+
     });
 })(window.App);
 
@@ -522,6 +537,9 @@
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
+                if (attributes['ProjectID'] === ''){
+                    attributes['ProjectID'] = App.Vars.currentProjectID;
+                }
                 _log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.save(attributes ,
@@ -821,7 +839,7 @@
         },
         initializeFileUploadObj: function (el) {
             $(el).fileupload({
-                url: App.Vars.sAjaxFileUploadURL,
+                url: '/admin/project/list/upload',
                 dataType: 'json',
                 done: function (e, data) {
                     let self = this;
@@ -1080,7 +1098,7 @@
                             growl(response.msg, response.success ? 'success' : 'error');
                             if (bFetchCollection) {
 
-                                self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
+                                self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
                                 $.when(
                                     self.collection.fetch({reset: true})
                                 ).then(function () {
@@ -1138,7 +1156,7 @@
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
+                        self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
@@ -1168,7 +1186,7 @@
                 data: attributes,
                 success: function (response) {
                     window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
+                    self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
                     $.when(
                         self.collection.fetch({reset: true})
                     ).then(function () {
@@ -1299,7 +1317,7 @@
                 App.Models.siteStatusModel.fetch({reset: true});
 
                 // fetch new product collection
-                App.PageableCollections.projectCollection.url = '/admin/project/all/' + SiteStatusID;
+                App.PageableCollections.projectCollection.url = '/admin/project/list/all/' + SiteStatusID;
                 App.PageableCollections.projectCollection.fetch({
                     reset: true,
                     success: function (model, response, options) {
@@ -2883,6 +2901,7 @@
             App.Views.annualBudgetsManagementView = this.annualBudgetsManagementView = new this.annualBudgetsManagementViewClass({
                 className: 'box box-primary collapsed-box annualbudgets-management-view',
                 viewClassName: 'annualbudgets-management-view',
+                model: App.Models.annualBudgetModel,
                 mainAppEl: this.el,
                 modelNameLabel: 'AnnualBudget',
                 collection: App.Collections.annualBudgetsManagementCollection,

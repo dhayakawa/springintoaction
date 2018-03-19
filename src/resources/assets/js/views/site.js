@@ -99,7 +99,7 @@
                 App.Models.siteStatusModel.fetch({reset: true});
 
                 // fetch new product collection
-                App.PageableCollections.projectCollection.url = '/admin/project/all/' + SiteStatusID;
+                App.PageableCollections.projectCollection.url = '/admin/project/list/all/' + SiteStatusID;
                 App.PageableCollections.projectCollection.fetch({
                     reset: true,
                     success: function (model, response, options) {
