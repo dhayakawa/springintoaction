@@ -128,4 +128,9 @@
             //
         }
 
+        public function getBudgets(){
+            $model          = new AnnualBudget();
+            $annual_budgets = $model->getBudgets(date('Y'));
+            return $annual_budgets;
+        }
     }

@@ -235,8 +235,22 @@
 
         public function uploadList(Request $request){
 
+            if($request->hasFile('projects_import') && $request->file('projects_import')->isValid()) {
+                $file = $request->file('projects_import');
+                //$path = $request->projects_import->path();
+                //$extension = $request->projects_import->extension();
+                $path = $request->projects_import->storePubliclyAs('uploads/import','projects_import.csv');
+                //$path = $request->projects_import->storeAs('images', 'filename.jpg');
+                //$path = $request->projects_import->storeAs('images', 'filename.jpg', 's3');
+            }
             $aaOptions['upload_dir']    = 'uploads/';
             $aaOptions['upload_url']    = 'project/list/upload/';
             $oAjaxUploadHandler         = new ajaxUploader($aaOptions);
+        }
+
+        public function getAllProjects(){
+            $all_projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')
+                ->where('site_status.Year', date('Y'))->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            return $all_projects;
         }
     }

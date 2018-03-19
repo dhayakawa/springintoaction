@@ -21,7 +21,7 @@
         },
         initializeFileUploadObj: function (el) {
             $(el).fileupload({
-                url: App.Vars.sAjaxFileUploadURL,
+                url: '/admin/project/list/upload',
                 dataType: 'json',
                 done: function (e, data) {
                     let self = this;
@@ -280,7 +280,7 @@
                             growl(response.msg, response.success ? 'success' : 'error');
                             if (bFetchCollection) {
 
-                                self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
+                                self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
                                 $.when(
                                     self.collection.fetch({reset: true})
                                 ).then(function () {
@@ -338,7 +338,7 @@
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
+                        self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
@@ -368,7 +368,7 @@
                 data: attributes,
                 success: function (response) {
                     window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.collection.url = '/admin/project/all/' + App.Models.projectModel.get('SiteStatusID');
+                    self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
                     $.when(
                         self.collection.fetch({reset: true})
                     ).then(function () {

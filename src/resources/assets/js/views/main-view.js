@@ -53,6 +53,7 @@
             App.Views.annualBudgetsManagementView = this.annualBudgetsManagementView = new this.annualBudgetsManagementViewClass({
                 className: 'box box-primary collapsed-box annualbudgets-management-view',
                 viewClassName: 'annualbudgets-management-view',
+                model: App.Models.annualBudgetModel,
                 mainAppEl: this.el,
                 modelNameLabel: 'AnnualBudget',
                 collection: App.Collections.annualBudgetsManagementCollection,
