@@ -109,6 +109,7 @@
         Route::get('project_budget/all/{ProjectID}', ['as' => 'project_budget', 'uses' => 'BudgetController@getProjectBudgets']);
         Route::put('project_budget/{BudgetID}', ['as' => 'project_budget.update', 'uses' => 'BudgetController@update']);
         Route::post('project_budget', ['as' => 'project_budget.create', 'uses' => 'BudgetController@store']);
+        Route::post('project_budget/batch/destroy', ['as' => 'project_budget.batch.destroy', 'uses' => 'BudgetController@batchDestroy']);
 
         //Route::resource('project_contact', 'ProjectContactController');
         Route::get('project_contact/{ProjectContactID}', ['as' => 'project_contact', 'uses' => 'ProjectContactController@show']);

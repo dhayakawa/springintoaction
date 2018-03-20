@@ -127,4 +127,30 @@
             //
         }
 
+        public function batchDestroy(Request $request) {
+            $params       = $request->all();
+            $batchSuccess = true;
+            if(is_array($params['deleteModelIDs'])) {
+                foreach($params['deleteModelIDs'] as $modelID) {
+                    $success = Budget::findOrFail($modelID)->delete();
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                }
+            } else {
+                $success = false;
+            }
+            $success = $batchSuccess;
+
+            if(!isset($success)) {
+                $response = ['success' => false, 'msg' => 'Budget Batch Removal Not Implemented Yet.'];
+            } elseif($success) {
+                $response = ['success' => true, 'msg' => 'Budget Batch Removal Succeeded.'];
+            } else {
+                $response = ['success' => false, 'msg' => 'Budget Batch Removal Failed.'];
+            }
+
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
+        }
     }
