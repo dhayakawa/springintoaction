@@ -4,9 +4,9 @@
 ])
 @push('js')
 @include('boilerplate::load.icheck')
-<script src="{{ asset('/js/springintoaction.packages.js') }}"></script>
-<script src="{{ asset('/js/springintoaction.init.js') }}"></script>
-<script src="{{ asset('/js/springintoaction.models.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.packages.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.init.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.models.js') }}"></script>
 
 <script>
 
@@ -132,7 +132,7 @@
 
     });
 </script>
-<script src="{{ asset('/js/springintoaction.collections.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.collections.js') }}"></script>
 <script>
     App.Vars.sAjaxFileUploadURL = '/admin/project/list/upload';
     App.Vars.bBackgridColumnManagerSaveState = false;
@@ -168,8 +168,8 @@
     App.Views.contactsManagementView = {};
     App.Views.volunteersManagementView = {};
 </script>
-<script src="{{ asset('/js/springintoaction.views.js') }}"></script>
-<script src="{{ asset('/js/springintoaction.main.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.views.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.main.js') }}"></script>
 <div id="sia-modal" class="sia-modal modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -197,8 +197,8 @@
 @endpush
 
 @push('css')
-<link rel="stylesheet" href="{{ asset('/css/springintoaction.packages.css') }}"/>
-<link rel="stylesheet" href="{{ asset('/css/springintoaction.app.css') }}"/>
+<link rel="stylesheet" href="{{ mix('/css/springintoaction.packages.css') }}"/>
+<link rel="stylesheet" href="{{ mix('/css/springintoaction.app.css') }}"/>
 @endpush
 
 @section('content')
