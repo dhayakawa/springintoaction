@@ -139,6 +139,7 @@
                 $annual_budget = [];
                 report($e);
             }
+
             $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites','project_leads', 'project_budgets', 'project_contacts','project_volunteers', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets']);
 
             return view('springintoaction::admin.main.app', $request, compact('appInitialData'));
