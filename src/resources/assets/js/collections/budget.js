@@ -78,7 +78,7 @@
         {
             name: "Comments",
             label: "Comments",
-            cell: "text",
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -94,7 +94,7 @@
     ];
     let projectOptions = function () {
         let options = [];
-        _.each(appInitialData['all_projects'], function (model) {
+        _.each(App.Vars.appInitialData['all_projects'], function (model) {
             options.push([model['ProjectDescription'], model['ProjectID']]);
         });
 

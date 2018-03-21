@@ -70,7 +70,8 @@ mix.scripts([
     'resources/assets/js/models/site.js',
     'resources/assets/js/models/site-status.js',
     'resources/assets/js/models/volunteer.js',
-    'resources/assets/js/models/project-volunteer-role.js'
+    'resources/assets/js/models/project-volunteer-role.js',
+    'resources/assets/js/models/init-models.js'
 ], 'public/js/springintoaction.models.js');
 mix.scripts([
     'resources/assets/js/collections/budget.js',
@@ -78,7 +79,8 @@ mix.scripts([
     'resources/assets/js/collections/site.js',
     'resources/assets/js/collections/contact.js',
     'resources/assets/js/collections/volunteer.js',
-    'resources/assets/js/collections/project-volunteer.js'
+    'resources/assets/js/collections/project-volunteer.js',
+    'resources/assets/js/models/init-collections.js'
 ], 'public/js/springintoaction.collections.js');
 mix.scripts([
     'resources/assets/js/views/annual-budget.js',
@@ -106,6 +108,7 @@ mix.scripts([
     'resources/assets/js/routes/route.js',
     'resources/assets/js/sia.js'
 ], 'public/js/springintoaction.main.js');
+
 // These copies are for local dev only so we can debug styles. uncomment as needed
 // .copy('node_modules/bootstrap/dist/css/bootstrap.min.css.map', 'public/css/bootstrap.min.css.map', false)
 // .copy('node_modules/backgrid/lib/backgrid.min.css', 'public/css/backgrid.min.css', false)
@@ -137,4 +140,16 @@ mix.styles([
     'resources/assets/js/jquery-file-upload/css/jquery.fileupload.css'
 ], 'public/css/springintoaction.packages.css');
 
+
+
+mix.copy('resources/assets/js/springintoaction.templates.js','public/js/springintoaction.templates.js');
+mix.copy('resources/assets/js/app-initial-model-vars-data.js','public/js/app-initial-model-vars-data.js');
+mix.copy('resources/assets/js/app-initial-collections-view-data.js','public/js/app-initial-collections-view-data.js');
 mix.version();
+
+// mix.copy('resources/assets/js/test/test.js','public/js/test/test.js');
+// mix.copy('node_modules/mocha/mocha.css','public/css/mocha.css');
+// mix.copy('node_modules/mocha/mocha.js','public/js/mocha.js');
+// mix.copy('node_modules/chai/chai.js','public/js/chai.js');
+// mix.copy('node_modules/sinon/pkg/sinon.js','public/js/sinon.js');
+// mix.copy('node_modules/sinon-chai/lib/sinon-chai.js','public/js/sinon-chai.js');

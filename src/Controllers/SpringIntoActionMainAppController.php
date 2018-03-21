@@ -139,12 +139,40 @@
                 $annual_budget = [];
                 report($e);
             }
+            $random = rand(0, time());
 
-            $appInitialData = compact(['Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites','project_leads', 'project_budgets', 'project_contacts','project_volunteers', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets']);
-
+            $appInitialData = compact(['random', 'Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites','project_leads', 'project_budgets', 'project_contacts','project_volunteers', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets']);
+            $this->makeJsFiles(compact('appInitialData'));
             return view('springintoaction::admin.main.app', $request, compact('appInitialData'));
         }
 
+        public function makeJsFiles($appInitialData){
+            //packages/dhayakawa/springintoaction/src/resources/assets/js/springintoaction.templates.js
+            //public/js/springintoaction.templates.js
+            $content = "window.JST = {};" . \PHP_EOL;
+
+            $files = \glob(base_path(). "/resources/views/vendor/springintoaction/admin/backbone/*.backbone.template.php");
+            foreach($files as $file){
+                $templateID = str_replace('.backbone.template.php','',basename($file));
+                $fileContents = preg_replace(["/(\r\n|\n)/","/\s+/","/> </"],[""," ","><"], addcslashes(\file_get_contents($file),'"'));
+                $content .= "window.JST['{$templateID}'] = _.template(
+                    \"{$fileContents}\"
+                );" . \PHP_EOL;
+            }
+
+            \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/springintoaction.templates.js", $content);
+            \file_put_contents(base_path() . "/public/js/springintoaction.templates.js", $content);
+
+            $contentView = view('springintoaction::admin.backbone.app-initial-models-vars-data', $appInitialData);
+            $content = $contentView->render();
+            \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-models-vars-data.js", $content);
+            \file_put_contents(base_path() . "/public/js/app-initial-models-vars-data.js", $content);
+
+            $contentView = view('springintoaction::admin.backbone.app-initial-collections-view-data', $appInitialData);
+            $content     = $contentView->render();
+            \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-collections-view-data.js", $content);
+            \file_put_contents(base_path() . "/public/js/app-initial-collections-view-data.js", $content);
+        }
         private function dbSqlfix(){
             \file_put_contents('/home/vagrant/code/laravel/public/insert_fixed.txt', '', null);
             $aInsert = file('/home/vagrant/code/laravel/public/insert.txt');

@@ -1,17 +1,55 @@
 // Global object for spring into action backbone app
 window.App = {
-    Models: {},
-    PageableCollections: {},
-    Collections: {},
-    Views: {},
+    Models: {
+        siteModel: null,
+        siteStatusModel: null,
+        projectModel: null,
+        contactModel: null,
+        volunteerModel: null,
+        projectContactModel: null,
+        projectLeadModel: null,
+        projectBudgetModel: new Backbone.Model(),
+        projectVolunteerModel: null,
+        projectVolunteerRoleModel: null,
+        annualBudgetModel: null
+    },
+    PageableCollections: {
+        backGridFiltersPanelCollection: null,
+        contactsManagementCollection: null,
+        projectBudgetsCollection: null,
+        projectCollection: null,
+        projectContactsCollection: null,
+        projectLeadsCollection: null,
+        projectVolunteersCollection: null,
+        unassignedProjectVolunteersCollection: null,
+        volunteersManagementCollection: null
+    },
+    Collections: {
+        allProjectsCollection: null,
+        annualBudgetsManagementCollection: null,
+        contactsManagementCollection: null,
+        projectVolunteersCollection: null,
+        sitesDropDownCollection: null,
+        siteYearsDropDownCollection: null
+    },
+    Views: {
+        siteProjectTabsView: {},
+        projectsView: {},
+        contactsManagementView: {},
+        volunteersManagementView: {}
+    },
+    Templates: {},
     Router: {},
     Vars: {
+        bBackgridColumnManagerSaveState: false,
         // Turn on the console logging
         bAllowConsoleOutput: 1,
         bAllowConsoleOutputHiLite: 1,
         bAllowConsoleVarGroupsOutput: 1,
         rowBgColorSelected: '#e3f6b1',
-        workerRoleID: 4
+        workerRoleID: 4,
+        appInitialData: {}
+
     },
     CellEditors: {}
 };
@@ -32,7 +70,7 @@ App.CellEditors.Select2CellEditor = Backgrid.Extension.Select2CellEditor.extend(
  * @returns {Function}
  */
 window.template = function (id) {
-    return _.template($('#' + id).html());
+    return window.JST[id];
 };
 
 window.ajaxWaiting = function (action, selector) {
@@ -158,7 +196,11 @@ let Ferrari = Car.fullExtend({
 // exists in case dhayakawa/springintoaction/src/resources/assets/js/browser.console.logging.js
 // goes missing somehow. browser.console.logging.js will override this function.
 var _log = function () {console.log('!!_log feature is not working!!',arguments)};
-
+$('#sia-modal').modal({
+    backdrop: true,
+    show: false,
+    keyboard: false
+});
 
 /**
  * Browser console logging helper

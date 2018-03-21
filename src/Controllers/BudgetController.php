@@ -4,6 +4,7 @@
 
     use Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Dhayakawa\SpringIntoAction\Models\Budget;
+    use Dhayakawa\SpringIntoAction\Models\Project;
     use Illuminate\Http\Request;
 
     class BudgetController extends BaseController {
@@ -152,5 +153,19 @@
 
 
             return view('springintoaction::admin.main.response', $request, compact('response'));
+        }
+
+        public function getProjectBudgets($ProjectID) {
+            // Need to return an array for the grid
+            $result = [];
+            try {
+                if($b = Project::find($ProjectID)->budgets) {
+                    $result = $b->toArray();
+                }
+            } catch(\Exception $e) {
+
+            }
+
+            return $result;
         }
     }

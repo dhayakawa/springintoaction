@@ -11,9 +11,9 @@
             _.bindAll(this, 'render');
         },
         render: function () {
-            _log('App.Views.mainApp.render', 'appInitialData', appInitialData);
-            App.Vars.currentSiteID = appInitialData.site.SiteID;
-            App.Vars.currentProjectID = appInitialData.project.ProjectID;
+            _log('App.Views.mainApp.render', 'appInitialData', App.Vars.appInitialData);
+            App.Vars.currentSiteID = App.Vars.appInitialData.site.SiteID;
+            App.Vars.currentProjectID = App.Vars.appInitialData.project.ProjectID;
             App.Vars.mainAppDoneLoading = false;
 
             App.Views.siteManagementView = this.siteManagementView = new this.siteManagementViewClass({

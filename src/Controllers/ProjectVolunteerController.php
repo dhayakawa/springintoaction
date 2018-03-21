@@ -159,7 +159,7 @@
                 foreach($params['deleteModelIDs'] as $modelID) {
                     $model   = ProjectVolunteerRole::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $params['ProjectRoleID']);
                     if($model->get()->count()) {
-                        $success = $model->delete();
+                        $success = $model->forceDelete();
                     } else {
                         $success = true;
                     }
@@ -171,8 +171,9 @@
                     // Only remove from project volunteers if there are no other roles available
                     $projectVolunteerRoleModel = ProjectVolunteerRole::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID']);
                     $projectVolunteerModel = ProjectVolunteer::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID']);
+
                     if($projectVolunteerRoleModel->get()->count() === 0 && $projectVolunteerModel->get()->count()) {
-                        $success = $model->delete();
+                        $success = $projectVolunteerModel->forceDelete();
                     } else {
                         $success = true;
                     }
