@@ -116,9 +116,12 @@
 
                 return $value;
             }, $request->only($model->getFillable()));
-            array_walk($data, function(&$value, $key){
-                if(is_string($value)){
+            array_walk($data, function (&$value, $key) {
+                if(is_string($value)) {
                     $value = \urldecode($value);
+                }
+                if($key !== 'VolunteerID' && preg_match("/ID$/", $key) && $value === '') {
+                    $value = 0;
                 }
             });
             $model->fill($data);
