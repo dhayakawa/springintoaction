@@ -151,27 +151,37 @@
             //public/js/springintoaction.templates.js
             $content = "window.JST = {};" . \PHP_EOL;
 
-            $files = \glob(base_path(). "/resources/views/vendor/springintoaction/admin/backbone/*.backbone.template.php");
-            foreach($files as $file){
-                $templateID = str_replace('.backbone.template.php','',basename($file));
-                $fileContents = preg_replace(["/(\r\n|\n)/","/\s+/","/> </"],[""," ","><"], addcslashes(\file_get_contents($file),'"'));
-                $content .= "window.JST['{$templateID}'] = _.template(
-                    \"{$fileContents}\"
-                );" . \PHP_EOL;
+            try {
+                $files = \glob(base_path() . "/resources/views/vendor/springintoaction/admin/backbone/*.backbone.template.php");
+                foreach($files as $file) {
+                    $templateID   = str_replace('.backbone.template.php', '', basename($file));
+                    $fileContents = preg_replace(["/(\r\n|\n)/", "/\s+/", "/> </"], ["", " ", "><"], addcslashes(\file_get_contents($file), '"'));
+                    $content      .= "window.JST['{$templateID}'] = _.template(
+                        \"{$fileContents}\"
+                    );" . \PHP_EOL;
+                }
+
+                if(\file_exists(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js")) {
+                    \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/springintoaction.templates.js", $content);
+                }
+                \file_put_contents(base_path() . "/public/js/springintoaction.templates.js", $content);
+
+                $contentView = view('springintoaction::admin.backbone.app-initial-models-vars-data', $appInitialData);
+                $content     = $contentView->render();
+                if(\file_exists(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js")) {
+                    \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-models-vars-data.js", $content);
+                }
+                \file_put_contents(base_path() . "/public/js/app-initial-models-vars-data.js", $content);
+
+                $contentView = view('springintoaction::admin.backbone.app-initial-collections-view-data', $appInitialData);
+                $content     = $contentView->render();
+                if(\file_exists(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js")) {
+                    \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-collections-view-data.js", $content);
+                }
+                \file_put_contents(base_path() . "/public/js/app-initial-collections-view-data.js", $content);
+            } catch(\Exception $e) {
+                report($e);
             }
-
-            \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/springintoaction.templates.js", $content);
-            \file_put_contents(base_path() . "/public/js/springintoaction.templates.js", $content);
-
-            $contentView = view('springintoaction::admin.backbone.app-initial-models-vars-data', $appInitialData);
-            $content = $contentView->render();
-            \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-models-vars-data.js", $content);
-            \file_put_contents(base_path() . "/public/js/app-initial-models-vars-data.js", $content);
-
-            $contentView = view('springintoaction::admin.backbone.app-initial-collections-view-data', $appInitialData);
-            $content     = $contentView->render();
-            \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-collections-view-data.js", $content);
-            \file_put_contents(base_path() . "/public/js/app-initial-collections-view-data.js", $content);
         }
         private function dbSqlfix(){
             \file_put_contents('/home/vagrant/code/laravel/public/insert_fixed.txt', '', null);
