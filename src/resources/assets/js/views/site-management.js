@@ -47,7 +47,7 @@
 
             App.Views.projectsView = this.projectsView = new this.projectsViewClass({
                 el: this.$('.projects-backgrid-wrapper'),
-                parentViewEl: this.el,
+                parentViewEl: this.$el,
                 collection: App.PageableCollections.projectCollection,
                 columnCollectionDefinitions: App.Vars.projectsBackgridColumnDefinitions,
                 model: App.Models.projectModel

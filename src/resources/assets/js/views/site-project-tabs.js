@@ -14,6 +14,7 @@
                 self.toggleDeleteBtn(e);
             });
             this.listenTo(App.Views.siteProjectTabsView, 'tab-toggled', this.toggleProjectTabToolbars);
+
         },
         events: {
             'click .btnTabAdd': 'addGridRow',
@@ -114,7 +115,10 @@
             });
             let selectedModels = tabView[tabName].backgrid.getSelectedModels();
             // clear or else the previously selected models remain as undefined
-            tabView[tabName].backgrid.clearSelectedModels();
+            try {
+                tabView[tabName].backgrid.clearSelectedModels();
+            } catch (e) {
+            }
             let modelIDs = _.map(selectedModels, function (model) {
                 return model.get(model.idAttribute);
             });
@@ -138,16 +142,17 @@
         initialize: function (options) {
             this.options = options;
             this.childViews = [];
-            _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID');
+            _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID','toggleProductTabsBox');
             // this.model is App.Models.projectModel
             this.listenTo(this.model, "change", this.fetchIfNewProjectID);
+            this.listenTo(App.Views.siteYearsDropDownView, 'toggle-product-tabs-box', this.toggleProductTabsBox);
         },
         events: {
             'shown.bs.tab a[data-toggle="tab"]': 'notifyProjectTabToolbar',
             'clear-child-views': 'removeChildViews'
         },
         render: function () {
-
+            let self = this;
             App.Views.projectLeadsView = this.projectLeadsView = new this.projectLeadsViewClass({
                 el: this.$('.project-leads-backgrid-wrapper'),
                 mainAppEl: this.options.mainAppEl,
@@ -206,13 +211,32 @@
             this.projectBudgetView.render();
             this.projectContactsView.render();
             this.projectVolunteersView.render();
-
-            $(this.options.mainAppEl).find('h3.box-title small').html(this.model.get('ProjectDescription'));
-            _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + this.model.get('ProjectDescription'), 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
+            let titleDescription = App.Views.projectsView.collection.length === 0 ? 'No projects created yet.' : this.model.get('ProjectDescription');
+            $(this.options.mainAppEl).find('h3.box-title small').html(titleDescription);
+            _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + titleDescription, 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
             this.$el.data('project-id', this.model.get('ProjectID'));
             window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+            self.toggleProductTabsBox();
 
             return this;
+        },
+        toggleProductTabsBox: function () {
+            let self = this;
+            _log('App.Views.SiteProjectTabs.toggleProductTabsBox', 'App.Views.projectsView.collection.length:'+ App.Views.projectsView.collection.length);
+            if (App.Views.projectsView.collection.length === 0) {
+                if (!self.$el.hasClass('collapsed-box')) {
+                    self.$el.find('.btn-box-tool').trigger('click');
+                }
+                self.$el.find('.btn-box-tool').hide();
+                $(this.options.mainAppEl).find('h3.box-title small').html('No projects created yet.');
+            } else {
+                self.$el.find('.btn-box-tool').show();
+
+                if (self.$el.hasClass('collapsed-box')) {
+                    self.$el.find('.btn-box-tool').trigger('click');
+                    self.$el.removeClass('collapsed-box')
+                }
+            }
         },
         /**
          * Rebuild the Project Tabs if the project has changed

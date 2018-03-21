@@ -154,7 +154,7 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "150",
             filterType: "string"
         },
         {
@@ -163,7 +163,7 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "150",
             filterType: "string"
         },
         {
@@ -172,7 +172,7 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "150",
             filterType: "string"
         },
         {
@@ -181,7 +181,7 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "150",
             filterType: "string"
         },
         {
@@ -190,7 +190,7 @@
             cell: "email",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "175",
             filterType: "string"
         },
         {
@@ -205,7 +205,7 @@
         {
             name: "Comments",
             label: "Comments",
-            cell: "text",
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -319,7 +319,7 @@
         {
             name: "NotesOnYourSkillAssessment",
             label: "NotesOnYourSkillAssessment",
-            cell: "text",
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -374,76 +374,9 @@
             orderable: true,
             width: "250"
         },
-        {
-            name: "ConfirmationCode",
-            label: "GroveConfirmationCode",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            renderable: false
-        },
-        {
-            name: "FullName",
-            label: "FullName",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            renderable: false,
-            filterType: "string"
-        },
-
-        {
-            name: "EnteredFirstName",
-            label: "GroveEnteredFirstName",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            renderable: false
-        },
-        {
-            name: "EnteredLastName",
-            label: "GroveEnteredLastName",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            renderable: false
-        }, {
-            name: "IndividualID",
-            label: "GroveIndividualID",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        }, {
-            name: "DateSubmitted",
-            label: "GroveDateSubmitted",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "DateModified",
-            label: "GroveDateModified",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        }, {
+         {
             name: "PreferredSiteID",
             label: "PreferredSiteID",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "ResponseID",
-            label: "GroveResponseID",
             cell: "string",
             resizeable: true,
             orderable: true,

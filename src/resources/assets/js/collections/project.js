@@ -181,7 +181,7 @@
         }
 
     });
-    let TextareaCell = Backgrid.Extension.TextCell.extend({
+    App.Vars.TextareaCell = Backgrid.Extension.TextCell.extend({
         attributes: function () {
             return { 'data-toggle':'popover','data-trigger':'hover'}
         },
@@ -270,7 +270,7 @@
         {
             name: "OriginalRequest",
             label: "Original Request",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -279,7 +279,7 @@
         {
             name: "ProjectDescription",
             label: "Project Description",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: false,
             width: "250",
@@ -288,7 +288,7 @@
         {
             name: "Comments",
             label: "Comments",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -306,7 +306,7 @@
         {
             name: "StatusReason",
             label: "Status Reason",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -360,7 +360,7 @@
         {
             name: "MaterialsNeeded",
             label: "Materials Needed",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -423,7 +423,7 @@
         {
             name: "SpecialEquipmentNeeded",
             label: "Special Equipment Needed",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -432,7 +432,7 @@
         {
             name: "PermitsOrApprovalsNeeded",
             label: "Permits Or Approvals Needed",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -441,7 +441,7 @@
         {
             name: "PrepWorkRequiredBeforeSIA",
             label: "Prep Work Required Before SIA",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -450,7 +450,7 @@
         {
             name: "SetupDayInstructions",
             label: "Setup Day Instructions",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -459,7 +459,7 @@
         {
             name: "SIADayInstructions",
             label: "SIA Day Instructions",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -576,7 +576,7 @@
         {
             name: "FinalCompletionAssessment",
             label: "Final Completion Assessment",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",

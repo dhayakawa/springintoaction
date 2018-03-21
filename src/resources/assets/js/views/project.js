@@ -80,7 +80,10 @@
                 if (bConfirmed) {
                     let selectedModels = App.Views.projectsView.backgrid.getSelectedModels();
                     // clear or else the previously selected models remain as undefined
-                    App.Views.projectsView.backgrid.clearSelectedModels();
+                    try {
+                        App.Views.projectsView.backgrid.clearSelectedModels();
+                    } catch (e) {
+                    }
                     _log('App.Views.ProjectGridManagerContainerToolbar.deleteCheckedRows', 'selectedModels', selectedModels);
                     let modelIDs = _.map(selectedModels, function (model) {
                         return model.get(model.idAttribute);
@@ -112,15 +115,15 @@
     App.Views.Projects = Backbone.View.extend({
         initialize: function (options) {
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'getModalForm','toggleDeleteBtn');
+            _.bindAll(this, 'render', 'update','updateProjectDataViews', 'getModalForm','create','destroy','toggleDeleteBtn');
             this.rowBgColor = 'lightYellow';
-            //this.collection.bind('reset', this.render, this);
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
+            this.$parentViewEl = this.options.parentViewEl;
         },
         events: {
             'focusin tbody tr': 'updateProjectDataViews'
         },
-        render: function () {
+        render: function (e) {
             let self = this;
 
             // I believe we have to re-build this collection every time the view is created or else a js error is thrown when looping through the column elements
@@ -246,8 +249,8 @@
                 ProjectID = $RadioElement.val();
 
                 // Highlight row
-                $TableRowElement.siblings().css('background-color', 'white');
-                $TableRowElement.css('background-color', self.rowBgColor);
+                $TableRowElement.siblings().removeAttr('style');
+                $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
             }
 
             if (App.Vars.mainAppDoneLoading && ProjectID && $('.site-projects-tabs').data('project-id') != ProjectID) {
@@ -280,7 +283,7 @@
                             growl(response.msg, response.success ? 'success' : 'error');
                             if (bFetchCollection) {
 
-                                self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
+                                self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                                 $.when(
                                     self.collection.fetch({reset: true})
                                 ).then(function () {
@@ -338,18 +341,21 @@
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
+                        self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
                             //initialize your views here
                             _log('App.Views.Project.create.event', 'project collection fetch promise done');
                             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                            App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                            self.$el.find('tbody tr:first-child').trigger('focusin');
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                        App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
                     }
                 });
         },
@@ -368,31 +374,34 @@
                 data: attributes,
                 success: function (response) {
                     window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.collection.url = '/admin/project/list/all/' + App.Models.projectModel.get('SiteStatusID');
+                    self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                     $.when(
                         self.collection.fetch({reset: true})
                     ).then(function () {
                         //initialize your views here
                         _log('App.Views.Project.destroy.event', 'project collection fetch promise done');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                        App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
                     });
                 },
                 fail: function (response) {
-                    window.growl(response.msg, 'error')
+                    window.growl(response.msg, 'error');
+                    window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                    App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
                 }
             })
         },
         toggleDeleteBtn: function (e) {
             var self = this;
             let selectedModels = self.backgrid.getSelectedModels();
-            _log('App.Views.Project.toggleDeleteBtn.event', selectedModels.length, e);
+            _log('App.Views.Projects.toggleDeleteBtn.event', selectedModels.length, e);
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
             //App.Views.siteManagementView.trigger('toggle-delete-btn', {toggle: toggleState});
-            _log('App.Views.ProjectGridManagerContainerToolbar.toggleDeleteBtn.event', e.toggle, e);
-            if (toggle === 'disable') {
-                this.$el.find('#btnDeleteCheckedProjects').addClass('disabled');
+            _log('App.Views.Projects.toggleDeleteBtn.event', 'toggleState:'+toggleState, self.$parentViewEl);
+            if (toggleState === 'disable') {
+                self.$parentViewEl.find('#btnDeleteCheckedProjects').addClass('disabled');
             } else {
-                this.$el.find('#btnDeleteCheckedProjects').removeClass('disabled');
+                self.$parentViewEl.find('#btnDeleteCheckedProjects').removeClass('disabled');
             }
         },
     });

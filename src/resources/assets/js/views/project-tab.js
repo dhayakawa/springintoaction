@@ -1,11 +1,10 @@
 (function (App) {
     App.Views.ProjectTab = Backbone.View.extend({
         initialize: function (options) {
+            let self = this;
             this.options = options;
             _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy','toggleDeleteBtn');
-            this.rowBgColor = 'lightYellow';
-            // apparently backgrid is managing the collection reset thing
-            //this.collection.bind('reset', this.render, this);
+            self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
         },
         events: {
@@ -77,7 +76,6 @@
             });
             $gridContainer.find('thead').before(orderHandler.render().el);
 
-            // since we're appending and not replacing we need to remove the last visibility control
             this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
@@ -87,10 +85,29 @@
             this.backgrid.collection.on('backgrid:selected', function (e) {
                 self.toggleDeleteBtn(e);
             });
-
+            window.ajaxWaiting('remove', self.ajaxWaitingSelector);
             _log('App.Views.ProjectTab.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
             // Set the current model id on the tab so we can reference it in other views
             $('#' + this.options.tab).data('current-model-id', this.model.get(this.model.idAttribute));
+
+            // Show a popup of the text that has been truncated
+            $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
+                placement: 'auto right',
+                padding: 0,
+                container: 'body',
+                content: function () {
+                    return $(this).text()
+                }
+            });
+            // hide popover if it is not overflown
+            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
+                let element = this;
+
+                let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+                if (!bOverflown) {
+                    $gridContainer.find('td.renderable').popover('hide')
+                }
+            });
 
             return this;
         },
@@ -110,12 +127,12 @@
                 currentModelID = $RadioElement.val();
 
                 // Highlight row
-                $TableRowElement.siblings().css('background-color', 'white');
-                $TableRowElement.css('background-color', self.rowBgColor);
+                $TableRowElement.siblings().removeAttr('style');
+                $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
 
             }
 
-            if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') != currentModelID) {
+            if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
                 // Refresh tabs on new row select
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.fetch({reset: true});
@@ -148,6 +165,7 @@
         },
         create: function (attributes) {
             var self = this;
+            window.ajaxWaiting('show', self.backgridWrapperClassSelector);
             _log('App.Views.ProjectTab.create', self.options.tab, attributes, this.model);
             this.model.url = '/admin/' + self.options.tab;
             this.model.save(attributes,
@@ -155,18 +173,16 @@
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
                         self.collection.url = '/admin/' + self.options.tab + '/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
-                        window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
-
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
                             _log('App.Views.ProjectTab.create.event', self.options.tab + ' collection fetch promise done');
-                            window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
                     }
                 });
         },
@@ -185,6 +201,7 @@
 
             bootbox.confirm("Do you really want to delete the checked " + self.options.tab + "s?", function (bConfirmed) {
                 if (bConfirmed) {
+                    window.ajaxWaiting('show', self.backgridWrapperClassSelector);
                     attributes = _.extend(attributes, {
                         ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
                         ProjectRoleID: self.model.get('ProjectRoleID')
@@ -198,10 +215,16 @@
                         success: function (response) {
                             window.growl(response.msg, response.success ? 'success' : 'error');
                             self.collection.url = '/admin/' + self.options.tab + '/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
-                            self.collection.fetch({reset: true});
+                            $.when(
+                                self.collection.fetch({reset: true})
+                            ).then(function () {
+                                _log('App.Views.ProjectTab.destroy.event', self.options.tab + ' collection fetch promise done');
+                                window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            });
                         },
                         fail: function (response) {
-                            window.growl(response.msg, 'error')
+                            window.growl(response.msg, 'error');
+                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
                         }
                     })
                 }

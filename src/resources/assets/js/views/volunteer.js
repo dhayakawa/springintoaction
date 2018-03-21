@@ -99,6 +99,7 @@
         },
         create: function (attributes) {
             let self = this;
+            window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
             let model = App.Models.projectVolunteerModel.clone().clear({silent: true});
             model.url = '/admin/project_volunteer/batch/store';
             _log('App.Views.ProjectVolunteer.create', attributes, model);
@@ -107,8 +108,6 @@
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
                         self.collection.url = '/admin/project_volunteer/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
-                        window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
-
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
