@@ -5,6 +5,7 @@
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Dhayakawa\SpringIntoAction\Models\Volunteer;
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
+    use Dhayakawa\SpringIntoAction\Models\Project;
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Controllers\ajaxUploader;
 
@@ -192,5 +193,24 @@
             $aaOptions['upload_dir'] = 'uploads/';
             $aaOptions['upload_url'] = 'volunteer/list/upload/';
             $oAjaxUploadHandler      = new ajaxUploader($aaOptions);
+        }
+
+        public function getProjectVolunteers($ProjectID) {
+            try {
+                if($v = Project::find($ProjectID)->volunteers) {
+                    return $v->toArray();
+                }
+            } catch(\Exception $e) {
+                return [];
+            }
+
+            return [];
+        }
+
+        public function getLeadVolunteers($ProjectID) {
+            // Gave up on the Eloquent relational model
+            return $project_leads = Volunteer::join('project_volunteer_role', 'volunteers.VolunteerID', '=', 'project_volunteer_role.VolunteerID')
+                ->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')
+                ->where('project_volunteer_role.ProjectID', $ProjectID)->get()->toArray();
         }
     }

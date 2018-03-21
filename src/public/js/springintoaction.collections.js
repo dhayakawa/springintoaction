@@ -78,7 +78,7 @@
         {
             name: "Comments",
             label: "Comments",
-            cell: "text",
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -94,7 +94,7 @@
     ];
     let projectOptions = function () {
         let options = [];
-        _.each(appInitialData['all_projects'], function (model) {
+        _.each(App.Vars.appInitialData['all_projects'], function (model) {
             options.push([model['ProjectDescription'], model['ProjectID']]);
         });
 
@@ -350,7 +350,7 @@
         }
 
     });
-    let TextareaCell = Backgrid.Extension.TextCell.extend({
+    App.Vars.TextareaCell = Backgrid.Extension.TextCell.extend({
         attributes: function () {
             return { 'data-toggle':'popover','data-trigger':'hover'}
         },
@@ -439,7 +439,7 @@
         {
             name: "OriginalRequest",
             label: "Original Request",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -448,7 +448,7 @@
         {
             name: "ProjectDescription",
             label: "Project Description",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: false,
             width: "250",
@@ -457,7 +457,7 @@
         {
             name: "Comments",
             label: "Comments",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -475,7 +475,7 @@
         {
             name: "StatusReason",
             label: "Status Reason",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -529,7 +529,7 @@
         {
             name: "MaterialsNeeded",
             label: "Materials Needed",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -592,7 +592,7 @@
         {
             name: "SpecialEquipmentNeeded",
             label: "Special Equipment Needed",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -601,7 +601,7 @@
         {
             name: "PermitsOrApprovalsNeeded",
             label: "Permits Or Approvals Needed",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -610,7 +610,7 @@
         {
             name: "PrepWorkRequiredBeforeSIA",
             label: "Prep Work Required Before SIA",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -619,7 +619,7 @@
         {
             name: "SetupDayInstructions",
             label: "Setup Day Instructions",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -628,7 +628,7 @@
         {
             name: "SIADayInstructions",
             label: "SIA Day Instructions",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -745,7 +745,7 @@
         {
             name: "FinalCompletionAssessment",
             label: "Final Completion Assessment",
-            cell: TextareaCell,
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "255",
@@ -802,7 +802,7 @@
     });
     let siteOptions = function () {
         let options = [];
-        _.each(appInitialData['sites'], function (model) {
+        _.each(App.Vars.appInitialData['sites'], function (model) {
             options.push([model['SiteName'], model['SiteID']]);
         });
 
@@ -1098,7 +1098,7 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "150",
             filterType: "string"
         },
         {
@@ -1107,7 +1107,7 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "150",
             filterType: "string"
         },
         {
@@ -1116,7 +1116,7 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "150",
             filterType: "string"
         },
         {
@@ -1125,7 +1125,7 @@
             cell: "string",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "150",
             filterType: "string"
         },
         {
@@ -1134,7 +1134,7 @@
             cell: "email",
             resizeable: true,
             orderable: true,
-            width: "250",
+            width: "175",
             filterType: "string"
         },
         {
@@ -1149,7 +1149,7 @@
         {
             name: "Comments",
             label: "Comments",
-            cell: "text",
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1263,7 +1263,7 @@
         {
             name: "NotesOnYourSkillAssessment",
             label: "NotesOnYourSkillAssessment",
-            cell: "text",
+            cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1318,76 +1318,9 @@
             orderable: true,
             width: "250"
         },
-        {
-            name: "ConfirmationCode",
-            label: "GroveConfirmationCode",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            renderable: false
-        },
-        {
-            name: "FullName",
-            label: "FullName",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            renderable: false,
-            filterType: "string"
-        },
-
-        {
-            name: "EnteredFirstName",
-            label: "GroveEnteredFirstName",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            renderable: false
-        },
-        {
-            name: "EnteredLastName",
-            label: "GroveEnteredLastName",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            renderable: false
-        }, {
-            name: "IndividualID",
-            label: "GroveIndividualID",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        }, {
-            name: "DateSubmitted",
-            label: "GroveDateSubmitted",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "DateModified",
-            label: "GroveDateModified",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        }, {
+         {
             name: "PreferredSiteID",
             label: "PreferredSiteID",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "ResponseID",
-            label: "GroveResponseID",
             cell: "string",
             resizeable: true,
             orderable: true,

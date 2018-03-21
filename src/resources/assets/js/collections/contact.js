@@ -11,7 +11,7 @@
     });
     let siteOptions = function () {
         let options = [];
-        _.each(appInitialData['sites'], function (model) {
+        _.each(App.Vars.appInitialData['sites'], function (model) {
             options.push([model['SiteName'], model['SiteID']]);
         });
 

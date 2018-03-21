@@ -10,6 +10,9 @@
 .sia-main-app .grid-manager-container {
   width: 100%;
 }
+.sia-main-app .grid-manager-container button {
+  margin-right: 5px;
+}
 .sia-main-app .grid-manager-container .columnmanager-visibilitycontrol-container {
   display: inline-block;
 }

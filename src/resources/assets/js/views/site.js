@@ -89,6 +89,7 @@
             this.setSelectedId($option.data('siteid'), $option.data('sitestatusid'), $option.val());
         },
         setSelectedId: function (SiteID, SiteStatusID, Year) {
+            let self = this;
             if (App.Vars.mainAppDoneLoading) {
                 _log('App.Views.SiteYears.setSelectedId.event', 'new year selected', SiteID, SiteStatusID, Year);
                 window.ajaxWaiting('show','#site-well');
@@ -111,11 +112,13 @@
                             window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                         }
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                        self.trigger('toggle-product-tabs-box');
                     },
                     error: function (model, response, options) {
                         growl(response.msg, 'error');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
                         window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                        self.trigger('toggle-product-tabs-box');
                     }
 
                 });

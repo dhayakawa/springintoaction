@@ -80,9 +80,9 @@
             $success = $model->save();
 
             if($success) {
-                $response = ['success' => true, 'msg' => 'Volunteer Update Succeeded.'];
+                $response = ['success' => true, 'msg' => 'Site Status Update Succeeded.'];
             } else {
-                $response = ['success' => false, 'msg' => 'Volunteer Update Failed.'];
+                $response = ['success' => false, 'msg' => 'Site Status Update Failed.'];
             }
 
 
