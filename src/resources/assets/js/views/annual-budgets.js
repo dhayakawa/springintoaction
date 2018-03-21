@@ -101,11 +101,12 @@
             this.collection.each(function (model) {
                 let amt = parseFloat(model.get('BudgetAmount'));
                 totalAmt += amt;
-                if (_.indexOf(model.get('BudgetSource'), 'Woodlands') !== -1){
+                if (model.get('BudgetSource') === 'Woodlands'){
                     totalWoodlandsAmt += amt;
                 }
             });
             totalWoodlandsAmt = annualBudgetAmount - totalWoodlandsAmt;
+            _log('App.Views.AnnualBudgetsManagement.render', annualBudgetAmount, totalWoodlandsAmt);
             this.$el.find('.box-footer').append('<div class="annual-budget-woodlands-total-wrapper"><strong>Woodlands Budget Remaining:</strong>'+parseFloat(totalWoodlandsAmt).toFixed(2)+'</div><div class="annual-budget-total-wrapper"><strong>Total:</strong>'+parseFloat(totalAmt).toFixed(2)+'</div>');
 
             return this;

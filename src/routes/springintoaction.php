@@ -74,6 +74,7 @@
         Route::put('volunteer/{VolunteerID}', ['as' => 'volunteer.update', 'uses' => 'VolunteerController@update']);
         Route::post('volunteer', ['as' => 'volunteer.create', 'uses' => 'VolunteerController@store']);
         Route::post('volunteer/list/upload', ['as' => 'volunteer.upload', 'uses' => 'VolunteerController@uploadList']);
+        Route::post('volunteer/batch/destroy', ['as' => 'volunteer.batch.destroy', 'uses' => 'VolunteerController@batchDestroy']);
 
         //Route::resource('contact', 'ContactController');
         Route::get('contact/{ContactID}', ['as' => 'contact', 'uses' => 'ContactController@show']);

@@ -148,12 +148,12 @@
                         $batchSuccess = false;
                     }
                     $model   = ProjectVolunteer::where('VolunteerID', '=', $modelID);
-                    $success = $model->delete();
+                    $success = $model->forceDelete();
                     if(!$success) {
                         $batchSuccess = false;
                     }
                     $model   = ProjectVolunteerRole::where('VolunteerID', '=', $modelID);
-                    $success = $model->delete();
+                    $success = $model->forceDelete();
                     if(!$success) {
                         $batchSuccess = false;
                     }
