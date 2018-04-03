@@ -245,6 +245,7 @@
          Focuses the textarea when the modal is shown.
          */
         focus: function () {
+
             this.$el.find("textarea").focus();
         }
 

@@ -414,7 +414,7 @@
         initialize: function (options) {
             let self = this;
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy','toggleDeleteBtn');
+            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn');
             self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
         },
@@ -490,6 +490,10 @@
             this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
+            this.backgrid.collection.on('backgrid:editing', function (e) {
+                _log('App.Views.ProjectTab.render', self.options.tab, 'backgrid.collection.on backgrid:editing', e);
+                self.updateProjectTabView(e);
+            });
             this.backgrid.collection.on('backgrid:edited', function (e) {
                 self.update(e);
             });
@@ -519,7 +523,7 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-
+            this.$gridContainer = $gridContainer;
             return this;
         },
         /**
@@ -529,10 +533,17 @@
         updateProjectTabView: function (e) {
             let self = this;
             let currentModelID = 0;
-            // console.log(e)
-            if (typeof e === 'object' && !_.isUndefined(e.target)) {
-                let $TableRowElement = $(e.currentTarget);
-                let $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
+            let $RadioElement = null;
+            let $TableRowElement = null;
+            _log('App.Views.ProjectTab.updateProjectTabView.event', 'event triggered:', e);
+            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
+                $RadioElement = this.$gridContainer.find('input[type="radio"][name="' + this.model.idAttribute + '"][value="' + e.id + '"]');
+                $TableRowElement = $RadioElement.parents('tr');
+            } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
+                $TableRowElement = $(e.currentTarget);
+                $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
+            }
+            if ($RadioElement !== null) {
                 // click is only a visual indication that the row is selected. nothing should be listening for this click
                 $RadioElement.trigger('click');
                 currentModelID = $RadioElement.val();
@@ -555,12 +566,12 @@
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
-                if (attributes['ProjectID'] === ''){
+                if (attributes['ProjectID'] === '') {
                     attributes['ProjectID'] = App.Vars.currentProjectID;
                 }
                 _log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
-                this.model.save(attributes ,
+                this.model.save(attributes,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
@@ -1044,6 +1055,10 @@
             $gridContainer.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
+            this.backgrid.collection.on('backgrid:editing', function (e) {
+                _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:editing', e);
+                self.updateProjectDataViews(e);
+            });
             this.backgrid.collection.on('backgrid:edited', function (e) {
                 _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:edited', e);
                 self.update(e);
@@ -1070,7 +1085,7 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-
+            this.$gridContainer = $gridContainer;
             return this;
 
         },
@@ -1081,10 +1096,17 @@
         updateProjectDataViews: function (e) {
             let self = this;
             let ProjectID = 0;
-
-            if (typeof e === 'object' && !_.isUndefined(e.target)) {
-                let $TableRowElement = $(e.currentTarget);
-                let $RadioElement = $TableRowElement.find('input[type="radio"][name="ProjectID"]');
+            let $RadioElement = null;
+            let $TableRowElement = null;
+            _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:',e);
+            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)){
+                $RadioElement = this.$gridContainer.find('input[type="radio"][name="ProjectID"][value="'+ e.id +'"]');
+                $TableRowElement = $RadioElement.parents('tr');
+            } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
+                $TableRowElement = $(e.currentTarget);
+                $RadioElement = $TableRowElement.find('input[type="radio"][name="ProjectID"]');
+            }
+            if ($RadioElement !== null){
                 // click is only a visual indication that the row is selected. nothing should be listening for this click
                 $RadioElement.trigger('click');
                 ProjectID = $RadioElement.val();
@@ -1093,10 +1115,10 @@
                 $TableRowElement.siblings().removeAttr('style');
                 $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
             }
-
             if (App.Vars.mainAppDoneLoading && ProjectID && $('.site-projects-tabs').data('project-id') != ProjectID) {
                 window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
-                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector, 'last chosen ProjectID:' + $('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:' + ProjectID);
+                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:' ,e, 'last chosen' +
+                    ' ProjectID:' + $('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:' + ProjectID);
                 // Refresh tabs on new row select
                 App.Models.projectModel.url = '/admin/project/' + ProjectID;
                 App.Models.projectModel.fetch({reset: true});
@@ -1982,7 +2004,7 @@
 
         /** @property {function(Object, ?Object=): string} template */
         template: function (data) {
-            return '<span class="search">&nbsp;</span><input data-filter-name="' + data.filterName + '" type="search" ' + (data.placeholder ? 'placeholder="' + data.placeholder + '"' : '') + ' name="' + data.name + '" ' + (data.value ? 'value="' + data.value + '"' : '') + '/><a class="clear" data-backgrid-action="clear" href="#">&times;</a>';
+            return '<span class="search">&nbsp;</span><input data-filter-name="' + data.filterName + '" type="search" ' + (data.placeholder ? 'placeholder="' + data.placeholder + '"' : '') + ' name="' + data.name + '" ' + (data.value ? 'value="' + data.value + '"' : '') + '/><a class="clear" data-backgrid-action="clear" href="#" style="display:none">&times;</a>';
         },
         filterName: '',
         /** @property {string} [name='q'] Query key */
@@ -2226,9 +2248,10 @@
          it otherwise.
          */
         showClearButtonMaybe: function (e) {
-            //_log('App.Views.BackGridFiltersPanel.showClearButtonMaybe', e);
+
             let $clearButton = this.clearButton(e);
             let searchTerms = this.filterQueryValue[this.getFilterName(e)];
+            _log('App.Views.BackGridFiltersPanel.showClearButtonMaybe', e, searchTerms, $clearButton);
             if (searchTerms) $clearButton.show();
             else $clearButton.hide();
         },
@@ -2247,7 +2270,11 @@
          Returns the clear button.
          */
         clearButton: function (e) {
-            return this.$el.find(e.target).siblings("a[data-backgrid-action=clear]");
+            let $target = this.$el.find(e.target);
+            if ($target.hasClass('clear')) {
+                return $target;
+            }
+            return $target.siblings("a[data-backgrid-action=clear]");
         },
 
         /**

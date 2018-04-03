@@ -203,6 +203,10 @@
             $gridContainer.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
+            this.backgrid.collection.on('backgrid:editing', function (e) {
+                _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:editing', e);
+                self.updateProjectDataViews(e);
+            });
             this.backgrid.collection.on('backgrid:edited', function (e) {
                 _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:edited', e);
                 self.update(e);
@@ -229,7 +233,7 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-
+            this.$gridContainer = $gridContainer;
             return this;
 
         },
@@ -240,10 +244,17 @@
         updateProjectDataViews: function (e) {
             let self = this;
             let ProjectID = 0;
-
-            if (typeof e === 'object' && !_.isUndefined(e.target)) {
-                let $TableRowElement = $(e.currentTarget);
-                let $RadioElement = $TableRowElement.find('input[type="radio"][name="ProjectID"]');
+            let $RadioElement = null;
+            let $TableRowElement = null;
+            _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:',e);
+            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)){
+                $RadioElement = this.$gridContainer.find('input[type="radio"][name="ProjectID"][value="'+ e.id +'"]');
+                $TableRowElement = $RadioElement.parents('tr');
+            } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
+                $TableRowElement = $(e.currentTarget);
+                $RadioElement = $TableRowElement.find('input[type="radio"][name="ProjectID"]');
+            }
+            if ($RadioElement !== null){
                 // click is only a visual indication that the row is selected. nothing should be listening for this click
                 $RadioElement.trigger('click');
                 ProjectID = $RadioElement.val();
@@ -252,10 +263,10 @@
                 $TableRowElement.siblings().removeAttr('style');
                 $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
             }
-
             if (App.Vars.mainAppDoneLoading && ProjectID && $('.site-projects-tabs').data('project-id') != ProjectID) {
                 window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
-                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector, 'last chosen ProjectID:' + $('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:' + ProjectID);
+                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:' ,e, 'last chosen' +
+                    ' ProjectID:' + $('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:' + ProjectID);
                 // Refresh tabs on new row select
                 App.Models.projectModel.url = '/admin/project/' + ProjectID;
                 App.Models.projectModel.fetch({reset: true});
