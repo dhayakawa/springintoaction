@@ -4,6 +4,7 @@
 
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Dhayakawa\SpringIntoAction\Models\Volunteer;
+    use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
     use Dhayakawa\SpringIntoAction\Models\Project;
     use Illuminate\Http\Request;
@@ -141,8 +142,8 @@
         public function batchDestroy(Request $request) {
             $params       = $request->all();
             $batchSuccess = true;
-            if(is_array($params['modelIDs'])) {
-                foreach($params['modelIDs'] as $modelID) {
+            if(is_array($params['deleteModelIDs'])) {
+                foreach($params['deleteModelIDs'] as $modelID) {
                     $success = Volunteer::findOrFail($modelID)->delete();
                     if(!$success) {
                         $batchSuccess = false;
