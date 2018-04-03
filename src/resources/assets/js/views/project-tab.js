@@ -3,7 +3,7 @@
         initialize: function (options) {
             let self = this;
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy','toggleDeleteBtn');
+            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn');
             self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
         },
@@ -79,6 +79,10 @@
             this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
+            this.backgrid.collection.on('backgrid:editing', function (e) {
+                _log('App.Views.ProjectTab.render', self.options.tab, 'backgrid.collection.on backgrid:editing', e);
+                self.updateProjectTabView(e);
+            });
             this.backgrid.collection.on('backgrid:edited', function (e) {
                 self.update(e);
             });
@@ -108,7 +112,7 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-
+            this.$gridContainer = $gridContainer;
             return this;
         },
         /**
@@ -118,10 +122,17 @@
         updateProjectTabView: function (e) {
             let self = this;
             let currentModelID = 0;
-            // console.log(e)
-            if (typeof e === 'object' && !_.isUndefined(e.target)) {
-                let $TableRowElement = $(e.currentTarget);
-                let $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
+            let $RadioElement = null;
+            let $TableRowElement = null;
+            _log('App.Views.ProjectTab.updateProjectTabView.event', 'event triggered:', e);
+            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
+                $RadioElement = this.$gridContainer.find('input[type="radio"][name="' + this.model.idAttribute + '"][value="' + e.id + '"]');
+                $TableRowElement = $RadioElement.parents('tr');
+            } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
+                $TableRowElement = $(e.currentTarget);
+                $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
+            }
+            if ($RadioElement !== null) {
                 // click is only a visual indication that the row is selected. nothing should be listening for this click
                 $RadioElement.trigger('click');
                 currentModelID = $RadioElement.val();
@@ -144,12 +155,12 @@
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
-                if (attributes['ProjectID'] === ''){
+                if (attributes['ProjectID'] === '') {
                     attributes['ProjectID'] = App.Vars.currentProjectID;
                 }
                 _log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
-                this.model.save(attributes ,
+                this.model.save(attributes,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
