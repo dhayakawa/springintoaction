@@ -3,7 +3,7 @@
     <input type="hidden" name="SiteStatusID" value="<%= SiteStatusID %>"/>
     <div class="form-group">
         <label for="inputActive">Active</label>
-        <select name="Active" class="form-control" id="inputActive"><%= yesNoOptions %></select>
+        <select name="Active" class="form-control" id="inputActive"><%= yesNoIsActiveOptions %></select>
     </div>
     <div class="form-group">
         <label for="selectContactID">Contact</label>

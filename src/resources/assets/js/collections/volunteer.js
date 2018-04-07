@@ -383,7 +383,10 @@
             width: "250"
         }
     ];
-
+    let displayOrderCnt = 1;
+    _.each(App.Vars.volunteersBackgridColumnDefinitions, function (value, key) {
+        value.displayOrder = displayOrderCnt++;
+    });
     App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
     let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email'];
     _.each(sharedCells,  function (value, key) {
@@ -400,7 +403,8 @@
                 resizeable: true,
                 orderable: true,
                 width: "250",
-                filterType: "string"
+                filterType: "string",
+                displayOrder: value.displayOrder++
             });
         }
     });

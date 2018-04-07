@@ -3,12 +3,15 @@
         initialize: function (options) {
             let self = this;
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn');
+            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn','showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
             self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
         },
         events: {
-            'focusin tbody tr': 'updateProjectTabView'
+            'focusin tbody tr': 'updateProjectTabView',
+            'mouseenter thead th button': 'showColumnHeaderLabel',
+            'mouseenter tbody td': 'showTruncatedCellContentPopup',
+            'mouseleave tbody td': 'hideTruncatedCellContentPopup'
         },
         render: function (e) {
             let self = this;
@@ -241,6 +244,49 @@
                 }
             });
 
+        },
+        showColumnHeaderLabel: function (e) {
+            var self = this;
+            let $element = $(e.currentTarget).parents('th');
+            let element = $element[0];
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.attr('title', $element.find('button').text());
+            }
+            //_log('App.Views.Projects.showColumnHeaderLabel.event', e);
+        },
+        showTruncatedCellContentPopup: function (e) {
+            var self = this;
+
+            let $element = $(e.currentTarget);
+            let element = e.currentTarget;
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.popover({
+                    placement: 'auto auto',
+                    padding: 0,
+                    container: 'body',
+                    content: function () {
+                        return $(this).text()
+                    }
+                });
+                $element.popover('show');
+            }
+            _log('App.Views.ProjectTab.showTruncatedCellContent.event', e, element, bOverflown);
+        },
+        hideTruncatedCellContentPopup: function (e) {
+            var self = this;
+
+            let $element = $(e.currentTarget);
+            let element = e.currentTarget;
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.popover('hide');
+            }
+            _log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
         }
     });
 })(window.App);
