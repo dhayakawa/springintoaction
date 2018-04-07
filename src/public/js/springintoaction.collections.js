@@ -266,13 +266,22 @@
             displayOrder: 3
         },
         {
+            name: "SequenceNumber",
+            label: "Project ID",
+            cell: "integer",
+            resizeable: true,
+            orderable: true,
+            width: "50",
+            displayOrder: 4
+        },
+        {
             name: "OriginalRequest",
             label: "Original Request",
             cell: App.Vars.TextareaCell,
             resizeable: true,
             orderable: true,
             width: "250",
-            displayOrder: 4
+            displayOrder: 5
         },
         {
             name: "ProjectDescription",
@@ -281,7 +290,7 @@
             resizeable: true,
             orderable: false,
             width: "250",
-            displayOrder: 5
+            displayOrder: 6
         },
         {
             name: "Comments",
@@ -290,7 +299,7 @@
             resizeable: true,
             orderable: true,
             width: "250",
-            displayOrder: 6
+            displayOrder: 7
         },
         {
             name: "Status",
@@ -299,7 +308,7 @@
             resizeable: true,
             orderable: true,
             width: "66",
-            displayOrder: 7
+            displayOrder: 8
         },
         {
             name: "StatusReason",
@@ -308,7 +317,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 8
+            displayOrder: 9
         },
         {
             name: "BudgetSources",
@@ -317,7 +326,7 @@
             resizeable: true,
             orderable: true,
             width: "125",
-            displayOrder: 9
+            displayOrder: 10
         },
         {
             name: "ChildFriendly",
@@ -326,7 +335,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 10
+            displayOrder: 11
         },
         {
             name: "PrimarySkillNeeded",
@@ -335,7 +344,7 @@
             resizeable: true,
             orderable: true,
             width: "150",
-            displayOrder: 11
+            displayOrder: 12
         },
         {
             name: "VolunteersNeededEst",
@@ -344,7 +353,7 @@
             resizeable: true,
             orderable: true,
             width: "166",
-            displayOrder: 12
+            displayOrder: 13
         },
         {
             name: "VolunteersAssigned",
@@ -353,7 +362,7 @@
             resizeable: true,
             orderable: true,
             width: "145",
-            displayOrder: 13
+            displayOrder: 14
         },
         {
             name: "MaterialsNeeded",
@@ -362,7 +371,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 14
+            displayOrder: 15
         },
         {
             name: "EstimatedCost",
@@ -371,7 +380,7 @@
             resizeable: true,
             orderable: true,
             width: "120",
-            displayOrder: 15
+            displayOrder: 16
         },
         {
             name: "ActualCost",
@@ -380,7 +389,7 @@
             resizeable: true,
             orderable: true,
             width: "95",
-            displayOrder: 16
+            displayOrder: 17
         },
         {
             name: "BudgetAvailableForPC",
@@ -389,7 +398,7 @@
             resizeable: true,
             orderable: true,
             width: "178",
-            displayOrder: 17
+            displayOrder: 18
         },
         {
             name: "VolunteersLastYear",
@@ -398,7 +407,7 @@
             resizeable: true,
             orderable: true,
             width: "153",
-            displayOrder: 18
+            displayOrder: 19
         },
         {
             name: "NeedsToBeStartedEarly",
@@ -407,7 +416,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 19
+            displayOrder: 20
         },
         {
             name: "PCSeeBeforeSIA",
@@ -416,7 +425,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 20
+            displayOrder: 21
         },
         {
             name: "SpecialEquipmentNeeded",
@@ -425,7 +434,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 21
+            displayOrder: 22
         },
         {
             name: "PermitsOrApprovalsNeeded",
@@ -434,7 +443,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 22
+            displayOrder: 23
         },
         {
             name: "PrepWorkRequiredBeforeSIA",
@@ -443,7 +452,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 23
+            displayOrder: 24
         },
         {
             name: "SetupDayInstructions",
@@ -452,7 +461,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 24
+            displayOrder: 25
         },
         {
             name: "SIADayInstructions",
@@ -461,7 +470,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 25
+            displayOrder: 26
         },
         {
             name: "Attachments",
@@ -470,7 +479,7 @@
             resizeable: true,
             orderable: true,
             width: "100",
-            displayOrder: 26
+            displayOrder: 27
         },
         {
             name: "Area",
@@ -479,7 +488,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 27
+            displayOrder: 28
         },
         {
             name: "PaintOrBarkEstimate",
@@ -488,7 +497,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 28
+            displayOrder: 29
         },
         {
             name: "PaintAlreadyOnHand",
@@ -497,7 +506,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 29
+            displayOrder: 30
         },
         {
             name: "PaintOrdered",
@@ -506,7 +515,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 30
+            displayOrder: 31
         },
         {
             name: "CostEstimateDone",
@@ -515,7 +524,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 31
+            displayOrder: 32
         },
         {
             name: "MaterialListDone",
@@ -524,7 +533,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 32
+            displayOrder: 33
         },
         {
             name: "BudgetAllocationDone",
@@ -533,7 +542,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 33
+            displayOrder: 34
         },
         {
             name: "VolunteerAllocationDone",
@@ -542,7 +551,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 34
+            displayOrder: 35
         },
         {
             name: "NeedSIATShirtsForPC",
@@ -551,7 +560,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 35
+            displayOrder: 36
         },
         {
             name: "ProjectSend",
@@ -560,7 +569,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 36
+            displayOrder: 37
         },
         {
             name: "FinalCompletionStatus",
@@ -569,7 +578,7 @@
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 37
+            displayOrder: 38
         },
         {
             name: "FinalCompletionAssessment",
@@ -578,16 +587,7 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 38
-        },
-        {
-            name: "SequenceNumber",
-            label: "Sequence Number",
-            cell: "integer",
-            resizeable: true,
-            orderable: true,
-            width: "50",
-            displayOrder: 40
+            displayOrder: 39
         },
         {
             name: "updated_at",
@@ -598,7 +598,7 @@
             orderable: true,
             width: "50",
             renderable: true,
-            displayOrder: 42
+            displayOrder: 40
         }
 
     ];
@@ -1156,7 +1156,10 @@
             width: "250"
         }
     ];
-
+    let displayOrderCnt = 1;
+    _.each(App.Vars.volunteersBackgridColumnDefinitions, function (value, key) {
+        value.displayOrder = displayOrderCnt++;
+    });
     App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
     let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email'];
     _.each(sharedCells,  function (value, key) {
@@ -1173,7 +1176,8 @@
                 resizeable: true,
                 orderable: true,
                 width: "250",
-                filterType: "string"
+                filterType: "string",
+                displayOrder: value.displayOrder++
             });
         }
     });

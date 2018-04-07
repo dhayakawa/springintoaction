@@ -42,7 +42,7 @@
             'FinalCompletionStatus': '',
             'FinalCompletionAssessment': ''
         },
-        getStatusOptions: function (bReturnHtml) {
+        getStatusOptions: function (bReturnHtml, defaultOption) {
             let options = [
                 ['',''],
                 ['DN-District', 'DN-District'],
@@ -56,14 +56,16 @@
             if (bReturnHtml) {
                 options.shift();
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    return "<option " + selected +" value='" + value[0] + "'>" + value[1] + "</option>";
                 })
             } else {
                 return options;
             }
         },
-        getSkillsNeededOptions: function (bReturnHtml) {
+        getSkillsNeededOptions: function (bReturnHtml, defaultOption) {
             let options = [
+                ['',''],
                 ['Construction', 'Construction'],
                 ['Painting', 'Painting'],
                 ['Landscaping', 'Landscaping'],
@@ -73,7 +75,8 @@
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    return "<option " + selected +" value='" + value[0] + "'>" + value[1] + "</option>";
                 })
             } else {
                 return options;
@@ -93,7 +96,7 @@
                 return options;
             }
         },
-        getYesNoOptions: function (bReturnHtml) {
+        getYesNoOptions: function (bReturnHtml, defaultOption) {
             bReturnHtml = !_.isBoolean(bReturnHtml) ? false : bReturnHtml;
             let options = [
                 ['No', 0],
@@ -101,7 +104,8 @@
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;

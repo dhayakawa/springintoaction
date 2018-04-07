@@ -414,12 +414,15 @@
         initialize: function (options) {
             let self = this;
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn');
+            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn','showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
             self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
         },
         events: {
-            'focusin tbody tr': 'updateProjectTabView'
+            'focusin tbody tr': 'updateProjectTabView',
+            'mouseenter thead th button': 'showColumnHeaderLabel',
+            'mouseenter tbody td': 'showTruncatedCellContentPopup',
+            'mouseleave tbody td': 'hideTruncatedCellContentPopup'
         },
         render: function (e) {
             let self = this;
@@ -652,6 +655,49 @@
                 }
             });
 
+        },
+        showColumnHeaderLabel: function (e) {
+            var self = this;
+            let $element = $(e.currentTarget).parents('th');
+            let element = $element[0];
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.attr('title', $element.find('button').text());
+            }
+            //_log('App.Views.Projects.showColumnHeaderLabel.event', e);
+        },
+        showTruncatedCellContentPopup: function (e) {
+            var self = this;
+
+            let $element = $(e.currentTarget);
+            let element = e.currentTarget;
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.popover({
+                    placement: 'auto auto',
+                    padding: 0,
+                    container: 'body',
+                    content: function () {
+                        return $(this).text()
+                    }
+                });
+                $element.popover('show');
+            }
+            _log('App.Views.ProjectTab.showTruncatedCellContent.event', e, element, bOverflown);
+        },
+        hideTruncatedCellContentPopup: function (e) {
+            var self = this;
+
+            let $element = $(e.currentTarget);
+            let element = e.currentTarget;
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.popover('hide');
+            }
+            _log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
         }
     });
 })(window.App);
@@ -855,7 +901,7 @@
         template: template('projectsGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
-            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState','toggleDeleteBtn');
+            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
             this.listenTo(App.Views.siteManagementView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
             });
@@ -967,13 +1013,16 @@
     App.Views.Projects = Backbone.View.extend({
         initialize: function (options) {
             this.options = options;
-            _.bindAll(this, 'render', 'update','updateProjectDataViews', 'getModalForm','create','destroy','toggleDeleteBtn');
+            _.bindAll(this, 'render', 'update', 'updateProjectDataViews', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
             this.rowBgColor = 'lightYellow';
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
             this.$parentViewEl = this.options.parentViewEl;
         },
         events: {
-            'focusin tbody tr': 'updateProjectDataViews'
+            'focusin tbody tr': 'updateProjectDataViews',
+            'mouseenter thead th button': 'showColumnHeaderLabel',
+            'mouseenter tbody td': 'showTruncatedCellContentPopup',
+            'mouseleave tbody td': 'hideTruncatedCellContentPopup'
         },
         render: function (e) {
             let self = this;
@@ -1067,24 +1116,7 @@
                 self.toggleDeleteBtn(e);
             });
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-            // Show a popup of the text that has been truncated
-            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').popover({
-                placement: 'auto right',
-                padding: 0,
-                container: 'body',
-                content: function () {
-                    return $(this).text()
-                }
-            });
-            // hide popover if it is not overflown
-            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
-                let element = this;
 
-                let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-                if (!bOverflown) {
-                    $gridContainer.find('td.renderable').popover('hide')
-                }
-            });
             this.$gridContainer = $gridContainer;
             return this;
 
@@ -1098,15 +1130,15 @@
             let ProjectID = 0;
             let $RadioElement = null;
             let $TableRowElement = null;
-            _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:',e);
-            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)){
-                $RadioElement = this.$gridContainer.find('input[type="radio"][name="ProjectID"][value="'+ e.id +'"]');
+            _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:', e);
+            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
+                $RadioElement = this.$gridContainer.find('input[type="radio"][name="ProjectID"][value="' + e.id + '"]');
                 $TableRowElement = $RadioElement.parents('tr');
             } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
                 $TableRowElement = $(e.currentTarget);
                 $RadioElement = $TableRowElement.find('input[type="radio"][name="ProjectID"]');
             }
-            if ($RadioElement !== null){
+            if ($RadioElement !== null) {
                 // click is only a visual indication that the row is selected. nothing should be listening for this click
                 $RadioElement.trigger('click');
                 ProjectID = $RadioElement.val();
@@ -1117,7 +1149,7 @@
             }
             if (App.Vars.mainAppDoneLoading && ProjectID && $('.site-projects-tabs').data('project-id') != ProjectID) {
                 window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
-                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:' ,e, 'last chosen' +
+                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:', e, 'last chosen' +
                     ' ProjectID:' + $('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:' + ProjectID);
                 // Refresh tabs on new row select
                 App.Models.projectModel.url = '/admin/project/' + ProjectID;
@@ -1176,10 +1208,11 @@
             let tplVars = {
                 SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
                 SiteStatusID: App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute),
+                yesNoIsActiveOptions: App.Models.projectModel.getYesNoOptions(true, 'Yes'),
                 yesNoOptions: App.Models.projectModel.getYesNoOptions(true),
                 contactSelect: contactSelect.getHtml(),
-                primarySkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
-                statusOptions: App.Models.projectModel.getStatusOptions(true),
+                primarySkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true, ''),
+                statusOptions: App.Models.projectModel.getStatusOptions(true, 'Pending'),
                 projectSendOptions: App.Models.projectModel.getSendOptions(true),
                 budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
                 testString: '',
@@ -1260,13 +1293,56 @@
             _log('App.Views.Projects.toggleDeleteBtn.event', selectedModels.length, e);
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
             //App.Views.siteManagementView.trigger('toggle-delete-btn', {toggle: toggleState});
-            _log('App.Views.Projects.toggleDeleteBtn.event', 'toggleState:'+toggleState, self.$parentViewEl);
+            _log('App.Views.Projects.toggleDeleteBtn.event', 'toggleState:' + toggleState, self.$parentViewEl);
             if (toggleState === 'disable') {
                 self.$parentViewEl.find('#btnDeleteCheckedProjects').addClass('disabled');
             } else {
                 self.$parentViewEl.find('#btnDeleteCheckedProjects').removeClass('disabled');
             }
         },
+        showColumnHeaderLabel: function (e) {
+            var self = this;
+            let $element = $(e.currentTarget).parents('th');
+            let element = $element[0];
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.attr('title', $element.find('button').text());
+            }
+            //_log('App.Views.Projects.showColumnHeaderLabel.event', e);
+        },
+        showTruncatedCellContentPopup: function (e) {
+            var self = this;
+
+            let $element = $(e.currentTarget);
+            let element = e.currentTarget;
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.popover({
+                    placement: 'auto auto',
+                    padding: 0,
+                    container: 'body',
+                    content: function () {
+                        return $(this).text()
+                    }
+                });
+                $element.popover('show');
+            }
+            //_log('App.Views.Projects.showTruncatedCellContent.event', e, '$element.text():' + $element.text());
+        },
+        hideTruncatedCellContentPopup: function (e) {
+            var self = this;
+
+            let $element = $(e.currentTarget);
+            let element = e.currentTarget;
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.popover('hide');
+            }
+            //_log('App.Views.Projects.showTruncatedCellContent.event', e, '$element.text():' + $element.text());
+        }
     });
 })(window.App);
 

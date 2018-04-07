@@ -94,6 +94,16 @@
             $batchSuccess = true;
             $failMsg = '';
             $params = $request->all();
+            array_walk(
+                $params,
+                function (&$value, $key) {
+                    if (is_string($value)) {
+                        $value = \urldecode($value);
+                    } elseif(is_array($value)){
+                        $value = join(",", $value);
+                    }
+                }
+            );
             $projectVolunteerRoleModel  = new ProjectVolunteerRole;
             $projectVolunteerRoleModel->fill(['VolunteerID' => $params['VolunteerID'], 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID'], 'Status' => $params['ProjectVolunteerRoleStatus']]);
             $success = $projectVolunteerRoleModel->save();
@@ -102,7 +112,18 @@
                 $failMsg      .= ' Project Volunteer Role update failed. ';
             }
             $model = Volunteer::findOrFail($id);
-            $model->fill($request->only($model->getFillable()));
+            $data = $request->only($model->getFillable());
+            array_walk(
+                $data,
+                function (&$value, $key) {
+                    if (is_string($value)) {
+                        $value = \urldecode($value);
+                    } elseif (is_array($value)) {
+                        $value = join(",", $value);
+                    }
+                }
+            );
+            $model->fill($data);
             $success = $model->save();
             if(!$success) {
                 $batchSuccess = false;
