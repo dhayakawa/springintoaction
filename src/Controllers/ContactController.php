@@ -96,6 +96,8 @@
             array_walk($data, function (&$value, $key) {
                 if(is_string($value)) {
                     $value = \urldecode($value);
+                } elseif (is_array($value)) {
+                    $value = join(',', $value);
                 }
             });
             $model->fill($data);
