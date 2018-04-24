@@ -6,6 +6,10 @@
   #site_years {
     width: 100px;
   }
+  .projects-grid-manager-container, .site-volunteers-grid-manager-container{
+    padding: 20px 15px 0 15px;
+
+  }
   .projects-backgrid-wrapper {
     border: 0px solid #ddd;
   }
@@ -21,12 +25,26 @@
       display: inline-block;
     }
   }
-
+  .well-title{
+    margin-top:0px;
+    font-size:18px;
+  }
+  .nested-box{
+    margin:5px;
+    padding:0;
+  }
   .site-projects-tabs {
+    .nav-tabs > li.active > a{
+
+    }
     .tab-content {
       border: 1px solid #ddd;
       border-top: 0;
       padding-top: 1px;
+      background-color: white;
+    }
+    .box-footer{
+      background-color:transparent;
     }
   }
 
@@ -38,6 +56,7 @@
   border: 0px solid #ddd;
   overflow: auto;
   width: 100%;
+  background-color:white;
   //max-height:400px;
   padding: 0;
   .backgrid {

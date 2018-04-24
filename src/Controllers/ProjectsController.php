@@ -75,10 +75,6 @@ class ProjectsController extends BaseController
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Creation Not Implemented Yet.'];
         } elseif ($success) {
-            if ($project->SiteStatusID) {
-                // Rebuild SequenceNumber order
-                DB::select('call `spring_into_action`.resequence_projects(?)', [$project->SiteStatusID]);
-            }
             $response = ['success' => true, 'msg' => 'Project Creation Succeeded.'];
         } else {
             $response = ['success' => false, 'msg' => 'Project Creation Failed.'];
@@ -114,10 +110,6 @@ class ProjectsController extends BaseController
         $success = $project->save();
 
         if ($success) {
-            if ($project->SiteStatusID) {
-                // Rebuild SequenceNumber order
-                $this->reSequenceList($project->SiteStatusID);
-            }
             $response = ['success' => true, 'msg' => 'Project Update Succeeded.'];
         } else {
             $response = ['success' => false, 'msg' => 'Project Update Failed.'];
@@ -128,18 +120,18 @@ class ProjectsController extends BaseController
 
     public function reSequenceList($SiteStatusID)
     {
-        $projects =
-            Project::where('SiteStatusID', $SiteStatusID)->orderBy('SequenceNumber', 'asc')->orderBy(
-                'updated_at',
-                'desc'
-            )->get()->toArray();
-        $iCounter = 0;
-        foreach ($projects as $data) {
-            $project = Project::findOrFail($data['ProjectID']);
-            $data['SequenceNumber'] = ++$iCounter;
-            $project->fill($data);
-            $project->save();
-        }
+        // $projects =
+        //     Project::where('SiteStatusID', $SiteStatusID)->orderBy('SequenceNumber', 'asc')->orderBy(
+        //         'updated_at',
+        //         'desc'
+        //     )->get()->toArray();
+        // $iCounter = 0;
+        // foreach ($projects as $data) {
+        //     $project = Project::findOrFail($data['ProjectID']);
+        //     $data['SequenceNumber'] = ++$iCounter;
+        //     $project->fill($data);
+        //     $project->save();
+        // }
     }
 
     public function destroy(Request $request, $id)

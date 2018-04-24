@@ -43,54 +43,36 @@
             'FinalCompletionAssessment': ''
         },
         getStatusOptions: function (bReturnHtml, defaultOption) {
-            let options = [
-                ['',''],
-                ['DN-District', 'DN-District'],
-                ['DN-Woodlands', 'DN-Woodlands'],
-                ['NA-District', 'NA-District'],
-                ['NA-Woodlands', 'NA-Woodlands'],
-                ['Pending', 'Pending'],
-                ['Approved', 'Approved'],
-                ['Cancelled', 'Cancelled']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['ProjectStatusOptions']);
+
             if (bReturnHtml) {
                 options.shift();
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
-                    return "<option " + selected +" value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getSkillsNeededOptions: function (bReturnHtml, defaultOption) {
-            let options = [
-                ['',''],
-                ['Construction', 'Construction'],
-                ['Painting', 'Painting'],
-                ['Landscaping', 'Landscaping'],
-                ['Finish Carpentry', 'Finish Carpentry'],
-                ['General Carpentry', 'General Carpentry'],
-                ['Cabinetry', 'Cabinetry']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['ProjectSkillNeededOptions']);
+
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
-                    return "<option " + selected +" value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
-        getSendOptions: function (bReturnHtml) {
-            let options = [
-                ['Not Ready', 'Not Ready'],
-                ['Ready', 'Ready'],
-                ['Sent', 'Sent']
-            ];
+        getSendOptions: function (bReturnHtml, defaultOption) {
+            let options = _.pairs(App.Vars.selectOptions['SendStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;

@@ -3,12 +3,13 @@
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear(@json($appInitialData['site_years']));
     App.PageableCollections.projectCollection = new App.PageableCollections.Project(@json($appInitialData['projects']));
     App.Collections.allProjectsCollection = new App.Collections.Project(@json($appInitialData['all_projects']));
-
+    App.PageableCollections.siteVolunteersCollection= new App.PageableCollections.Project(@json($appInitialData['site_volunteers']));
     // project tabs
     App.PageableCollections.projectLeadsCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_leads']));
     App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget(@json($appInitialData['project_budgets']));
     App.PageableCollections.projectContactsCollection = new App.PageableCollections.Contact(@json($appInitialData['project_contacts']));
     App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_volunteers']));
+    App.PageableCollections.projectAttachmentsCollection = new App.PageableCollections.ProjectAttachment(@json($appInitialData['project_attachments']));
 
     // @App.Collections.projectVolunteersCollection- This is for the drop down in the select new project lead form
     App.Collections.projectVolunteersCollection = new App.Collections.Volunteer(@json($appInitialData['volunteers']));
