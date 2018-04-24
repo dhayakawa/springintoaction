@@ -1,0 +1,25 @@
+75,20,'PTO',250.00,'Paid','',NULL,NULL
+77,21,'PTO',250.00,'','',NULL,NULL
+78,43,'Thrivent',250.00,'Approved','Brianna Blakey',NULL,NULL
+79,125,'Thrivent',250.00,'Approved','Dan Demers',NULL,NULL
+80,130,'Thrivent',250.00,'Approved','Jeannie Swanstrom',NULL,NULL
+81,129,'Thrivent',250.00,'Approved','Jen Schneider - tshirts',NULL,NULL
+82,8,'Thrivent',250.00,'Approved','Phil Neff',NULL,NULL
+83,129,'Thrivent',250.00,'Approved','Ron Patten - supplies',NULL,NULL
+84,129,'Thrivent',250.00,'Approved','Travis Thomack - supplies',NULL,NULL
+85,118,'Thrivent',140.00,'Approved','Anna Arneson',NULL,NULL
+87,42,'Thrivent',110.00,'Approved','Anna Arneson',NULL,NULL
+88,42,'Thrivent',60.00,'Approved','Luke Arneson',NULL,NULL
+89,114,'Thrivent',190.00,'Approved','Luke Arneson',NULL,NULL
+90,129,'School',0.00,'','',NULL,NULL
+91,129,'Woodlands',0.00,'','',NULL,NULL
+92,129,'District',0.00,'','',NULL,NULL
+93,129,'CF Grant',0.00,'','',NULL,NULL
+94,48,'Thrivent',250.00,'Approved','Brian Erickson',NULL,NULL
+95,43,'School',400.00,'Approved','Online Learning Center School Budget',NULL,NULL
+96,58,'Thrivent',100.00,'Approved','Scott Carlson',NULL,NULL
+97,52,'Thrivent',150.00,'Approved','Scott Carlson - remainder',NULL,NULL
+99,80,'Thrivent',50.00,'Approved','Ben Blomberg',NULL,NULL
+100,128,'Thrivent',200.00,'Approved','Ben Blomberg',NULL,NULL
+102,146,'PTO',33.00,'Proposed','33','2018-03-03 05:32:29','2018-03-03 05:32:29'
+103,146,'PTO',54.00,'Proposed','443','2018-03-03 05:39:15','2018-03-03 05:39:15'

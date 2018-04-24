@@ -5,6 +5,7 @@
         siteViewClass: App.Views.Site,
         siteStatusViewClass: App.Views.SiteStatus,
         projectsViewClass: App.Views.Projects,
+        siteVolunteersViewClass: App.Views.SiteVolunteer,
         initialize: function (options) {
             this.options = options;
             this.childViews = [];
@@ -53,6 +54,21 @@
                 model: App.Models.projectModel
             });
             this.projectsView.render();
+
+
+
+            App.Views.siteVolunteersView = this.siteVolunteersView = new this.siteVolunteersViewClass({
+                el: this.$('.site-volunteers-backgrid-wrapper'),
+                mainAppEl: this.options.mainAppEl,
+                parentViewEl: this.el,
+                model: App.Models.siteVolunteerModel,
+                modelNameLabel: 'SiteVolunteer',
+                collection: App.PageableCollections.siteVolunteersCollection,
+                columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
+                hideCellCnt: 0//2
+            });
+            this.siteVolunteersView.render();
+
             return this;
         },
         /**

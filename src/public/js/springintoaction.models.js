@@ -1,4 +1,15 @@
 (function (App) {
+    App.Models.ProjectAttachment = Backbone.Model.extend({
+        url: '/admin/project_attachment',
+        idAttribute: "ProjectAttachmentID",
+        defaults: {
+            'ProjectID': '',
+            'AttachmentPath': ''
+        }
+    });
+})(window.App);
+
+(function (App) {
     App.Models.AnnualBudget = Backbone.Model.extend({
         idAttribute: "AnnualBudgetID",
         url: '/admin/annualbudget',
@@ -21,36 +32,20 @@
             'Comments': ''
         },
         getStatusOptions: function (bReturnHtml) {
-            let options = [
-                ['Proposed', 'Proposed'],
-                ['Approved', 'Approved'],
-                ['Paid', 'Paid'],
-                ['Rejected', 'Rejected']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['BudgetStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getSourceOptions: function (bReturnHtml) {
-            let options = [
-                ['',''],
-                ['PTO', 'PTO'],
-                ['School', 'School'],
-                ['School (OLC funds)', 'School (OLC funds)'],
-                ['District', 'District'],
-                ['Woodlands', 'Woodlands'],
-                ['Grant', 'Grant'],
-                ['CF Grant', 'CF Grant'],
-                ['Thrivent', 'Thrivent'],
-                ['Unknown', 'Unknown']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['BudgetSourceOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
@@ -135,54 +130,36 @@
             'FinalCompletionAssessment': ''
         },
         getStatusOptions: function (bReturnHtml, defaultOption) {
-            let options = [
-                ['',''],
-                ['DN-District', 'DN-District'],
-                ['DN-Woodlands', 'DN-Woodlands'],
-                ['NA-District', 'NA-District'],
-                ['NA-Woodlands', 'NA-Woodlands'],
-                ['Pending', 'Pending'],
-                ['Approved', 'Approved'],
-                ['Cancelled', 'Cancelled']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['ProjectStatusOptions']);
+
             if (bReturnHtml) {
                 options.shift();
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
-                    return "<option " + selected +" value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getSkillsNeededOptions: function (bReturnHtml, defaultOption) {
-            let options = [
-                ['',''],
-                ['Construction', 'Construction'],
-                ['Painting', 'Painting'],
-                ['Landscaping', 'Landscaping'],
-                ['Finish Carpentry', 'Finish Carpentry'],
-                ['General Carpentry', 'General Carpentry'],
-                ['Cabinetry', 'Cabinetry']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['ProjectSkillNeededOptions']);
+
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
-                    return "<option " + selected +" value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
-        getSendOptions: function (bReturnHtml) {
-            let options = [
-                ['Not Ready', 'Not Ready'],
-                ['Ready', 'Ready'],
-                ['Sent', 'Sent']
-            ];
+        getSendOptions: function (bReturnHtml, defaultOption) {
+            let options = _.pairs(App.Vars.selectOptions['SendStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
@@ -329,31 +306,20 @@
             'AssignmentInformationSendStatus': ''
         },
         getStatusOptions: function (bReturnHtml) {
-            let options = [
-                ['Candidate','Candidate'],
-                ['Proposed', 'Proposed'],
-                ['Undecided', 'Undecided'],
-                ['Agreed', 'Agreed'],
-                ['Declined', 'Declined']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['VolunteerStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getAgeRangeOptions: function (bReturnHtml) {
-            let options = [
-                ['Child under 1', 'Child under 1'],
-                ['Child (1-11)', 'Child (1-11)'],
-                ['Youth (12-17)', 'Youth (12-17)'],
-                ['Adult (18+)', 'Adult (18+)']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['VolunteerAgeRangeOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
@@ -380,73 +346,50 @@
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
-                })
-            } else {
-                return options;
-            }
-        },
-        getRoleOptions: function (bReturnHtml) {
-            let options = [
-                ['Liaison', 7],
-                ['Scout', 6],
-                ['Estimator', 2],
-                ['Site Coordinator', 68],
-                ['Project Coordinator', 3],
-                ['Team Leader', 25],
-                ['Worker', App.Vars.workerRoleID]
-            ];
-            if (bReturnHtml) {
-                return _.map(options, function (value) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
+        getRoleOptions: function (bReturnHtml) {
+            let options = _.pairs(App.Vars.selectOptions['project_roles']);
+            if (bReturnHtml) {
+                return _.map(options, function (value) {
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
+                })
+            } else {
+
+                return options;
+            }
+        },
         getPrimarySkillOptions: function (bReturnHtml) {
-            let options = [
-                ['', ''],
-                ['Painting', 'Painting'],
-                ['Landscaping', 'Landscaping'],
-                ['Construction', 'Construction'],
-                ['Electrical', 'Electrical'],
-                ['Cabinetry Finish Work', 'CabinetryFinishWork'],
-                ['Plumbing', 'Plumbing']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['VolunteerPrimarySkillOptions']);
+
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getSkillLevelOptions: function (bReturnHtml) {
-            let options = [
-                ['',''],
-                ['Unskilled', 'Unskilled'],
-                ['Fair', 'Fair'],
-                ['Good', 'Good'],
-                ['Excellent', 'Excellent']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['VolunteerSkillLevelOptions']);
+
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getSendOptions: function (bReturnHtml) {
-            let options = [
-                ['Not Ready', 'Not Ready'],
-                ['Ready', 'Ready'],
-                ['Sent', 'Sent']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['SendStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
@@ -470,9 +413,44 @@
 })(window.App);
 
 (function (App) {
+    App.Models.SiteRole = Backbone.Model.extend({
+        url: '/admin/site_role',
+        idAttribute: "SiteRoleID",
+        defaults: {
+            'Role': '',
+            'DisplaySequence': ''
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Models.SiteVolunteer = Backbone.Model.extend({
+        url: '/admin/site_volunteer',
+        idAttribute: "SiteVolunteerID",
+        defaults: {
+            'VolunteerID': '',
+            'SiteStatusID': '',
+            'SiteVolunteerRoleID': ''
+        },
+        getRoleOptions: function (bReturnHtml) {
+            let options = _.pairs(App.Vars.selectOptions['site_roles']);
+            if (bReturnHtml) {
+                return _.map(options, function (value) {
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
+                })
+            } else {
+                return options;
+            }
+        }
+    });
+})(window.App);
+
+(function (App) {
     App.Models.siteModel = new App.Models.Site();
     App.Models.siteStatusModel = new App.Models.SiteStatus();
     App.Models.projectModel = new App.Models.Project();
+    App.Models.siteVolunteerModel = new App.Models.SiteVolunteer();
+
     /**
      * Models for the contacts and volunteer management
      */
@@ -487,4 +465,5 @@
     App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
     App.Models.annualBudgetModel = new App.Models.AnnualBudget();
+
 })(window.App);

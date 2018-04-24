@@ -60,6 +60,7 @@ mix.scripts([
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js'
 ], 'public/js/springintoaction.packages.min.js');
 mix.scripts([
+    'resources/assets/js/models/project-attachment.js',
     'resources/assets/js/models/annual-budget.js',
     'resources/assets/js/models/budget.js',
     'resources/assets/js/models/contact.js',
@@ -71,15 +72,19 @@ mix.scripts([
     'resources/assets/js/models/site-status.js',
     'resources/assets/js/models/volunteer.js',
     'resources/assets/js/models/project-volunteer-role.js',
+    'resources/assets/js/models/site-role.js',
+    'resources/assets/js/models/site-volunteer.js',
     'resources/assets/js/models/init-models.js'
 ], 'public/js/springintoaction.models.js');
 mix.scripts([
+    'resources/assets/js/collections/project-attachment.js',
     'resources/assets/js/collections/budget.js',
     'resources/assets/js/collections/project.js',
     'resources/assets/js/collections/site.js',
     'resources/assets/js/collections/contact.js',
     'resources/assets/js/collections/volunteer.js',
     'resources/assets/js/collections/project-volunteer.js',
+    'resources/assets/js/collections/site-volunteer.js',
     'resources/assets/js/models/init-collections.js'
 ], 'public/js/springintoaction.collections.js');
 mix.scripts([
@@ -87,11 +92,13 @@ mix.scripts([
     'resources/assets/js/views/annual-budgets.js',
     'resources/assets/js/views/grid-manager-container-toolbar.js',
     'resources/assets/js/views/project-tab.js',
+    'resources/assets/js/views/project-attachment.js',
     'resources/assets/js/views/budget.js',
     'resources/assets/js/views/contact.js',
     'resources/assets/js/views/volunteer.js',
     'resources/assets/js/views/project.js',
     'resources/assets/js/views/site.js',
+    'resources/assets/js/views/site-volunteers.js',
     'resources/assets/js/views/site-management.js',
     'resources/assets/js/views/site-project-tabs.js',
     'resources/assets/js/views/backgrid-filters-panel.js',

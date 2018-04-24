@@ -64,54 +64,71 @@
                         <button id="btnCancelNewSite" type="button" class="btn btn-default">Cancel</button>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="projects-view col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                        <div class="projects-backgrid-wrapper backgrid-wrapper"></div>
+                <div class="well well-sm collapse in">
+                    <h4 class="well-title">Projects
+                    </h4>
+                    <div class="row">
+                        <div class="projects-view col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <div class="projects-backgrid-wrapper backgrid-wrapper"></div>
+                        </div>
+                        <div class="projects-grid-manager-container grid-manager-container col-xs-12 col-sm-12 col-md-12 col-lg-12"></div>
                     </div>
-                </div>
-            </div>
-            <div class="box-footer">
-                <div class="projects-grid-manager-container grid-manager-container"></div>
-            </div>
-        </div>
-        <div class="box box-secondary site-projects-tabs collapsed-box">
-            <div class="box-header with-border">
-                <h3 class="box-title">Project Details:
-                    <small></small>
-                </h3>
-                <div class="box-tools pull-right">
-                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                </div>
-            </div>
-            <div class="box-body">
-                <!-- Nav tabs -->
-                <ul class="nav nav-tabs" role="tablist">
-                    <li role="presentation" class="active"><a href="#project_lead" aria-controls="project_lead" role="tab" data-toggle="tab">Project Lead Volunteers</a></li>
-                    <li role="presentation"><a href="#project_budget" aria-controls="project_budget" role="tab" data-toggle="tab">Budget Allocation</a></li>
-                    <li role="presentation"><a href="#project_contact" aria-controls="project_contact" role="tab" data-toggle="tab">Project Site Contacts</a></li>
-                    <li role="presentation"><a href="#project_volunteer" aria-controls="project_volunteer" role="tab" data-toggle="tab">Volunteers</a></li>
-                </ul>
+                    <div class="row">
+                    <div class="nested-box site-projects-tabs collapsed-box">
+                        <div class="box-header with-border">
+                            <h3 class="box-title">Project Details:
+                                <small></small>
+                            </h3>
+                        </div>
+                        <div class="box-body">
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li role="presentation" class="active"><a href="#project_lead" aria-controls="project_lead" role="tab" data-toggle="tab">Project Lead Volunteers</a></li>
+                                <li role="presentation"><a href="#project_budget" aria-controls="project_budget" role="tab" data-toggle="tab">Budget Allocation</a></li>
+                                <li role="presentation"><a href="#project_contact" aria-controls="project_contact" role="tab" data-toggle="tab">Project Site Contacts</a></li>
+                                <li role="presentation"><a href="#project_volunteer" aria-controls="project_volunteer" role="tab" data-toggle="tab">Volunteers</a></li>
+                                <li role="presentation"><a href="#project_attachment" aria-controls="project_attachment" role="tab" data-toggle="tab">Attachments</a></li>
+                            </ul>
 
-                <!-- Tab panes -->
-                <div class="tab-content backgrid-wrapper">
-                    <div role="tabpanel" class="tab-pane active" id="project_lead">
-                        <div class="project-leads-backgrid-wrapper"></div>
+                            <!-- Tab panes -->
+                            <div class="tab-content backgrid-wrapper">
+                                <div role="tabpanel" class="tab-pane active" id="project_lead">
+                                    <div class="project-leads-backgrid-wrapper"></div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane" id="project_budget">
+                                    <div class="project-budget-backgrid-wrapper"></div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane" id="project_contact">
+                                    <div class="project-contacts-backgrid-wrapper"></div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane" id="project_volunteer">
+                                    <div class="project-volunteers-backgrid-wrapper"></div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane" id="project_attachment">
+                                    <div class="project_attachments-backgrid-wrapper"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-footer">
+                            <div class="project-tabs-grid-manager-container grid-manager-container"></div>
+                        </div>
                     </div>
-                    <div role="tabpanel" class="tab-pane" id="project_budget">
-                        <div class="project-budget-backgrid-wrapper"></div>
-                    </div>
-                    <div role="tabpanel" class="tab-pane" id="project_contact">
-                        <div class="project-contacts-backgrid-wrapper"></div>
-                    </div>
-                    <div role="tabpanel" class="tab-pane" id="project_volunteer">
-                        <div class="project-volunteers-backgrid-wrapper"></div>
+                </div>
+                </div>
+                <div id="site-well" class="well well-sm collapse in">
+                    <h4 class="well-title">Site Volunteers</h4>
+                    <div class="row">
+                        <div class="site-volunteers-view col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <div class="site-volunteers-backgrid-wrapper backgrid-wrapper"></div>
+                        </div>
+                        <div class="site-volunteers-grid-manager-container grid-manager-container col-xs-12 col-sm-12 col-md-12 col-lg-12">
+
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="box-footer">
-                <div class="project-tabs-grid-manager-container grid-manager-container"></div>
-            </div>
         </div>
+
     </div>
 </div>
 @endsection

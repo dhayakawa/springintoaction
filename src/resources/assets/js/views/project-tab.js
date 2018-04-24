@@ -181,8 +181,9 @@
             var self = this;
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
             _log('App.Views.ProjectTab.create', self.options.tab, attributes, this.model);
-            this.model.url = '/admin/' + self.options.tab;
-            this.model.save(attributes,
+            let model = this.model.clone().clear({silent: true});
+            model.url = '/admin/' + self.options.tab;
+            model.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
@@ -274,7 +275,7 @@
                 });
                 $element.popover('show');
             }
-            _log('App.Views.ProjectTab.showTruncatedCellContent.event', e, element, bOverflown);
+            //_log('App.Views.ProjectTab.showTruncatedCellContent.event', e, element, bOverflown);
         },
         hideTruncatedCellContentPopup: function (e) {
             var self = this;
@@ -286,7 +287,7 @@
             if (bOverflown) {
                 $element.popover('hide');
             }
-            _log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
+           //_log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
         }
     });
 })(window.App);

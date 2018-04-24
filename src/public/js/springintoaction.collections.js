@@ -1,4 +1,64 @@
 (function (App) {
+    App.Collections.ProjectAttachment = Backbone.Collection.extend({
+        model: App.Models.ProjectAttachment
+    });
+
+    App.PageableCollections.ProjectAttachment = Backbone.PageableCollection.extend({
+        model: App.Models.ProjectAttachment,
+        state: {
+            pageSize: 10
+        },
+        mode: "client" // page entirely on the client side
+    });
+    App.Vars.ProjectAttachmentsBackgridColumnDefinitions = [
+        {
+            // name is a required parameter, but you don't really want one on a select all column
+            name: "",
+            label: "",
+            // Backgrid.Extension.SelectRowCell lets you select individual rows
+            cell: "select-row",
+            // Backgrid.Extension.SelectAllHeaderCell lets you select all the row on a page
+            headerCell: "select-all",
+            resizeable: false,
+            orderable: false,
+            width: "30"
+        },
+        {
+            name: "ProjectAttachmentID",
+            label: "   ",
+            formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                fromRaw: function (rawValue) {
+                    return '<input title="' + rawValue + '" type="radio" name="BudgetID" value="' + rawValue + '" />';
+                    //You can use rawValue to custom your html, you can change this value using the name parameter.
+                }
+            }),
+            cell: "html",
+            editable: false,
+            resizeable: false,
+            orderable: false,
+            width: "30"
+        },
+        {
+            name: "AttachmentPath",
+            label: "AttachmentPath",
+            cell: "string",
+            resizeable: true,
+            orderable: true,
+            width: "175"
+        },
+        {
+            name: "ProjectID",
+            label: "Project",
+            cell: "integer",
+            resizeable: true,
+            orderable: true,
+            width: "150"
+        }
+    ];
+    _log('App.Vars.CollectionsGroup', 'App.Vars.ProjectAttachmentsBackgridColumnDefinitions:', App.Vars.ProjectAttachmentsBackgridColumnDefinitions);
+})(window.App);
+
+(function (App) {
     App.Collections.Budget = Backbone.Collection.extend({
         model: App.Models.Budget
     });
@@ -851,7 +911,7 @@
             // default is false because Backgrid will save the cell's value
             // and exit edit mode on enter
             openOnEnter: false,
-            multiple:true
+            multiple: true
         },
         optionValues: [{
             values: App.Models.volunteerModel.getAgeRangeOptions(false)
@@ -1125,7 +1185,7 @@
         {
             name: "TeamLeaderWilling",
             label: "TeamLeaderWilling",
-            cell: "string",
+            cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1147,7 +1207,7 @@
             orderable: true,
             width: "250"
         },
-         {
+        {
             name: "PreferredSiteID",
             label: "PreferredSiteID",
             cell: "string",
@@ -1162,13 +1222,17 @@
     });
     App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
     let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email'];
-    _.each(sharedCells,  function (value, key) {
+    _.each(sharedCells, function (value, key) {
         let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
-        if (value === 'Status') {
+        cellDefinition = _.clone(cellDefinition);
+        if (cellDefinition.name === 'Status') {
             cellDefinition.name = 'ProjectVolunteerRoleStatus';
         }
+        if (cellDefinition.name === 'Active' || cellDefinition.name === 'FirstName' || cellDefinition.name === 'LastName' || cellDefinition.name === 'MobilePhoneNumber' || cellDefinition.name === 'HomePhoneNumber' || cellDefinition.name === 'Email') {
+            cellDefinition.editable = false;
+        }
         App.Vars.volunteerLeadsBackgridColumnDefinitions.push(cellDefinition);
-        if (value === 'Active'){
+        if (cellDefinition.name === 'Active') {
             App.Vars.volunteerLeadsBackgridColumnDefinitions.push({
                 name: "ProjectRoleID",
                 label: "Project Lead Role",
@@ -1195,4 +1259,53 @@
         },
         mode: "client" // page entirely on the client side
     });
+})(window.App);
+
+(function (App) {
+    App.PageableCollections.SiteVolunteer = Backbone.PageableCollection.extend({
+        model: App.Models.SiteVolunteer,
+        state: {
+            pageSize: 10
+        },
+        mode: "client" // page entirely on the client side
+    });
+
+    let SiteVolunteerRoleCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
+        // any options specific to `select2` goes here
+        select2Options: {
+            // default is false because Backgrid will save the cell's value
+            // and exit edit mode on enter
+            openOnEnter: false
+        },
+        optionValues: [{
+            values: App.Models.siteVolunteerModel.getRoleOptions(false)
+        }],
+        formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
+            toRaw: function (formattedValue, model) {
+                return formattedValue === null ? [] : _.map(formattedValue, function (v) {
+                    return parseInt(v);
+                })
+            }
+        })
+
+    });
+    App.Vars.siteVolunteersBackgridColumnDefinitions = [];
+
+    _.each(App.Vars.volunteerLeadsBackgridColumnDefinitions, function (value, key) {
+
+        let cellDefinition = _.clone(value);
+
+        if (cellDefinition.name === 'ProjectVolunteerRoleStatus') {
+            cellDefinition.name = 'SiteVolunteerRoleStatus';
+        } else if (cellDefinition.name === 'ProjectRoleID') {
+            cellDefinition.name = 'SiteRoleID';
+            cellDefinition.label = "Site Volunteer Role";
+            cellDefinition.cell= SiteVolunteerRoleCell;
+        }
+        App.Vars.siteVolunteersBackgridColumnDefinitions.push(cellDefinition);
+
+    });
+    _log('App.Vars.CollectionsGroup', 'App.Vars.siteVolunteersBackgridColumnDefinitions:', App.Vars.siteVolunteersBackgridColumnDefinitions);
+
 })(window.App);

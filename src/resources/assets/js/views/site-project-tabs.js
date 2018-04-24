@@ -46,7 +46,7 @@
 
         },
         addGridRow: function (e) {
-            var self = this;
+            let self = this;
             let tabName = $(e.target).parents('.tabButtonPane').data('tab-name');
             let tabView = _.find(this.parentChildViews, function (val) {
                 return _.has(val, tabName)
@@ -62,7 +62,38 @@
                 let modal = $(this);
                 modal.find('.modal-title').html($(self.options.parentViewEl).find('h3.box-title').html());
                 modal.find('.modal-body').html(tabView[tabName].getModalForm());
-
+                if (tabName === 'project_attachment') {
+                    let selfView = modal.find('form[name="newProjectAttachment"]');
+                    let sAjaxFileUploadURL = '/admin/project_attachment/upload';
+                    $(selfView.find('input[type="file"]')).fileupload({
+                        url: sAjaxFileUploadURL,
+                        dataType: 'json',
+                        done: function (e, data) {
+                            selfView.find('.file_progress').fadeTo(0, 'slow');
+                            selfView.find('.files').val('');
+                            selfView.find('.file_chosen').empty();
+                            $.each(data.files, function (index, file) {
+                                let sFileName = file.name;
+                                let sExistingVal = selfView.find('.files').val().length > 0 ? selfView.find('.files').val() + ',' : '';
+                                selfView.find('.files').val(sExistingVal + sFileName);
+                                selfView.find('.file_chosen').append(sFileName + '<br>')
+                            });
+                            modal.find('.save.btn').trigger('click')
+                        },
+                        start: function (e) {
+                            selfView.find('.file_progress').fadeTo('fast', 1);
+                            selfView.find('.file_progress').find('.meter').removeClass('green');
+                        },
+                        progress: function (e, data) {
+                            let progress = parseInt(data.loaded / data.total * 100, 10);
+                            selfView.find('.file_progress .meter').addClass('green').css(
+                                'width',
+                                progress + '%'
+                            ).find('p').html(progress + '%');
+                        }
+                    }).prop('disabled', !$.support.fileInput)
+                        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+                }
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
                     if (tabName === 'project_volunteer') {
@@ -139,13 +170,14 @@
         projectVolunteersViewClass: App.Views.ProjectVolunteer,
         projectLeadsViewClass: App.Views.ProjectLead,
         projectBudgetViewClass: App.Views.Budget,
+        projectAttachmentsViewClass: App.Views.ProjectAttachment,
         initialize: function (options) {
             this.options = options;
             this.childViews = [];
-            _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID','toggleProductTabsBox');
+            _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID', 'toggleProductTabsBox');
             // this.model is App.Models.projectModel
             this.listenTo(this.model, "change", this.fetchIfNewProjectID);
-            this.listenTo(App.Views.siteYearsDropDownView, 'toggle-product-tabs-box', this.toggleProductTabsBox);
+            this.listenTo(App.Views.siteYearsDropDownView, 'toggle-project-tabs-box', this.toggleProductTabsBox);
         },
         events: {
             'shown.bs.tab a[data-toggle="tab"]': 'notifyProjectTabToolbar',
@@ -197,6 +229,17 @@
             });
             this.childViews.push({project_volunteer: this.projectVolunteersView});
 
+            App.Views.projectAttachmentsView = this.projectAttachmentsView = new this.projectAttachmentsViewClass({
+                el: this.$('.project-attachments-backgrid-wrapper'),
+                tab: 'project_attachment',
+                parentViewEl: this.el,
+                mainAppEl: this.options.mainAppEl,
+                collection: App.PageableCollections.projectAttachmentsCollection,
+                columnCollectionDefinitions: App.Vars.ProjectAttachmentsBackgridColumnDefinitions,
+                hideCellCnt: 0//8
+            });
+            this.childViews.push({project_attachment: this.projectAttachmentsView});
+
             /**
              * Handles the buttons below the tabbed grids
              */
@@ -211,6 +254,7 @@
             this.projectBudgetView.render();
             this.projectContactsView.render();
             this.projectVolunteersView.render();
+            this.projectAttachmentsView.render();
             let titleDescription = App.Views.projectsView.collection.length === 0 ? 'No projects created yet.' : this.model.get('ProjectDescription');
             $(this.options.mainAppEl).find('h3.box-title small').html(titleDescription);
             _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + titleDescription, 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
@@ -222,7 +266,7 @@
         },
         toggleProductTabsBox: function () {
             let self = this;
-            _log('App.Views.SiteProjectTabs.toggleProductTabsBox', 'App.Views.projectsView.collection.length:'+ App.Views.projectsView.collection.length);
+            _log('App.Views.SiteProjectTabs.toggleProductTabsBox', 'App.Views.projectsView.collection.length:' + App.Views.projectsView.collection.length);
             if (App.Views.projectsView.collection.length === 0) {
                 if (!self.$el.hasClass('collapsed-box')) {
                     self.$el.find('.btn-box-tool').trigger('click');
