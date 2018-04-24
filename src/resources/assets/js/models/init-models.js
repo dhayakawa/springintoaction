@@ -2,6 +2,8 @@
     App.Models.siteModel = new App.Models.Site();
     App.Models.siteStatusModel = new App.Models.SiteStatus();
     App.Models.projectModel = new App.Models.Project();
+    App.Models.siteVolunteerModel = new App.Models.SiteVolunteer();
+
     /**
      * Models for the contacts and volunteer management
      */
@@ -16,4 +18,5 @@
     App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
     App.Models.annualBudgetModel = new App.Models.AnnualBudget();
+
 })(window.App);

@@ -78,7 +78,7 @@
             // default is false because Backgrid will save the cell's value
             // and exit edit mode on enter
             openOnEnter: false,
-            multiple:true
+            multiple: true
         },
         optionValues: [{
             values: App.Models.volunteerModel.getAgeRangeOptions(false)
@@ -352,7 +352,7 @@
         {
             name: "TeamLeaderWilling",
             label: "TeamLeaderWilling",
-            cell: "string",
+            cell: App.Vars.yesNoCell,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -374,7 +374,7 @@
             orderable: true,
             width: "250"
         },
-         {
+        {
             name: "PreferredSiteID",
             label: "PreferredSiteID",
             cell: "string",
@@ -389,13 +389,17 @@
     });
     App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
     let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email'];
-    _.each(sharedCells,  function (value, key) {
+    _.each(sharedCells, function (value, key) {
         let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
-        if (value === 'Status') {
+        cellDefinition = _.clone(cellDefinition);
+        if (cellDefinition.name === 'Status') {
             cellDefinition.name = 'ProjectVolunteerRoleStatus';
         }
+        if (cellDefinition.name === 'Active' || cellDefinition.name === 'FirstName' || cellDefinition.name === 'LastName' || cellDefinition.name === 'MobilePhoneNumber' || cellDefinition.name === 'HomePhoneNumber' || cellDefinition.name === 'Email') {
+            cellDefinition.editable = false;
+        }
         App.Vars.volunteerLeadsBackgridColumnDefinitions.push(cellDefinition);
-        if (value === 'Active'){
+        if (cellDefinition.name === 'Active') {
             App.Vars.volunteerLeadsBackgridColumnDefinitions.push({
                 name: "ProjectRoleID",
                 label: "Project Lead Role",

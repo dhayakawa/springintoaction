@@ -592,8 +592,9 @@
             var self = this;
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
             _log('App.Views.ProjectTab.create', self.options.tab, attributes, this.model);
-            this.model.url = '/admin/' + self.options.tab;
-            this.model.save(attributes,
+            let model = this.model.clone().clear({silent: true});
+            model.url = '/admin/' + self.options.tab;
+            model.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
@@ -685,7 +686,7 @@
                 });
                 $element.popover('show');
             }
-            _log('App.Views.ProjectTab.showTruncatedCellContent.event', e, element, bOverflown);
+            //_log('App.Views.ProjectTab.showTruncatedCellContent.event', e, element, bOverflown);
         },
         hideTruncatedCellContentPopup: function (e) {
             var self = this;
@@ -697,7 +698,46 @@
             if (bOverflown) {
                 $element.popover('hide');
             }
-            _log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
+           //_log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.ProjectAttachment = App.Views.ProjectTab.fullExtend({
+        getModalForm: function () {
+            let template = window.template('newProjectAttachmentTemplate');
+
+            let tplVars = {
+                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
+                budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
+                statusOptions: App.Models.projectBudgetModel.getStatusOptions(true)
+            };
+
+            return template(tplVars);
+        },
+        create: function (attributes) {
+            let self = this;
+            window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+            let newModel = new App.Models.ProjectAttachment();
+            newModel.url = '/admin/' + this.options.tab;
+            _log('App.Views.ProjectAttachment.create', newModel.url, attributes);
+            newModel.save(attributes,
+                {
+                    success: function (model, response, options) {
+                        window.growl(response.msg, response.success ? 'success' : 'error');
+                        self.collection.url = '/admin/project_attachment/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        $.when(
+                            self.collection.fetch({reset: true})
+                        ).then(function () {
+                            _log('App.Views.ProjectAttachment.create.event', self.options.tab + ' collection fetch promise done');
+                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                        });
+                    },
+                    error: function (model, response, options) {
+                        window.growl(response.msg, 'error')
+                    }
+                });
         }
     });
 })(window.App);
@@ -905,6 +945,7 @@
             this.listenTo(App.Views.siteManagementView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
             });
+
         },
         events: {
             'click #btnAddProject': 'addGridRow',
@@ -1017,6 +1058,7 @@
             this.rowBgColor = 'lightYellow';
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
             this.$parentViewEl = this.options.parentViewEl;
+            _log('App.Views.Projects.initialize', options);
         },
         events: {
             'focusin tbody tr': 'updateProjectDataViews',
@@ -1244,14 +1286,14 @@
                             //initialize your views here
                             _log('App.Views.Project.create.event', 'project collection fetch promise done');
                             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                            App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                            App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
                             self.$el.find('tbody tr:first-child').trigger('focusin');
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                        App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
                     }
                 });
         },
@@ -1277,13 +1319,13 @@
                         //initialize your views here
                         _log('App.Views.Project.destroy.event', 'project collection fetch promise done');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                        App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
                     });
                 },
                 fail: function (response) {
                     window.growl(response.msg, 'error');
                     window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                    App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                    App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
                 }
             })
         },
@@ -1460,13 +1502,13 @@
                             window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                         }
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        self.trigger('toggle-product-tabs-box');
+                        self.trigger('toggle-project-tabs-box');
                     },
                     error: function (model, response, options) {
                         growl(response.msg, 'error');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
                         window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
-                        self.trigger('toggle-product-tabs-box');
+                        self.trigger('toggle-project-tabs-box');
                     }
 
                 });
@@ -1629,12 +1671,410 @@
 })(window.App);
 
 (function (App) {
+    App.Views.SiteVolunteerGridManagerContainerToolbar = Backbone.View.extend({
+        template: template('siteVolunteersGridManagerContainerToolbarTemplate'),
+        initialize: function (options) {
+            let self = this;
+            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
+            this.listenTo(App.Views.siteVolunteersView, 'toggle-delete-btn', function (e) {
+                self.toggleDeleteBtn(e);
+            });
+
+        },
+        events: {
+            'click .btnAdd': 'addGridRow',
+            'click .btnDeleteChecked': 'deleteCheckedRows',
+            'click .btnClearStored': 'clearStoredColumnState',
+        },
+        render: function () {
+            this.$el.html(this.template());
+            // initialize all file upload inputs on the page at load time
+            //this.initializeFileUploadObj(this.$el.find('input[type="file"]'));
+            return this;
+        },
+        initializeFileUploadObj: function (el) {
+
+        },
+        addGridRow: function (e) {
+            var self = this;
+            e.preventDefault();
+            $('#sia-modal').one('show.bs.modal', function (event) {
+                let modal = $(this);
+                modal.find('.modal-title').html('New Site Volunteer');
+                modal.find('.modal-body').html(App.Views.siteVolunteersView.getModalForm());
+
+                modal.find('.save.btn').one('click', function (e) {
+                    e.preventDefault();
+                    App.Views.siteVolunteersView.create($.unserialize(modal.find('form').serialize()));
+                    $('#sia-modal').modal('hide');
+                });
+
+            });
+            $('#sia-modal').modal('show');
+
+        },
+        deleteCheckedRows: function (e) {
+            e.preventDefault();
+            if ($(e.target).hasClass('disabled')) {
+                growl('Please check a box to delete a site volunteer.');
+                return;
+            }
+            bootbox.confirm("Do you really want to delete the checked site volunteers?", function (bConfirmed) {
+                if (bConfirmed) {
+                    let selectedModels = App.Views.siteVolunteersView.backgrid.getSelectedModels();
+                    // clear or else the previously selected models remain as undefined
+                    try {
+                        App.Views.siteVolunteersView.backgrid.clearSelectedModels();
+                    } catch (e) {
+                    }
+                    _log('App.Views.SiteVolunteerGridManagerContainerToolbar.deleteCheckedRows', 'selectedModels', selectedModels);
+                    let modelIDs = _.map(selectedModels, function (model) {
+                        return model.get('SiteVolunteerID');
+                    });
+
+                    App.Views.siteVolunteersView.destroy({deleteModelIDs: modelIDs});
+                }
+            });
+        },
+        clearStoredColumnState(e) {
+            e.preventDefault();
+            growl('Resetting site volunteers columns. Please wait while the page refreshes.', 'success');
+            localStorage.removeItem('backgrid-colmgr-site-volunteers');
+            location.reload();
+        },
+        toggleDeleteBtn: function (e) {
+            let toggle = e.toggle;
+
+            _log('App.Views.SiteVolunteerGridManagerContainerToolbar.toggleDeleteBtn.event', this.$el.find('.btnDeleteChecked'), e.toggle, e);
+            if (toggle === 'disable') {
+                this.$el.find('.btnDeleteChecked').addClass('disabled');
+            } else {
+                this.$el.find('.btnDeleteChecked').removeClass('disabled');
+            }
+
+        }
+
+    });
+    App.Views.SiteVolunteer = Backbone.View.extend({
+        initialize: function (options) {
+            let self = this;
+            this.options = options;
+            _.bindAll(this, 'render', 'update', 'updateSiteVolunteerView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+            self.backgridWrapperClassSelector = '.site-volunteers-backgrid-wrapper';
+            this.gridManagerContainerToolbarClassName = 'site-volunteers-grid-manager-container';
+            this.gridManagerContainerToolbarSelector = '.' + this.gridManagerContainerToolbarClassName;
+            this.ajaxWaitingSelector = this.backgridWrapperClassSelector;
+            this.modelNameLabel = this.options.modelNameLabel;
+            this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
+            this.routeName = 'site_volunteer';
+            _log('App.Views.SiteVolunteer.initialize', options);
+        },
+        events: {
+            'focusin tbody tr': 'updateSiteVolunteerView',
+            'mouseenter thead th button': 'showColumnHeaderLabel',
+            'mouseenter tbody td': 'showTruncatedCellContentPopup',
+            'mouseleave tbody td': 'hideTruncatedCellContentPopup'
+        },
+        render: function (e) {
+            let self = this;
+            this.hideCellCnt = this.options.hideCellCnt;
+            this.$tabBtnPanePaginationContainer = $(this.gridManagerContainerToolbarSelector).find('.pagination-controls');
+            this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
+
+            this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
+            this.columnCollection.setPositions().sort();
+
+            let Header = Backgrid.Extension.GroupedHeader;
+            this.backgrid = new Backgrid.Grid({
+                header: Header,
+                columns: this.columnCollection,
+                collection: this.collection
+            });
+
+            let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
+            let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
+                initialColumnsVisible: initialColumnsVisible,
+                trackSize: true,
+                trackOrder: true,
+                trackVisibility: true,
+                saveState: App.Vars.bBackgridColumnManagerSaveState,
+                saveStateKey: 'site-volunteers',
+                loadStateOnInit: true,
+                stateChecking: "loose"
+            });
+
+            // let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
+            //     columnManager: colManager
+            // });
+            _log('App.Views.SiteVolunteer.render', this.routeName, $(this.options.parentViewEl), _.isUndefined(e) ? 'no event passed in for this call.' : e, $(self.options.parentViewEl).find('.site-volunteers-grid-manager-container').find('.tab-pagination-controls'));
+
+            let $gridContainer = this.$el.html(this.backgrid.render().el);
+
+            this.gridManagerContainerToolbar = new App.Views.SiteVolunteerGridManagerContainerToolbar({
+                el: '.site-volunteers-grid-manager-container'
+            });
+
+            $(this.options.parentViewEl).find('.site-volunteers-grid-manager-container').append(this.gridManagerContainerToolbar.render().el);
+            $(this.options.parentViewEl).find('.site-volunteers-grid-manager-container').find('.file-upload-container').hide();
+            let paginator = new Backgrid.Extension.Paginator({
+                collection: this.collection
+            });
+
+            // Render the paginator
+            $(this.options.parentViewEl).find('.site-volunteers-grid-manager-container').find('.site-volunteers-pagination-controls').html(paginator.render().el);
+
+            // Add sizeable columns
+            let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
+                collection: this.collection,
+                columns: this.columnCollection,
+                grid: this.backgrid
+            });
+            $gridContainer.find('thead').before(sizeAbleCol.render().el);
+
+            // Add resize handlers
+            let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
+                sizeAbleColumns: sizeAbleCol,
+                saveColumnWidth: true
+            });
+            $gridContainer.find('thead').before(sizeHandler.render().el);
+
+            // Make columns reorderable
+            let orderHandler = new Backgrid.Extension.OrderableColumns({
+                grid: this.backgrid,
+                sizeAbleColumns: sizeAbleCol
+            });
+            $gridContainer.find('thead').before(orderHandler.render().el);
+
+            //this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
+
+            // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
+            this.backgrid.collection.on('backgrid:editing', function (e) {
+                _log('App.Views.SiteVolunteer.render', self.routeName, 'backgrid.collection.on backgrid:editing', e);
+                self.updateSiteVolunteerView(e);
+            });
+            this.backgrid.collection.on('backgrid:edited', function (e) {
+                self.update(e);
+            });
+            this.backgrid.collection.on('backgrid:selected', function (e) {
+                self.toggleDeleteBtn(e);
+            });
+            window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+            _log('App.Views.SiteVolunteer.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
+            // Set the current model id on the tab so we can reference it in other views
+            $('#' + this.options.tab).data('current-model-id', this.model.get(this.model.idAttribute));
+
+            // Show a popup of the text that has been truncated
+            $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
+                placement: 'auto right',
+                padding: 0,
+                container: 'body',
+                content: function () {
+                    return $(this).text()
+                }
+            });
+            // hide popover if it is not overflown
+            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
+                let element = this;
+
+                let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+                if (!bOverflown) {
+                    $gridContainer.find('td.renderable').popover('hide')
+                }
+            });
+            this.$gridContainer = $gridContainer;
+            return this;
+        },
+        getModalForm: function () {
+            let template = window.template('newSiteVolunteerTemplate');
+
+            let volunteerSelect = new App.Views.Select({
+                el: '',
+                attributes: {id: 'VolunteerID', name: 'VolunteerID', class: 'form-control'},
+                buildHTML: true,
+                collection: App.Collections.projectVolunteersCollection,
+                optionValueModelAttrName: 'VolunteerID',
+                optionLabelModelAttrName: ['LastName', 'FirstName']
+            });
+            let tplVars = {
+                SiteStatusID: App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute),
+                volunteerSelect: volunteerSelect.getHtml(),
+                siteRoleOptions: App.Models.siteVolunteerModel.getRoleOptions(true),
+                statusOptions: App.Models.volunteerModel.getStatusOptions(true)
+            };
+            return template(tplVars);
+        },
+        /**
+         * ProjectIDParam can also be an event
+         * @param e
+         */
+        updateSiteVolunteerView: function (e) {
+            let self = this;
+            let currentModelID = 0;
+            let $RadioElement = null;
+            let $TableRowElement = null;
+            _log('App.Views.SiteVolunteer.updateSiteVolunteerView.event', 'event triggered:', e);
+            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
+                $RadioElement = this.$gridContainer.find('input[type="radio"][name="' + this.model.idAttribute + '"][value="' + e.id + '"]');
+                $TableRowElement = $RadioElement.parents('tr');
+            } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
+                $TableRowElement = $(e.currentTarget);
+                $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
+            }
+            if ($RadioElement !== null) {
+                // click is only a visual indication that the row is selected. nothing should be listening for this click
+                $RadioElement.trigger('click');
+                currentModelID = $RadioElement.val();
+
+                // Highlight row
+                $TableRowElement.siblings().removeAttr('style');
+                $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
+
+            }
+
+            if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
+                // Refresh tabs on new row select
+                this.model.url = '/admin/' + self.routeName + '/' + currentModelID;
+                this.model.fetch({reset: true});
+            }
+
+        },
+        update: function (e) {
+            let self = this;
+            if (!_.isEmpty(e.changed)) {
+                let currentModelID = e.attributes[self.model.idAttribute];
+                let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
+                attributes['Status'] = attributes['SiteVolunteerRoleStatus'];
+                attributes['SiteStatusID'] = App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
+                _log('App.Views.SiteVolunteer.update', self.routeName, e.changed, attributes, this.model);
+                this.model.url = '/admin/' + self.routeName + '/' + currentModelID;
+                this.model.save(attributes,
+                    {
+                        success: function (model, response, options) {
+                            _log('App.Views.SiteVolunteer.update', self.routeName + ' save', model, response, options);
+                            growl(response.msg, response.success ? 'success' : 'error');
+                        },
+                        error: function (model, response, options) {
+                            console.error('App.Views.SiteVolunteer.update', self.routeName + ' save', model, response, options);
+                            growl(response.msg, 'error')
+                        }
+                    });
+            } else {
+            }
+        },
+        create: function (attributes) {
+            var self = this;
+            window.ajaxWaiting('show', self.ajaxWaitingSelector);
+            let model = this.model.clone().clear({silent: true});
+            _log('App.Views.SiteVolunteer.create', self.routeName, attributes, model, self.ajaxWaitingSelector);
+            model.url = '/admin/' + self.routeName;
+            attributes['Status'] = attributes['SiteVolunteerRoleStatus'];
+            attributes['SiteStatusID'] = App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
+            model.save(attributes,
+                {
+                    success: function (model, response, options) {
+                        window.growl(response.msg, response.success ? 'success' : 'error');
+                        self.collection.url = '/admin/' + self.routeName + '/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
+                        $.when(
+                            self.collection.fetch({reset: true})
+                        ).then(function () {
+                            _log('App.Views.SiteVolunteer.create.event', self.routeName + ' collection fetch promise done');
+                            window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                        });
+                    },
+                    error: function (model, response, options) {
+                        window.growl(response.msg, 'error');
+                        window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                    }
+                });
+        },
+        toggleDeleteBtn: function (e) {
+            var self = this;
+            let selectedModels = self.backgrid.getSelectedModels();
+            _log('App.Views.SiteVolunteer.toggleDeleteBtn.event', self.routeName, selectedModels.length, e);
+            let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
+            App.Views.siteVolunteersView.trigger('toggle-delete-btn', {toggle: toggleState, tab: self.routeName});
+        },
+        destroy: function (attributes) {
+            var self = this;
+            window.ajaxWaiting('show', this.ajaxWaitingSelector);
+
+            _log(this.viewName + '.destroy', attributes);
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: '/admin/' + self.routeName + '/batch/destroy',
+                data: attributes,
+                success: function (response) {
+                    window.growl(response.msg, response.success ? 'success' : 'error');
+                    self.collection.url = '/admin/' + self.routeName + '/list/all';
+                    $.when(
+                        self.collection.fetch({reset: true})
+                    ).then(function () {
+                        //initialize your views here
+                        _log(self.viewName + '.destroy.event', self.routeName + ' collection fetch promise done');
+                        window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                    });
+                },
+                fail: function (response) {
+                    window.growl(response.msg, 'error');
+                    window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                }
+            })
+        },
+        showColumnHeaderLabel: function (e) {
+            var self = this;
+            let $element = $(e.currentTarget).parents('th');
+            let element = $element[0];
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.attr('title', $element.find('button').text());
+            }
+            //_log('App.Views.Projects.showColumnHeaderLabel.event', e);
+        },
+        showTruncatedCellContentPopup: function (e) {
+            var self = this;
+
+            let $element = $(e.currentTarget);
+            let element = e.currentTarget;
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.popover({
+                    placement: 'auto auto',
+                    padding: 0,
+                    container: 'body',
+                    content: function () {
+                        return $(this).text()
+                    }
+                });
+                $element.popover('show');
+            }
+            //_log('App.Views.SiteVolunteer.showTruncatedCellContent.event', e, element, bOverflown);
+        },
+        hideTruncatedCellContentPopup: function (e) {
+            var self = this;
+
+            let $element = $(e.currentTarget);
+            let element = e.currentTarget;
+
+            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            if (bOverflown) {
+                $element.popover('hide');
+            }
+            //_log('App.Views.SiteVolunteer.hideTruncatedCellContent.event', e, element, bOverflown);
+        }
+    });
+})(window.App);
+
+(function (App) {
     App.Views.SiteManagement = Backbone.View.extend({
         sitesViewClass: App.Views.Sites,
         siteYearsViewClass: App.Views.SiteYears,
         siteViewClass: App.Views.Site,
         siteStatusViewClass: App.Views.SiteStatus,
         projectsViewClass: App.Views.Projects,
+        siteVolunteersViewClass: App.Views.SiteVolunteer,
         initialize: function (options) {
             this.options = options;
             this.childViews = [];
@@ -1683,6 +2123,21 @@
                 model: App.Models.projectModel
             });
             this.projectsView.render();
+
+
+
+            App.Views.siteVolunteersView = this.siteVolunteersView = new this.siteVolunteersViewClass({
+                el: this.$('.site-volunteers-backgrid-wrapper'),
+                mainAppEl: this.options.mainAppEl,
+                parentViewEl: this.el,
+                model: App.Models.siteVolunteerModel,
+                modelNameLabel: 'SiteVolunteer',
+                collection: App.PageableCollections.siteVolunteersCollection,
+                columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
+                hideCellCnt: 0//2
+            });
+            this.siteVolunteersView.render();
+
             return this;
         },
         /**
@@ -1774,7 +2229,7 @@
 
         },
         addGridRow: function (e) {
-            var self = this;
+            let self = this;
             let tabName = $(e.target).parents('.tabButtonPane').data('tab-name');
             let tabView = _.find(this.parentChildViews, function (val) {
                 return _.has(val, tabName)
@@ -1790,7 +2245,38 @@
                 let modal = $(this);
                 modal.find('.modal-title').html($(self.options.parentViewEl).find('h3.box-title').html());
                 modal.find('.modal-body').html(tabView[tabName].getModalForm());
-
+                if (tabName === 'project_attachment') {
+                    let selfView = modal.find('form[name="newProjectAttachment"]');
+                    let sAjaxFileUploadURL = '/admin/project_attachment/upload';
+                    $(selfView.find('input[type="file"]')).fileupload({
+                        url: sAjaxFileUploadURL,
+                        dataType: 'json',
+                        done: function (e, data) {
+                            selfView.find('.file_progress').fadeTo(0, 'slow');
+                            selfView.find('.files').val('');
+                            selfView.find('.file_chosen').empty();
+                            $.each(data.files, function (index, file) {
+                                let sFileName = file.name;
+                                let sExistingVal = selfView.find('.files').val().length > 0 ? selfView.find('.files').val() + ',' : '';
+                                selfView.find('.files').val(sExistingVal + sFileName);
+                                selfView.find('.file_chosen').append(sFileName + '<br>')
+                            });
+                            modal.find('.save.btn').trigger('click')
+                        },
+                        start: function (e) {
+                            selfView.find('.file_progress').fadeTo('fast', 1);
+                            selfView.find('.file_progress').find('.meter').removeClass('green');
+                        },
+                        progress: function (e, data) {
+                            let progress = parseInt(data.loaded / data.total * 100, 10);
+                            selfView.find('.file_progress .meter').addClass('green').css(
+                                'width',
+                                progress + '%'
+                            ).find('p').html(progress + '%');
+                        }
+                    }).prop('disabled', !$.support.fileInput)
+                        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+                }
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
                     if (tabName === 'project_volunteer') {
@@ -1867,13 +2353,14 @@
         projectVolunteersViewClass: App.Views.ProjectVolunteer,
         projectLeadsViewClass: App.Views.ProjectLead,
         projectBudgetViewClass: App.Views.Budget,
+        projectAttachmentsViewClass: App.Views.ProjectAttachment,
         initialize: function (options) {
             this.options = options;
             this.childViews = [];
-            _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID','toggleProductTabsBox');
+            _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID', 'toggleProductTabsBox');
             // this.model is App.Models.projectModel
             this.listenTo(this.model, "change", this.fetchIfNewProjectID);
-            this.listenTo(App.Views.siteYearsDropDownView, 'toggle-product-tabs-box', this.toggleProductTabsBox);
+            this.listenTo(App.Views.siteYearsDropDownView, 'toggle-project-tabs-box', this.toggleProductTabsBox);
         },
         events: {
             'shown.bs.tab a[data-toggle="tab"]': 'notifyProjectTabToolbar',
@@ -1925,6 +2412,17 @@
             });
             this.childViews.push({project_volunteer: this.projectVolunteersView});
 
+            App.Views.projectAttachmentsView = this.projectAttachmentsView = new this.projectAttachmentsViewClass({
+                el: this.$('.project-attachments-backgrid-wrapper'),
+                tab: 'project_attachment',
+                parentViewEl: this.el,
+                mainAppEl: this.options.mainAppEl,
+                collection: App.PageableCollections.projectAttachmentsCollection,
+                columnCollectionDefinitions: App.Vars.ProjectAttachmentsBackgridColumnDefinitions,
+                hideCellCnt: 0//8
+            });
+            this.childViews.push({project_attachment: this.projectAttachmentsView});
+
             /**
              * Handles the buttons below the tabbed grids
              */
@@ -1939,6 +2437,7 @@
             this.projectBudgetView.render();
             this.projectContactsView.render();
             this.projectVolunteersView.render();
+            this.projectAttachmentsView.render();
             let titleDescription = App.Views.projectsView.collection.length === 0 ? 'No projects created yet.' : this.model.get('ProjectDescription');
             $(this.options.mainAppEl).find('h3.box-title small').html(titleDescription);
             _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + titleDescription, 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
@@ -1950,7 +2449,7 @@
         },
         toggleProductTabsBox: function () {
             let self = this;
-            _log('App.Views.SiteProjectTabs.toggleProductTabsBox', 'App.Views.projectsView.collection.length:'+ App.Views.projectsView.collection.length);
+            _log('App.Views.SiteProjectTabs.toggleProductTabsBox', 'App.Views.projectsView.collection.length:' + App.Views.projectsView.collection.length);
             if (App.Views.projectsView.collection.length === 0) {
                 if (!self.$el.hasClass('collapsed-box')) {
                     self.$el.find('.btn-box-tool').trigger('click');
@@ -2253,7 +2752,6 @@
             }
 
             let skillOptions = App.Models.volunteerModel.getSkillLevelOptions();
-            skillOptions.shift();
             let ageRangeOptions = App.Models.volunteerModel.getAgeRangeOptions();
             let primarySkillOptions = App.Models.volunteerModel.getPrimarySkillOptions();
             let statusOptions = App.Models.volunteerModel.getStatusOptions();

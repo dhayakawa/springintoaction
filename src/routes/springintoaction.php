@@ -126,4 +126,18 @@
         Route::get('project_volunteer/{VolunteerID}', ['as' => 'project_volunteer', 'uses' => 'VolunteerController@show']);
         Route::get('project_volunteer/all/{ProjectID}', ['as' => 'project_volunteer', 'uses' => 'VolunteerController@getProjectVolunteers']);
 
+        Route::get('project_attachment/{BudgetID}', ['as' => 'project_attachment', 'uses' => 'ProjectAttachmentController@show']);
+        Route::get('project_attachment/all/{ProjectID}', ['as' => 'project_attachment', 'uses' => 'ProjectAttachmentController@getProjectAttachments']);
+        Route::put('project_attachment/{BudgetID}', ['as' => 'project_attachment.update', 'uses' => 'ProjectAttachmentController@update']);
+        Route::post('project_attachment', ['as' => 'project_attachment.create', 'uses' => 'ProjectAttachmentController@store']);
+        Route::post('project_attachment/batch/destroy', ['as' => 'project_attachment.batch.destroy', 'uses' => 'ProjectAttachmentController@batchDestroy']);
+        Route::post('project_attachment/upload', ['as' => 'project_attachment.upload', 'uses' => 'ProjectAttachmentController@upload']);
+
+        Route::post('site_volunteer', ['as' => 'site_volunteer.batch.store', 'uses' => 'SiteVolunteerController@store']);
+        Route::post('site_volunteer/batch/destroy', ['as' => 'site_volunteer.batch.destroy', 'uses' => 'SiteVolunteerController@batchDestroy']);
+        Route::get('site_volunteer/unassigned/{SiteStatusID}/{Year}', ['as' => 'site_volunteer.unassigned', 'uses' => 'SiteVolunteerController@getUnassigned']);
+        Route::put('site_volunteer/{VolunteerID}', ['as' => 'site_volunteer.update', 'uses' => 'SiteVolunteerController@update']);
+        Route::get('site_volunteer/{VolunteerID}', ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@show']);
+        Route::get('site_volunteer/all/{SiteStatusID}', ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@getSiteVolunteers']);
+
     });

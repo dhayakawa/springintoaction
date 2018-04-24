@@ -225,7 +225,6 @@
             }
 
             let skillOptions = App.Models.volunteerModel.getSkillLevelOptions();
-            skillOptions.shift();
             let ageRangeOptions = App.Models.volunteerModel.getAgeRangeOptions();
             let primarySkillOptions = App.Models.volunteerModel.getPrimarySkillOptions();
             let statusOptions = App.Models.volunteerModel.getStatusOptions();

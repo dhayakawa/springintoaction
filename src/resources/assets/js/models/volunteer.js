@@ -43,31 +43,20 @@
             'AssignmentInformationSendStatus': ''
         },
         getStatusOptions: function (bReturnHtml) {
-            let options = [
-                ['Candidate','Candidate'],
-                ['Proposed', 'Proposed'],
-                ['Undecided', 'Undecided'],
-                ['Agreed', 'Agreed'],
-                ['Declined', 'Declined']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['VolunteerStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getAgeRangeOptions: function (bReturnHtml) {
-            let options = [
-                ['Child under 1', 'Child under 1'],
-                ['Child (1-11)', 'Child (1-11)'],
-                ['Youth (12-17)', 'Youth (12-17)'],
-                ['Adult (18+)', 'Adult (18+)']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['VolunteerAgeRangeOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
@@ -94,73 +83,50 @@
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
-                })
-            } else {
-                return options;
-            }
-        },
-        getRoleOptions: function (bReturnHtml) {
-            let options = [
-                ['Liaison', 7],
-                ['Scout', 6],
-                ['Estimator', 2],
-                ['Site Coordinator', 68],
-                ['Project Coordinator', 3],
-                ['Team Leader', 25],
-                ['Worker', App.Vars.workerRoleID]
-            ];
-            if (bReturnHtml) {
-                return _.map(options, function (value) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
+        getRoleOptions: function (bReturnHtml) {
+            let options = _.pairs(App.Vars.selectOptions['project_roles']);
+            if (bReturnHtml) {
+                return _.map(options, function (value) {
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
+                })
+            } else {
+
+                return options;
+            }
+        },
         getPrimarySkillOptions: function (bReturnHtml) {
-            let options = [
-                ['', ''],
-                ['Painting', 'Painting'],
-                ['Landscaping', 'Landscaping'],
-                ['Construction', 'Construction'],
-                ['Electrical', 'Electrical'],
-                ['Cabinetry Finish Work', 'CabinetryFinishWork'],
-                ['Plumbing', 'Plumbing']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['VolunteerPrimarySkillOptions']);
+
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getSkillLevelOptions: function (bReturnHtml) {
-            let options = [
-                ['',''],
-                ['Unskilled', 'Unskilled'],
-                ['Fair', 'Fair'],
-                ['Good', 'Good'],
-                ['Excellent', 'Excellent']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['VolunteerSkillLevelOptions']);
+
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;
             }
         },
         getSendOptions: function (bReturnHtml) {
-            let options = [
-                ['Not Ready', 'Not Ready'],
-                ['Ready', 'Ready'],
-                ['Sent', 'Sent']
-            ];
+            let options = _.pairs(App.Vars.selectOptions['SendStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[0] + "'>" + value[1] + "</option>";
+                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
                 })
             } else {
                 return options;

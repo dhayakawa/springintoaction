@@ -5,11 +5,13 @@
      * Bootstap Backbone models & collections for initial page load
      */
     App.Vars.appInitialData = @json($appInitialData);
-
+    App.Vars.selectOptions = App.Vars.appInitialData['select_options'];
 
     App.Models.siteModel = new App.Models.Site(@json($appInitialData['site']));
     App.Models.siteStatusModel = new App.Models.SiteStatus(@json($appInitialData['siteStatus']));
     App.Models.projectModel = new App.Models.Project(@json($appInitialData['project']));
+    App.Models.siteVolunteerModel = new App.Models.SiteVolunteer(@json($appInitialData['site_volunteer']));
+
     /**
      * Models for the contacts and volunteer management
      */
@@ -21,6 +23,7 @@
     App.Models.projectContactModel = new App.Models.ProjectContact(@json(current($appInitialData['project_contacts'])));
     App.Models.projectLeadModel = new App.Models.Volunteer(@json(current($appInitialData['project_leads'])));
     App.Models.projectBudgetModel = new App.Models.Budget(@json(current($appInitialData['project_budgets'])));
+    App.Models.projectAttachmentModel = new App.Models.ProjectAttachment(@json(current($appInitialData['project_attachments'])));
     App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
     App.Models.annualBudgetModel = new App.Models.AnnualBudget(@json(current($appInitialData['annual_budget'])));
@@ -33,7 +36,8 @@
             project_lead: App.Models.projectLeadModel,
             project_budget: App.Models.projectBudgetModel,
             project_contact: App.Models.projectContactModel,
-            project_volunteer: App.Models.volunteerModel
+            project_volunteer: App.Models.volunteerModel,
+            project_attachment: App.Models.projectAttachmentModel
         }
     ;
 

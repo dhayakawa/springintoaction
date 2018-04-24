@@ -7,6 +7,7 @@
             this.listenTo(App.Views.siteManagementView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
             });
+
         },
         events: {
             'click #btnAddProject': 'addGridRow',
@@ -119,6 +120,7 @@
             this.rowBgColor = 'lightYellow';
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
             this.$parentViewEl = this.options.parentViewEl;
+            _log('App.Views.Projects.initialize', options);
         },
         events: {
             'focusin tbody tr': 'updateProjectDataViews',
@@ -346,14 +348,14 @@
                             //initialize your views here
                             _log('App.Views.Project.create.event', 'project collection fetch promise done');
                             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                            App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                            App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
                             self.$el.find('tbody tr:first-child').trigger('focusin');
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                        App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
                     }
                 });
         },
@@ -379,13 +381,13 @@
                         //initialize your views here
                         _log('App.Views.Project.destroy.event', 'project collection fetch promise done');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                        App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
                     });
                 },
                 fail: function (response) {
                     window.growl(response.msg, 'error');
                     window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                    App.Views.siteYearsDropDownView.trigger('toggle-product-tabs-box');
+                    App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
                 }
             })
         },

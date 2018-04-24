@@ -112,13 +112,13 @@
                             window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                         }
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        self.trigger('toggle-product-tabs-box');
+                        self.trigger('toggle-project-tabs-box');
                     },
                     error: function (model, response, options) {
                         growl(response.msg, 'error');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
                         window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
-                        self.trigger('toggle-product-tabs-box');
+                        self.trigger('toggle-project-tabs-box');
                     }
 
                 });

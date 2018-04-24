@@ -22,7 +22,8 @@ window.App = {
         projectLeadsCollection: null,
         projectVolunteersCollection: null,
         unassignedProjectVolunteersCollection: null,
-        volunteersManagementCollection: null
+        volunteersManagementCollection: null,
+        projectAttachmentsCollection: null
     },
     Collections: {
         allProjectsCollection: null,
@@ -48,7 +49,8 @@ window.App = {
         bAllowConsoleVarGroupsOutput: 1,
         rowBgColorSelected: '#e3f6b1',
         workerRoleID: 4,
-        appInitialData: {}
+        appInitialData: {},
+        selectOptions:{}
 
     },
     CellEditors: {}

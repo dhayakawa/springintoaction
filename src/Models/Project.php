@@ -130,6 +130,10 @@
             return $this->hasMany('Dhayakawa\SpringIntoAction\Models\Budget', 'ProjectID', 'ProjectID');
         }
 
+        public function attachments() {
+            return $this->hasMany('Dhayakawa\SpringIntoAction\Models\ProjectAttachment', 'ProjectID', 'ProjectID');
+        }
+
         public function projectVolunteersWithRoles() {
             return $this->belongsToMany('Dhayakawa\SpringIntoAction\Models\Volunteer', 'project_volunteer_role', 'ProjectID', 'VolunteerID')->as('project_leads');
         }
