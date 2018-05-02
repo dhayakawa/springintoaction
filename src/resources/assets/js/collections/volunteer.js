@@ -388,7 +388,7 @@
         value.displayOrder = displayOrderCnt++;
     });
     App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
-    let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email'];
+    let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email', 'Comments'];
     _.each(sharedCells, function (value, key) {
         let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
         cellDefinition = _.clone(cellDefinition);

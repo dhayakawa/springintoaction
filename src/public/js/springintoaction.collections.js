@@ -796,6 +796,14 @@
             width: "250"
         },
         {
+            name: "Comments",
+            label: "Comments",
+            cell: App.Vars.TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "250"
+        },
+        {
             name: "ContactType",
             label: "ContactType",
             cell: "string",
@@ -1221,7 +1229,7 @@
         value.displayOrder = displayOrderCnt++;
     });
     App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
-    let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email'];
+    let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email', 'Comments'];
     _.each(sharedCells, function (value, key) {
         let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
         cellDefinition = _.clone(cellDefinition);
