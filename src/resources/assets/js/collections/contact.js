@@ -116,6 +116,14 @@
             width: "250"
         },
         {
+            name: "Comments",
+            label: "Comments",
+            cell: App.Vars.TextareaCell,
+            resizeable: true,
+            orderable: true,
+            width: "250"
+        },
+        {
             name: "ContactType",
             label: "ContactType",
             cell: "string",
