@@ -33,6 +33,34 @@
         protected $primaryKey = 'AnnualBudgetID';
         protected $fillable = ['BudgetAmount',
             'Year'];
+        private $defaultRecordData = [
+            'BudgetAmount' => 0,
+            'Year' => '',
+        ];
+
+        /**
+         * @param null|array $defaults
+         *
+         * @return array
+         */
+        public function getDefaultRecordData($defaults = null)
+        {
+            if (is_array($defaults) && !empty($defaults)) {
+                foreach ($defaults as $key => $value) {
+                    if (isset($this->defaultRecordData[$key])) {
+                        $this->defaultRecordData[$key] = trim($value);
+                    }
+                }
+            }
+            if (isset($this->defaultRecordData['Year']) &&
+                (!is_numeric($this->defaultRecordData['Year']) ||
+                 !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))
+            ) {
+                $this->defaultRecordData['Year'] = date('Y');
+            }
+
+            return $this->defaultRecordData;
+        }
 
         public function getBudgets($Year) {
 
@@ -50,4 +78,6 @@
         public function getAnnualBudget($Year){
             return AnnualBudget::where('Year','=',$Year)->get()->toArray();
         }
+
+
     }

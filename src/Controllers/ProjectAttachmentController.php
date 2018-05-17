@@ -5,6 +5,7 @@
  * Date: 4/9/2018
  * Time: 7:05 PM
  */
+
 namespace Dhayakawa\SpringIntoAction\Controllers;
 
 use Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
@@ -45,23 +46,33 @@ class ProjectAttachmentController extends BaseController
     {
         $model = new ProjectAttachment;
         $data = $request->only($model->getFillable());
-        $aAttachmentPaths = preg_split("/,/", $data['AttachmentPath']);
-        $bSuccess = true;
-        foreach($aAttachmentPaths as $path){
+
+        $aAttachmentPaths = array_filter(preg_split("/(\r\n|\n)/", $data['AttachmentPath']));
+        $bSuccess = !empty($aAttachmentPaths);
+        $aFailedPaths = [];
+        foreach ($aAttachmentPaths as $attachment) {
+            $attachment = \urldecode($attachment);
             $model = new ProjectAttachment;
-            $aData = ['ProjectID' => $data['ProjectID'], 'AttachmentPath' => $path];
+            $aData = ['ProjectID' => $data['ProjectID'], 'AttachmentPath' => $attachment];
             $model->fill($aData);
 
             $success = $model->save();
-            if(!$success){
+            if (!$success) {
                 $bSuccess = false;
+                $aFailedPaths[] = $attachment;
             }
         }
 
         if ($bSuccess) {
             $response = ['success' => true, 'msg' => 'Project Attachment Creation Succeeded.'];
         } else {
-            $response = ['success' => false, 'msg' => 'Project Attachment Creation Failed.'];
+            $response = [
+                'success' => false,
+                'msg' => 'Project Attachment Creation Failed on:' . join(
+                        '</br>',
+                        $aFailedPaths
+                    )
+            ];
         }
 
         return view('springintoaction::admin.main.response', $request, compact('response'));
@@ -175,30 +186,14 @@ class ProjectAttachmentController extends BaseController
         // Need to return an array for the grid
         $results = [];
         try {
-            if ($b = ProjectAttachment::where('ProjectID', $ProjectID)) {
-                $results = $b->toArray();
+            if ($model = ProjectAttachment::where('ProjectID', $ProjectID)->get()) {
+                $results = $model->toArray();
             }
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' .
+                                                                                                    __LINE__,$e->getMessage()]);
         }
-        $attachments = [];
 
-        return $attachments;
-    }
-
-    public function upload(Request $request)
-    {
-        $Attachments = [];
-        if ($request->hasFile('project_attachment') && $request->file('project_attachment')->isValid()) {
-            $file = $request->file('project_attachment');
-            $fileName = $file->getClientOriginalName();
-
-            $Attachments[] = $request->project_attachment->storePubliclyAs('uploads/project_attachments', $fileName);
-        }
-        // $aaOptions['upload_dir'] = 'uploads/';
-        // $aaOptions['upload_url'] = 'admin/project_attachment/upload/';
-        // $oAjaxUploadHandler = new ajaxUploader($aaOptions);
-        $response = ['success' => true, 'msg' => 'Project Attachment Upload Succeeded.', 'files' =>
-            $Attachments];
-        return view('springintoaction::admin.main.response', $request, compact('response'));
+        return $results;
     }
 }

@@ -4,9 +4,7 @@
             let template = window.template('newProjectAttachmentTemplate');
 
             let tplVars = {
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
-                budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
-                statusOptions: App.Models.projectBudgetModel.getStatusOptions(true)
+                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)
             };
 
             return template(tplVars);
