@@ -589,7 +589,7 @@
             }
         },
         create: function (attributes) {
-            var self = this;
+            let self = this;
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
             _log('App.Views.ProjectTab.create', self.options.tab, attributes, this.model);
             let model = this.model.clone().clear({silent: true});
@@ -616,23 +616,30 @@
             return '';
         },
         toggleDeleteBtn: function (e) {
-            var self = this;
+            let self = this;
             let selectedModels = self.backgrid.getSelectedModels();
-            _log('App.Views.ProjectTab.toggleDeleteBtn.event', self.options.tab, selectedModels.length, e);
+            _log('App.Views.ProjectTab.toggleDeleteBtn.event', self.options.tab, 'selectedModels.length:' + selectedModels.length, e);
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
             App.Views.siteProjectTabsView.trigger('toggle-delete-btn', {toggle: toggleState, tab: self.options.tab});
         },
         destroy: function (attributes) {
-            var self = this;
+            let self = this;
+            let deleteCnt = attributes.deleteModelIDs.length;
+            let confirmMsg = "Do you really want to delete the checked " + self.options.tab + "s?";
+            if (deleteCnt === self.collection.fullCollection.length){
+                confirmMsg = "You are about to delete every checked " + self.options.tab + ". Do you really want to" +
+                    " continue with deleting them all?";
+            }
 
-            bootbox.confirm("Do you really want to delete the checked " + self.options.tab + "s?", function (bConfirmed) {
+            bootbox.confirm(confirmMsg, function (bConfirmed) {
                 if (bConfirmed) {
                     window.ajaxWaiting('show', self.backgridWrapperClassSelector);
                     attributes = _.extend(attributes, {
                         ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
                         ProjectRoleID: self.model.get('ProjectRoleID')
                     });
-                    _log('App.Views.ProjectTab.destroy', self.options.tab, attributes);
+                    _log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:'+ deleteCnt,'self.collection.fullCollection.length:'+
+                        self.collection.fullCollection.length);
                     $.ajax({
                         type: "POST",
                         dataType: "json",
@@ -658,7 +665,7 @@
 
         },
         showColumnHeaderLabel: function (e) {
-            var self = this;
+            let self = this;
             let $element = $(e.currentTarget).parents('th');
             let element = $element[0];
 
@@ -669,7 +676,7 @@
             //_log('App.Views.Projects.showColumnHeaderLabel.event', e);
         },
         showTruncatedCellContentPopup: function (e) {
-            var self = this;
+            let self = this;
 
             let $element = $(e.currentTarget);
             let element = e.currentTarget;
@@ -689,7 +696,7 @@
             //_log('App.Views.ProjectTab.showTruncatedCellContent.event', e, element, bOverflown);
         },
         hideTruncatedCellContentPopup: function (e) {
-            var self = this;
+            let self = this;
 
             let $element = $(e.currentTarget);
             let element = e.currentTarget;
@@ -709,9 +716,7 @@
             let template = window.template('newProjectAttachmentTemplate');
 
             let tplVars = {
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
-                budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
-                statusOptions: App.Models.projectBudgetModel.getStatusOptions(true)
+                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)
             };
 
             return template(tplVars);

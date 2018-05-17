@@ -28,7 +28,7 @@
             label: "   ",
             formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                 fromRaw: function (rawValue) {
-                    return '<input title="' + rawValue + '" type="radio" name="BudgetID" value="' + rawValue + '" />';
+                    return '<input title="' + rawValue + '" type="radio" name="ProjectAttachmentID" value="' + rawValue + '" />';
                     //You can use rawValue to custom your html, you can change this value using the name parameter.
                 }
             }),
@@ -39,20 +39,21 @@
             width: "30"
         },
         {
-            name: "AttachmentPath",
-            label: "AttachmentPath",
-            cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "175"
-        },
-        {
             name: "ProjectID",
-            label: "Project",
+            label: "Project ID",
             cell: "integer",
             resizeable: true,
             orderable: true,
-            width: "150"
+            editable: false,
+            width: "50"
+        },
+        {
+            name: "AttachmentPath",
+            label: "Attachment URL",
+            cell: "uri",
+            resizeable: true,
+            orderable: true,
+            width: "*"
         }
     ];
     _log('App.Vars.CollectionsGroup', 'App.Vars.ProjectAttachmentsBackgridColumnDefinitions:', App.Vars.ProjectAttachmentsBackgridColumnDefinitions);

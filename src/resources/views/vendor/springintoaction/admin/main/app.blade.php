@@ -108,7 +108,7 @@
                                     <div class="project-volunteers-backgrid-wrapper"></div>
                                 </div>
                                 <div role="tabpanel" class="tab-pane" id="project_attachment">
-                                    <div class="project_attachments-backgrid-wrapper"></div>
+                                    <div class="project-attachments-backgrid-wrapper"></div>
                                 </div>
                             </div>
                         </div>
@@ -119,7 +119,7 @@
                 </div>
                 </div>
                 <div id="site-well" class="well well-sm collapse in">
-                    <h4 class="well-title">Site Volunteers</h4>
+                    <h4 class="well-title">Site Team Leaders</h4>
                     <div class="row">
                         <div class="site-volunteers-view col-xs-12 col-sm-12 col-md-12 col-lg-12">
                             <div class="site-volunteers-backgrid-wrapper backgrid-wrapper"></div>

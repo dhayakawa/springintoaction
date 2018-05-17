@@ -131,7 +131,6 @@
         Route::put('project_attachment/{BudgetID}', ['as' => 'project_attachment.update', 'uses' => 'ProjectAttachmentController@update']);
         Route::post('project_attachment', ['as' => 'project_attachment.create', 'uses' => 'ProjectAttachmentController@store']);
         Route::post('project_attachment/batch/destroy', ['as' => 'project_attachment.batch.destroy', 'uses' => 'ProjectAttachmentController@batchDestroy']);
-        Route::post('project_attachment/upload', ['as' => 'project_attachment.upload', 'uses' => 'ProjectAttachmentController@upload']);
 
         Route::post('site_volunteer', ['as' => 'site_volunteer.batch.store', 'uses' => 'SiteVolunteerController@store']);
         Route::post('site_volunteer/batch/destroy', ['as' => 'site_volunteer.batch.destroy', 'uses' => 'SiteVolunteerController@batchDestroy']);
