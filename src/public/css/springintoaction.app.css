@@ -87,6 +87,10 @@
 .annual-budget-woodlands-total-wrapper strong {
   padding-right: 20px;
 }
+textarea#AttachmentPath {
+  white-space: pre;
+  min-height: 200px;
+}
 .columnmanager-dropdown-container {
   width: 400px !important;
   overflow-y: auto !important;
