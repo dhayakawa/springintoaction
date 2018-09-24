@@ -11,7 +11,6 @@
             _.bindAll(this, 'render');
         },
         render: function () {
-            _log('App.Views.mainApp.render', 'appInitialData', App.Vars.appInitialData);
             App.Vars.currentSiteID = App.Vars.appInitialData.site.SiteID;
             App.Vars.currentProjectID = App.Vars.appInitialData.project.ProjectID;
             App.Vars.mainAppDoneLoading = false;

@@ -115,6 +115,9 @@ mix.scripts([
     'resources/assets/js/routes/route.js',
     'resources/assets/js/sia.js'
 ], 'public/js/springintoaction.main.js');
+mix.scripts([
+    'resources/assets/js/frontend/springintoaction.project-request.js'
+], 'public/js/frontend/springintoaction.project-request.js');
 
 // These copies are for local dev only so we can debug styles. uncomment as needed
 // .copy('node_modules/bootstrap/dist/css/bootstrap.min.css.map', 'public/css/bootstrap.min.css.map', false)
@@ -133,6 +136,8 @@ mix.scripts([
 // .copy('node_modules/backbone/backbone-min.map', 'public/js/backbone-min.map', false)
 // This is not just dev, this is for production
 mix.less('resources/assets/less/sia_app.less', 'public/css/springintoaction.app.css');
+mix.less('resources/assets/less/frontend/fonts.less', 'public/css/springintoaction.fonts.css');
+mix.less('resources/assets/less/sia_frontend.less', 'public/css/springintoaction.frontend.css');
 mix.styles([
     'node_modules/backgrid/lib/backgrid.min.css',
     'node_modules/backgrid-paginator/backgrid-paginator.min.css',
@@ -149,6 +154,7 @@ mix.styles([
 
 
 
+mix.copy('resources/assets/fonts','public/fonts');
 mix.copy('resources/assets/js/springintoaction.templates.js','public/js/springintoaction.templates.js');
 mix.copy('resources/assets/js/app-initial-model-vars-data.js','public/js/app-initial-model-vars-data.js');
 mix.copy('resources/assets/js/app-initial-collections-view-data.js','public/js/app-initial-collections-view-data.js');

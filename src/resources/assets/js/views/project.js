@@ -37,7 +37,7 @@
                     });
                 },
                 start: function (e) {
-                    let self = this
+                    let self = this;
                     $('#file_progress_' + self.id).fadeTo('fast', 1);
                     $('#file_progress_' + self.id).find('.meter').removeClass('green');
                 },
@@ -126,6 +126,7 @@
             'focusin tbody tr': 'updateProjectDataViews',
             'mouseenter thead th button': 'showColumnHeaderLabel',
             'mouseenter tbody td': 'showTruncatedCellContentPopup',
+            'click tbody td': 'hideTruncatedCellContentPopup',
             'mouseleave tbody td': 'hideTruncatedCellContentPopup'
         },
         render: function (e) {
@@ -420,7 +421,9 @@
 
             let $element = $(e.currentTarget);
             let element = e.currentTarget;
-
+            if ($element.find('> select').length){
+                return;
+            }
             let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
             if (bOverflown) {
                 $element.popover({
@@ -439,12 +442,7 @@
             var self = this;
 
             let $element = $(e.currentTarget);
-            let element = e.currentTarget;
-
-            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            if (bOverflown) {
-                $element.popover('hide');
-            }
+            $element.popover('hide');
             //_log('App.Views.Projects.showTruncatedCellContent.event', e, '$element.text():' + $element.text());
         }
     });
