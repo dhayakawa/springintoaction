@@ -96,7 +96,6 @@
             _log('App.Views.ProjectTab.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
             // Set the current model id on the tab so we can reference it in other views
             $('#' + this.options.tab).data('current-model-id', this.model.get(this.model.idAttribute));
-
             // Show a popup of the text that has been truncated
             $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
                 placement: 'auto right',
@@ -114,6 +113,9 @@
                 if (!bOverflown) {
                     $gridContainer.find('td.renderable').popover('hide')
                 }
+            });
+            $gridContainer.find('td').on('click', function () {
+                $gridContainer.find('td.renderable').popover('hide')
             });
             this.$gridContainer = $gridContainer;
             return this;

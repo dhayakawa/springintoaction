@@ -35,8 +35,16 @@ class SpringIntoActionMainAppController extends BaseController
     {
         //\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, Config::all()]);
         $year = $request->input('year');
-        $Year = $year ?: date('Y');
+	    if ( !$year ) {
+		    $yearNow = date( 'Y' );
+		    $month   = date( 'n' );
 
+		    // need to make sure the year is for the upcoming/next spring
+		    // or this spring if the month is less than may
+		    $Year = $month > 5 ? $yearNow + 1 : $yearNow;
+	    } else {
+		    $Year = $year;
+	    }
         try {
             $sites = Site::orderBy('SiteName', 'asc')->get()->toArray();
             $site = current($sites);

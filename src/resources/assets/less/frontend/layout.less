@@ -1,0 +1,76 @@
+html, body {
+    background-color : #fff;
+    color            : #333333;
+    font-family      : 'Raleway', sans-serif;
+    font-weight      : 400;
+    height           : 100vh;
+    margin           : 0;
+}
+.home-logo {
+    float   : left;
+    padding : 5px 0 1px 0;
+    display : block;
+    img {
+        height : 60px;
+    }
+}
+.nav-links {
+    display         : block;
+    float           : right;
+    top             : 40px;
+    position        : relative;
+    list-style-type : none;
+    li {
+        display : block;
+        float   : left;
+        a {
+            color           : #636b6f;
+            padding         : 0 0 0 25px;
+            font-size       : 12px;
+            font-weight     : 600;
+            letter-spacing  : .1rem;
+            text-decoration : none;
+            text-transform  : uppercase;
+        }
+    }
+}
+
+.full-height {
+    height : 100vh;
+}
+.flex-center {
+    align-items     : center;
+    display         : flex;
+    justify-content : center;
+}
+.position-ref {
+    position : relative;
+}
+.top-right {
+    position : absolute;
+    right    : 10px;
+    top      : 18px;
+}
+.bg {
+    /* The image used */
+    background-image    : url("/images/sia-grass.png");
+
+    /* Full height */
+    height              : 100vh;
+    width               : 100vw;
+
+    /* Center and scale the image nicely */
+    background-position : center;
+    background-repeat   : no-repeat;
+    background-size     : cover;
+    position            : fixed;
+    z-index             : 0;
+}
+.page-box {
+    background     : #fff;
+    padding-top    : 15px;
+    padding-bottom : 15px;
+    .page-box-body {
+        min-height :50vh;
+    }
+}

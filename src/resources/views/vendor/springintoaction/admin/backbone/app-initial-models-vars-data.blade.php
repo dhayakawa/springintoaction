@@ -94,6 +94,7 @@
                 if (_.isString(rawValue) && rawValue.match(/,/)) {
                     rawValue = rawValue.split(',');
                 }
+
                 return _.isArray(rawValue) ? rawValue : rawValue != null ? [rawValue] : [];
             }
         })

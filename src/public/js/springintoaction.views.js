@@ -507,7 +507,6 @@
             _log('App.Views.ProjectTab.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
             // Set the current model id on the tab so we can reference it in other views
             $('#' + this.options.tab).data('current-model-id', this.model.get(this.model.idAttribute));
-
             // Show a popup of the text that has been truncated
             $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
                 placement: 'auto right',
@@ -525,6 +524,9 @@
                 if (!bOverflown) {
                     $gridContainer.find('td.renderable').popover('hide')
                 }
+            });
+            $gridContainer.find('td').on('click', function () {
+                $gridContainer.find('td.renderable').popover('hide')
             });
             this.$gridContainer = $gridContainer;
             return this;
@@ -980,7 +982,7 @@
                     });
                 },
                 start: function (e) {
-                    let self = this
+                    let self = this;
                     $('#file_progress_' + self.id).fadeTo('fast', 1);
                     $('#file_progress_' + self.id).find('.meter').removeClass('green');
                 },
@@ -1069,6 +1071,7 @@
             'focusin tbody tr': 'updateProjectDataViews',
             'mouseenter thead th button': 'showColumnHeaderLabel',
             'mouseenter tbody td': 'showTruncatedCellContentPopup',
+            'click tbody td': 'hideTruncatedCellContentPopup',
             'mouseleave tbody td': 'hideTruncatedCellContentPopup'
         },
         render: function (e) {
@@ -1363,7 +1366,9 @@
 
             let $element = $(e.currentTarget);
             let element = e.currentTarget;
-
+            if ($element.find('> select').length){
+                return;
+            }
             let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
             if (bOverflown) {
                 $element.popover({
@@ -1382,12 +1387,7 @@
             var self = this;
 
             let $element = $(e.currentTarget);
-            let element = e.currentTarget;
-
-            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            if (bOverflown) {
-                $element.popover('hide');
-            }
+            $element.popover('hide');
             //_log('App.Views.Projects.showTruncatedCellContent.event', e, '$element.text():' + $element.text());
         }
     });
@@ -3524,7 +3524,6 @@
             _.bindAll(this, 'render');
         },
         render: function () {
-            _log('App.Views.mainApp.render', 'appInitialData', App.Vars.appInitialData);
             App.Vars.currentSiteID = App.Vars.appInitialData.site.SiteID;
             App.Vars.currentProjectID = App.Vars.appInitialData.project.ProjectID;
             App.Vars.mainAppDoneLoading = false;

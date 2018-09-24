@@ -34,6 +34,9 @@
         // Sign Up Routes. No login required at the moment
         Route::get('signup', ['as' => 'signup', 'uses' => 'SignUpController@showSignUpForm']);
         Route::post('signup', ['as' => 'signup.post', 'uses' => 'SignUpController@signUp']);
+
+        Route::get('project_request', ['as' => 'project.request', 'uses' => 'ProjectRequestController@showProjectRequestForm']);
+        Route::post('project_request', ['as' => 'project.store', 'uses' => 'ProjectRequestController@store']);
     });
 
     Route::group(array_merge($adminDefault, ['middleware' => ['web', 'auth', 'ability:admin,backend_access']]), function () {
