@@ -1,0 +1,115 @@
+html,
+body {
+  background-color: #fff;
+  color: #333333;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 400;
+  height: 100vh;
+  margin: 0;
+}
+.home-logo {
+  float: left;
+  padding: 5px 0 1px 0;
+  display: block;
+}
+.home-logo img {
+  height: 60px;
+}
+.nav-links {
+  display: block;
+  float: right;
+  top: 40px;
+  position: relative;
+  list-style-type: none;
+}
+.nav-links li {
+  display: block;
+  float: left;
+}
+.nav-links li a {
+  color: #636b6f;
+  padding: 0 0 0 25px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1rem;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.full-height {
+  height: 100vh;
+}
+.flex-center {
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+.position-ref {
+  position: relative;
+}
+.top-right {
+  position: absolute;
+  right: 10px;
+  top: 18px;
+}
+.bg {
+  /* The image used */
+  background-image: url("/images/sia-grass.png");
+  /* Full height */
+  height: 100vh;
+  width: 100vw;
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: fixed;
+  z-index: 0;
+}
+.page-box {
+  background: #fff;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.page-box .page-box-body {
+  min-height: 50vh;
+}
+.welcome-page .nav-links {
+  top: auto;
+}
+.welcome-page .title {
+  font-size: 84px;
+  position: relative;
+  font-weight: 100;
+}
+.welcome-page .m-b-md {
+  margin-bottom: 30px;
+}
+.welcome-page .welcome-links {
+  padding: 20px;
+}
+.welcome-page .welcome-links a {
+  color: #636b6f;
+  padding: 0 25px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1rem;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.project-request-page form[name="project-request"] :required,
+.project-request-page form[name="project-request"] label.required {
+  background: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIgogICB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIgogICB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5zb3VyY2Vmb3JnZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIgogICB4bWxuczppbmtzY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFtZXNwYWNlcy9pbmtzY2FwZSIKICAgYXJpYS1oaWRkZW49InRydWUiCiAgIGRhdGEtcHJlZml4PSJmYXMiCiAgIGRhdGEtaWNvbj0iYXN0ZXJpc2siCiAgIGNsYXNzPSJzdmctaW5saW5lLS1mYSBmYS1hc3RlcmlzayBmYS13LTE2IgogICByb2xlPSJpbWciCiAgIHZpZXdCb3g9IjAgMCAzMCAzMCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnNCIKICAgc29kaXBvZGk6ZG9jbmFtZT0iYXN0ZXJpc2stc29saWQtc21hbGwuc3ZnIgogICBpbmtzY2FwZTp2ZXJzaW9uPSIwLjkyLjIgKDVjM2U4MGQsIDIwMTctMDgtMDYpIgogICB3aWR0aD0iMzAiCiAgIGhlaWdodD0iMzAiPgogIDxtZXRhZGF0YQogICAgIGlkPSJtZXRhZGF0YTEwIj4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzOCIgLz4KICA8c29kaXBvZGk6bmFtZWR2aWV3CiAgICAgcGFnZWNvbG9yPSIjZmZmZmZmIgogICAgIGJvcmRlcmNvbG9yPSIjNjY2NjY2IgogICAgIGJvcmRlcm9wYWNpdHk9IjEiCiAgICAgb2JqZWN0dG9sZXJhbmNlPSIxMCIKICAgICBncmlkdG9sZXJhbmNlPSIxMCIKICAgICBndWlkZXRvbGVyYW5jZT0iMTAiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAiCiAgICAgaW5rc2NhcGU6cGFnZXNoYWRvdz0iMiIKICAgICBpbmtzY2FwZTp3aW5kb3ctd2lkdGg9IjM4NDAiCiAgICAgaW5rc2NhcGU6d2luZG93LWhlaWdodD0iMjA1NSIKICAgICBpZD0ibmFtZWR2aWV3NiIKICAgICBzaG93Z3JpZD0iZmFsc2UiCiAgICAgaW5rc2NhcGU6em9vbT0iMy42ODc1IgogICAgIGlua3NjYXBlOmN4PSItMTg3LjY2MTAyIgogICAgIGlua3NjYXBlOmN5PSIxNDcuNTI1NDIiCiAgICAgaW5rc2NhcGU6d2luZG93LXg9Ii0xMyIKICAgICBpbmtzY2FwZTp3aW5kb3cteT0iLTEzIgogICAgIGlua3NjYXBlOndpbmRvdy1tYXhpbWl6ZWQ9IjEiCiAgICAgaW5rc2NhcGU6Y3VycmVudC1sYXllcj0ic3ZnNCIgLz4KICA8cGF0aAogICAgIGQ9Ik0gMjcuMjA2MzU3LDE5LjI4OTc3NCAxOS4zOTQ1MzMsMTUgMjcuMjA2MzU3LDEwLjcxMDIyNiBjIDAuNjQ3OTIxLC0wLjM1NTc5MSAwLjg3Njc3MSwtMS4xNzQ2NTg2IDAuNTA3MTI5LC0xLjgxNDc4MzYgTCAyNi42NDM0MTgsNy4wNDE5OTYxIEMgMjYuMjczODQ2LDYuNDAxODc5OSAyNS40NTAzMDIsNi4xOTA2MDg0IDI0LjgxODIxMSw2LjU3MzgxMTUgbCAtNy42MjA5NDMsNC42MjA0MTA1IDAuMTkwODksLTguOTEwMTMyMiBDIDE3LjQwMzk3OCwxLjU0NTA5NjcgMTYuODA5MjgzLDAuOTM3NSAxNi4wNzAwNywwLjkzNzUgaCAtMi4xNDAxMzYgYyAtMC43MzkxNjEsMCAtMS4zMzM5MDgsMC42MDc1OTY3IC0xLjMxODAzNCwxLjM0NjU4OTggTCAxMi44MDI3MzYsMTEuMTk0MjIyIDUuMTgxNzkyNiw2LjU3Mzg3MyBDIDQuNTQ5NzUzNSw2LjE5MDY2OTkgMy43MjYxNTY4LDYuNDAxOTMyNiAzLjM1NjU3NjcsNy4wNDIwNDg4IEwgMi4yODY1MDgzLDguODk1NTAzOSBDIDEuOTE2OTI4Myw5LjUzNTYyMDEgMi4xNDU3Nzc4LDEwLjM1NDQ4OSAyLjc5MzY5ODgsMTAuNzEwMjc4IEwgMTAuNjA1NDcxLDE1IDIuNzkzNjM3MiwxOS4yODk3NzQgYyAtMC42NDc5MTIsMC4zNTU3OTEgLTAuODc2NzYxNywxLjE3NDY1OCAtMC41MDcxMjg5LDEuODE0Nzc1IGwgMS4wNzAwNjg0LDEuODUzNDU1IGMgMC4zNjk1ODAxLDAuNjQwMTE2IDEuMTkzMTc2OCwwLjg1MTM3OSAxLjgyNTIxNTksMC40NjgxODQgbCA3LjYyMDk0MzQsLTQuNjIwNDE5IC0wLjE5MDg5LDguOTEwMTMyIGMgLTAuMDE1ODIsMC43MzkwMDIgMC41Nzg5MjcsMS4zNDY1OTkgMS4zMTgwODgsMS4zNDY1OTkgaCAyLjE0MDE4OSBjIDAuNzM5MTYsMCAxLjMzMzkwNywtMC42MDc1OTcgMS4zMTgwODcsLTEuMzQ2NTk5IGwgLTAuMTkwOTQyLC04LjkxMDEzMiA3LjYyMDk0Myw0LjYyMDM1OCBjIDAuNjMyMDM5LDAuMzgzMjAzIDEuNDU1NjI3LDAuMTcxOTQgMS44MjUyMDcsLTAuNDY4MTc2IGwgMS4wNzAwNjgsLTEuODUzNDU1IGMgMC4zNjk1ODEsLTAuNjQwMTE2IDAuMTQwNzkyLC0xLjQ1ODkyMyAtMC41MDcxMjksLTEuODE0NzIyIHoiCiAgICAgaWQ9InBhdGgyIgogICAgIGlua3NjYXBlOmNvbm5lY3Rvci1jdXJ2YXR1cmU9IjAiCiAgICAgc3R5bGU9ImZpbGw6I2E5NDQ0MjtzdHJva2Utd2lkdGg6MC4wNTQ5MzE2NCIgLz4KPC9zdmc+Cg==') no-repeat;
+  background-position: 3px 3px;
+  background-size: 8px 8px;
+}
+.project-request-page form[name="project-request"] label.required {
+  padding-left: 15px;
+}
+.project-request-page form[name="project-request"] .new-contact-info {
+  display: none;
+}
