@@ -59,7 +59,7 @@ function acquireTokenRedirectAndCallMSGraph() {
 }
 
 function acquireTokenRedirectCallBack(errorDesc, token, error, tokenType) {
-    if (tokenType === "access_token") {
+    if (tokenType === "accessToken") {
         callMSGraph(applicationConfig.graphEndpoint, accessToken, graphAPICallback);
     } else {
         console.log("token type is:" + tokenType);
@@ -119,5 +119,8 @@ var applicationConfig = {
     graphScopes: ["user.read"],
     graphEndpoint: "https://graph.microsoft.com/v1.0/me"
 };
-
+//composer require venkatesanchinna/laravel-onedrive-sdk
 //https://homestead.test:30662/
+
+// prod pass:pnggIDM5:;%nnkQHQS8412}
+// dev pass:qpdnokFTIA2~_#kQFZ4043~

@@ -37,6 +37,9 @@
 
         Route::get('project_request', ['as' => 'project.request', 'uses' => 'ProjectRequestController@showProjectRequestForm']);
         Route::post('project_request', ['as' => 'project.store', 'uses' => 'ProjectRequestController@store']);
+
+        //onedrive routes.
+        Route::get('onedrive_callback', ['as' => 'onedrive.callback', 'uses' => 'OneDriveController@callback']);
     });
 
     Route::group(array_merge($adminDefault, ['middleware' => ['web', 'auth', 'ability:admin,backend_access']]), function () {
@@ -142,4 +145,5 @@
         Route::get('site_volunteer/{VolunteerID}', ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@show']);
         Route::get('site_volunteer/all/{SiteStatusID}', ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@getSiteVolunteers']);
 
+        Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
     });
