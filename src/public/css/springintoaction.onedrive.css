@@ -1,0 +1,13 @@
+#headerBar {
+  height: 40px;
+  background: blue;
+}
+#footerBar {
+  height: 40px;
+  background: red;
+}
+#whiteText {
+  color: #ffffff;
+  font-family: GeezaPro, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 1.5em;
+}

@@ -93,9 +93,9 @@
         </div>
 </div>
 @php
-$hide = $_SERVER["HTTP_HOST"] === 'homestead.test' ? '' : 'style="display:none"';
+$hide = $_SERVER["HTTP_HOST"] === 'homestead.test' ? '' : 'display:none';
 @endphp
-<div class="row" {{ $hide }}>
+<div class="row" style="{{ $hide }}">
         <div class="form-group col-xs-12">
             <label for="ProjectAttachments">Upload Photos of Project Examples</label>
             {{ Form::file('ProjectAttachments',['class'=>'form-control','multiple'=>'multiple','aria-label'=>"Upload file"]) }}

@@ -135,6 +135,7 @@ mix.scripts([
 // .copy('node_modules/underscore/underscore-min.map', 'public/js/underscore-min.map', false)
 // .copy('node_modules/backbone/backbone-min.map', 'public/js/backbone-min.map', false)
 // This is not just dev, this is for production
+mix.less('resources/assets/less/onedrive.less', 'public/css/springintoaction.onedrive.css');
 mix.less('resources/assets/less/sia_app.less', 'public/css/springintoaction.app.css');
 mix.less('resources/assets/less/frontend/fonts.less', 'public/css/springintoaction.fonts.css');
 mix.less('resources/assets/less/sia_frontend.less', 'public/css/springintoaction.frontend.css');
