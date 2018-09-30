@@ -226,6 +226,7 @@ class ProjectRequestController extends BaseController {
 		} );
 
 		$data['SiteStatusID']   = $siteStatusID;
+        $data['OriginalRequest'] .= PHP_EOL . $request->input('OriginalRequestRoom') . PHP_EOL . $request->input('OriginalRequestRoomPerson');
 		$data['Active']         = 1;
 		$data['SequenceNumber'] = $sequenceNumber;
 		$project->fill( $data );
