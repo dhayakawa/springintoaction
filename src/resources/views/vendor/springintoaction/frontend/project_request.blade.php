@@ -63,8 +63,21 @@
 <div class="row">
     <div class="form-group col-xs-12">
         <label for="OriginalRequest">Project Request</label>
-        {{ Form::textarea('OriginalRequest', old('originalrequest'), ['id'=>'OriginalRequest','class'=>'form-control','rows'=>"3", 'required'=>'required', 'aria-describedby'=>"Please provide room # or specific area in building where project will be done or installed - include person (teacher or staff person) responsible for room."]) }}
-        <small class="form-text text-muted">Please provide room # or specific area in building where project will be done or installed - include person (teacher or staff person) responsible for room.</small>
+        {{ Form::textarea('OriginalRequest', old('originalrequest'), ['id'=>'OriginalRequest','class'=>'form-control','rows'=>"3", 'required'=>'required']) }}
+    </div>
+</div>
+<div class="row">
+    <div class="form-group col-xs-12">
+        <label for="OriginalRequestRoom">Please provide room # or specific area in building where project will be done or installed</label>
+        {{ Form::text('OriginalRequestRoom', old('originalrequestroom'), ['id'=>'OriginalRequestRoom','class'=>'form-control','rows'=>"3", 'required'=>'required', 'aria-describedby'=>"Please provide room # or
+        specific area in building where project will be done or installed"]) }}
+    </div>
+</div>
+<div class="row">
+    <div class="form-group col-xs-12">
+        <label for="OriginalRequestRoomPerson">Please provide person (teacher or staff person) responsible for room or area</label>
+        {{ Form::text('OriginalRequestRoomPerson', old('originalrequestroomperson'), ['id'=>'OriginalRequestRoomPerson','class'=>'form-control','rows'=>"3", 'required'=>'required', 'aria-describedby'=>"Please
+        provide person (teacher or staff person) responsible for room or area"]) }}
     </div>
 </div>
 <div class="row">
