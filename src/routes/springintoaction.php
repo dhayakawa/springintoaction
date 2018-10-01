@@ -102,6 +102,7 @@
         Route::get('project/contacts/{ProjectID}', ['as' => 'project.contacts', 'uses' => 'ProjectsController@getContacts']);
         Route::get('project/project_leads/{ProjectID}', ['as' => 'project.project_leads', 'uses' => 'ProjectsController@getLeadVolunteers']);
         Route::get('project/volunteers/{ProjectID}', ['as' => 'project.volunteers', 'uses' => 'ProjectsController@getVolunteers']);
+        Route::get('project/project_attachment/{ProjectID}', ['as' => 'project.project_attachments', 'uses' => 'ProjectsController@getProjectAttachments']);
 
         //Route::resource('lead_volunteer', 'ProjectVolunteerRoleController');
         Route::get('project_lead/all', ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getAllProjectLeads']);
@@ -132,9 +133,9 @@
         Route::get('project_volunteer/{VolunteerID}', ['as' => 'project_volunteer', 'uses' => 'VolunteerController@show']);
         Route::get('project_volunteer/all/{ProjectID}', ['as' => 'project_volunteer', 'uses' => 'VolunteerController@getProjectVolunteers']);
 
-        Route::get('project_attachment/{BudgetID}', ['as' => 'project_attachment', 'uses' => 'ProjectAttachmentController@show']);
+        Route::get('project_attachment/{ProjectAttachmentID}', ['as' => 'project_attachment', 'uses' => 'ProjectAttachmentController@show']);
         Route::get('project_attachment/all/{ProjectID}', ['as' => 'project_attachment', 'uses' => 'ProjectAttachmentController@getProjectAttachments']);
-        Route::put('project_attachment/{BudgetID}', ['as' => 'project_attachment.update', 'uses' => 'ProjectAttachmentController@update']);
+        Route::put('project_attachment/{ProjectAttachmentID}', ['as' => 'project_attachment.update', 'uses' => 'ProjectAttachmentController@update']);
         Route::post('project_attachment', ['as' => 'project_attachment.create', 'uses' => 'ProjectAttachmentController@store']);
         Route::post('project_attachment/batch/destroy', ['as' => 'project_attachment.batch.destroy', 'uses' => 'ProjectAttachmentController@batchDestroy']);
 

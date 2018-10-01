@@ -193,7 +193,7 @@ class ProjectAttachmentController extends BaseController
             \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' .
                                                                                                     __LINE__,$e->getMessage()]);
         }
-
+\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $ProjectID,$results]);
         return $results;
     }
 }

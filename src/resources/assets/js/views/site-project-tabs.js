@@ -295,12 +295,14 @@
                 App.PageableCollections.projectBudgetsCollection.url = '/admin/project/budgets/' + ProjectID;
                 App.PageableCollections.projectContactsCollection.url = '/admin/project/contacts/' + ProjectID;
                 App.PageableCollections.projectVolunteersCollection.url = '/admin/project/volunteers/' + ProjectID;
+                App.PageableCollections.projectAttachmentsCollection.url = '/admin/project/project_attachment/' + ProjectID;
 
                 $.when(
                     App.PageableCollections.projectLeadsCollection.fetch({reset: true}),
                     App.PageableCollections.projectBudgetsCollection.fetch({reset: true}),
                     App.PageableCollections.projectContactsCollection.fetch({reset: true}),
-                    App.PageableCollections.projectVolunteersCollection.fetch({reset: true})
+                    App.PageableCollections.projectVolunteersCollection.fetch({reset: true}),
+                    App.PageableCollections.projectAttachmentsCollection.fetch({reset: true})
                 ).then(function () {
                     //initialize your views here
                     _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'tab collections fetch promise done');
