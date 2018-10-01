@@ -1,3 +1,10 @@
+.sia-main-app .widget-user-image i {
+  width: 65px;
+  height: auto;
+  float: left;
+  font-size: 45px;
+  line-height: 65px;
+}
 .sia-main-app .site-management-selects {
   width: 200px;
 }
