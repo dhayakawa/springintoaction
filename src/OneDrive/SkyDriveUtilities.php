@@ -129,6 +129,9 @@ class SkyDriveUtilities
         return $storagePath . "onedrive/$folderId";
     }
 
+    public static function uploadLocal() {
+
+    }
     public static function upload ($folderId = null, $fileUrl = '') {
         $token = SkyDriveTokenStore::acquireToken(); // Call this function to grab a current accessToken, or false if none is available.
 
@@ -142,7 +145,7 @@ class SkyDriveUtilities
             $target_dir = self::getLocalOneDriveUploadDirectory($folderId);
             $timeStamp = date("Ymd") . round(microtime(true));
             if (empty($fileUrl) && !empty($_FILES)) {
-                $newFileName = $timeStamp . $_FILES["uploadfile"]["name"];
+                $newFileName = $timeStamp . '-' . $_FILES["uploadfile"]["name"];
                 $fileTmp = $_FILES['uploadfile']['tmp_name'];
                 $uploadPath = $target_dir . $newFileName;
                 move_uploaded_file($fileTmp, $uploadPath);

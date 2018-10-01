@@ -7,7 +7,7 @@
 @endpush
 @section('content')
 @component('springintoaction::frontend.page')
-{!! Form::open(['route' => 'project.request', 'name' => 'project-request', 'method' => 'post', 'autocomplete'=> 'off']) !!}
+{!! Form::open(['route' => 'project.request', 'name' => 'project-request', 'method' => 'post', 'autocomplete'=> 'off', 'enctype'=>'multipart/form-data']) !!}
 @if (isset($errors) && !empty($errors))
 @include('springintoaction::frontend.error_messages')
 @endif
@@ -105,13 +105,11 @@
 
         </div>
 </div>
-@php
-$hide = $_SERVER["HTTP_HOST"] === 'homestead.test' ? '' : 'display:none';
-@endphp
-<div class="row" style="{{ $hide }}">
+
+<div class="row">
         <div class="form-group col-xs-12">
             <label for="ProjectAttachments">Upload Photos of Project Examples</label>
-            {{ Form::file('ProjectAttachments',['class'=>'form-control','multiple'=>'multiple','aria-label'=>"Upload file"]) }}
+            {{ Form::file('ProjectAttachments[]',['class'=>'form-control form-control-file','id'=>'ProjectAttachments','multiple'=>'multiple','aria-label'=>"Upload file"]) }}
             <small class="form-text text-muted">If you have multiple examples of what you'd like us to do, please choose them all at once.</small>
         </div>
 </div>
