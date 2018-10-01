@@ -20,6 +20,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
 use \Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
 use Dhayakawa\SpringIntoAction\Models\Budget;
 use Dhayakawa\SpringIntoAction\Controllers\ajaxUploader;
+use Dhayakawa\SpringIntoAction\Models\ProjectAttachment;
 
 class ProjectsController extends BaseController
 {
@@ -292,5 +293,21 @@ class ProjectsController extends BaseController
                 )->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
 
         return $all_projects;
+    }
+
+    public function getProjectAttachments($ProjectID)
+    {
+        // Need to return an array for the grid
+        $results = [];
+        try {
+            if ($model = ProjectAttachment::where('ProjectID', $ProjectID)->get()) {
+                $results = $model->toArray();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $e->getMessage()]);
+        }
+
+
+        return $results;
     }
 }
