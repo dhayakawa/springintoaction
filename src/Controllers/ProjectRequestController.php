@@ -48,7 +48,6 @@ class ProjectRequestController extends BaseController
 
     public function __construct () {
         $this->redirectTo = route(config('springintoaction.app.redirectTo', 'springintoaction.index'));
-        $this->middleware('guest');
     }
 
     /**
