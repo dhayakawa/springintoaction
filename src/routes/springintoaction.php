@@ -8,7 +8,7 @@
     $default      = ['prefix' => config('springintoaction.app.frontend_prefix', ''),
         'namespace' => 'Dhayakawa\SpringIntoAction\Controllers'
     ];
-    $adminDefault = array_merge($default, ['prefix' => config('springintoaction.app.backend_prefix', 'admin'),
+    $adminDefault = array_merge($default, ['prefix' => config('springintoaction.app.backend_prefix', 'admin/'),
     ]);
 
     Route::group(array_merge($default, ['middleware' => ['web']]), function () {
@@ -147,4 +147,6 @@
         Route::get('site_volunteer/all/{SiteStatusID}', ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@getSiteVolunteers']);
 
         Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
+
+        Route::get('report/project/{Year}/{SiteID}/{ProjectID}', ['as' => 'report.project', 'uses' => 'ReportsController@getYearSiteProjectReportUrl']);
     });

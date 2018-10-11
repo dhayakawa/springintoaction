@@ -11,7 +11,8 @@ window.App = {
         projectBudgetModel: new Backbone.Model(),
         projectVolunteerModel: null,
         projectVolunteerRoleModel: null,
-        annualBudgetModel: null
+        annualBudgetModel: null,
+        reportModel: null
     },
     PageableCollections: {
         backGridFiltersPanelCollection: null,
@@ -31,13 +32,21 @@ window.App = {
         contactsManagementCollection: null,
         projectVolunteersCollection: null,
         sitesDropDownCollection: null,
-        siteYearsDropDownCollection: null
+        siteYearsDropDownCollection: null,
+        reportsManagementCollection: null,
+        projectsDropDownCollection:null
     },
     Views: {
+        dashboardView: {},
+        siteManagementView: {},
+        siteYearsDropDownView: {},
+        projectManagementView: {},
         siteProjectTabsView: {},
         projectsView: {},
         contactsManagementView: {},
-        volunteersManagementView: {}
+        volunteersManagementView: {},
+        budgetManagementView: {},
+        reportsManagementView: {}
     },
     Templates: {},
     Router: {},
@@ -50,7 +59,8 @@ window.App = {
         rowBgColorSelected: '#e3f6b1',
         workerRoleID: 4,
         appInitialData: {},
-        selectOptions:{}
+        selectOptions:{},
+        devMode: false
 
     },
     CellEditors: {}
@@ -78,6 +88,7 @@ window.template = function (id) {
 window.ajaxWaiting = function (action, selector) {
     let $el = $(selector);
     if (action === 'show'){
+
         let t = window.template('ajaxSpinnerTemplate');
         if ($el.css('position') !== 'absolute'){
             $el.css('position','relative')

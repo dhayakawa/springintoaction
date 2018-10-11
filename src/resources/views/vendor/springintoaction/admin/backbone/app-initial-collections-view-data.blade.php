@@ -1,6 +1,7 @@
 (function (App) {
     App.Collections.sitesDropDownCollection = new App.Collections.Site(@json($appInitialData['sites']));
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear(@json($appInitialData['site_years']));
+    App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown(@json($appInitialData['select_options']['projects_dropdown']));
     App.PageableCollections.projectCollection = new App.PageableCollections.Project(@json($appInitialData['projects']));
     App.Collections.allProjectsCollection = new App.Collections.Project(@json($appInitialData['all_projects']));
     App.PageableCollections.siteVolunteersCollection= new App.PageableCollections.Project(@json($appInitialData['site_volunteers']));
@@ -27,8 +28,15 @@
     App.PageableCollections.unassignedProjectVolunteersCollection.url = '/admin/project_volunteer/unassigned/' + App.Models.siteStatusModel.get('SiteID') + '/' + App.Models.siteStatusModel.get('Year');
     App.PageableCollections.unassignedProjectVolunteersCollection.fetch({reset: true});
     // Predefining the view so they exist on load
+    App.Views.dashboardView = {};
+    App.Views.siteManagementView = {};
+    App.Views.siteYearsDropDownView = {};
+    App.Views.projectManagementView = {};
     App.Views.siteProjectTabsView = {};
     App.Views.projectsView = {};
     App.Views.contactsManagementView = {};
     App.Views.volunteersManagementView = {};
+    App.Views.budgetManagementView = {};
+    App.Views.reportsManagementView = {};
+    App.Views.projectsDropDownView = {};
 })(window.App);

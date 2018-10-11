@@ -1,4 +1,13 @@
 (function (App) {
+    App.Collections.DashboardPanel = Backbone.Collection.extend({
+        model: App.Models.DashboardPanel
+    });
+    App.Collections.DashboardPanelLinksListItem = Backbone.Collection.extend({
+        model: App.Models.DashboardPanelLinksListItem
+    });
+})(window.App);
+
+(function (App) {
     App.Collections.ProjectAttachment = Backbone.Collection.extend({
         model: App.Models.ProjectAttachment
     });
@@ -1316,5 +1325,15 @@
 
     });
     _log('App.Vars.CollectionsGroup', 'App.Vars.siteVolunteersBackgridColumnDefinitions:', App.Vars.siteVolunteersBackgridColumnDefinitions);
+
+})(window.App);
+
+(function (App) {
+    App.Collections.Report = Backbone.Collection.extend({
+        model: App.Models.Report
+    });
+    App.Collections.ProjectsDropDown = Backbone.Collection.extend({
+        model: App.Models.ProjectDropDown
+    });
 
 })(window.App);

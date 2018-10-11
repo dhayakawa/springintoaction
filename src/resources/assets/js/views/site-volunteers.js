@@ -88,13 +88,16 @@
             let self = this;
             this.options = options;
             _.bindAll(this, 'render', 'update', 'updateSiteVolunteerView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+            this.parentView = this.options.parentView;
             self.backgridWrapperClassSelector = '.site-volunteers-backgrid-wrapper';
             this.gridManagerContainerToolbarClassName = 'site-volunteers-grid-manager-container';
             this.gridManagerContainerToolbarSelector = '.' + this.gridManagerContainerToolbarClassName;
+            this.$siteVolunteersGridManagerContainer = this.parentView.$('.site-volunteers-grid-manager-container');
             this.ajaxWaitingSelector = this.backgridWrapperClassSelector;
             this.modelNameLabel = this.options.modelNameLabel;
             this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
             this.routeName = 'site_volunteer';
+
             _log('App.Views.SiteVolunteer.initialize', options);
         },
         events: {
@@ -134,7 +137,7 @@
             // let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
             //     columnManager: colManager
             // });
-            _log('App.Views.SiteVolunteer.render', this.routeName, $(this.options.parentViewEl), _.isUndefined(e) ? 'no event passed in for this call.' : e, $(self.options.parentViewEl).find('.site-volunteers-grid-manager-container').find('.tab-pagination-controls'));
+            _log('App.Views.SiteVolunteer.render', this.routeName, self.parentView.el, _.isUndefined(e) ? 'no event passed in for this call.' : e, self.parentView.$('.site-volunteers-grid-manager-container').find('.tab-pagination-controls'));
 
             let $gridContainer = this.$el.html(this.backgrid.render().el);
 
@@ -142,14 +145,14 @@
                 el: '.site-volunteers-grid-manager-container'
             });
 
-            $(this.options.parentViewEl).find('.site-volunteers-grid-manager-container').append(this.gridManagerContainerToolbar.render().el);
-            $(this.options.parentViewEl).find('.site-volunteers-grid-manager-container').find('.file-upload-container').hide();
+            this.$siteVolunteersGridManagerContainer.append(this.gridManagerContainerToolbar.render().el);
+            this.$siteVolunteersGridManagerContainer.find('.file-upload-container').hide();
             let paginator = new Backgrid.Extension.Paginator({
                 collection: this.collection
             });
 
             // Render the paginator
-            $(this.options.parentViewEl).find('.site-volunteers-grid-manager-container').find('.site-volunteers-pagination-controls').html(paginator.render().el);
+            this.$siteVolunteersGridManagerContainer.find('.site-volunteers-pagination-controls').html(paginator.render().el);
 
             // Add sizeable columns
             let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({

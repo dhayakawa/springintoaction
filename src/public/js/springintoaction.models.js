@@ -1,3 +1,25 @@
+
+(function (App) {
+    App.Models.DashboardPanelLinksListItem = Backbone.Model.extend({
+        defaults: {
+            'linkText': '',
+            'badgeCount': '',
+            'route': ''
+        }
+    });
+
+    App.Models.DashboardPanel = Backbone.Model.extend({
+        defaults: {
+            'panelBgColor': '',
+            'panelFAIconClass': '',
+            'panelName':'',
+            'panelDescription':'',
+            'panelLinksListView':{}
+        }
+    });
+
+})(window.App);
+
 (function (App) {
     App.Models.ProjectAttachment = Backbone.Model.extend({
         url: '/admin/project_attachment',
@@ -446,6 +468,26 @@
 })(window.App);
 
 (function (App) {
+    App.Models.Report = Backbone.Model.extend({
+        idAttribute: "id",
+        url: '/admin/report',
+        defaults: {
+            'ReportName' : '',
+            'url':''
+        },
+    });
+    /**
+     * This is the site years drop down
+     */
+    App.Models.ProjectDropDown = Backbone.Model.extend({
+        defaults: {
+            'ProjectID': '',
+            'SequenceNumber': 1
+        }
+    });
+})(window.App);
+
+(function (App) {
     App.Models.siteModel = new App.Models.Site();
     App.Models.siteStatusModel = new App.Models.SiteStatus();
     App.Models.projectModel = new App.Models.Project();
@@ -465,5 +507,6 @@
     App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
     App.Models.annualBudgetModel = new App.Models.AnnualBudget();
+    App.Models.reportModel = new App.Models.Report();
 
 })(window.App);

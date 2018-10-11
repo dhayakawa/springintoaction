@@ -47,7 +47,7 @@
     });
     App.Views.SiteYearsOption = Backbone.View.extend({
         tagName: 'option',
-        initialize: function () {
+        initialize: function (options) {
             _.bindAll(this, 'render');
         },
         render: function () {
@@ -59,8 +59,10 @@
         }
     });
     App.Views.SiteYears = Backbone.View.extend({
-        initialize: function () {
+        initialize: function (options) {
+            this.options = options;
             this.optionsView = [];
+            this.parentView = this.options.parentView;
             _.bindAll(this, 'addOne', 'addAll', 'changeSelected');
             this.collection.bind('reset', this.addAll, this);
         },
@@ -92,38 +94,18 @@
             let self = this;
             if (App.Vars.mainAppDoneLoading) {
                 _log('App.Views.SiteYears.setSelectedId.event', 'new year selected', SiteID, SiteStatusID, Year);
-                window.ajaxWaiting('show','#site-well');
-                window.ajaxWaiting('show','.projects-backgrid-wrapper');
-                window.ajaxWaiting('show','.tab-content.backgrid-wrapper');
+
+                if (self.parentView.$el.hasClass('site-management-view')) {
+                    window.ajaxWaiting('show', '#site-well');
+                }
                 // fetch new sitestatus
                 App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
                 App.Models.siteStatusModel.fetch({reset: true});
 
-                // fetch new product collection
-                App.PageableCollections.projectCollection.url = '/admin/project/list/all/' + SiteStatusID;
-                App.PageableCollections.projectCollection.fetch({
-                    reset: true,
-                    success: function (model, response, options) {
-                        //console.log('project collection fetch success', model, response, options)
-                        if (!_.isUndefined(response[0])) {
-                            App.Vars.currentProjectID = response[0]['ProjectID'];
-                            App.Models.projectModel.set(response[0])
-                        } else {
-                            window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
-                        }
-                        window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        self.trigger('toggle-project-tabs-box');
-                    },
-                    error: function (model, response, options) {
-                        growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
-                        self.trigger('toggle-project-tabs-box');
-                    }
 
-                });
-
-
+                if (!self.parentView.$el.hasClass('site-management-view')) {
+                    self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
+                }
             }
         }
     });
@@ -173,7 +155,7 @@
             return template(tplVars);
         },
         create: function (attributes) {
-            var self = this;
+            let self = this;
             window.ajaxWaiting('show', '#site-well');
             attributes = _.omit(attributes, 'SiteID');
             _log('App.Views.Site.create', attributes, this.model);
@@ -201,7 +183,7 @@
                 });
         },
         destroy: function () {
-            var self = this;
+            let self = this;
             _log('App.Views.Project.destroy', self.model);
             self.model.destroy({
                 success: function (model, response, options) {

@@ -10,7 +10,7 @@
         'vendorlink' => '',                         // Vendor URL
         'logo-lg' => 'Spring Into Action<br><small>Woodlands</small>',       // Logo displayed on large screen (title on the top of the main menu)
         'logo-mini' => 'SIA',                       // Logo displayed on small screen
-        'backend_prefix' => 'admin',                    // Backend prefix. Ex: "admin" => "http://..../admin"
+        'backend_prefix' => 'admin/',                    // Backend prefix. Ex: "admin" => "http://..../admin"
         'frontend_prefix' => '',                    // Frontend prefix.
         'redirectTo' => 'springintoaction.index'  // after frontend login
 

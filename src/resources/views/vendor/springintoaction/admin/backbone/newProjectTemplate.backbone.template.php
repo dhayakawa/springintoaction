@@ -10,9 +10,9 @@
         <%= contactSelect %>
     </div>
     <div class="form-group">
-        <label for="inputSequenceNumber">Sequence Number</label>
-        <input type="text" name="SequenceNumber" class="form-control" id="inputSequenceNumber" placeholder="If left blank, the sequence number will automatically be created. "
-               value="<%= testNumber %>"/>
+        <label for="inputSequenceNumber">Project ID</label>
+        <input type="text" readonly name="SequenceNumber" class="form-control" id="inputSequenceNumber"
+               value="<%= SequenceNumber %>"/>
     </div>
     <div class="form-group">
         <label for="inputOriginalRequest">Original Request</label>

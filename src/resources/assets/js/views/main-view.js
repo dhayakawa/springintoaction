@@ -1,69 +1,49 @@
 (function (App) {
     App.Views.mainApp = Backbone.View.extend({
+        dashboardViewClass: App.Views.Dashboard,
         siteManagementViewClass: App.Views.SiteManagement,
-        siteProjectTabsViewClass: App.Views.SiteProjectTabs,
         contactsManagementViewClass: App.Views.ContactsManagement,
         volunteersManagementViewClass: App.Views.VolunteersManagement,
         annualBudgetsManagementViewClass: App.Views.AnnualBudgetsManagement,
         el: $(".sia-main-app"),
         initialize: function (options) {
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
-            _.bindAll(this, 'render');
+            _.bindAll(this, 'render', 'setRouteView');
+            this.routeView              = null;
+            this.bOnlyRenderRouteView   = false;
+            App.Vars.currentSiteID      = App.Vars.appInitialData.site.SiteID;
+            App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
+            App.Vars.mainAppDoneLoading = false;
+        },
+        setRouteView: function (view, bOnlyRenderRouteView) {
+            this.routeView = view;
+            if (typeof bOnlyRenderRouteView !== 'undefined') {
+                this.bOnlyRenderRouteView = bOnlyRenderRouteView;
+            }
+            return this;
         },
         render: function () {
-            App.Vars.currentSiteID = App.Vars.appInitialData.site.SiteID;
-            App.Vars.currentProjectID = App.Vars.appInitialData.project.ProjectID;
-            App.Vars.mainAppDoneLoading = false;
+            let self = this;
 
-            App.Views.siteManagementView = this.siteManagementView = new this.siteManagementViewClass({
-                el: this.$('.site-management-view')
-            });
-            this.siteManagementView.render();
+            if (self.routeView !== null) {
+                if (self.bOnlyRenderRouteView) {
+                    /**
+                     * The routeView had to execute $(this.options.mainApp.el).html(this.template());
+                     * in order to render its own child views.
+                     * Don't do it again or it will remove everything the routeView created
+                     */
+                    self.routeView.render();
 
-            App.Views.siteProjectTabsView = this.siteProjectTabsView = new this.siteProjectTabsViewClass({
-                el: this.$('.site-projects-tabs'),
-                mainAppEl: this.el,
-                model: App.Models.projectModel
-            });
-            this.siteProjectTabsView.render();
+                } else {
+                    this.$el.html(self.routeView.render().el);
+                }
+            }
 
-            App.Views.contactsManagementView = this.contactsManagementView = new this.contactsManagementViewClass({
-                className: 'box box-primary collapsed-box contacts-management-view',
-                viewClassName: 'contacts-management-view',
-                mainAppEl: this.el,
-                modelNameLabel: 'Contact',
-                collection: App.PageableCollections.contactsManagementCollection,
-                columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
-                hideCellCnt: 0
-            });
-            this.$el.append(this.contactsManagementView.render().el);
-
-            App.Views.volunteersManagementView = this.volunteersManagementView = new this.volunteersManagementViewClass({
-                className: 'box box-primary collapsed-box volunteers-management-view',
-                viewClassName: 'volunteers-management-view',
-                mainAppEl: this.el,
-                modelNameLabel: 'Volunteer',
-                collection: App.PageableCollections.volunteersManagementCollection,
-                columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
-                hideCellCnt: 0
-            });
-            this.$el.append(this.volunteersManagementView.render().el);
-
-            App.Views.annualBudgetsManagementView = this.annualBudgetsManagementView = new this.annualBudgetsManagementViewClass({
-                className: 'box box-primary collapsed-box annualbudgets-management-view',
-                viewClassName: 'annualbudgets-management-view',
-                model: App.Models.annualBudgetModel,
-                mainAppEl: this.el,
-                modelNameLabel: 'AnnualBudget',
-                collection: App.Collections.annualBudgetsManagementCollection,
-                columnCollectionDefinitions: App.Vars.annualBudgetsBackgridColumnDefinitions,
-                hideCellCnt: 0
-            });
-            this.$el.append(this.annualBudgetsManagementView.render().el);
-
-            _log('App.Views.mainApp.render', 'render', this.$el);
-            App.Vars.mainAppDoneLoading = true;
-            _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
+            _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), this.$el);
+            if (App.Vars.mainAppDoneLoading === false) {
+                App.Vars.mainAppDoneLoading = true;
+                _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
+            }
             return this;
         }
     });
