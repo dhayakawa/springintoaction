@@ -3676,6 +3676,17 @@
 })(window.App);
 
 (function (App) {
+    App.Views.ProjectsDropDownOption = Backbone.View.extend({
+        tagName: 'option',
+        initialize: function (options) {
+            _.bindAll(this, 'render');
+        },
+        render: function () {
+            $(this.el).attr('value', this.model.get('ProjectID'))
+                .html(this.model.get('Year'));
+            return this;
+        }
+    });
     App.Views.ProjectsDropDown = Backbone.View.extend({
         initialize: function (options) {
             this.options     = options;
@@ -3687,7 +3698,7 @@
         events: {
             "change": "changeSelected"
         },
-        addOne: function (site) {
+        addOne: function (projectDropDown) {
             let option = new App.Views.ProjectsDropDownOption({model: projectDropDown});
             this.optionsView.push(option);
             $(this.el).append(option.render().el);
@@ -3706,18 +3717,14 @@
         changeSelected: function () {
             let $option = $(this.el).find(':selected');
 
-            this.setSelectedId($option.data('siteid'), $option.data('sitestatusid'), $option.val());
+            this.setSelectedId($option.val());
         },
-        setSelectedId: function (SiteID, SiteStatusID, Year) {
+        setSelectedId: function (Year, SiteID, ProjectID) {
             let self = this;
             if (App.Vars.mainAppDoneLoading) {
-                _log('App.Views.SiteYears.setSelectedId.event', 'new year selected', SiteID, SiteStatusID, Year);
-
-                if (self.parentView.$el.hasClass('site-management-view')) {
-                    window.ajaxWaiting('show', '#site-well');
-                }
-                // fetch new sitestatus
-                App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
+                _log('App.Views.ProjectsDropDown.setSelectedId.event', 'new project selected', ProjectID);
+                // fetch new report
+                App.Models.siteStatusModel.url = '/admin/report/project/' + Year + '/' + SiteID + '/' + ProjectID;
                 App.Models.siteStatusModel.fetch({reset: true});
 
 
@@ -3787,17 +3794,7 @@
             return this;
         },
     });
-    App.Views.ProjectsDropDownOption = Backbone.View.extend({
-        tagName: 'option',
-        initialize: function (options) {
-            _.bindAll(this, 'render');
-        },
-        render: function () {
-            $(this.el).attr('value', this.model.get('ProjectID'))
-                .html(this.model.get('Year'));
-            return this;
-        }
-    });
+
 
 })(window.App);
 
