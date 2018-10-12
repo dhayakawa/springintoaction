@@ -56,7 +56,6 @@
     new App.Router;
 
     let rootUrl = $('.sia-main-app').length ? $('.sia-main-app').data('rooturl') : 'http://homestead.test/admin';
-
     if (!rootUrl.endsWith('/')) {
         rootUrl += '/';
     }
