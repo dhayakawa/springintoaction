@@ -223,19 +223,21 @@ class ProjectRequestController extends BaseController
         $timeStamp = date("Ymd") . round(microtime(true));
 
         $aProjectAttachments = $request->file('ProjectAttachments');
-        foreach ($aProjectAttachments as $ProjectAttachment) {
-            \Illuminate\Support\Facades\Log::debug('$ProjectAttachments', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $ProjectAttachment]);
+        if (is_array($aProjectAttachments)) {
+            foreach ($aProjectAttachments as $ProjectAttachment) {
+                \Illuminate\Support\Facades\Log::debug('$ProjectAttachments', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $ProjectAttachment]);
 
-            $newFileName = $timeStamp . '-' . $ProjectAttachment->getClientOriginalName();
-            $siaPath = "{$Year}/{$ProjectID}";
-            $newFilePath = $siaPath . '/' . $newFileName;
-            Storage::disk('local')->put($newFilePath, File::get($ProjectAttachment));
-            $ProjectAttachmentModel = new ProjectAttachment;
-            $attachmentLocalPath = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix() . $newFilePath;
-            $aData = ['ProjectID' => $ProjectID, 'AttachmentPath' => $attachmentLocalPath];
-            $ProjectAttachmentModel->fill($aData);
+                $newFileName = $timeStamp . '-' . $ProjectAttachment->getClientOriginalName();
+                $siaPath = "{$Year}/{$ProjectID}";
+                $newFilePath = $siaPath . '/' . $newFileName;
+                Storage::disk('local')->put($newFilePath, File::get($ProjectAttachment));
+                $ProjectAttachmentModel = new ProjectAttachment;
+                $attachmentLocalPath = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix() . $newFilePath;
+                $aData = ['ProjectID' => $ProjectID, 'AttachmentPath' => $attachmentLocalPath];
+                $ProjectAttachmentModel->fill($aData);
 
-            $success = $ProjectAttachmentModel->save();
+                $success = $ProjectAttachmentModel->save();
+            }
         }
 
     }
