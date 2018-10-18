@@ -30,7 +30,7 @@
                     $('#file_' + self.id).val('')
                     $('#file_chosen_' + self.id).empty()
                     $.each(data.files, function (index, file) {
-                        let sFileName = file.name
+                        let sFileName    = file.name
                         let sExistingVal = $('#file_' + self.id).val().length > 0 ? $('#file_' + self.id).val() + ',' : ''
                         $('#file_' + self.id).val(sExistingVal + sFileName)
                         $('#file_chosen_' + self.id).append(sFileName + '<br>')
@@ -42,7 +42,7 @@
                     $('#file_progress_' + self.id).find('.meter').removeClass('green');
                 },
                 progress: function (e, data) {
-                    let self = this
+                    let self     = this
                     let progress = parseInt(data.loaded / data.total * 100, 10);
 
                     $('#file_progress_' + self.id + ' .meter').addClass('green').css(
@@ -113,16 +113,16 @@
         }
 
     });
-    App.Views.Projects = Backbone.View.extend({
+    App.Views.Projects                           = Backbone.View.extend({
         initialize: function (options) {
-            let self = this;
+            let self     = this;
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateProjectDataViews', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup','handleSiteStatusIDChange');
-            this.rowBgColor = 'lightYellow';
+            _.bindAll(this, 'render', 'update', 'updateProjectDataViews', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup', 'handleSiteStatusIDChange');
+            this.rowBgColor                  = 'lightYellow';
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
-            this.parentView = this.options.parentView;
-            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e) {
-                self.handleSiteStatusIDChange(e);
+            this.parentView                  = this.options.parentView;
+            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e, data) {
+                self.handleSiteStatusIDChange(e, data);
             });
             _log('App.Views.Projects.initialize', options);
         },
@@ -140,7 +140,7 @@
             let backgridOrderableColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
             backgridOrderableColumnCollection.setPositions().sort();
 
-            let Header = Backgrid.Extension.GroupedHeader;
+            let Header    = Backgrid.Extension.GroupedHeader;
             this.backgrid = new Backgrid.Grid({
                 header: Header,
                 columns: backgridOrderableColumnCollection,
@@ -148,9 +148,9 @@
             });
 
             // Hide db record foreign key ids
-            let hideCellCnt = 0;//9 + 25;
+            let hideCellCnt           = 0;//9 + 25;
             let initialColumnsVisible = App.Vars.projectsBackgridColumnDefinitions.length - hideCellCnt;
-            this.colManager = new Backgrid.Extension.ColumnManager(backgridOrderableColumnCollection, {
+            this.colManager           = new Backgrid.Extension.ColumnManager(backgridOrderableColumnCollection, {
                 initialColumnsVisible: initialColumnsVisible,
                 trackSize: true,
                 trackOrder: true,
@@ -166,7 +166,7 @@
                 columnManager: this.colManager
             });
             // This is the current View
-            let $backgridWrapper = this.$el.html(this.backgrid.render().el);
+            let $backgridWrapper     = this.$el.html(this.backgrid.render().el);
 
             this.projectGridManagerContainerToolbar = new App.Views.ProjectGridManagerContainerToolbar({
                 el: this.parentView.$('.projects-grid-manager-container')
@@ -231,7 +231,10 @@
             return this;
 
         },
-        handleSiteStatusIDChange: function () {
+        handleSiteStatusIDChange: function (e, data) {
+            let self = this;
+            console.log(e,'data:', data)
+            let SiteStatusID = data
             window.ajaxWaiting('show', '.projects-backgrid-wrapper');
             //window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
             // fetch new product collection
@@ -262,17 +265,17 @@
          * @param e
          */
         updateProjectDataViews: function (e) {
-            let self = this;
-            let ProjectID = 0;
-            let $RadioElement = null;
+            let self             = this;
+            let ProjectID        = 0;
+            let $RadioElement    = null;
             let $TableRowElement = null;
             _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:', e);
             if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
-                $RadioElement = this.$gridContainer.find('input[type="radio"][name="ProjectID"][value="' + e.id + '"]');
+                $RadioElement    = this.$gridContainer.find('input[type="radio"][name="ProjectID"][value="' + e.id + '"]');
                 $TableRowElement = $RadioElement.parents('tr');
             } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
                 $TableRowElement = $(e.currentTarget);
-                $RadioElement = $TableRowElement.find('input[type="radio"][name="ProjectID"]');
+                $RadioElement    = $TableRowElement.find('input[type="radio"][name="ProjectID"]');
             }
             if ($RadioElement !== null) {
                 // click is only a visual indication that the row is selected. nothing should be listening for this click
@@ -332,7 +335,7 @@
             }
         },
         getModalForm: function () {
-            let template = window.template('newProjectTemplate');
+            let template      = window.template('newProjectTemplate');
             let contactSelect = new App.Views.Select({
                 el: '',
                 attributes: {id: 'ContactID', name: 'selectContactID', class: 'form-control'},
@@ -342,7 +345,7 @@
                 optionLabelModelAttrName: ['LastName', 'FirstName', 'Title']
             });
 
-            let sequenceNumber = _.max(App.PageableCollections.projectCollection.fullCollection.models,function (project) {
+            let sequenceNumber = _.max(App.PageableCollections.projectCollection.fullCollection.models, function (project) {
                 return parseInt(project.get("SequenceNumber"));
             }).get('SequenceNumber');
 
@@ -430,7 +433,7 @@
             })
         },
         toggleDeleteBtn: function (e) {
-            let self = this;
+            let self           = this;
             let selectedModels = self.backgrid.getSelectedModels();
             _log('App.Views.Projects.toggleDeleteBtn.event', selectedModels.length, e);
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
@@ -443,9 +446,9 @@
             }
         },
         showColumnHeaderLabel: function (e) {
-            let self = this;
+            let self     = this;
             let $element = $(e.currentTarget).parents('th');
-            let element = $element[0];
+            let element  = $element[0];
 
             let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
             if (bOverflown) {
@@ -457,8 +460,8 @@
             let self = this;
 
             let $element = $(e.currentTarget);
-            let element = e.currentTarget;
-            if ($element.find('> select').length){
+            let element  = e.currentTarget;
+            if ($element.find('> select').length) {
                 return;
             }
             let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
