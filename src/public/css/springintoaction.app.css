@@ -1,3 +1,24 @@
+.badge {
+  padding: 1px 7px 3px 7px;
+}
+.sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-image i {
+  width: 32px;
+  height: auto;
+  float: left;
+  font-size: 32px;
+  line-height: 40px;
+}
+.sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-username {
+  margin-left: 50px;
+}
+.sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-desc {
+  display: none;
+}
+.sia-main-app .reports-management-view #reports-iframe-view {
+  width: 100%;
+  height: 80vh;
+  border: thin solid #d8d8d8;
+}
 .sia-main-app .site-management-selects {
   width: 200px;
 }

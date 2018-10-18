@@ -65,6 +65,7 @@ class ProjectRequestController extends BaseController
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function showProjectRequestForm (Request $request) {
+
         // if (!config('springintoaction.project.allow')) {
         //     return view('springintoaction::frontend.project_closed');
         // }
@@ -110,14 +111,34 @@ class ProjectRequestController extends BaseController
             $BudgetSourceOptions = $BudgetSourceOptions ? $BudgetSourceOptions->toArray() : [];
             foreach ($BudgetSourceOptions as $option) {
                 $aBudgetSourceOptions[] = ['option_value' => $option['option_value'], 'option_label' => $option['option_label']];
+                $aBudgetSources[$option['option_value']] = $option['option_label'];
             }
             \array_shift($aBudgetSourceOptions);
+            \array_shift($aBudgetSources);
         } catch (\Exception $e) {
             $aBudgetSourceOptions = [];
+            $aBudgetSources = [];
             report($e);
         }
 
-        $formData = compact(['aSiteOptions', 'aBudgetSourceOptions', 'aContactOptions', 'aContactOptionAttrs']);
+        try {
+            $yearNow = date('Y');
+            $month = date('n');
+
+            // need to make sure the year is for the upcoming/next spring
+            // or this spring if the month is less than may
+            $Year = $month > 5 ? $yearNow + 1 : $yearNow;
+            foreach ($sites as $option) {
+
+                $aaProjects[$option['SiteID']] = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.Year', $Year)->where('site_status.SiteID', $option['SiteID'])->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            }
+
+        } catch (\Exception $e) {
+            $aaProjects = [];
+
+            report($e);
+        }
+        $formData = compact(['aSiteOptions', 'aBudgetSourceOptions', 'aBudgetSources', 'aContactOptions', 'aContactOptionAttrs', 'aaProjects']);
 
 
         return view('springintoaction::frontend.project_request', $request, compact('formData'));
