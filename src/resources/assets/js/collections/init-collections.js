@@ -25,4 +25,7 @@
     // This is for the project volunteers tab
     App.PageableCollections.unassignedProjectVolunteersCollection = new App.PageableCollections.Volunteer();
 
+    // @App.Collections.reportsManagementCollection- This is for the reports management
+    App.Collections.reportsManagementCollection = new App.Collections.Report();
+    App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown();
 })(window.App);

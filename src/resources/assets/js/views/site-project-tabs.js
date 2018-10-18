@@ -6,7 +6,8 @@
             this.parentChildViews = options.parentChildViews;
             _.bindAll(this, 'toggleProjectTabToolbars', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
             this.options = options;
-            this.tabs = $(self.options.parentViewEl).find('.nav-tabs [role="tab"]');
+            this.parentView = this.options.parentView;
+            this.tabs = this.parentView.$('.nav-tabs [role="tab"]');
             this.listenTo(App.Views.siteProjectTabsView, 'cleared-child-views', function () {
                 self.remove();
             });
@@ -28,8 +29,9 @@
                 let tabName = $(el).attr('aria-controls');
                 let tabButtonLabel = $(el).text();
                 self.$el.append(self.template({TabName: tabName, btnLabel: tabButtonLabel}));
+
                 if (idx === 0) {
-                    $('.tabButtonPane.' + tabName).show()
+                    self.$('.tabButtonPane.' + tabName).show()
                 }
             });
 
@@ -60,7 +62,7 @@
                 // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
                 // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
                 let modal = $(this);
-                modal.find('.modal-title').html($(self.options.parentViewEl).find('h3.box-title').html());
+                modal.find('.modal-title').html(self.parentView.$('h3.box-title').html());
                 modal.find('.modal-body').html(tabView[tabName].getModalForm());
                 if (tabName === 'project_attachment') {
                     let selfView = modal.find('form[name="newProjectAttachment"]');
@@ -173,11 +175,14 @@
         projectAttachmentsViewClass: App.Views.ProjectAttachment,
         initialize: function (options) {
             this.options = options;
+            this.mainApp = this.options.mainApp;
+            this.parentView = this.options.parentView;
+            this.options.mainAppEl = this.mainApp.el;
             this.childViews = [];
             _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID', 'toggleProductTabsBox');
             // this.model is App.Models.projectModel
             this.listenTo(this.model, "change", this.fetchIfNewProjectID);
-            this.listenTo(App.Views.siteYearsDropDownView, 'toggle-project-tabs-box', this.toggleProductTabsBox);
+            this.listenTo(App.Views.projectsView, 'toggle-project-tabs-box', this.toggleProductTabsBox);
         },
         events: {
             'shown.bs.tab a[data-toggle="tab"]': 'notifyProjectTabToolbar',
@@ -187,7 +192,7 @@
             let self = this;
             App.Views.projectLeadsView = this.projectLeadsView = new this.projectLeadsViewClass({
                 el: this.$('.project-leads-backgrid-wrapper'),
-                mainAppEl: this.options.mainAppEl,
+                mainAppEl: this.mainApp.el,
                 tab: 'project_lead',
                 parentViewEl: this.el,
                 collection: App.PageableCollections.projectLeadsCollection,
@@ -198,7 +203,7 @@
 
             App.Views.projectBudgetView = this.projectBudgetView = new this.projectBudgetViewClass({
                 el: this.$('.project-budget-backgrid-wrapper'),
-                mainAppEl: this.options.mainAppEl,
+                mainAppEl: this.mainApp.el,
                 tab: 'project_budget',
                 parentViewEl: this.el,
                 collection: App.PageableCollections.projectBudgetsCollection,
@@ -210,7 +215,7 @@
             App.Views.projectContactsView = this.projectContactsView = new this.projectContactsViewClass({
                 el: this.$('.project-contacts-backgrid-wrapper'),
                 tab: 'project_contact',
-                mainAppEl: this.options.mainAppEl,
+                mainAppEl: this.mainApp.el,
                 parentViewEl: this.el,
                 collection: App.PageableCollections.projectContactsCollection,
                 columnCollectionDefinitions: App.Vars.projectContactsBackgridColumnDefinitions,
@@ -222,7 +227,7 @@
                 el: this.$('.project-volunteers-backgrid-wrapper'),
                 tab: 'project_volunteer',
                 parentViewEl: this.el,
-                mainAppEl: this.options.mainAppEl,
+                mainAppEl: this.mainApp.el,
                 collection: App.PageableCollections.projectVolunteersCollection,
                 columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
                 hideCellCnt: 0//8
@@ -233,7 +238,7 @@
                 el: this.$('.project-attachments-backgrid-wrapper'),
                 tab: 'project_attachment',
                 parentViewEl: this.el,
-                mainAppEl: this.options.mainAppEl,
+                mainAppEl: this.mainApp.el,
                 collection: App.PageableCollections.projectAttachmentsCollection,
                 columnCollectionDefinitions: App.Vars.ProjectAttachmentsBackgridColumnDefinitions,
                 hideCellCnt: 0//8
@@ -244,8 +249,8 @@
              * Handles the buttons below the tabbed grids
              */
             App.Views.projectTabsGridManagerContainerToolbarView = this.projectTabsGridManagerContainerToolbarView = new App.Views.ProjectTabsGridManagerContainerToolbar({
-                parentViewEl: this.el,
-                el: '.project-tabs-grid-manager-container',
+                parentView: this,
+                el: this.parentView.$('.project-tabs-grid-manager-container'),
                 parentChildViews: this.childViews
             });
 
@@ -256,7 +261,7 @@
             this.projectVolunteersView.render();
             this.projectAttachmentsView.render();
             let titleDescription = App.Views.projectsView.collection.length === 0 ? 'No projects created yet.' : this.model.get('ProjectDescription');
-            $(this.options.mainAppEl).find('h3.box-title small').html(titleDescription);
+            self.mainApp.$('h3.box-title small').html(titleDescription);
             _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + titleDescription, 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
             this.$el.data('project-id', this.model.get('ProjectID'));
             window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
@@ -272,7 +277,7 @@
                     self.$el.find('.btn-box-tool').trigger('click');
                 }
                 self.$el.find('.btn-box-tool').hide();
-                $(this.options.mainAppEl).find('h3.box-title small').html('No projects created yet.');
+                self.mainApp.$('h3.box-title small').html('No projects created yet.');
             } else {
                 self.$el.find('.btn-box-tool').show();
 
@@ -306,7 +311,7 @@
                 ).then(function () {
                     //initialize your views here
                     _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'tab collections fetch promise done');
-                    $(self.options.mainAppEl).find('h3.box-title small').html(self.model.get('ProjectDescription'));
+                    self.mainApp.$('h3.box-title small').html(self.model.get('ProjectDescription'));
                     window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                 });
                 _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
@@ -325,7 +330,7 @@
             _log('App.Views.SiteProjectTabs.updateProjectTabViewTitle', 'update project tabs title', ProjectID);
             if (typeof ProjectID === 'string') {
                 let currentProjectModel = self.collection.findWhere({ProjectID: parseInt(ProjectID)});
-                $(self.options.mainAppEl).find('.site-projects-tabs .box-title small').html(currentProjectModel.get('ProjectDescription'))
+                self.mainApp.$('.site-projects-tabs .box-title small').html(currentProjectModel.get('ProjectDescription'))
             }
         },
         removeChildViews: function () {

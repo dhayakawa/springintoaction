@@ -4,17 +4,25 @@
         siteYearsViewClass: App.Views.SiteYears,
         siteViewClass: App.Views.Site,
         siteStatusViewClass: App.Views.SiteStatus,
-        projectsViewClass: App.Views.Projects,
         siteVolunteersViewClass: App.Views.SiteVolunteer,
+        attributes: {
+            class: 'site-management-view route-view box box-primary'
+        },
+        template: template('siteManagementTemplate'),
         initialize: function (options) {
             this.options = options;
             this.childViews = [];
+            this.mainApp = this.options.mainApp;
+            _.bindAll(this, 'render', 'addSite', 'deleteSite');
         },
         events: {
             'click #btnAddSite': 'addSite',
             'click #btnDeleteSite': 'deleteSite'
         },
         render: function () {
+            let self = this;
+            // Add template to this views el now so child view el selectors exist when they are instantiated
+            self.$el.html(this.template());
 
             App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
                 el: this.$('select#sites'),
@@ -22,22 +30,19 @@
             });
             this.sitesDropDownView.render();
 
-
             App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
                 el: this.$('select#site_years'),
+                parentView: this,
                 collection: App.Collections.siteYearsDropDownCollection
             });
             this.siteYearsDropDownView.render();
 
-
             App.Views.siteView = this.siteView = new this.siteViewClass({
                 el: this.$('.site-view'),
-                mainAppEl: this.el,
                 model: App.Models.siteModel,
                 collection: App.Collections.sitesDropDownCollection
             });
             this.siteView.render();
-
 
             App.Views.siteStatusView = this.siteStatusView = new this.siteStatusViewClass({
                 el: this.$('.site-status-view'),
@@ -45,22 +50,9 @@
             });
             this.siteStatusView.render();
 
-
-            App.Views.projectsView = this.projectsView = new this.projectsViewClass({
-                el: this.$('.projects-backgrid-wrapper'),
-                parentViewEl: this.$el,
-                collection: App.PageableCollections.projectCollection,
-                columnCollectionDefinitions: App.Vars.projectsBackgridColumnDefinitions,
-                model: App.Models.projectModel
-            });
-            this.projectsView.render();
-
-
-
             App.Views.siteVolunteersView = this.siteVolunteersView = new this.siteVolunteersViewClass({
                 el: this.$('.site-volunteers-backgrid-wrapper'),
-                mainAppEl: this.options.mainAppEl,
-                parentViewEl: this.el,
+                parentView: this,
                 model: App.Models.siteVolunteerModel,
                 modelNameLabel: 'SiteVolunteer',
                 collection: App.PageableCollections.siteVolunteersCollection,
@@ -71,23 +63,7 @@
 
             return this;
         },
-        /**
-         * ProjectID can also be an event
-         * @param ProjectID
-         */
-        updateProjectDataViews: function (ProjectID) {
-            let self = this;
-
-            if (typeof ProjectID === 'string') {
-                let currentProjectModel = self.collection.findWhere({ProjectID: parseInt(ProjectID)});
-                $(self.options.mainAppEl).find('.site-projects-tabs .box-title small').html(currentProjectModel.get('ProjectDescription'))
-            }
-        },
-        updateProjectDataTabButtons: function (e) {
-            console.log('updateProjectDataTabButtons triggered')
-        },
         addSite: function () {
-
             $('#sia-modal').one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('New Site');

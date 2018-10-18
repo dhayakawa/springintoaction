@@ -54,7 +54,7 @@
                 .parent().addClass($.support.fileInput ? undefined : 'disabled');
         },
         addGridRow: function (e) {
-            var self = this;
+            let self = this;
             e.preventDefault();
             $('#sia-modal').one('show.bs.modal', function (event) {
                 let modal = $(this);
@@ -115,11 +115,15 @@
     });
     App.Views.Projects = Backbone.View.extend({
         initialize: function (options) {
+            let self = this;
             this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateProjectDataViews', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+            _.bindAll(this, 'render', 'update', 'updateProjectDataViews', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup','handleSiteStatusIDChange');
             this.rowBgColor = 'lightYellow';
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
-            this.$parentViewEl = this.options.parentViewEl;
+            this.parentView = this.options.parentView;
+            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e) {
+                self.handleSiteStatusIDChange(e);
+            });
             _log('App.Views.Projects.initialize', options);
         },
         events: {
@@ -161,10 +165,11 @@
             let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
                 columnManager: this.colManager
             });
-            let $gridContainer = this.$el.html(this.backgrid.render().el);
+            // This is the current View
+            let $backgridWrapper = this.$el.html(this.backgrid.render().el);
 
             this.projectGridManagerContainerToolbar = new App.Views.ProjectGridManagerContainerToolbar({
-                el: '.projects-grid-manager-container'
+                el: this.parentView.$('.projects-grid-manager-container')
             });
             this.projectGridManagerContainerToolbar.render();
 
@@ -173,15 +178,15 @@
             });
 
             // Render the paginator
-            this.projectGridManagerContainerToolbar.$el.find('.projects-pagination-controls').html(paginator.render().el);
-            _log('App.Views.Projects.render', '$gridContainer', $gridContainer, '$gridContainer.find(\'thead\')', $gridContainer.find('thead'));
+            this.projectGridManagerContainerToolbar.$('.projects-pagination-controls').html(paginator.render().el);
+            _log('App.Views.Projects.render', '$backgridWrapper', $backgridWrapper, '$backgridWrapper.find(\'thead\')', $backgridWrapper.find('thead'));
             //Add sizeable columns
             let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
                 collection: this.collection,
                 columns: backgridOrderableColumnCollection,
                 grid: this.backgrid
             });
-            $gridContainer.find('thead').before(sizeAbleCol.render().el);
+            $backgridWrapper.find('thead').before(sizeAbleCol.render().el);
             _log('App.Views.Projects.render', 'after sizeAbleCol.render()');
 
             //Add resize handlers
@@ -189,7 +194,7 @@
                 sizeAbleColumns: sizeAbleCol,
                 saveColumnWidth: true
             });
-            $gridContainer.find('thead').before(sizeHandler.render().el);
+            $backgridWrapper.find('thead').before(sizeHandler.render().el);
             _log('App.Views.Projects.render', 'after sizeHandler.render()');
 
             //Make columns reorderable
@@ -197,16 +202,16 @@
                 grid: this.backgrid,
                 sizeAbleColumns: sizeAbleCol
             });
-            $gridContainer.find('thead').before(orderHandler.render().el);
+            $backgridWrapper.find('thead').before(orderHandler.render().el);
             _log('App.Views.Projects.render', 'after orderHandler.render()');
             //this.options.mainAppEl is passed in through constructor
-            this.projectGridManagerContainerToolbar.$el.find('.file-upload-container').before(colVisibilityControl.render().el);
+            this.projectGridManagerContainerToolbar.$('.file-upload-container').before(colVisibilityControl.render().el);
 
             // Always assumes the first row of the backgrid/collection is the current model
             App.Vars.currentProjectID = this.collection.length ? this.collection.at(0).get('ProjectID') : null;
 
             // Set the "current project to load the tabbed project data"
-            $gridContainer.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
+            $backgridWrapper.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
             this.backgrid.collection.on('backgrid:editing', function (e) {
@@ -222,9 +227,35 @@
             });
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
 
-            this.$gridContainer = $gridContainer;
+            this.$gridContainer = $backgridWrapper;
             return this;
 
+        },
+        handleSiteStatusIDChange: function () {
+            window.ajaxWaiting('show', '.projects-backgrid-wrapper');
+            //window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
+            // fetch new product collection
+            App.PageableCollections.projectCollection.url = '/admin/project/list/all/' + SiteStatusID;
+            App.PageableCollections.projectCollection.fetch({
+                reset: true,
+                success: function (model, response, options) {
+                    //console.log('project collection fetch success', model, response, options)
+                    if (!_.isUndefined(response[0])) {
+                        App.Vars.currentProjectID = response[0]['ProjectID'];
+                        App.Models.projectModel.set(response[0])
+                    } else {
+                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                    }
+                    window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                    self.trigger('toggle-project-tabs-box');
+                },
+                error: function (model, response, options) {
+                    growl(response.msg, 'error');
+                    window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                    window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                    self.trigger('toggle-project-tabs-box');
+                }
+            });
         },
         /**
          * ProjectIDParam can also be an event
@@ -310,6 +341,11 @@
                 optionValueModelAttrName: 'ContactID',
                 optionLabelModelAttrName: ['LastName', 'FirstName', 'Title']
             });
+
+            let sequenceNumber = _.max(App.PageableCollections.projectCollection.fullCollection.models,function (project) {
+                return parseInt(project.get("SequenceNumber"));
+            }).get('SequenceNumber');
+
             let tplVars = {
                 SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
                 SiteStatusID: App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute),
@@ -320,6 +356,7 @@
                 statusOptions: App.Models.projectModel.getStatusOptions(true, 'Pending'),
                 projectSendOptions: App.Models.projectModel.getSendOptions(true),
                 budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
+                SequenceNumber: parseInt(sequenceNumber) + 1,
                 testString: '',
                 testNumber: '0',
                 testFloat: '0.00'
@@ -327,7 +364,7 @@
             return template(tplVars);
         },
         create: function (attributes) {
-            var self = this;
+            let self = this;
             window.ajaxWaiting('show', '.projects-backgrid-wrapper');
             // Set the sequence to the end if it was left empty
             if (_.isEmpty(attributes['SequenceNumber'])) {
@@ -349,19 +386,19 @@
                             //initialize your views here
                             _log('App.Views.Project.create.event', 'project collection fetch promise done');
                             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                            App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
+                            self.trigger('toggle-project-tabs-box');
                             self.$el.find('tbody tr:first-child').trigger('focusin');
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
+                        self.trigger('toggle-project-tabs-box');
                     }
                 });
         },
         destroy: function (attributes) {
-            var self = this;
+            let self = this;
             window.ajaxWaiting('show', '.projects-backgrid-wrapper');
             attributes = _.extend(attributes, {
                 ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
@@ -382,31 +419,31 @@
                         //initialize your views here
                         _log('App.Views.Project.destroy.event', 'project collection fetch promise done');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                        App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
+                        self.trigger('toggle-project-tabs-box');
                     });
                 },
                 fail: function (response) {
                     window.growl(response.msg, 'error');
                     window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
-                    App.Views.siteYearsDropDownView.trigger('toggle-project-tabs-box');
+                    self.trigger('toggle-project-tabs-box');
                 }
             })
         },
         toggleDeleteBtn: function (e) {
-            var self = this;
+            let self = this;
             let selectedModels = self.backgrid.getSelectedModels();
             _log('App.Views.Projects.toggleDeleteBtn.event', selectedModels.length, e);
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
             //App.Views.siteManagementView.trigger('toggle-delete-btn', {toggle: toggleState});
-            _log('App.Views.Projects.toggleDeleteBtn.event', 'toggleState:' + toggleState, self.$parentViewEl);
+            _log('App.Views.Projects.toggleDeleteBtn.event', 'toggleState:' + toggleState, self.parentView.el);
             if (toggleState === 'disable') {
-                self.$parentViewEl.find('#btnDeleteCheckedProjects').addClass('disabled');
+                self.parentView.$('#btnDeleteCheckedProjects').addClass('disabled');
             } else {
-                self.$parentViewEl.find('#btnDeleteCheckedProjects').removeClass('disabled');
+                self.parentView.$('#btnDeleteCheckedProjects').removeClass('disabled');
             }
         },
         showColumnHeaderLabel: function (e) {
-            var self = this;
+            let self = this;
             let $element = $(e.currentTarget).parents('th');
             let element = $element[0];
 
@@ -417,7 +454,7 @@
             //_log('App.Views.Projects.showColumnHeaderLabel.event', e);
         },
         showTruncatedCellContentPopup: function (e) {
-            var self = this;
+            let self = this;
 
             let $element = $(e.currentTarget);
             let element = e.currentTarget;
@@ -439,7 +476,7 @@
             //_log('App.Views.Projects.showTruncatedCellContent.event', e, '$element.text():' + $element.text());
         },
         hideTruncatedCellContentPopup: function (e) {
-            var self = this;
+            let self = this;
 
             let $element = $(e.currentTarget);
             $element.popover('hide');

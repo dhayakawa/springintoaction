@@ -31,20 +31,20 @@ use \Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
 
 class SpringIntoActionMainAppController extends BaseController
 {
-    public function index(Request $request)
-    {
+
+    public function index (Request $request) {
         //\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, Config::all()]);
         $year = $request->input('year');
-	    if ( !$year ) {
-		    $yearNow = date( 'Y' );
-		    $month   = date( 'n' );
+        if (!$year) {
+            $yearNow = date('Y');
+            $month = date('n');
 
-		    // need to make sure the year is for the upcoming/next spring
-		    // or this spring if the month is less than may
-		    $Year = $month > 5 ? $yearNow + 1 : $yearNow;
-	    } else {
-		    $Year = $year;
-	    }
+            // need to make sure the year is for the upcoming/next spring
+            // or this spring if the month is less than may
+            $Year = $month > 5 ? $yearNow + 1 : $yearNow;
+        } else {
+            $Year = $year;
+        }
         try {
             $sites = Site::orderBy('SiteName', 'asc')->get()->toArray();
             $site = current($sites);
@@ -54,20 +54,14 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
-            $siteStatus = current(
-                Site::find($site['SiteID'])->status()->where('Year', $Year)->orderBy('Year', 'desc')->get()->toArray()
-            );
+            $siteStatus = current(Site::find($site['SiteID'])->status()->where('Year', $Year)->orderBy('Year', 'desc')->get()->toArray());
         } catch (\Exception $e) {
             $siteStatus = [];
             report($e);
         }
 
         try {
-            $site_years =
-                SiteStatus::select('SiteStatusID', 'SiteID', 'Year')->where('SiteID', $site['SiteID'])->orderBy(
-                    'Year',
-                    'desc'
-                )->get()->toArray();
+            $site_years = SiteStatus::select('SiteStatusID', 'SiteID', 'Year')->where('SiteID', $site['SiteID'])->orderBy('Year', 'desc')->get()->toArray();
         } catch (\Exception $e) {
             $site_years = [];
             report($e);
@@ -82,22 +76,17 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
-            $projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-                'site_status.SiteStatusID',
-                $siteStatus['SiteStatusID']
-            )->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            $projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
             $project = current($projects);
+            $projects_dropdown = Project::select('projects.ProjectID', 'projects.SequenceNumber')->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+
         } catch (\Exception $e) {
             $projects = [];
             $project = [];
             report($e);
         }
         try {
-            $all_projects =
-                Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-                    'site_status.Year',
-                    $Year
-                )->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            $all_projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.Year', $Year)->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
         } catch (\Exception $e) {
             $all_projects = [];
 
@@ -186,10 +175,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $project_roles = [];
-            $projectRoles = ProjectRole::select('ProjectRoleID AS option_value', 'Role AS option_label')->orderBy(
-                'DisplaySequence',
-                'asc'
-            )->get();
+            $projectRoles = ProjectRole::select('ProjectRoleID AS option_value', 'Role AS option_label')->orderBy('DisplaySequence', 'asc')->get();
             $projectRoles = $projectRoles ? $projectRoles->toArray() : [];
             foreach ($projectRoles as $role) {
                 $project_roles[$role['option_label']] = $role['option_value'];
@@ -200,10 +186,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aBudgetSourceOptions = [];
-            $BudgetSourceOptions = BudgetSourceOptions::select('id AS option_value', 'option_label')->orderBy(
-                'DisplaySequence',
-                'asc'
-            )->get();
+            $BudgetSourceOptions = BudgetSourceOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
             $BudgetSourceOptions = $BudgetSourceOptions ? $BudgetSourceOptions->toArray() : [];
             foreach ($BudgetSourceOptions as $option) {
                 $aBudgetSourceOptions[$option['option_label']] = $option['option_value'];
@@ -214,10 +197,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aBudgetStatusOptions = [];
-            $BudgetStatusOptions = BudgetStatusOptions::select('id AS option_value', 'option_label')->orderBy(
-                'DisplaySequence',
-                'asc'
-            )->get();
+            $BudgetStatusOptions = BudgetStatusOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
             $BudgetStatusOptions = $BudgetStatusOptions ? $BudgetStatusOptions->toArray() : [];
             foreach ($BudgetStatusOptions as $option) {
                 $aBudgetStatusOptions[$option['option_label']] = $option['option_value'];
@@ -228,11 +208,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aProjectSkillNeededOptions = [];
-            $ProjectSkillNeededOptions =
-                ProjectSkillNeededOptions::select('id AS option_value', 'option_label')->orderBy(
-                    'DisplaySequence',
-                    'asc'
-                )->get();
+            $ProjectSkillNeededOptions = ProjectSkillNeededOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
             $ProjectSkillNeededOptions = $ProjectSkillNeededOptions ? $ProjectSkillNeededOptions->toArray() : [];
             foreach ($ProjectSkillNeededOptions as $option) {
                 $aProjectSkillNeededOptions[$option['option_label']] = $option['option_value'];
@@ -243,10 +219,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aProjectStatusOptions = [];
-            $ProjectStatusOptions = ProjectStatusOptions::select('id AS option_value', 'option_label')->orderBy(
-                'DisplaySequence',
-                'asc'
-            )->get();
+            $ProjectStatusOptions = ProjectStatusOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
             $ProjectStatusOptions = $ProjectStatusOptions ? $ProjectStatusOptions->toArray() : [];
             foreach ($ProjectStatusOptions as $option) {
                 $aProjectStatusOptions[$option['option_label']] = $option['option_value'];
@@ -257,10 +230,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aSendStatusOptions = [];
-            $SendStatusOptions = SendStatusOptions::select('id AS option_value', 'option_label')->orderBy(
-                'DisplaySequence',
-                'asc'
-            )->get();
+            $SendStatusOptions = SendStatusOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
             $SendStatusOptions = $SendStatusOptions ? $SendStatusOptions->toArray() : [];
             foreach ($SendStatusOptions as $option) {
                 $aSendStatusOptions[$option['option_label']] = $option['option_value'];
@@ -271,10 +241,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aVolunteerAgeRangeOptions = [];
-            $VolunteerAgeRangeOptions = VolunteerAgeRangeOptions::select('id AS option_value', 'option_label')->orderBy(
-                'DisplaySequence',
-                'asc'
-            )->get();
+            $VolunteerAgeRangeOptions = VolunteerAgeRangeOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
             $VolunteerAgeRangeOptions = $VolunteerAgeRangeOptions ? $VolunteerAgeRangeOptions->toArray() : [];
             foreach ($VolunteerAgeRangeOptions as $option) {
                 $aVolunteerAgeRangeOptions[$option['option_label']] = $option['option_value'];
@@ -285,13 +252,8 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aVolunteerPrimarySkillOptions = [];
-            $VolunteerPrimarySkillOptions =
-                VolunteerPrimarySkillOptions::select('id AS option_value', 'option_label')->orderBy(
-                    'DisplaySequence',
-                    'asc'
-                )->get();
-            $VolunteerPrimarySkillOptions =
-                $VolunteerPrimarySkillOptions ? $VolunteerPrimarySkillOptions->toArray() : [];
+            $VolunteerPrimarySkillOptions = VolunteerPrimarySkillOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
+            $VolunteerPrimarySkillOptions = $VolunteerPrimarySkillOptions ? $VolunteerPrimarySkillOptions->toArray() : [];
             foreach ($VolunteerPrimarySkillOptions as $option) {
                 $aVolunteerPrimarySkillOptions[$option['option_label']] = $option['option_value'];
             }
@@ -301,11 +263,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aVolunteerSkillLevelOptions = [];
-            $VolunteerSkillLevelOptions =
-                VolunteerSkillLevelOptions::select('id AS option_value', 'option_label')->orderBy(
-                    'DisplaySequence',
-                    'asc'
-                )->get();
+            $VolunteerSkillLevelOptions = VolunteerSkillLevelOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
             $VolunteerSkillLevelOptions = $VolunteerSkillLevelOptions ? $VolunteerSkillLevelOptions->toArray() : [];
             foreach ($VolunteerSkillLevelOptions as $option) {
                 $aVolunteerSkillLevelOptions[$option['option_label']] = $option['option_value'];
@@ -316,10 +274,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aVolunteerStatusOptions = [];
-            $VolunteerStatusOptions = VolunteerStatusOptions::select('id AS option_value', 'option_label')->orderBy(
-                'DisplaySequence',
-                'asc'
-            )->get();
+            $VolunteerStatusOptions = VolunteerStatusOptions::select('id AS option_value', 'option_label')->orderBy('DisplaySequence', 'asc')->get();
             $VolunteerStatusOptions = $VolunteerStatusOptions ? $VolunteerStatusOptions->toArray() : [];
             foreach ($VolunteerStatusOptions as $option) {
                 $aVolunteerStatusOptions[$option['option_label']] = $option['option_value'];
@@ -330,10 +285,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $site_roles = [];
-            $siteRoles = SiteRole::select('SiteRoleID AS option_value', 'Role AS option_label')->orderBy(
-                'DisplaySequence',
-                'asc'
-            )->get();
+            $siteRoles = SiteRole::select('SiteRoleID AS option_value', 'Role AS option_label')->orderBy('DisplaySequence', 'asc')->get();
             $siteRoles = $siteRoles ? $siteRoles->toArray() : [];
             foreach ($siteRoles as $role) {
                 $site_roles[$role['option_label']] = $role['option_value'];
@@ -343,99 +295,44 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         $random = rand(0, time());
-        $select_options = [
-            'site_roles' => $site_roles,
-            'project_roles' => $project_roles,
-            'BudgetSourceOptions' => $aBudgetSourceOptions,
-            'BudgetStatusOptions' => $aBudgetStatusOptions,
-            'ProjectSkillNeededOptions' => $aProjectSkillNeededOptions,
-            'ProjectStatusOptions' => $aProjectStatusOptions,
-            'SendStatusOptions' => $aSendStatusOptions,
-            'VolunteerAgeRangeOptions' => $aVolunteerAgeRangeOptions,
-            'VolunteerPrimarySkillOptions' => $aVolunteerPrimarySkillOptions,
-            'VolunteerSkillLevelOptions' => $aVolunteerSkillLevelOptions,
-            'VolunteerStatusOptions' => $aVolunteerStatusOptions
-        ];
-        $appInitialData = compact(
-            [
-                'random',
-                'Year',
-                'site',
-                'site_years',
-                'siteStatus',
-                'contacts',
-                'project',
-                'projects',
-                'all_projects',
-                'sites',
-                'project_leads',
-                'project_budgets',
-                'project_contacts',
-                'project_volunteers',
-                'project_attachments',
-                'volunteers',
-                'all_contacts',
-                'annual_budget',
-                'annual_budgets',
-                'select_options',
-                'site_volunteers',
-                'site_volunteer'
-            ]
-        );
+        $select_options = ['site_roles' => $site_roles, 'project_roles' => $project_roles, 'projects_dropdown' => $projects_dropdown, 'BudgetSourceOptions' => $aBudgetSourceOptions, 'BudgetStatusOptions' => $aBudgetStatusOptions, 'ProjectSkillNeededOptions' => $aProjectSkillNeededOptions, 'ProjectStatusOptions' => $aProjectStatusOptions, 'SendStatusOptions' => $aSendStatusOptions, 'VolunteerAgeRangeOptions' => $aVolunteerAgeRangeOptions, 'VolunteerPrimarySkillOptions' => $aVolunteerPrimarySkillOptions, 'VolunteerSkillLevelOptions' => $aVolunteerSkillLevelOptions, 'VolunteerStatusOptions' => $aVolunteerStatusOptions];
+        $appInitialData = compact(['random', 'Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites', 'project_leads', 'project_budgets', 'project_contacts', 'project_volunteers', 'project_attachments', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets', 'select_options', 'site_volunteers', 'site_volunteer']);
         $this->makeJsFiles(compact('appInitialData'));
 
         return view('springintoaction::admin.main.app', $request, compact('appInitialData'));
     }
 
-    public function makeJsFiles($appInitialData)
-    {
+    public function makeJsFiles ($appInitialData) {
         //packages/dhayakawa/springintoaction/src/resources/assets/js/springintoaction.templates.js
         //public/js/springintoaction.templates.js
         $content = "window.JST = {};" . \PHP_EOL;
 
         try {
-            $files =
-                \glob(base_path() . "/resources/views/vendor/springintoaction/admin/backbone/*.backbone.template.php");
+            $files = \glob(base_path() . "/resources/views/vendor/springintoaction/admin/backbone/*.backbone.template.php");
             foreach ($files as $file) {
                 $templateID = str_replace('.backbone.template.php', '', basename($file));
-                $fileContents = preg_replace(
-                    ["/(\r\n|\n)/", "/\s+/", "/> </"],
-                    ["", " ", "><"],
-                    addcslashes(\file_get_contents($file), '"')
-                );
+                $fileContents = preg_replace(["/(\r\n|\n)/", "/\s+/", "/> </"], ["", " ", "><"], addcslashes(\file_get_contents($file), '"'));
                 $content .= "window.JST['{$templateID}'] = _.template(
                         \"{$fileContents}\"
                     );" . \PHP_EOL;
             }
 
             if (\file_exists(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js")) {
-                \file_put_contents(
-                    base_path() .
-                    "/packages/dhayakawa/springintoaction/src/resources/assets/js/springintoaction.templates.js",
-                    $content
-                );
+                \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/springintoaction.templates.js", $content);
             }
             \file_put_contents(base_path() . "/public/js/springintoaction.templates.js", $content);
 
             $contentView = view('springintoaction::admin.backbone.app-initial-models-vars-data', $appInitialData);
             $content = $contentView->render();
             if (\file_exists(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js")) {
-                \file_put_contents(
-                    base_path() .
-                    "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-models-vars-data.js",
-                    $content
-                );
+                \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-models-vars-data.js", $content);
             }
             \file_put_contents(base_path() . "/public/js/app-initial-models-vars-data.js", $content);
 
             $contentView = view('springintoaction::admin.backbone.app-initial-collections-view-data', $appInitialData);
             $content = $contentView->render();
             if (\file_exists(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js")) {
-                \file_put_contents(
-                    base_path() .
-                    "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-collections-view-data.js",
-                    $content
-                );
+                \file_put_contents(base_path() . "/packages/dhayakawa/springintoaction/src/resources/assets/js/app-initial-collections-view-data.js", $content);
             }
             \file_put_contents(base_path() . "/public/js/app-initial-collections-view-data.js", $content);
         } catch (\Exception $e) {

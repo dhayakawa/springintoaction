@@ -110,6 +110,15 @@ body {
 .project-request-page form[name="project-request"] label.required {
   padding-left: 15px;
 }
+.project-request-page form[name="project-request"] .site-projects {
+  display: none;
+}
+.project-request-page form[name="project-request"] .site-projects .table {
+  display: none;
+}
+.project-request-page form[name="project-request"] .no-site-projects {
+  display: none;
+}
 .project-request-page form[name="project-request"] .new-contact-info {
   display: none;
 }

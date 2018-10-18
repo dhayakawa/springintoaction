@@ -18,5 +18,6 @@
     App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
     App.Models.annualBudgetModel = new App.Models.AnnualBudget();
+    App.Models.reportModel = new App.Models.Report();
 
 })(window.App);

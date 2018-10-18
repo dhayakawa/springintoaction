@@ -1,63 +1,298 @@
 (function (App) {
-    App.Router = Backbone.Router.extend({
+    App.BackboneRouter = Backbone.Router.extend({
+        dashboardViewClass: App.Views.Dashboard,
+        siteManagementViewClass: App.Views.SiteManagement,
+        projectManagementViewClass: App.Views.ProjectManagement,
+        siteProjectTabsViewClass: App.Views.SiteProjectTabs,
+        contactsManagementViewClass: App.Views.ContactsManagement,
+        volunteersManagementViewClass: App.Views.VolunteersManagement,
+        annualBudgetsManagementViewClass: App.Views.AnnualBudgetsManagement,
+        reportsManagementViewClass: App.Views.ReportsManagement,
+        dashboardView: null,
+        siteManagementView: null,
+        projectManagementView: null,
+        siteProjectTabsView: null,
+        contactsManagementView: null,
+        volunteersManagementView: null,
+        annualBudgetsManagementView: null,
+        reportsManagementView: null,
+        bRouteViewRendered: false,
+        routeRequested: '',
+        initialize: function (options) {
+            let self = this;
+            _.bindAll(self, 'dashboard', 'loadView');
+            self.mainApp = new App.Views.mainApp;
+        },
         routes: {
-            '': 'index',
-            'show/:id': 'show', // passing param in hash tag route
-            'download/*random': 'download',//hash tag route
-            'search/:query': 'search',
-            '*default': '_default'
+            '': 'dashboard',
+            'view/:route/:action(/:type)': 'loadView',
+            '*default': 'loadView'
         },
-        index: function () {
-            //$(document.body).append("SIA index route has been called..");
-            //growl('SIA index route has been called');
-
+        preRouteViewRender: function () {
+            let self = this;
+            self.mainApp.$el.html('');
+            self.bRouteViewRendered = false;
         },
-
-        show: function (id) {
-            growl("Show route has been called.. with id equals : " + id);
-        },
-
-        download: function (random) {
-            growl("download route has been called.. with random equals : " + random);
-        },
-
-        search: function (query) {
-            growl("Search route has been called.. with query equals : " + query);
-        },
-        showContent: function () {
-            this._loadAjaxContent(function () {
-                $('#page-content .action-delete').submit(function () {
-                    return confirm('Are you sure you want to delete this THING ?');
-                });
-            });
-        },
-        _loadAjaxContent: function (callback) {
-            $.ajax({
-                method: "GET",
-                url: Backbone.history.root + Backbone.history.fragment
-            })
-                .done(function (msg) {
-                    document.querySelector('#page-content').innerHTML = msg;
-                    if (typeof callback === 'function') {
-                        callback();
+        postRouteViewRender: function () {
+            let self = this;
+            // Just in case we need to do anything after each route view render
+            if (!self.bRouteViewRendered) {
+                growl('Sorry, The Page you were looking for was not found. If you think this is an error, let Woodlands know about it.', 'danger');
+                // missing route requests get the dashboard route view as long as it's not the dashboard view that's missing
+                if (self.routeRequested !== 'dashboard') {
+                    if (App.Vars.devMode) {
+                        // This keeps the route url visible so we can troubleshoot etc.
+                        self.dashboard();
+                    } else {
+                        window.location.href = '#';
                     }
-                });
+                }
+            }
+            self.bRouteViewRendered = false;
         },
-        _default: function (_default) {
-            growl("Default route has been called.. with query equals : " + _default);
-        }
+        dashboard: function () {
+            let self = this;
+            self.preRouteViewRender();
+            self.routeRequested = 'dashboard';
+            //growl('SIA index route has been called');
+            if (self.dashboardView === null) {
+                let aDashboardPanelViews = [
+                    new App.Views.DashboardPanel({
+                        model:
+                            new App.Models.DashboardPanel({
+                                'panelBgColor': 'aqua',
+                                'panelFAIconClass': 'fa-university',
+                                'panelName': 'Site Management',
+                                'panelDescription': '',
+                                'panelLinksListView': new App.Views.DashboardPanelLinksList({
+                                    collection: new App.Collections.DashboardPanelLinksListItem([
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Sites',
+                                            'badgeCount': App.Vars.appInitialData.sites.length,
+                                            'route': 'view/site/management'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Projects',
+                                            'badgeCount': App.Vars.appInitialData.all_projects.length,
+                                            'route': 'view/project/management'
+                                        })
+                                    ])
+                                }).render().$el.html()
+                            })
+                    }).render().$el.html(),
+                    new App.Views.DashboardPanel({
+                        model:
+                            new App.Models.DashboardPanel({
+                                'panelBgColor': 'green',
+                                'panelFAIconClass': 'fa-users',
+                                'panelName': 'People Management',
+                                'panelDescription': '',
+                                'panelLinksListView': new App.Views.DashboardPanelLinksList({
+                                    collection: new App.Collections.DashboardPanelLinksListItem([
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Site Contacts',
+                                            'badgeCount': App.Vars.appInitialData.all_contacts.length,
+                                            'route': 'view/site_contacts/management'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteers',
+                                            'badgeCount': App.Vars.appInitialData.volunteers.length,
+                                            'route': 'view/volunteers/management'
+                                        })
+                                    ])
+                                }).render().$el.html()
+                            })
+                    }).render().$el.html(),
+                    new App.Views.DashboardPanel({
+                        model:
+                            new App.Models.DashboardPanel({
+                                'panelBgColor': 'orange',
+                                'panelFAIconClass': 'fa-bar-chart',
+                                'panelName': 'Reports',
+                                'panelDescription': '',
+                                'panelLinksListView': new App.Views.DashboardPanelLinksList({
+                                    collection: new App.Collections.DashboardPanelLinksListItem([
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Sites',
+                                            'badgeCount': '12',
+                                            'route': 'view/reports/management/sites'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Projects',
+                                            'badgeCount': '12',
+                                            'route': 'view/reports/management/projects'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteers',
+                                            'badgeCount': '12',
+                                            'route': 'view/reports/management/volunteers'
+                                        })
+                                    ])
+                                }).render().$el.html()
+                            })
+                    }).render().$el.html(),
+                    new App.Views.DashboardPanel({
+                        model:
+                            new App.Models.DashboardPanel({
+                                'panelBgColor': 'purple',
+                                'panelFAIconClass': 'fa-calculator',
+                                'panelName': 'Budget Management',
+                                'panelDescription': '',
+                                'panelLinksListView': new App.Views.DashboardPanelLinksList({
+                                    collection: new App.Collections.DashboardPanelLinksListItem([
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Review ' + App.Vars.appInitialData.annual_budget[0].Year,
+                                            'badgeCount': '$' + App.Vars.appInitialData.annual_budget[0].BudgetAmount,
+                                            'route': 'view/budget/management'
+                                        })
+                                    ])
+                                }).render().$el.html()
+                            })
+                    }).render().$el.html()
+                ];
+                App.Views.dashboardView  = self.dashboardView = new self.dashboardViewClass({
+                    dashboardPanelViews: aDashboardPanelViews
+                });
+            }
+            self.mainApp.setRouteView(self.dashboardView).render();
+            self.bRouteViewRendered = true;
+            self.postRouteViewRender();
+        },
+        loadView: function (route, action, type) {
+            let self = this;
+            type = typeof type !== 'undefined' ? type : '';
+            self.preRouteViewRender();
+            growl('SIA loadView route has been called:' + route + '_' + action);
+            self.routeRequested = route + '_' + action;
 
+            // The backbone View to render
+            let routeView = null;
+
+            try {
+                switch (self.routeRequested) {
+                    case 'site_management':
+                        if (self.siteManagementView === null) {
+                            App.Views.siteManagementView = self.siteManagementView = new self.siteManagementViewClass({
+                                mainApp: self.mainApp
+                            });
+                        }
+
+                        routeView = self.siteManagementView;
+                        break;
+                    case 'project_management':
+                        if (self.projectManagementView === null) {
+                            App.Views.projectManagementView = self.projectManagementView = new self.projectManagementViewClass({
+                                mainApp: self.mainApp
+
+                            });
+                        }
+
+                        routeView = self.projectManagementView;
+
+                        break;
+                    case 'site_contacts_management':
+                        if (self.contactsManagementView === null) {
+                            App.Views.contactsManagementView = self.contactsManagementView = new self.contactsManagementViewClass({
+                                className: 'box box-primary contacts-management-view',
+                                viewClassName: 'contacts-management-view',
+                                mainAppEl: self.mainApp.el,
+                                mainApp: self.mainApp,
+                                modelNameLabel: 'Contact',
+                                collection: App.PageableCollections.contactsManagementCollection,
+                                columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
+                                hideCellCnt: 0
+                            });
+                        }
+                        routeView = self.contactsManagementView;
+
+                        break;
+                    case 'volunteers_management':
+                        if (self.volunteersManagementView === null) {
+                            App.Views.volunteersManagementView = self.volunteersManagementView = new self.volunteersManagementViewClass({
+                                className: 'box box-primary volunteers-management-view',
+                                viewClassName: 'volunteers-management-view',
+                                mainAppEl: self.mainApp.el,
+                                mainApp: self.mainApp,
+                                modelNameLabel: 'Volunteer',
+                                collection: App.PageableCollections.volunteersManagementCollection,
+                                columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
+                                hideCellCnt: 0
+                            });
+                        }
+                        routeView = self.volunteersManagementView;
+
+                        break;
+                    case 'budget_management':
+                        if (self.annualBudgetsManagementView === null) {
+                            App.Views.annualBudgetsManagementView = self.annualBudgetsManagementView = new self.annualBudgetsManagementViewClass({
+                                className: 'box box-primary annualbudgets-management-view',
+                                viewClassName: 'annualbudgets-management-view',
+                                model: App.Models.annualBudgetModel,
+                                mainAppEl: self.mainApp.el,
+                                mainApp: self.mainApp,
+                                modelNameLabel: 'AnnualBudget',
+                                collection: App.Collections.annualBudgetsManagementCollection,
+                                columnCollectionDefinitions: App.Vars.annualBudgetsBackgridColumnDefinitions,
+                                hideCellCnt: 0
+                            });
+                        }
+                        routeView = self.annualBudgetsManagementView;
+
+
+                        break;
+                    case 'reports_management':
+                        if (self.reportsManagementView === null) {
+                            App.Views.reportManagementView = self.reportsManagementView = new self.reportsManagementViewClass({
+                                className: 'box box-primary reports-management-view',
+                                viewClassName: 'reports-management-view',
+                                model: App.Models.reportModel,
+                                mainAppEl: self.mainApp.el,
+                                mainApp: self.mainApp,
+                                modelNameLabel: 'Report',
+                                collection: App.Collections.reportsManagementCollection,
+                                columnCollectionDefinitions: [],
+                                hideCellCnt: 0
+                            });
+                        }
+                        routeView = self.reportsManagementView;
+
+                        break;
+                    default:
+                        routeView               = null;
+                        self.bRouteViewRendered = false;
+                }
+            } catch (e) {
+                console.log('routeView instantiation exception:', e);
+                self.bRouteViewRendered = false;
+            }
+
+            if (routeView !== null) {
+                try {
+                    self.mainApp.setRouteView(routeView).render();
+                    self.bRouteViewRendered = true;
+                } catch (e) {
+                    console.log('self.mainApp.setRouteView render exception:', e);
+                    self.bRouteViewRendered = false;
+                }
+
+            }
+            self.postRouteViewRender();
+
+        }
     });
 
 })(window.App);
 
 
 (function (App) {
-    new App.Router;
+    /**
+     * All the view logic is in the router
+     */
+    new App.BackboneRouter;
 
     let rootUrl = $('.sia-main-app').length ? $('.sia-main-app').data('rooturl') : 'http://homestead.test/admin';
     if (!rootUrl.endsWith('/')) {
-        rootUrl += '/';
+        //rootUrl += '/';
     }
     let rootPath = rootUrl.replace('://', '');
     let index = rootPath.indexOf('/');
@@ -67,78 +302,15 @@
         let index = url.indexOf(rootUrl);
         return (index > -1 ? url.substr(index + rootUrl.length) : url);
     };
-    Backbone.history.firstLoad = true;
-    Backbone.history.on('route', function () {
-        Backbone.history.firstLoad = false;
-    });
+
+    if (rootUrl.match(/homestead/i)){
+        App.Vars.devMode = true;
+    }
 
     Backbone.history.start({
-        pushState: true,
-        silent: false,
+        pushState: false,
         root: rootPath
     });
-    // Finally, we kick things off by creating the **App**.
-    let mainApp = new App.Views.mainApp;
-    mainApp.render();
 
-    // 3. catch clicks on links and dispatch them to the router
-    // $('.sia-main-app').on('click', 'a:not([data-bypass])', function (evt) {
-    //     let href = $(this).attr('href');
-    //
-    //     if (href.length && href.substr(0, 1) !== '#') {
-    //         evt.preventDefault();
-    //         // 4. update the browser's url and call the routing function
-    //         App.Router.navigate(getRelativeUrl(href, rootUrl), {trigger: true});
-    //     }
-    // });
-
-    // 5. small hack to detect the correct URL, in case of a redirect
-    //  http://stackoverflow.com/questions/9177252/detecting-a-redirect-in-jquery-ajax
-    // let xhr;
-    // let _orgAjax = jQuery.ajaxSettings.xhr;
-    // jQuery.ajaxSettings.xhr = function () {
-    //     xhr = _orgAjax();
-    //     return xhr;
-    // };
-    // 6. catch form submissions
-    // $('.sia-main-app').on('submit', 'form:not([data-bypass])', function (evt) {
-    //     let $form = $(this);
-    //     let href = $form.attr('action');
-    //
-    //     if (href.length && href.substr(0, 1) !== '#') {
-    //         evt.preventDefault();
-    //
-    //         $.ajax({
-    //             type: $form.attr('method'),
-    //             url: Backbone.history.root + getRelativeUrl(href, rootUrl),
-    //             data: $form.serialize(),
-    //         })
-    //             .error(function (jqXHR, textStatus, errorThrown) {
-    //                 if (jqXHR.status === 422) { // Unprocessable Entity - Sent in case of validation error
-    //                     // 7. add an error class to the problematic fields
-    //                     // and display a notification toast with a description of the error(s)
-    //                     $form.find('.has-error').removeClass('has-error');
-    //                     let errors = jqXHR.responseJSON;
-    //                     let errorsToDisplay = [];
-    //                     $.each(errors, function (key, value) {
-    //                         $form.find('label[for=' + key + ']').parents('.form-group').addClass('has-error');
-    //                         errorsToDisplay.push(value[0] || value);
-    //                     });
-    //                     toastr.error(errorsToDisplay.join('<br />'), 'Validation errors', {timeOut: 4000});
-    //                 }
-    //                 else {
-    //                     toastr.error('Code: ' + jqXHR.status, 'Error', {timeOut: 4000});
-    //                 }
-    //             })
-    //             .done(function (data) {
-    //                 // 8. set the page content and update the browser's url
-    //                 //$('#page-content').innerHTML = data;
-    //                 console.log(data)
-    //                 App.Router.navigate(getRelativeUrl(xhr.responseURL, rootUrl));
-    //             });
-    //     }
-    //
-    //     return false;
-    // });
 })(window.App);
 

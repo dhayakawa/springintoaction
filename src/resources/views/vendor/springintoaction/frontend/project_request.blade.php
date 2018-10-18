@@ -3,6 +3,10 @@
 'bodyClass' => 'project-request-page'
 ])
 @push('js')
+<script type="text/javascript">
+    let aaProjects = @json($formData['aaProjects']);
+    let aBudgetSources = @json($formData['aBudgetSources']);
+</script>
 <script src="{{ mix('/js/frontend/springintoaction.project-request.js') }}"></script>
 @endpush
 @section('content')
@@ -58,6 +62,22 @@
     <div class="form-group col-xs-4">
         <label for="Title">Your Job Title</label>
         {{ Form::text('Title', old('title'), ['id'=>'Title','enctype'=>'multipart/form-data','class'=>'form-control','aria-describedby'=>"Title",'placeholder'=>"Enter Your Job Title"]) }}
+    </div>
+</div>
+<div class="row">
+    <div class="form-group col-xs-12 site-projects">
+        <label>Current Site Projects</label>
+        <table class="table">
+            <thead>
+                <th>Project ID</th>
+                <th>Description</th>
+                <th>Budget Sources</th>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+        <div class="no-site-projects">No projects have been submitted for this year yet.</div>
     </div>
 </div>
 <div class="row">
