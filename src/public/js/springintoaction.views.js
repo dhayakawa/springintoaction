@@ -1150,8 +1150,8 @@
             this.rowBgColor                  = 'lightYellow';
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
             this.parentView                  = this.options.parentView;
-            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e, data) {
-                self.handleSiteStatusIDChange(e, data);
+            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e) {
+                self.handleSiteStatusIDChange(e);
             });
             _log('App.Views.Projects.initialize', options);
         },
@@ -1260,10 +1260,10 @@
             return this;
 
         },
-        handleSiteStatusIDChange: function (e, data) {
+        handleSiteStatusIDChange: function (e) {
             let self = this;
-            console.log(e,'data:', data)
-            let SiteStatusID = data
+
+            let SiteStatusID = e.SiteStatusID;
             window.ajaxWaiting('show', '.projects-backgrid-wrapper');
             //window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
             // fetch new product collection
