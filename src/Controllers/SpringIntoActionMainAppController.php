@@ -8,6 +8,7 @@ use Dhayakawa\SpringIntoAction\Models\AnnualBudget;
 use Dompdf\Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Dhayakawa\SpringIntoAction\Models\Site;
 use Dhayakawa\SpringIntoAction\Models\SiteStatus;
@@ -147,6 +148,7 @@ class SpringIntoActionMainAppController extends BaseController
         try {
             $project_attachments = Project::find($project['ProjectID'])->attachments;
             $project_attachments = $project_attachments ? $project_attachments->toArray() : [];
+
         } catch (\Exception $e) {
             $project_attachments = [];
             if (!empty($project)) {
@@ -294,9 +296,10 @@ class SpringIntoActionMainAppController extends BaseController
             $site_roles = [];
             report($e);
         }
+        $bIsLocalEnv = App::environment('local');
         $random = rand(0, time());
         $select_options = ['site_roles' => $site_roles, 'project_roles' => $project_roles, 'projects_dropdown' => $projects_dropdown, 'BudgetSourceOptions' => $aBudgetSourceOptions, 'BudgetStatusOptions' => $aBudgetStatusOptions, 'ProjectSkillNeededOptions' => $aProjectSkillNeededOptions, 'ProjectStatusOptions' => $aProjectStatusOptions, 'SendStatusOptions' => $aSendStatusOptions, 'VolunteerAgeRangeOptions' => $aVolunteerAgeRangeOptions, 'VolunteerPrimarySkillOptions' => $aVolunteerPrimarySkillOptions, 'VolunteerSkillLevelOptions' => $aVolunteerSkillLevelOptions, 'VolunteerStatusOptions' => $aVolunteerStatusOptions];
-        $appInitialData = compact(['random', 'Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites', 'project_leads', 'project_budgets', 'project_contacts', 'project_volunteers', 'project_attachments', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets', 'select_options', 'site_volunteers', 'site_volunteer']);
+        $appInitialData = compact(['bIsLocalEnv','random', 'Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites', 'project_leads', 'project_budgets', 'project_contacts', 'project_volunteers', 'project_attachments', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets', 'select_options', 'site_volunteers', 'site_volunteer']);
         $this->makeJsFiles(compact('appInitialData'));
 
         return view('springintoaction::admin.main.app', $request, compact('appInitialData'));

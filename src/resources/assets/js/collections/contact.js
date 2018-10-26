@@ -76,6 +76,14 @@
             width: "50"
         },
         {
+            name: "SiteID",
+            label: "Site",
+            cell: SitesCell,
+            resizeable: true,
+            orderable: true,
+            width: "250"
+        },
+        {
             name: "FirstName",
             label: "FirstName",
             cell: "string",
@@ -127,14 +135,6 @@
             name: "ContactType",
             label: "ContactType",
             cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "SiteID",
-            label: "Site",
-            cell: SitesCell,
             resizeable: true,
             orderable: true,
             width: "250"

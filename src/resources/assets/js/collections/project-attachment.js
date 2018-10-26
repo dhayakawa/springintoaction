@@ -3,7 +3,7 @@
         model: App.Models.ProjectAttachment
     });
 
-    App.PageableCollections.ProjectAttachment = Backbone.PageableCollection.extend({
+    App.PageableCollections.ProjectAttachment            = Backbone.PageableCollection.extend({
         model: App.Models.ProjectAttachment,
         state: {
             pageSize: 10

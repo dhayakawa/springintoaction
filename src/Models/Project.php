@@ -131,7 +131,9 @@
         }
 
         public function attachments() {
-            return $this->hasMany('Dhayakawa\SpringIntoAction\Models\ProjectAttachment', 'ProjectID', 'ProjectID');
+            $results = $this->hasMany('Dhayakawa\SpringIntoAction\Models\ProjectAttachment', 'ProjectID', 'ProjectID');
+
+            return $results;
         }
 
         public function projectVolunteersWithRoles() {
