@@ -12,6 +12,8 @@ use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseControl
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Dhayakawa\SpringIntoAction\Models\Site;
 use Dhayakawa\SpringIntoAction\Models\SiteStatus;
@@ -302,11 +304,17 @@ class ProjectsController extends BaseController
         try {
             if ($model = ProjectAttachment::where('ProjectID', $ProjectID)->get()) {
                 $results = $model->toArray();
+                foreach ($results as $key => $attachment) {
+                    $attachmentPath = $attachment['AttachmentPath'];
+                    if(\preg_match("/^.*\/storage\/app/", $attachmentPath)){
+                        $attachment['AttachmentPath'] = preg_replace("/^.*\/storage\/app/", "/admin/project_attachment/stream/storage/app", $attachment['AttachmentPath']);
+                        $results[$key] = $attachment;
+                    }
+                }
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $e->getMessage()]);
         }
-
 
         return $results;
     }

@@ -14,7 +14,7 @@ $(function () {
                         }
                     });
                     budgetSources = budgetSources.replace(/, $/, '');
-                    $tBody.append('<tr><td>' + value.SequenceNumber + '</td><td>' + value.OriginalRequest + '</td><td>' + budgetSources + '</td></tr>');
+                    $tBody.append('<tr><td>' + value.SequenceNumber + '</td><td>' + value.OriginalRequest.replace(/(\r\n|\n)/,'<br>') + '</td><td>' + budgetSources + '</td></tr>');
                 }
             })
         }

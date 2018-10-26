@@ -162,7 +162,9 @@
             let self = this;
             type = typeof type !== 'undefined' ? type : '';
             self.preRouteViewRender();
-            growl('SIA loadView route has been called:' + route + '_' + action);
+            if (App.Vars.devMode) {
+                growl('SIA loadView route has been called:' + route + '_' + action);
+            }
             self.routeRequested = route + '_' + action;
 
             // The backbone View to render

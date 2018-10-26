@@ -12,7 +12,7 @@
         model: App.Models.ProjectAttachment
     });
 
-    App.PageableCollections.ProjectAttachment = Backbone.PageableCollection.extend({
+    App.PageableCollections.ProjectAttachment            = Backbone.PageableCollection.extend({
         model: App.Models.ProjectAttachment,
         state: {
             pageSize: 10
@@ -766,6 +766,14 @@
             width: "50"
         },
         {
+            name: "SiteID",
+            label: "Site",
+            cell: SitesCell,
+            resizeable: true,
+            orderable: true,
+            width: "250"
+        },
+        {
             name: "FirstName",
             label: "FirstName",
             cell: "string",
@@ -817,14 +825,6 @@
             name: "ContactType",
             label: "ContactType",
             cell: "string",
-            resizeable: true,
-            orderable: true,
-            width: "250"
-        },
-        {
-            name: "SiteID",
-            label: "Site",
-            cell: SitesCell,
             resizeable: true,
             orderable: true,
             width: "250"

@@ -60,7 +60,7 @@ window.App = {
         workerRoleID: 4,
         appInitialData: {},
         selectOptions:{},
-        devMode: false
+        devMode: false,
 
     },
     CellEditors: {}

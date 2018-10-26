@@ -4,7 +4,9 @@
 /**
      * Bootstap Backbone models & collections for initial page load
      */
+
     App.Vars.appInitialData = @json($appInitialData);
+    App.Vars.devMode = App.Vars.appInitialData['bIsLocalEnv'];
     App.Vars.selectOptions = App.Vars.appInitialData['select_options'];
 
     App.Models.siteModel = new App.Models.Site(@json($appInitialData['site']));

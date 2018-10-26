@@ -9,6 +9,8 @@
 namespace Dhayakawa\SpringIntoAction\Controllers;
 
 use Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttachment;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Illuminate\Http\Request;
@@ -98,6 +100,33 @@ class ProjectAttachmentController extends BaseController
         }
 
         return $result;
+    }
+
+    /**
+     * @param $AttachmentPath
+     *
+     * @return mixed
+     */
+    public function streamAttachment($AttachmentPath)
+    {
+
+        try {
+            if ($model = ProjectAttachment::where("AttachmentPath", "REGEXP" ,$AttachmentPath."$")) {
+
+                $attachment = $model->first()->toArray();
+                if (!empty($attachment)) {
+                    $pathPrefix = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
+                    $relativePath = str_replace($pathPrefix, '', $attachment['AttachmentPath']);
+                    $exists = Storage::disk('local')->exists($relativePath);
+                    if ($exists) {
+                        return Storage::response($relativePath);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            report($e);
+        }
+        return 'Sorry, file not found';
     }
 
     /**
@@ -193,7 +222,7 @@ class ProjectAttachmentController extends BaseController
             \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' .
                                                                                                     __LINE__,$e->getMessage()]);
         }
-\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $ProjectID,$results]);
+
         return $results;
     }
 }

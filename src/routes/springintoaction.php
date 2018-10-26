@@ -133,8 +133,9 @@
         Route::get('project_volunteer/{VolunteerID}', ['as' => 'project_volunteer', 'uses' => 'VolunteerController@show']);
         Route::get('project_volunteer/all/{ProjectID}', ['as' => 'project_volunteer', 'uses' => 'VolunteerController@getProjectVolunteers']);
 
-        Route::get('project_attachment/{ProjectAttachmentID}', ['as' => 'project_attachment', 'uses' => 'ProjectAttachmentController@show']);
-        Route::get('project_attachment/all/{ProjectID}', ['as' => 'project_attachment', 'uses' => 'ProjectAttachmentController@getProjectAttachments']);
+        Route::get('project_attachment/{ProjectAttachmentID}', ['as' => 'project_attachment.show', 'uses' => 'ProjectAttachmentController@show']);
+        Route::get('project_attachment/stream/{AttachmentPath}', ['as' => 'project_attachment.stream', 'uses' => 'ProjectAttachmentController@streamAttachment'])->where('AttachmentPath', '.*$');
+        Route::get('project_attachment/all/{ProjectID}', ['as' => 'project_attachment.all', 'uses' => 'ProjectAttachmentController@getProjectAttachments']);
         Route::put('project_attachment/{ProjectAttachmentID}', ['as' => 'project_attachment.update', 'uses' => 'ProjectAttachmentController@update']);
         Route::post('project_attachment', ['as' => 'project_attachment.create', 'uses' => 'ProjectAttachmentController@store']);
         Route::post('project_attachment/batch/destroy', ['as' => 'project_attachment.batch.destroy', 'uses' => 'ProjectAttachmentController@batchDestroy']);
