@@ -55,6 +55,7 @@
             name: "BudgetSource",
             label: "BudgetSource",
             cell: App.Vars.budgetSourceCell,
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "175"
@@ -63,6 +64,7 @@
             name: "BudgetAmount",
             label: "BudgetAmount",
             cell: "number",
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "30"
@@ -71,6 +73,7 @@
             name: "Status",
             label: "Status",
             cell: BudgetStatusCell,
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "50"
@@ -79,6 +82,7 @@
             name: "Comments",
             label: "Comments",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -87,6 +91,7 @@
             name: "ProjectID",
             label: "Project",
             cell: "integer",
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "150"

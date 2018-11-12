@@ -80,6 +80,10 @@
   font: normal normal normal 14px/1 FontAwesome;
   content: "\F06E";
 }
+.backgrid-wrapper .backgrid thead th:nth-child(3) button::before {
+  font: normal normal normal 14px/1 FontAwesome;
+  content: "\F0C6";
+}
 .backgrid-wrapper .backgrid tbody tr {
   background-color: inherit;
 }

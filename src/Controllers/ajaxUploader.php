@@ -1382,6 +1382,7 @@
         }
 
         public function post($print_response = true) {
+
             if($this->get_query_param('_method') === 'DELETE') {
                 return $this->delete($print_response);
             }
@@ -1434,7 +1435,6 @@
                 }
             }
             $response = array($this->options['param_name'] => $files);
-
             return $this->generate_response($response, $print_response);
         }
 

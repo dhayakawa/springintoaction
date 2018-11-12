@@ -51,9 +51,7 @@
         }],
         formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
             toRaw: function (formattedValue, model) {
-                return formattedValue === null ? [] : _.map(formattedValue, function (v) {
-                    return parseInt(v);
-                })
+                return formattedValue === null ? [] : parseInt(formattedValue);
             }
         })
 
@@ -134,24 +132,17 @@
             name: "Active",
             label: "Active",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: false,
             width: "50",
             filterType: "integer"
         },
         {
-            name: "Status",
-            label: "Status",
-            cell: App.Vars.VolunteerStatusCell,
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            filterType: "string"
-        },
-        {
             name: "LastName",
             label: "LastName",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
@@ -161,15 +152,27 @@
             name: "FirstName",
             label: "FirstName",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
             filterType: "string"
         },
         {
+            name: "Status",
+            label: "Status",
+            cell: App.Vars.VolunteerStatusCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
+            resizeable: true,
+            orderable: true,
+            width: "250",
+            filterType: "string"
+        },
+        {
             name: "MobilePhoneNumber",
             label: "MobilePhoneNumber",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
@@ -179,6 +182,7 @@
             name: "HomePhoneNumber",
             label: "HomePhoneNumber",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
@@ -188,6 +192,7 @@
             name: "Email",
             label: "Email",
             cell: "email",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "175",
@@ -197,6 +202,7 @@
             name: "PrimarySkill",
             label: "PrimarySkill",
             cell: VolunteerPrimarySkillCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -206,6 +212,7 @@
             name: "Comments",
             label: "Comments",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -214,6 +221,7 @@
             name: "ContactPhone",
             label: "ContactPhone",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -223,6 +231,7 @@
             name: "AgeRange",
             label: "AgeRange",
             cell: AgeRangeCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -232,6 +241,7 @@
             name: "LG",
             label: "LG",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -241,6 +251,7 @@
             name: "Family",
             label: "Family",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -250,6 +261,7 @@
             name: "CFE",
             label: "CFE",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -258,6 +270,7 @@
             name: "CFP",
             label: "CFP",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -266,6 +279,7 @@
             name: "Painting",
             label: "Painting",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -275,6 +289,7 @@
             name: "Landscaping",
             label: "Landscaping",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -284,6 +299,7 @@
             name: "Construction",
             label: "Construction",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -293,6 +309,7 @@
             name: "Electrical",
             label: "Electrical",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -302,6 +319,7 @@
             name: "CabinetryFinishWork",
             label: "CabinetryFinishWork",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -311,6 +329,7 @@
             name: "Plumbing",
             label: "Plumbing",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -320,6 +339,7 @@
             name: "NotesOnYourSkillAssessment",
             label: "NotesOnYourSkillAssessment",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -328,6 +348,7 @@
             name: "PhysicalRestrictions",
             label: "PhysicalRestrictions",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -336,6 +357,7 @@
             name: "SchoolPreference",
             label: "SchoolPreference",
             cell: SchoolCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -345,6 +367,7 @@
             name: "Equipment",
             label: "Equipment",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -353,6 +376,7 @@
             name: "TeamLeaderWilling",
             label: "TeamLeaderWilling",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -361,6 +385,7 @@
             name: "Church",
             label: "Church",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -370,6 +395,7 @@
             name: "AssignmentInformationSendStatus",
             label: "AssignmentInformationSendStatus",
             cell: App.Vars.sendCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -378,6 +404,7 @@
             name: "PreferredSiteID",
             label: "PreferredSiteID",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -387,11 +414,13 @@
     _.each(App.Vars.volunteersBackgridColumnDefinitions, function (value, key) {
         value.displayOrder = displayOrderCnt++;
     });
+    displayOrderCnt = 1;
     App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
-    let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email', 'Comments'];
+    let sharedCells = ['', 'VolunteerID', 'Active', 'LastName', 'FirstName', 'Status', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email', 'Comments'];
     _.each(sharedCells, function (value, key) {
         let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
         cellDefinition = _.clone(cellDefinition);
+        cellDefinition.displayOrder = displayOrderCnt++;
         if (cellDefinition.name === 'Status') {
             cellDefinition.name = 'ProjectVolunteerRoleStatus';
         }
@@ -399,16 +428,17 @@
             cellDefinition.editable = false;
         }
         App.Vars.volunteerLeadsBackgridColumnDefinitions.push(cellDefinition);
-        if (cellDefinition.name === 'Active') {
+        if (cellDefinition.name === 'FirstName') {
             App.Vars.volunteerLeadsBackgridColumnDefinitions.push({
                 name: "ProjectRoleID",
                 label: "Project Lead Role",
                 cell: VolunteerRoleCell,
+                editable: App.Vars.Auth.bCanEditVolunteersGridFields,
                 resizeable: true,
                 orderable: true,
                 width: "250",
                 filterType: "string",
-                displayOrder: value.displayOrder++
+                displayOrder: displayOrderCnt++
             });
         }
     });

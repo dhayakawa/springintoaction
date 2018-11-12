@@ -196,7 +196,12 @@ class ProjectsController extends BaseController
     public function getSiteProjects($SiteStatusID)
     {
         return $projects =
-            Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
+            Project::select(
+                'projects.*',
+                DB::raw(
+                    '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
+                )
+            )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
                     'site_status.SiteStatusID',
                     $SiteStatusID
                 )->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
@@ -289,7 +294,12 @@ class ProjectsController extends BaseController
     public function getAllProjects()
     {
         $all_projects =
-            Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
+            Project::select(
+                'projects.*',
+                DB::raw(
+                    '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
+                )
+            )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
                     'site_status.Year',
                     date('Y')
                 )->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();

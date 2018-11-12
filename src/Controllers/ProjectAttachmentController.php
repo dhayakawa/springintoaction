@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\File;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttachment;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Illuminate\Http\Request;
+use \Dhayakawa\SpringIntoAction\Controllers\ajaxUploader;
 
 class ProjectAttachmentController extends BaseController
 {
@@ -50,31 +51,65 @@ class ProjectAttachmentController extends BaseController
         $data = $request->only($model->getFillable());
 
         $aAttachmentPaths = array_filter(preg_split("/(\r\n|\n)/", $data['AttachmentPath']));
-        $bSuccess = !empty($aAttachmentPaths);
+        $bSuccess = true;
         $aFailedPaths = [];
-        foreach ($aAttachmentPaths as $attachment) {
-            $attachment = \urldecode($attachment);
-            $model = new ProjectAttachment;
-            $aData = ['ProjectID' => $data['ProjectID'], 'AttachmentPath' => $attachment];
-            $model->fill($aData);
+        if (!empty($aAttachmentPaths)) {
+            foreach ($aAttachmentPaths as $attachment) {
+                $attachment = \urldecode($attachment);
+                $model = new ProjectAttachment;
+                $aData = ['ProjectID' => $data['ProjectID'], 'AttachmentPath' => $attachment];
+                $model->fill($aData);
 
-            $success = $model->save();
-            if (!$success) {
-                $bSuccess = false;
-                $aFailedPaths[] = $attachment;
+                $success = $model->save();
+                if (!$success) {
+                    $bSuccess = false;
+                    $aFailedPaths[] = $attachment;
+                }
             }
         }
 
         if ($bSuccess) {
             $response = ['success' => true, 'msg' => 'Project Attachment Creation Succeeded.'];
         } else {
-            $response = [
-                'success' => false,
-                'msg' => 'Project Attachment Creation Failed on:' . join(
-                        '</br>',
-                        $aFailedPaths
-                    )
-            ];
+            $response =
+                ['success' => false, 'msg' => 'Project Attachment Creation Failed on:' . join('</br>', $aFailedPaths)];
+        }
+
+        return view('springintoaction::admin.main.response', $request, compact('response'));
+    }
+
+    public function upload(Request $request)
+    {
+        $Year = date('Y');
+        $ProjectID = $request->input('ProjectID');
+        $timeStamp = date("Ymd") . round(microtime(true));
+        $response['files'] = [];
+        $aProjectAttachments = $request->file('files');
+        if (is_array($aProjectAttachments)) {
+            foreach ($aProjectAttachments as $ProjectAttachment) {
+                $newFileName = $timeStamp . '-' . $ProjectAttachment->getClientOriginalName();
+                $siaPath = "{$Year}/{$ProjectID}";
+                $newFilePath = $siaPath . '/' . $newFileName;
+                Storage::disk('local')->put($newFilePath, File::get($ProjectAttachment));
+                $ProjectAttachmentModel = new ProjectAttachment;
+                $attachmentLocalPath =
+                    Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix() . $newFilePath;
+                $aData = ['ProjectID' => $ProjectID, 'AttachmentPath' => $attachmentLocalPath];
+                $ProjectAttachmentModel->fill($aData);
+
+                $success = $ProjectAttachmentModel->save();
+                if ($success) {
+                    $response['files'][] =
+                        [
+                            "name" => $newFileName,
+                            "size" => File::size($ProjectAttachment),
+                            "url" => $attachmentLocalPath,
+                            "thumbnailUrl" => $ProjectAttachmentModel->getAttribute('ProjectAttachmentID'),
+                            "deleteUrl" => "",
+                            "deleteType" => "DELETE"
+                        ];
+                }
+            }
         }
 
         return view('springintoaction::admin.main.response', $request, compact('response'));
@@ -109,10 +144,8 @@ class ProjectAttachmentController extends BaseController
      */
     public function streamAttachment($AttachmentPath)
     {
-
         try {
-            if ($model = ProjectAttachment::where("AttachmentPath", "REGEXP" ,$AttachmentPath."$")) {
-
+            if ($model = ProjectAttachment::where("AttachmentPath", "REGEXP", $AttachmentPath . "$")) {
                 $attachment = $model->first()->toArray();
                 if (!empty($attachment)) {
                     $pathPrefix = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
@@ -126,6 +159,7 @@ class ProjectAttachmentController extends BaseController
         } catch (\Exception $e) {
             report($e);
         }
+
         return 'Sorry, file not found';
     }
 
@@ -217,10 +251,29 @@ class ProjectAttachmentController extends BaseController
         try {
             if ($model = ProjectAttachment::where('ProjectID', $ProjectID)->get()) {
                 $results = $model->toArray();
+                foreach ($results as $key => $attachment) {
+                    $attachmentPath = $attachment['AttachmentPath'];
+                    if (\preg_match("/^.*\/storage\/app/", $attachmentPath)) {
+                        $attachment['AttachmentPath'] =
+                            preg_replace(
+                                "/^.*\/storage\/app/",
+                                "/admin/project_attachment/stream/storage/app",
+                                $attachment['AttachmentPath']
+                            );
+                        $results[$key] = $attachment;
+                    }
+                }
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' .
-                                                                                                    __LINE__,$e->getMessage()]);
+            \Illuminate\Support\Facades\Log::debug(
+                '',
+                [
+                    'File:' . __FILE__,
+                    'Method:' . __METHOD__,
+                    'Line:' . __LINE__,
+                    $e->getMessage()
+                ]
+            );
         }
 
         return $results;
