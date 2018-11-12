@@ -1665,6 +1665,7 @@
                 });
         },
         render: function () {
+            this.model.set('disabled', !App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager ? 'disabled' : '');
             this.$el.html(this.template(this.model.toJSON()));
             return this;
         },
@@ -1780,6 +1781,7 @@
                 'BudgetActualCompleteIsChecked': this.model.get('BudgetActualComplete') === 1 ? 'checked' : '',
                 'EstimationCommentsIsChecked': this.model.get('EstimationComments') === 1 ? 'checked' : ''
             };
+            this.model.set('disabled', !App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager ? 'disabled' : '');
             this.$el.html(this.template(_.extend(this.model.toJSON(), checkedBoxes)));
             window.ajaxWaiting('remove', '#site-well');
             return this;
@@ -2212,7 +2214,12 @@
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
             self.$el.html(this.template());
-
+            if (!App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager) {
+                self.$el.find('#btnAddSite').hide();
+            }
+            if (!App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager) {
+                self.$el.find('#btnDeleteSite').hide();
+            }
             App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
                 el: this.$('select#sites'),
                 collection: App.Collections.sitesDropDownCollection

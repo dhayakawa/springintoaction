@@ -140,6 +140,7 @@
                 });
         },
         render: function () {
+            this.model.set('disabled', !App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager ? 'disabled' : '');
             this.$el.html(this.template(this.model.toJSON()));
             return this;
         },
@@ -255,6 +256,7 @@
                 'BudgetActualCompleteIsChecked': this.model.get('BudgetActualComplete') === 1 ? 'checked' : '',
                 'EstimationCommentsIsChecked': this.model.get('EstimationComments') === 1 ? 'checked' : ''
             };
+            this.model.set('disabled', !App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager ? 'disabled' : '');
             this.$el.html(this.template(_.extend(this.model.toJSON(), checkedBoxes)));
             window.ajaxWaiting('remove', '#site-well');
             return this;

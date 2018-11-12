@@ -60,6 +60,7 @@
             name: "AttachmentPath",
             label: "Attachment URL",
             cell: "uri",
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "*"
@@ -161,7 +162,7 @@
             name: "ProjectID",
             label: "Project",
             cell: "integer",
-            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
+            editable: false,
             resizeable: true,
             orderable: true,
             width: "150"
@@ -893,7 +894,7 @@
     _.each(contactsBackgridColumnDefinitions, function (value, key) {
         value = _.clone(value);
         if (value.name !== 'ContactID') {
-            value.editable = true;
+            value.editable = App.Vars.Auth.bCanEditProjectTabGridFields;
         }
         App.Vars.ContactsBackgridColumnDefinitions.push(value);
     });
@@ -1336,6 +1337,8 @@
         }
         if (cellDefinition.name === 'Active' || cellDefinition.name === 'FirstName' || cellDefinition.name === 'LastName' || cellDefinition.name === 'MobilePhoneNumber' || cellDefinition.name === 'HomePhoneNumber' || cellDefinition.name === 'Email') {
             cellDefinition.editable = false;
+        } else {
+            cellDefinition.editable = App.Vars.Auth.bCanEditProjectTabGridFields;
         }
         App.Vars.volunteerLeadsBackgridColumnDefinitions.push(cellDefinition);
         if (cellDefinition.name === 'FirstName') {
@@ -1343,7 +1346,7 @@
                 name: "ProjectRoleID",
                 label: "Project Lead Role",
                 cell: VolunteerRoleCell,
-                editable: App.Vars.Auth.bCanEditVolunteersGridFields,
+                editable: App.Vars.Auth.bCanEditProjectTabGridFields,
                 resizeable: true,
                 orderable: true,
                 width: "250",
