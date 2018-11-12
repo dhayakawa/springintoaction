@@ -153,7 +153,7 @@
     _.each(contactsBackgridColumnDefinitions, function (value, key) {
         value = _.clone(value);
         if (value.name !== 'ContactID') {
-            value.editable = true;
+            value.editable = App.Vars.Auth.bCanEditProjectTabGridFields;
         }
         App.Vars.ContactsBackgridColumnDefinitions.push(value);
     });
