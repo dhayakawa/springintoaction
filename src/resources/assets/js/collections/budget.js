@@ -91,7 +91,7 @@
             name: "ProjectID",
             label: "Project",
             cell: "integer",
-            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
+            editable: false,
             resizeable: true,
             orderable: true,
             width: "150"
