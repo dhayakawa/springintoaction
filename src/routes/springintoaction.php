@@ -21,6 +21,10 @@
         Route::post('login', ['as' => 'login.post', 'uses' => 'Auth\LoginController@login']);
         Route::post('logout', ['as' => 'logout', 'uses' => 'Auth\LoginController@logout']);
 
+        Route::get('admin/login', ['as' => 'admin.login', 'uses' => 'Auth\LoginController@showLoginForm']);
+        Route::post('admin/login', ['as' => 'admin.login.post', 'uses' => 'Auth\LoginController@login']);
+        Route::post('admin/logout', ['as' => 'admin.logout', 'uses' => 'Auth\LoginController@logout']);
+
         // Registration Routes...
         Route::get('register', ['as' => 'register', 'uses' => 'Auth\RegisterController@showRegistrationForm']);
         Route::post('register', ['as' => 'register.post', 'uses' => 'Auth\RegisterController@register']);
@@ -138,6 +142,7 @@
         Route::get('project_attachment/all/{ProjectID}', ['as' => 'project_attachment.all', 'uses' => 'ProjectAttachmentController@getProjectAttachments']);
         Route::put('project_attachment/{ProjectAttachmentID}', ['as' => 'project_attachment.update', 'uses' => 'ProjectAttachmentController@update']);
         Route::post('project_attachment', ['as' => 'project_attachment.create', 'uses' => 'ProjectAttachmentController@store']);
+        Route::post('project_attachment/upload', ['as' => 'project_attachment.upload', 'uses' => 'ProjectAttachmentController@upload']);
         Route::post('project_attachment/batch/destroy', ['as' => 'project_attachment.batch.destroy', 'uses' => 'ProjectAttachmentController@batchDestroy']);
 
         Route::post('site_volunteer', ['as' => 'site_volunteer.batch.store', 'uses' => 'SiteVolunteerController@store']);

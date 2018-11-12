@@ -34,7 +34,12 @@
                     self.$('.tabButtonPane.' + tabName).show()
                 }
             });
-
+            if (!App.Vars.Auth.bCanAddProjectTabModel) {
+                this.$el.find('.btnTabAdd').hide();
+            }
+            if (!App.Vars.Auth.bCanDeleteProjectTabModel) {
+                this.$el.find('.btnTabDeleteChecked').hide();
+            }
             return self;
         },
         toggleProjectTabToolbars: function (e) {

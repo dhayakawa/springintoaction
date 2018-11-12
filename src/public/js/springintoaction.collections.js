@@ -125,6 +125,7 @@
             name: "BudgetSource",
             label: "BudgetSource",
             cell: App.Vars.budgetSourceCell,
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "175"
@@ -133,6 +134,7 @@
             name: "BudgetAmount",
             label: "BudgetAmount",
             cell: "number",
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "30"
@@ -141,6 +143,7 @@
             name: "Status",
             label: "Status",
             cell: BudgetStatusCell,
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "50"
@@ -149,6 +152,7 @@
             name: "Comments",
             label: "Comments",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -157,6 +161,7 @@
             name: "ProjectID",
             label: "Project",
             cell: "integer",
+            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
             width: "150"
@@ -271,7 +276,7 @@
              @return {Array.<*>}
              */
             fromRaw: function (rawValue, model) {
-                if (_.isString(rawValue) && rawValue.match(/,/)){
+                if (_.isString(rawValue) && rawValue.match(/,/)) {
                     rawValue = rawValue.split(',');
                 }
                 return _.isArray(rawValue) ? rawValue : rawValue != null ? [rawValue] : [];
@@ -293,6 +298,8 @@
         }]
 
     });
+
+    let displayOrderCnt = 1;
     // Override until the textarea cell works
     //TextareaCell = 'string';
     // Resizeable columns must have a pixel width defined
@@ -308,7 +315,7 @@
             resizeable: false,
             orderable: false,
             width: "30",
-            displayOrder: 1
+            displayOrder: displayOrderCnt++
         },
         {
             name: "ProjectID",
@@ -324,351 +331,394 @@
             resizeable: false,
             orderable: false,
             width: "30",
-            displayOrder: 2
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "HasAttachments",
+            label: "   ",
+            formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                fromRaw: function (rawValue) {
+                    return rawValue ? '<i class="fa fa-paperclip" aria-hidden="true"></i>' : '';
+                    //You can use rawValue to custom your html, you can change this value using the name parameter.
+                }
+            }),
+            cell: "html",
+            editable: false,
+            resizeable: false,
+            orderable: false,
+            width: "30",
+            displayOrder: displayOrderCnt++
         },
         {
             name: "Active",
             label: "Active",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: false,
             width: "50",
-            displayOrder: 3
+            displayOrder: displayOrderCnt++
         },
         {
             name: "SequenceNumber",
             label: "Project ID",
             cell: "integer",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 4
+            displayOrder: displayOrderCnt++
         },
         {
             name: "OriginalRequest",
             label: "Original Request",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
-            displayOrder: 5
+            displayOrder: displayOrderCnt++
         },
         {
             name: "ProjectDescription",
             label: "Project Description",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: false,
             width: "250",
-            displayOrder: 6
+            displayOrder: displayOrderCnt++
         },
         {
             name: "Comments",
             label: "Comments",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
-            displayOrder: 7
+            displayOrder: displayOrderCnt++
         },
         {
             name: "Status",
             label: "Status",
             cell: StatusCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "66",
-            displayOrder: 8
+            displayOrder: displayOrderCnt++
         },
         {
             name: "StatusReason",
             label: "Status Reason",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 9
+            displayOrder: displayOrderCnt++
         },
         {
             name: "BudgetSources",
             label: "Budget Sources",
             cell: App.Vars.budgetSourceCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "125",
-            displayOrder: 10
+            displayOrder: displayOrderCnt++
         },
         {
             name: "ChildFriendly",
             label: "Child Friendly",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 11
+            displayOrder: displayOrderCnt++
         },
         {
             name: "PrimarySkillNeeded",
             label: "Primary Skill Needed",
             cell: SkillsNeededCell.extend({multiple: true}),
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
-            displayOrder: 12
+            displayOrder: displayOrderCnt++
         },
         {
             name: "VolunteersNeededEst",
             label: "Volunteers Needed Est",
             cell: "integer",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "166",
-            displayOrder: 13
+            displayOrder: displayOrderCnt++
         },
         {
             name: "VolunteersAssigned",
             label: "Volunteers Assigned",
             cell: "integer",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "145",
-            displayOrder: 14
+            displayOrder: displayOrderCnt++
         },
         {
             name: "MaterialsNeeded",
             label: "Materials Needed",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 15
+            displayOrder: displayOrderCnt++
         },
         {
             name: "EstimatedCost",
             label: "Estimated Cost",
             cell: "number",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "120",
-            displayOrder: 16
+            displayOrder: displayOrderCnt++
         },
         {
             name: "ActualCost",
             label: "Actual Cost",
             cell: "number",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "95",
-            displayOrder: 17
+            displayOrder: displayOrderCnt++
         },
         {
             name: "BudgetAvailableForPC",
             label: "Budget Available For PC",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "178",
-            displayOrder: 18
+            displayOrder: displayOrderCnt++
         },
         {
             name: "VolunteersLastYear",
             label: "Volunteers Last Year",
             cell: "integer",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "153",
-            displayOrder: 19
+            displayOrder: displayOrderCnt++
         },
         {
             name: "NeedsToBeStartedEarly",
             label: "Needs To Be Started Early",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 20
+            displayOrder: displayOrderCnt++
         },
         {
             name: "PCSeeBeforeSIA",
             label: "PCSeeBeforeSIA",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 21
+            displayOrder: displayOrderCnt++
         },
         {
             name: "SpecialEquipmentNeeded",
             label: "Special Equipment Needed",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 22
+            displayOrder: displayOrderCnt++
         },
         {
             name: "PermitsOrApprovalsNeeded",
             label: "Permits Or Approvals Needed",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 23
+            displayOrder: displayOrderCnt++
         },
         {
             name: "PrepWorkRequiredBeforeSIA",
             label: "Prep Work Required Before SIA",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 24
+            displayOrder: displayOrderCnt++
         },
         {
             name: "SetupDayInstructions",
             label: "Setup Day Instructions",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 25
+            displayOrder: displayOrderCnt++
         },
         {
             name: "SIADayInstructions",
             label: "SIA Day Instructions",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 26
+            displayOrder: displayOrderCnt++
         },
         {
             name: "Attachments",
             label: "Attachments",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "100",
-            displayOrder: 27
+            displayOrder: displayOrderCnt++
         },
         {
             name: "Area",
             label: "Area",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 28
+            displayOrder: displayOrderCnt++
         },
         {
             name: "PaintOrBarkEstimate",
             label: "Paint Or Bark Estimate",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 29
+            displayOrder: displayOrderCnt++
         },
         {
             name: "PaintAlreadyOnHand",
             label: "Paint Already On Hand",
             cell: "string",
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 30
+            displayOrder: displayOrderCnt++
         },
         {
             name: "PaintOrdered",
             label: "Paint Ordered",
             cell: "string",
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 31
+            displayOrder: displayOrderCnt++
         },
         {
             name: "CostEstimateDone",
             label: "Cost Estimate Done",
             cell: App.Vars.yesNoCell,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 32
+            displayOrder: displayOrderCnt++
         },
         {
             name: "MaterialListDone",
             label: "Material List Done",
             cell: App.Vars.yesNoCell,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 33
+            displayOrder: displayOrderCnt++
         },
         {
             name: "BudgetAllocationDone",
             label: "Budget Allocation Done",
             cell: App.Vars.yesNoCell,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 34
+            displayOrder: displayOrderCnt++
         },
         {
             name: "VolunteerAllocationDone",
             label: "Volunteer Allocation Done",
             cell: App.Vars.yesNoCell,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 35
+            displayOrder: displayOrderCnt++
         },
         {
             name: "NeedSIATShirtsForPC",
             label: "Need SIA TShirts For PC",
             cell: App.Vars.yesNoCell,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 36
+            displayOrder: displayOrderCnt++
         },
         {
             name: "ProjectSend",
             label: "Project Send",
             cell: App.Vars.sendCell,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 37
+            displayOrder: displayOrderCnt++
         },
         {
             name: "FinalCompletionStatus",
             label: "Project Completed",
             cell: App.Vars.yesNoCell,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "50",
-            displayOrder: 38
+            displayOrder: displayOrderCnt++
         },
         {
             name: "FinalCompletionAssessment",
             label: "Final Completion Assessment",
             cell: App.Vars.TextareaCell,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: 39
+            displayOrder: displayOrderCnt++
         },
         {
             name: "updated_at",
             label: "updated_at",
             cell: "string",
             editable: false,
-            resizeable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
             orderable: true,
             width: "50",
             renderable: true,
-            displayOrder: 40
+            displayOrder: displayOrderCnt++
         }
 
     ];
@@ -761,6 +811,7 @@
             name: "Active",
             label: "Active",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: false,
             width: "50"
@@ -769,6 +820,7 @@
             name: "SiteID",
             label: "Site",
             cell: SitesCell,
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -777,6 +829,7 @@
             name: "FirstName",
             label: "FirstName",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -785,6 +838,7 @@
             name: "LastName",
             label: "LastName",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -793,6 +847,7 @@
             name: "Title",
             label: "Title",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -801,6 +856,7 @@
             name: "Email",
             label: "Email",
             cell: "email",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -809,6 +865,7 @@
             name: "Phone",
             label: "Phone",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -817,6 +874,7 @@
             name: "Comments",
             label: "Comments",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -825,6 +883,7 @@
             name: "ContactType",
             label: "ContactType",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -902,9 +961,7 @@
         }],
         formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
             toRaw: function (formattedValue, model) {
-                return formattedValue === null ? [] : _.map(formattedValue, function (v) {
-                    return parseInt(v);
-                })
+                return formattedValue === null ? [] : parseInt(formattedValue);
             }
         })
 
@@ -985,24 +1042,17 @@
             name: "Active",
             label: "Active",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: false,
             width: "50",
             filterType: "integer"
         },
         {
-            name: "Status",
-            label: "Status",
-            cell: App.Vars.VolunteerStatusCell,
-            resizeable: true,
-            orderable: true,
-            width: "250",
-            filterType: "string"
-        },
-        {
             name: "LastName",
             label: "LastName",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
@@ -1012,15 +1062,27 @@
             name: "FirstName",
             label: "FirstName",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
             filterType: "string"
         },
         {
+            name: "Status",
+            label: "Status",
+            cell: App.Vars.VolunteerStatusCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
+            resizeable: true,
+            orderable: true,
+            width: "250",
+            filterType: "string"
+        },
+        {
             name: "MobilePhoneNumber",
             label: "MobilePhoneNumber",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
@@ -1030,6 +1092,7 @@
             name: "HomePhoneNumber",
             label: "HomePhoneNumber",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "150",
@@ -1039,6 +1102,7 @@
             name: "Email",
             label: "Email",
             cell: "email",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "175",
@@ -1048,6 +1112,7 @@
             name: "PrimarySkill",
             label: "PrimarySkill",
             cell: VolunteerPrimarySkillCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1057,6 +1122,7 @@
             name: "Comments",
             label: "Comments",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1065,6 +1131,7 @@
             name: "ContactPhone",
             label: "ContactPhone",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1074,6 +1141,7 @@
             name: "AgeRange",
             label: "AgeRange",
             cell: AgeRangeCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1083,6 +1151,7 @@
             name: "LG",
             label: "LG",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1092,6 +1161,7 @@
             name: "Family",
             label: "Family",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1101,6 +1171,7 @@
             name: "CFE",
             label: "CFE",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1109,6 +1180,7 @@
             name: "CFP",
             label: "CFP",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1117,6 +1189,7 @@
             name: "Painting",
             label: "Painting",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1126,6 +1199,7 @@
             name: "Landscaping",
             label: "Landscaping",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1135,6 +1209,7 @@
             name: "Construction",
             label: "Construction",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1144,6 +1219,7 @@
             name: "Electrical",
             label: "Electrical",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1153,6 +1229,7 @@
             name: "CabinetryFinishWork",
             label: "CabinetryFinishWork",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1162,6 +1239,7 @@
             name: "Plumbing",
             label: "Plumbing",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1171,6 +1249,7 @@
             name: "NotesOnYourSkillAssessment",
             label: "NotesOnYourSkillAssessment",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1179,6 +1258,7 @@
             name: "PhysicalRestrictions",
             label: "PhysicalRestrictions",
             cell: SkillsCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1187,6 +1267,7 @@
             name: "SchoolPreference",
             label: "SchoolPreference",
             cell: SchoolCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1196,6 +1277,7 @@
             name: "Equipment",
             label: "Equipment",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1204,6 +1286,7 @@
             name: "TeamLeaderWilling",
             label: "TeamLeaderWilling",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1212,6 +1295,7 @@
             name: "Church",
             label: "Church",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250",
@@ -1221,6 +1305,7 @@
             name: "AssignmentInformationSendStatus",
             label: "AssignmentInformationSendStatus",
             cell: App.Vars.sendCell,
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1229,6 +1314,7 @@
             name: "PreferredSiteID",
             label: "PreferredSiteID",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditVolunteersGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -1238,11 +1324,13 @@
     _.each(App.Vars.volunteersBackgridColumnDefinitions, function (value, key) {
         value.displayOrder = displayOrderCnt++;
     });
+    displayOrderCnt = 1;
     App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
-    let sharedCells = ['', 'VolunteerID', 'Active', 'Status', 'LastName', 'FirstName', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email', 'Comments'];
+    let sharedCells = ['', 'VolunteerID', 'Active', 'LastName', 'FirstName', 'Status', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email', 'Comments'];
     _.each(sharedCells, function (value, key) {
         let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
         cellDefinition = _.clone(cellDefinition);
+        cellDefinition.displayOrder = displayOrderCnt++;
         if (cellDefinition.name === 'Status') {
             cellDefinition.name = 'ProjectVolunteerRoleStatus';
         }
@@ -1250,16 +1338,17 @@
             cellDefinition.editable = false;
         }
         App.Vars.volunteerLeadsBackgridColumnDefinitions.push(cellDefinition);
-        if (cellDefinition.name === 'Active') {
+        if (cellDefinition.name === 'FirstName') {
             App.Vars.volunteerLeadsBackgridColumnDefinitions.push({
                 name: "ProjectRoleID",
                 label: "Project Lead Role",
                 cell: VolunteerRoleCell,
+                editable: App.Vars.Auth.bCanEditVolunteersGridFields,
                 resizeable: true,
                 orderable: true,
                 width: "250",
                 filterType: "string",
-                displayOrder: value.displayOrder++
+                displayOrder: displayOrderCnt++
             });
         }
     });

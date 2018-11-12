@@ -61,7 +61,7 @@ window.App = {
         appInitialData: {},
         selectOptions:{},
         devMode: false,
-
+        auth:[]
     },
     CellEditors: {}
 };

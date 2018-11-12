@@ -7,8 +7,10 @@ use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseControl
 use Dhayakawa\SpringIntoAction\Models\AnnualBudget;
 use Dompdf\Exception;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Dhayakawa\SpringIntoAction\Models\Site;
 use Dhayakawa\SpringIntoAction\Models\SiteStatus;
@@ -29,6 +31,8 @@ use \Dhayakawa\SpringIntoAction\Models\VolunteerAgeRangeOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerPrimarySkillOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerSkillLevelOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
+use \Laratrust\LaratrustPermission;
+use \Laratrust\LaratrustRole;
 
 class SpringIntoActionMainAppController extends BaseController
 {
@@ -77,7 +81,11 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
-            $projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            $projectModel = Project::select(
+                'projects.*', DB::raw('(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`')
+                )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy('projects.SequenceNumber', 'asc');
+            $projects = $projectModel->get()->toArray();
+
             $project = current($projects);
             $projects_dropdown = Project::select('projects.ProjectID', 'projects.SequenceNumber')->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
 
@@ -87,7 +95,12 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
-            $all_projects = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.Year', $Year)->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            $all_projects = Project::select(
+                'projects.*',
+                DB::raw(
+                    '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
+                )
+            )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.Year', $Year)->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
         } catch (\Exception $e) {
             $all_projects = [];
 
@@ -299,7 +312,30 @@ class SpringIntoActionMainAppController extends BaseController
         $bIsLocalEnv = App::environment('local');
         $random = rand(0, time());
         $select_options = ['site_roles' => $site_roles, 'project_roles' => $project_roles, 'projects_dropdown' => $projects_dropdown, 'BudgetSourceOptions' => $aBudgetSourceOptions, 'BudgetStatusOptions' => $aBudgetStatusOptions, 'ProjectSkillNeededOptions' => $aProjectSkillNeededOptions, 'ProjectStatusOptions' => $aProjectStatusOptions, 'SendStatusOptions' => $aSendStatusOptions, 'VolunteerAgeRangeOptions' => $aVolunteerAgeRangeOptions, 'VolunteerPrimarySkillOptions' => $aVolunteerPrimarySkillOptions, 'VolunteerSkillLevelOptions' => $aVolunteerSkillLevelOptions, 'VolunteerStatusOptions' => $aVolunteerStatusOptions];
-        $appInitialData = compact(['bIsLocalEnv','random', 'Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites', 'project_leads', 'project_budgets', 'project_contacts', 'project_volunteers', 'project_attachments', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets', 'select_options', 'site_volunteers', 'site_volunteer']);
+        $aPermissionNames = LaratrustPermission::select('name')->get()->toArray();
+        $auth = [];
+        foreach($aPermissionNames as $permission){
+
+            $key = 'bCan' . str_replace(' ' ,'',ucwords(str_replace('_',' ', $permission['name'])));
+
+            $auth[$key] = Auth::guard()->user()->ability(['admin'], [$permission['name']]);
+        }
+
+        $aRoleNames = LaratrustRole::select('name')->get()->toArray();
+        foreach ($aRoleNames as $role) {
+            $key = 'bIs' . str_replace(' ', '', ucwords(str_replace('_', ' ', $role['name'])));
+
+            $auth[$key] = Auth::guard()->user()->hasRole($role['name']);
+        }
+        // $auth = [
+        //     'bIsAdmin'=> Auth::guard()->user()->hasRole('admin'),
+        //     'bIsProjectManager'=> Auth::guard()->user()->hasRole('project_manager'),
+        //     'bCanViewBudgetManagement'=> Auth::guard()->user()->ability('admin','budget_management'),
+        //     'bCanViewProjectManagement'=> Auth::guard()->user()->ability(['admin','project_manager'],['project_management']),
+        //     'bCanViewPeopleManagement'=> Auth::guard()->user()->ability('admin','people_management'),
+        //     'bCanViewSiteManagement'=> Auth::guard()->user()->ability(['admin', 'project_manager'],'site_management'),
+        // ];
+        $appInitialData = compact(['bIsLocalEnv', 'random', 'auth', 'Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites', 'project_leads', 'project_budgets', 'project_contacts', 'project_volunteers', 'project_attachments', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets', 'select_options', 'site_volunteers', 'site_volunteer']);
         $this->makeJsFiles(compact('appInitialData'));
 
         return view('springintoaction::admin.main.app', $request, compact('appInitialData'));

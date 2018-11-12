@@ -18,6 +18,12 @@
             this.$el.html(this.template());
             // initialize all file upload inputs on the page at load time
             this.initializeFileUploadObj(this.$el.find('input[type="file"]'));
+            if (!App.Vars.Auth.bCanAddProject){
+                this.$el.find('#btnAddProject').hide();
+            }
+            if (!App.Vars.Auth.bCanDeleteProject) {
+                this.$el.find('#btnDeleteCheckedProjects').hide();
+            }
             return this;
         },
         initializeFileUploadObj: function (el) {

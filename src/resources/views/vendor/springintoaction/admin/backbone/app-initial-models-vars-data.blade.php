@@ -6,6 +6,7 @@
      */
 
     App.Vars.appInitialData = @json($appInitialData);
+    App.Vars.Auth = App.Vars.appInitialData['auth'];
     App.Vars.devMode = App.Vars.appInitialData['bIsLocalEnv'];
     App.Vars.selectOptions = App.Vars.appInitialData['select_options'];
 

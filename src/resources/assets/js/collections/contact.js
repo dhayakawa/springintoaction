@@ -71,6 +71,7 @@
             name: "Active",
             label: "Active",
             cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: false,
             width: "50"
@@ -79,6 +80,7 @@
             name: "SiteID",
             label: "Site",
             cell: SitesCell,
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -87,6 +89,7 @@
             name: "FirstName",
             label: "FirstName",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -95,6 +98,7 @@
             name: "LastName",
             label: "LastName",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -103,6 +107,7 @@
             name: "Title",
             label: "Title",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -111,6 +116,7 @@
             name: "Email",
             label: "Email",
             cell: "email",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -119,6 +125,7 @@
             name: "Phone",
             label: "Phone",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -127,6 +134,7 @@
             name: "Comments",
             label: "Comments",
             cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"
@@ -135,6 +143,7 @@
             name: "ContactType",
             label: "ContactType",
             cell: "string",
+            editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
             resizeable: true,
             orderable: true,
             width: "250"

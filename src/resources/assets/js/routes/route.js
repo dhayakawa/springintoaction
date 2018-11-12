@@ -56,8 +56,9 @@
             self.routeRequested = 'dashboard';
             //growl('SIA index route has been called');
             if (self.dashboardView === null) {
-                let aDashboardPanelViews = [
-                    new App.Views.DashboardPanel({
+                let aDashboardPanelViews = [];
+                if (App.Vars.Auth.bCanSiteManagement) {
+                    aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
                                 'panelBgColor': 'aqua',
@@ -79,8 +80,10 @@
                                     ])
                                 }).render().$el.html()
                             })
-                    }).render().$el.html(),
-                    new App.Views.DashboardPanel({
+                    }).render().$el.html());
+                }
+                if (App.Vars.Auth.bCanPeopleManagement) {
+                    aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
                                 'panelBgColor': 'green',
@@ -102,8 +105,10 @@
                                     ])
                                 }).render().$el.html()
                             })
-                    }).render().$el.html(),
-                    new App.Views.DashboardPanel({
+                    }).render().$el.html());
+                }
+                if (App.Vars.Auth.bCanProjectManagement) {
+                    aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
                                 'panelBgColor': 'orange',
@@ -130,8 +135,10 @@
                                     ])
                                 }).render().$el.html()
                             })
-                    }).render().$el.html(),
-                    new App.Views.DashboardPanel({
+                    }).render().$el.html());
+                }
+                if (App.Vars.Auth.bCanBudgetManagement) {
+                    aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
                                 'panelBgColor': 'purple',
@@ -148,9 +155,10 @@
                                     ])
                                 }).render().$el.html()
                             })
-                    }).render().$el.html()
-                ];
-                App.Views.dashboardView  = self.dashboardView = new self.dashboardViewClass({
+                    }).render().$el.html());
+                }
+
+                App.Views.dashboardView = self.dashboardView = new self.dashboardViewClass({
                     dashboardPanelViews: aDashboardPanelViews
                 });
             }
@@ -160,7 +168,7 @@
         },
         loadView: function (route, action, type) {
             let self = this;
-            type = typeof type !== 'undefined' ? type : '';
+            type     = typeof type !== 'undefined' ? type : '';
             self.preRouteViewRender();
             if (App.Vars.devMode) {
                 growl('SIA loadView route has been called:' + route + '_' + action);
