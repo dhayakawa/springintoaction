@@ -46,7 +46,7 @@ window.App = {
         contactsManagementView: {},
         volunteersManagementView: {},
         budgetManagementView: {},
-        reportsManagementView: {}
+        reportsManagementView: []
     },
     Templates: {},
     Router: {},

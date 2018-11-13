@@ -29,8 +29,23 @@ class ReportsController extends BaseController
         $spName = 'sp_DBR_YrSiteProject';
         $reportId = 7;
         $seed = 'WZyLIZPffEWoho9cBzJI5qkfo';
-        $hash = sha1($spName . 'm1' . $seed);
-        $response = ['ReportName' => 'Project Report by Year, Site and Project', 'url' => "https://springintoaction.woodlandschurch.org/mydbr/report.php?r={$reportId}&u1={$Year}&u2={$SiteID}&u3={$ProjectID}&m=1&h={$hash}"];
+        $hash = '48997fcf2aa01ef895950e77c2f6d3a9c6cd50f2';//sha1($spName . 'm1' . $seed);
+        $response = ['ReportName' => 'Project Report by Year, Site and Project', 'ReportUrl' => "https://springintoaction.woodlandschurch.org/mydbr/report.php?r={$reportId}&u1={$Year}&u2={$SiteID}&u3={$ProjectID}&m=1&h={$hash}"];
+
+        return view('springintoaction::admin.main.response', $request, compact('response'));
+    }
+
+    public function getYearSiteReportUrl(Request $request, $Year, $SiteID)
+    {
+        $spName = 'sp_DBR_YrSite';
+        $reportId = 10;
+        $seed = 'WZyLIZPffEWoho9cBzJI5qkfo';
+        $hash = 'eac641aa767ec57a5d4d6cf69f16c1cf7e770949';//sha1($spName . 'm1' . $seed);
+        $response =
+            [
+                'ReportName' => 'Project Report by Year, Site',
+                'ReportUrl' => "https://springintoaction.woodlandschurch.org/mydbr/report.php?r={$reportId}&u1={$Year}&u2={$SiteID}&m=1&h={$hash}"
+            ];
 
         return view('springintoaction::admin.main.response', $request, compact('response'));
     }

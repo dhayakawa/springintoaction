@@ -155,4 +155,5 @@
         Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
 
         Route::get('report/project/{Year}/{SiteID}/{ProjectID}', ['as' => 'report.project', 'uses' => 'ReportsController@getYearSiteProjectReportUrl']);
+        Route::get('report/site/{Year}/{SiteID}', ['as' => 'report.site', 'uses' => 'ReportsController@getYearSiteReportUrl']);
     });
