@@ -15,7 +15,7 @@
         contactsManagementView: null,
         volunteersManagementView: null,
         annualBudgetsManagementView: null,
-        reportsManagementView: null,
+        reportsManagementView: [],
         bRouteViewRendered: false,
         routeRequested: '',
         initialize: function (options) {
@@ -251,20 +251,24 @@
 
                         break;
                     case 'reports_management':
-                        if (self.reportsManagementView === null) {
-                            App.Views.reportManagementView = self.reportsManagementView = new self.reportsManagementViewClass({
+                        if (typeof self.reportsManagementView[type] === 'undefined' || self.reportsManagementView[type] === null) {
+                            App.Views.reportsManagementView.push(type);
+                            App.Views.reportsManagementView[type] = new self.reportsManagementViewClass({
                                 className: 'box box-primary reports-management-view',
                                 viewClassName: 'reports-management-view',
                                 model: App.Models.reportModel,
                                 mainAppEl: self.mainApp.el,
                                 mainApp: self.mainApp,
-                                modelNameLabel: 'Report',
+                                modelNameLabel: type.charAt(0).toUpperCase() + type.substr(1) + ' Report',
                                 collection: App.Collections.reportsManagementCollection,
                                 columnCollectionDefinitions: [],
-                                hideCellCnt: 0
+                                hideCellCnt: 0,
+                                reportType: type
                             });
+                            self.reportsManagementView.push(type);
+                            self.reportsManagementView[type]= App.Views.reportsManagementView[type];
                         }
-                        routeView = self.reportsManagementView;
+                        routeView = self.reportsManagementView[type];
 
                         break;
                     default:

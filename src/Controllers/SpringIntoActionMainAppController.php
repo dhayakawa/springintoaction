@@ -327,14 +327,7 @@ class SpringIntoActionMainAppController extends BaseController
 
             $auth[$key] = Auth::guard()->user()->hasRole($role['name']);
         }
-        // $auth = [
-        //     'bIsAdmin'=> Auth::guard()->user()->hasRole('admin'),
-        //     'bIsProjectManager'=> Auth::guard()->user()->hasRole('project_manager'),
-        //     'bCanViewBudgetManagement'=> Auth::guard()->user()->ability('admin','budget_management'),
-        //     'bCanViewProjectManagement'=> Auth::guard()->user()->ability(['admin','project_manager'],['project_management']),
-        //     'bCanViewPeopleManagement'=> Auth::guard()->user()->ability('admin','people_management'),
-        //     'bCanViewSiteManagement'=> Auth::guard()->user()->ability(['admin', 'project_manager'],'site_management'),
-        // ];
+
         $appInitialData = compact(['bIsLocalEnv', 'random', 'auth', 'Year', 'site', 'site_years', 'siteStatus', 'contacts', 'project', 'projects', 'all_projects', 'sites', 'project_leads', 'project_budgets', 'project_contacts', 'project_volunteers', 'project_attachments', 'volunteers', 'all_contacts', 'annual_budget', 'annual_budgets', 'select_options', 'site_volunteers', 'site_volunteer']);
         $this->makeJsFiles(compact('appInitialData'));
 

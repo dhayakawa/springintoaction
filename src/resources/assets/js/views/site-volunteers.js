@@ -16,6 +16,7 @@
         },
         render: function () {
             this.$el.html(this.template());
+            console.log('SiteVolunteerGridManagerContainerToolbar',this.el,this.$el)
             // initialize all file upload inputs on the page at load time
             //this.initializeFileUploadObj(this.$el.find('input[type="file"]'));
             return this;
@@ -97,7 +98,7 @@
             this.modelNameLabel = this.options.modelNameLabel;
             this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
             this.routeName = 'site_volunteer';
-
+            console.log('SiteVolunteer',this.el,this.$el)
             _log('App.Views.SiteVolunteer.initialize', options);
         },
         events: {
@@ -108,6 +109,7 @@
         },
         render: function (e) {
             let self = this;
+
             this.hideCellCnt = this.options.hideCellCnt;
             this.$tabBtnPanePaginationContainer = $(this.gridManagerContainerToolbarSelector).find('.pagination-controls');
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
@@ -142,7 +144,7 @@
             let $gridContainer = this.$el.html(this.backgrid.render().el);
 
             this.gridManagerContainerToolbar = new App.Views.SiteVolunteerGridManagerContainerToolbar({
-                el: '.site-volunteers-grid-manager-container'
+                el: this.parentView.$('.site-volunteers-grid-manager-container')
             });
 
             this.$siteVolunteersGridManagerContainer.append(this.gridManagerContainerToolbar.render().el);

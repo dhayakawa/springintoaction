@@ -96,5 +96,21 @@ return [
     'view_volunteers_reports' => [
         'display_name' => 'View Volunteers Reports',
         'description' => 'User can View Volunteers Reports'
+    ],
+    'add_site' => [
+        'display_name' => 'Add Site',
+        'description' => 'User can add site'
+    ],
+    'delete_site' => [
+        'display_name' => 'Delete Site',
+        'description' => 'User can delete site'
+    ],
+    'update_site_status' => [
+        'display_name' => 'Update Site Status',
+        'description' => 'User can update site status'
+    ],
+    'edit_site_grid_fields' => [
+        'display_name' => 'Edit Site Grid Fields',
+        'description' => 'User can edit site grid fields'
     ]
 ];
