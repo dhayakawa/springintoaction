@@ -37,12 +37,17 @@
             this.setSelectedId($(this.el).val());
         },
         setSelectedId: function (SiteID) {
+            let self = this;
             _log('App.Views.Sites.setSelectedId.event', 'new site selected', SiteID);
             // fetch new site model
             App.Models.siteModel.url = '/admin/site/' + SiteID;
             App.Models.siteModel.fetch();
             App.Collections.siteYearsDropDownCollection.url = '/admin/sitestatus/all/site/years/' + SiteID;
             App.Collections.siteYearsDropDownCollection.fetch({reset: true});
+            if (typeof self.parentView !== 'undefined' ) {
+                self.trigger('site-id-change', {SiteID: SiteID});
+                console.log('trigger site-id-change', self.parentView.$el.hasClass('reports-management-view'))
+            }
         }
     });
     App.Views.SiteYearsOption = Backbone.View.extend({
@@ -104,6 +109,7 @@
 
 
                 if (!self.parentView.$el.hasClass('site-management-view')) {
+                    console.log('triggered site-status-id-change')
                     self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
                 }
             }

@@ -473,7 +473,7 @@
         url: '/admin/report',
         defaults: {
             'ReportName' : '',
-            'url':''
+            'ReportUrl':''
         },
     });
     /**

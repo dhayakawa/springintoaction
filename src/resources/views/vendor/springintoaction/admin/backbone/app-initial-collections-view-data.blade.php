@@ -37,6 +37,6 @@
     App.Views.contactsManagementView = {};
     App.Views.volunteersManagementView = {};
     App.Views.budgetManagementView = {};
-    App.Views.reportsManagementView = {};
+    App.Views.reportsManagementView = [];
     App.Views.projectsDropDownView = {};
 })(window.App);

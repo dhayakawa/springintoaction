@@ -11,14 +11,25 @@
     </div>
 </div>
 <div class="box-body">
-    <div id="site-well" class="well well-sm collapse in">
-        <div class="row">
-            <div class="site-view col-xs-6"></div>
-            <div class="site-status-view col-xs-6"></div>
+    <div class="row">
+        <div class="col-xs-6 col-lg-4">
+            <div id="site-well" class="well well-sm collapse in">
+                <div class="row">
+                    <div class="site-view col-xs-12"></div>
+                </div>
+                <div class="site-create-toolbar" style="display:none">
+                    <button id="btnSaveNewSite" type="button" class="btn btn-success">Save New Site</button>
+                    <button id="btnCancelNewSite" type="button" class="btn btn-default">Cancel</button>
+                </div>
+            </div>
         </div>
-        <div class="site-create-toolbar" style="display:none">
-            <button id="btnSaveNewSite" type="button" class="btn btn-success">Save New Site</button>
-            <button id="btnCancelNewSite" type="button" class="btn btn-default">Cancel</button>
+        <div class="col-xs-6 col-lg-8">
+            <div id="site-well" class="well well-sm collapse in">
+                <h4 class="well-title">Site Statuses</h4>
+                <div class="row">
+                    <div class="site-status-view col-xs-12"></div>
+                </div>
+            </div>
         </div>
     </div>
     <div id="site-well" class="well well-sm collapse in">

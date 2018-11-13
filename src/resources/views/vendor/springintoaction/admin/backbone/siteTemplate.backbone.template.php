@@ -1,4 +1,5 @@
 <form id="site">
+    <% if(typeof disabled === 'undefined') { disabled = '';} %>
     <input type="hidden" name="SiteID" id="inputSiteID" value="<%= SiteID %>"/>
     <div class="form-group">
         <label for="inputSiteName">Site Name</label>
