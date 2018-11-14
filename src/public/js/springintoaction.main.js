@@ -119,19 +119,19 @@
                                     collection: new App.Collections.DashboardPanelLinksListItem([
                                         new App.Models.DashboardPanelLinksListItem({
                                             'linkText': 'Sites',
-                                            'badgeCount': '12',
+                                            'badgeCount': '1',
                                             'route': 'view/reports/management/sites'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
                                             'linkText': 'Projects',
-                                            'badgeCount': '12',
+                                            'badgeCount': '1',
                                             'route': 'view/reports/management/projects'
                                         }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteers',
-                                            'badgeCount': '12',
-                                            'route': 'view/reports/management/volunteers'
-                                        })
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Volunteers',
+                                        //     'badgeCount': '0',
+                                        //     'route': 'view/reports/management/volunteers'
+                                        // })
                                     ])
                                 }).render().$el.html()
                             })

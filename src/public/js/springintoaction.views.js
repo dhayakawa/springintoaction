@@ -3381,6 +3381,7 @@
                             //initialize your views here
                             _log(self.viewName + '.create.event', self.modelNameLabelLowerCase + ' collection fetch promise done');
                             window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            App.Collections.projectVolunteersCollection.set(self.collection.fullCollection.models)
                         });
                     },
                     error: function (model, response, options) {
@@ -3643,6 +3644,7 @@
                             //initialize your views here
                             _log(self.viewName + '.create.event', self.modelNameLabelLowerCase + ' collection fetch promise done');
                             window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            App.Collections.contactsManagementCollection.set(self.collection.fullCollection.models);
                         });
                     },
                     error: function (model, response, options) {
@@ -3837,16 +3839,19 @@
             let self = this;
             switch (self.reportType) {
                 case 'sites':
-                    App.Models.reportModel.url = '/admin/report/site/' + Year + '/' + SiteID;
+                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID;
                     break;
                 case 'projects':
-                    App.Models.reportModel.url = '/admin/report/project/' + Year + '/' + SiteID + '/' + ProjectID;
+                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
+                    break;
+                    case 'early_start_projects':
+                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year;
                     break;
                 case 'volunteers':
-                    App.Models.reportModel.url = '/admin/report/volunteer/' + Year + '/' + SiteID + '/' + ProjectID;
+                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
                     break;
                 default:
-                    App.Models.reportModel.url = '/admin/report/site/' + Year + '/' + SiteID;
+                    App.Models.reportModel.url = '/admin/report/sites/' + Year + '/' + SiteID ;
             }
             // fetch new report
 

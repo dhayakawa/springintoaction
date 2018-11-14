@@ -11,7 +11,7 @@
     $adminDefault = array_merge($default, ['prefix' => config('springintoaction.app.backend_prefix', 'admin/'),
     ]);
 
-    Route::group(array_merge($default, ['middleware' => ['web']]), function () {
+    Route::group(array_merge($default, ['middleware' => ['web', 'ajax.request']]), function () {
         Route::patch('/', [
             'as' => 'springintoaction.index',
             'uses' => 'HomeController@index'
@@ -46,7 +46,8 @@
         Route::get('onedrive_callback', ['as' => 'onedrive.callback', 'uses' => 'OneDriveController@callback']);
     });
 
-    Route::group(array_merge($adminDefault, ['middleware' => ['web', 'auth', 'ability:admin,backend_access']]), function () {
+    Route::group(array_merge($adminDefault, ['middleware' => ['web', 'auth','ajax.request', 'ability:admin,backend_access']]),
+function () {
 
         //Route::get('/', [
         //    'as' => 'boilerplate.home',
@@ -154,6 +155,6 @@
 
         Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
 
-        Route::get('report/project/{Year}/{SiteID}/{ProjectID}', ['as' => 'report.project', 'uses' => 'ReportsController@getYearSiteProjectReportUrl']);
-        Route::get('report/site/{Year}/{SiteID}', ['as' => 'report.site', 'uses' => 'ReportsController@getYearSiteReportUrl']);
+        Route::get('report/projects/{Year}/{SiteID}/{ProjectID}', ['as' => 'report.project', 'uses' => 'ReportsController@getYearSiteProjectReportUrl']);
+        Route::get('report/sites/{Year}/{SiteID}', ['as' => 'report.site', 'uses' => 'ReportsController@getYearSiteReportUrl']);
     });

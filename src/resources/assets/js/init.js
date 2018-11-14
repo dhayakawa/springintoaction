@@ -176,6 +176,19 @@ window.ajaxWaiting = function (action, selector) {
 
 })(Backbone.View);
 
+/**
+ * Catching Ajax session logged out scenario
+ */
+Backbone.ajax = function () {
+    let resp = Backbone.$.ajax.apply(Backbone.$, arguments);
+    resp.done(function (data, textStatus, jqXHR) {
+        if (typeof data.SESSION_STATUS !== 'undefined' && data.SESSION_STATUS === 'NOT_LOGGED_IN') {
+            window.location.href = '/login';
+        }
+        //console.log('done override', data,  textStatus, jqXHR);
+    });
+    return resp;
+};
 /*
 Example of Model/View extension using fullExtend
 let Car = Backbone.Model.extend({
@@ -205,6 +218,7 @@ let Ferrari = Car.fullExtend({
   }
 });
  */
+
 // Just defining this function here so it always
 // exists in case dhayakawa/springintoaction/src/resources/assets/js/browser.console.logging.js
 // goes missing somehow. browser.console.logging.js will override this function.
