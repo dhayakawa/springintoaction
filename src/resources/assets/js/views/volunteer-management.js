@@ -195,6 +195,7 @@
                             //initialize your views here
                             _log(self.viewName + '.create.event', self.modelNameLabelLowerCase + ' collection fetch promise done');
                             window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            App.Collections.projectVolunteersCollection.set(self.collection.fullCollection.models)
                         });
                     },
                     error: function (model, response, options) {
