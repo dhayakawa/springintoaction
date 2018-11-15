@@ -424,7 +424,7 @@
         if (cellDefinition.name === 'Status') {
             cellDefinition.name = 'ProjectVolunteerRoleStatus';
         }
-        if (cellDefinition.name === 'Active' || cellDefinition.name === 'FirstName' || cellDefinition.name === 'LastName' || cellDefinition.name === 'MobilePhoneNumber' || cellDefinition.name === 'HomePhoneNumber' || cellDefinition.name === 'Email') {
+        if (cellDefinition.name === 'VolunteerID' ||cellDefinition.name === 'Active' || cellDefinition.name === 'FirstName' || cellDefinition.name === 'LastName' || cellDefinition.name === 'MobilePhoneNumber' || cellDefinition.name === 'HomePhoneNumber' || cellDefinition.name === 'Email') {
             cellDefinition.editable = false;
         } else {
             cellDefinition.editable = App.Vars.Auth.bCanEditProjectTabGridFields;

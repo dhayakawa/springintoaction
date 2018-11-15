@@ -230,7 +230,7 @@
                         ProjectRoleID: self.model.get('ProjectRoleID')
                     });
                     _log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:'+ deleteCnt,'self.collection.fullCollection.length:'+
-                        self.collection.fullCollection.length);
+                        self.collection.fullCollection.length, self.model);
                     $.ajax({
                         type: "POST",
                         dataType: "json",
