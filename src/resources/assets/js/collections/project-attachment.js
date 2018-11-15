@@ -51,7 +51,7 @@
             name: "AttachmentPath",
             label: "Attachment URL",
             cell: "uri",
-            editable: App.Vars.Auth.bCanEditProjectTabGridFields,
+            editable: false,
             resizeable: true,
             orderable: true,
             width: "*"
