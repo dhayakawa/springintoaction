@@ -90,6 +90,25 @@
 .backgrid-wrapper .backgrid tbody tr:hover {
   background-color: lightyellow;
 }
+.cloned-backgrid-table-wrapper {
+  position: absolute;
+  top: 1px;
+  left: 15px;
+  overflow: hidden;
+  background: transparent;
+  padding-right: 20px;
+}
+.cloned-backgrid-table-wrapper .cloned-backgrid-table {
+  position: absolute;
+  table-layout: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  background: white;
+  border-radius: 0;
+  -webkit-box-shadow: 2px 0px 2px 0px #00000082;
+          box-shadow: 2px 0px 2px 0px #00000082;
+}
 .annualbudgets-management-view .backgrid thead th:nth-child(2) button::before {
   content: '';
 }

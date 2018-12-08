@@ -48,21 +48,12 @@
             width: "30"
         },
         {
-            name: "ProjectID",
-            label: "Project ID",
-            cell: "integer",
-            resizeable: true,
-            orderable: true,
-            editable: false,
-            width: "50"
-        },
-        {
             name: "AttachmentPath",
             label: "Attachment URL",
             cell: "uri",
             editable: false,
             resizeable: true,
-            orderable: true,
+            orderable: false,
             width: "*"
         }
     ];

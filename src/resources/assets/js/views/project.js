@@ -234,6 +234,7 @@
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
 
             this.$gridContainer = $backgridWrapper;
+
             return this;
 
         },
