@@ -488,6 +488,40 @@
                 this.$el.find('.btnDeleteChecked').removeClass('disabled');
             }
 
+        },
+        setStickyColumns: function (colIdx) {
+            let self = this;
+            self.parentView.find('.cloned-backgrid-table-wrapper').remove();
+            let left = 0;
+            let $backgridTable = self.parentView.find('table.backgrid');
+            let backgridTableHeight = $backgridTable.height();
+            $backgridTable.find('tbody tr:first-child td:nth-child(-n+' +
+                colIdx + ')').each(function (idx, el) {
+                let w = $(el).css('width');
+                left += parseInt(w.replace('px', ''));
+            });
+            let $tCloneWrapper = $('<div class="cloned-backgrid-table-wrapper"></div>');
+            $backgridTable.parent().parent().append($tCloneWrapper);
+            $tCloneWrapper.css({
+                'width': left + 10,
+                'height': backgridTableHeight - 1
+            });
+            let $tClone = $backgridTable.clone();
+            $tClone.addClass('cloned-backgrid-table').css({
+                'width': left
+            });
+            $tClone.find('>div').remove();
+            let nextColIdx = colIdx + 1;
+            $tClone.find('colgroup col:nth-child(n+' +
+                nextColIdx + ')').remove();
+            $tClone.find('thead tr th:nth-child(n+' +
+                nextColIdx + ')').remove();
+            $tClone.find('tbody tr td:nth-child(n+' +
+                nextColIdx + ')').remove();
+
+            $tCloneWrapper.append($tClone);
+            console.log('$backgridTable', $backgridTable, backgridTableHeight)
+            console.log('$tCloneWrapper', $tCloneWrapper)
         }
 
     });
@@ -1263,6 +1297,7 @@
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
 
             this.$gridContainer = $backgridWrapper;
+
             return this;
 
         },
