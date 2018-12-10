@@ -51,7 +51,7 @@ window.App = {
     Templates: {},
     Router: {},
     Vars: {
-        bBackgridColumnManagerSaveState: false,
+        bBackgridColumnManagerSaveState: true,
         // Turn on the console logging
         bAllowConsoleOutput: 1,
         bAllowConsoleOutputHiLite: 1,

@@ -1,11 +1,12 @@
 <?php
 
-    namespace Dhayakawa\SpringIntoAction\Controllers\Auth;
+    namespace Dhayakawa\SpringIntoAction\Controllers\Auth\Admin;
 
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Carbon\Carbon;
     use Illuminate\Foundation\Auth\AuthenticatesUsers;
     use Illuminate\Http\Request;
+    use Illuminate\Support\Facades\Auth;
 
     class LoginController extends BaseController {
 
@@ -35,7 +36,7 @@
          * @return void
          */
         public function __construct() {
-            $this->redirectTo = route(config('springintoaction.app.redirectTo', ''));
+            $this->redirectTo = route(config('springintoaction.admin.app.redirectTo', 'boilerplate.home'));
             $this->middleware('guest', ['except' => 'logout']);
         }
 
@@ -45,8 +46,9 @@
          * @return \Illuminate\Http\Response
          */
         public function showLoginForm() {
+            //$userModel = config('springintoaction.auth.providers.admins.model');
 
-            return view('springintoaction::frontend.auth.login');
+            return view('springintoaction::admin.auth.login');
         }
 
         /**
@@ -77,7 +79,7 @@
             $this->clearLoginAttempts($request);
 
             $this->guard()->user()->update(['last_login' => Carbon::now()->toDateTimeString()]);
-
+            $this->authenticated($request, $this->guard()->user());
 
             return $this->authenticated($request, $this->guard()->user()) ?:
                 redirect()->intended($this->redirectPath());
@@ -93,7 +95,7 @@
          * @return mixed
          */
         protected function authenticated(Request $request, $user) {
-            \Log::info('Grove User logged in : ' . $user->name);
+            \Log::info('User logged in : ' . $user->name);
         }
 
         /**
