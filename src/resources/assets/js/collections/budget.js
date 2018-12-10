@@ -67,7 +67,7 @@
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
-            width: "30"
+            width: "60"
         },
         {
             name: "Status",
@@ -76,7 +76,7 @@
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
-            width: "50"
+            width: "150"
         },
         {
             name: "Comments",
@@ -85,16 +85,7 @@
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
             resizeable: true,
             orderable: true,
-            width: "250"
-        },
-        {
-            name: "ProjectID",
-            label: "Project",
-            cell: "integer",
-            editable: false,
-            resizeable: true,
-            orderable: true,
-            width: "150"
+            width: "*"
         }
     ];
     let projectOptions = function () {

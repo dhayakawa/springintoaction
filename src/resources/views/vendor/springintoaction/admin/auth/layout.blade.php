@@ -12,18 +12,18 @@
     @stack('css')
 </head>
 <body class="{{ $bodyClass or 'login-page'}}">
-<div class="bg full-height"></div>
-<div class="container">
-    <div class="row">
-        <div class="col-xs-12 clearfix">
-            <ul class="nav-links">
-                <li><a href="{{ url('/') }}">Home</a></li>
-            </ul>
-            @yield('content')
+    <div class="bg full-height"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 clearfix">
+                <ul class="nav-links">
+                    <li><a href="{{ url('/') }}">Home</a></li>
+                </ul>
+                @yield('content')
+            </div>
         </div>
     </div>
-</div>
-<script src="{{ asset('js/boilerplate.min.js') }}"></script>
-@stack('js')
+    <script src="{{ asset('js/boilerplate.min.js') }}"></script>
+    @stack('js')
 </body>
 </html>

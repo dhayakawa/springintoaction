@@ -47,6 +47,8 @@
             //App.Vars.currentTabModels[clickedTab]
             this.$el.find('.tabButtonPane').hide();
             this.$el.find('.' + clickedTab + '.tabButtonPane').show();
+            // Hack to force grid columns to work
+            $('body').trigger('resize');
             let tabView = _.find(this.parentChildViews, function (val) {
                 return _.has(val, clickedTab)
             });
@@ -317,6 +319,11 @@
                     //initialize your views here
                     _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'tab collections fetch promise done');
                     self.mainApp.$('h3.box-title small').html(self.model.get('ProjectDescription'));
+                    self.projectLeadsView.render();
+                    self.projectBudgetView.render();
+                    self.projectContactsView.render();
+                    self.projectVolunteersView.render();
+                    self.projectAttachmentsView.render();
                     window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                 });
                 _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);

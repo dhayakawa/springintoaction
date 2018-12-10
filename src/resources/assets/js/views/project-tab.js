@@ -15,6 +15,7 @@
         },
         render: function (e) {
             let self = this;
+            this.$el.empty();
             this.hideCellCnt = this.options.hideCellCnt;
             this.$tabBtnPane = $(this.options.parentViewEl).find('.' + this.options.tab + '.tabButtonPane');
             this.$tabBtnPanePaginationContainer = this.$tabBtnPane.find('.tab-pagination-controls');
@@ -23,13 +24,6 @@
 
             this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
             this.columnCollection.setPositions().sort();
-
-            let Header = Backgrid.Extension.GroupedHeader;
-            this.backgrid = new Backgrid.Grid({
-                header: Header,
-                columns: this.columnCollection,
-                collection: this.collection
-            });
 
             let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
             let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
@@ -46,6 +40,15 @@
             let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
                 columnManager: colManager
             });
+
+            let Header = Backgrid.Header;
+            this.backgrid = new Backgrid.Grid({
+                header: Header,
+                columns: this.columnCollection,
+                collection: this.collection
+            });
+
+
             _log('App.Views.ProjectTab.render', this.options.tab, $(this.options.parentViewEl), this.$tabBtnPane, _.isUndefined(e) ? 'no event passed in for this call.' : e);
 
             let $gridContainer = this.$el.html(this.backgrid.render().el);
