@@ -39,9 +39,9 @@
                 <li><a href="{{ route('login') }}">Login</a></li>
                 <li><a href="{{ route('register') }}">Register</a></li>
                 @elseenv('testing')
-                // The application is in the testing environment...
+
                 @else
-                // The application is not in the local or testing environment...
+                
 <!--                <li><a href="{{ route('login') }}">Login</a></li>-->
 <!--                <li><a href="{{ route('register') }}">Register</a></li>-->
                 @endenv
