@@ -544,6 +544,7 @@
         },
         render: function (e) {
             let self = this;
+            this.$el.empty();
             this.hideCellCnt = this.options.hideCellCnt;
             this.$tabBtnPane = $(this.options.parentViewEl).find('.' + this.options.tab + '.tabButtonPane');
             this.$tabBtnPanePaginationContainer = this.$tabBtnPane.find('.tab-pagination-controls');
@@ -552,13 +553,6 @@
 
             this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
             this.columnCollection.setPositions().sort();
-
-            let Header = Backgrid.Extension.GroupedHeader;
-            this.backgrid = new Backgrid.Grid({
-                header: Header,
-                columns: this.columnCollection,
-                collection: this.collection
-            });
 
             let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
             let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
@@ -575,6 +569,15 @@
             let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
                 columnManager: colManager
             });
+
+            let Header = Backgrid.Header;
+            this.backgrid = new Backgrid.Grid({
+                header: Header,
+                columns: this.columnCollection,
+                collection: this.collection
+            });
+
+
             _log('App.Views.ProjectTab.render', this.options.tab, $(this.options.parentViewEl), this.$tabBtnPane, _.isUndefined(e) ? 'no event passed in for this call.' : e);
 
             let $gridContainer = this.$el.html(this.backgrid.render().el);
@@ -1066,7 +1069,7 @@
         template: template('projectsGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
-            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
+            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn','setStickyColumns');
             this.listenTo(App.Views.siteManagementView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
             });
@@ -1179,6 +1182,40 @@
                 this.$el.find('#btnDeleteCheckedProjects').removeClass('disabled');
             }
 
+        },
+        setStickyColumns: function (colIdx) {
+            let self = this;
+            self.parentView.find('.cloned-backgrid-table-wrapper').remove();
+            let left = 0;
+            let $backgridTable = self.parentView.find('table.backgrid');
+            let backgridTableHeight = $backgridTable.height();
+            $backgridTable.find('tbody tr:first-child td:nth-child(-n+' +
+                colIdx + ')').each(function (idx, el) {
+                let w = $(el).css('width');
+                left += parseInt(w.replace('px', ''));
+            });
+            let $tCloneWrapper = $('<div class="cloned-backgrid-table-wrapper"></div>');
+            $backgridTable.parent().parent().append($tCloneWrapper);
+            $tCloneWrapper.css({
+                'width': left + 10,
+                'height': backgridTableHeight - 1
+            });
+            let $tClone = $backgridTable.clone();
+            $tClone.addClass('cloned-backgrid-table').css({
+                'width': left
+            });
+            $tClone.find('>div').remove();
+            let nextColIdx = colIdx + 1;
+            $tClone.find('colgroup col:nth-child(n+' +
+                nextColIdx + ')').remove();
+            $tClone.find('thead tr th:nth-child(n+' +
+                nextColIdx + ')').remove();
+            $tClone.find('tbody tr td:nth-child(n+' +
+                nextColIdx + ')').remove();
+
+            $tCloneWrapper.append($tClone);
+            console.log('$backgridTable', $backgridTable, backgridTableHeight)
+            console.log('$tCloneWrapper', $tCloneWrapper)
         }
 
     });
@@ -2376,6 +2413,8 @@
             //App.Vars.currentTabModels[clickedTab]
             this.$el.find('.tabButtonPane').hide();
             this.$el.find('.' + clickedTab + '.tabButtonPane').show();
+            // Hack to force grid columns to work
+            $('body').trigger('resize');
             let tabView = _.find(this.parentChildViews, function (val) {
                 return _.has(val, clickedTab)
             });
@@ -2646,6 +2685,11 @@
                     //initialize your views here
                     _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'tab collections fetch promise done');
                     self.mainApp.$('h3.box-title small').html(self.model.get('ProjectDescription'));
+                    self.projectLeadsView.render();
+                    self.projectBudgetView.render();
+                    self.projectContactsView.render();
+                    self.projectVolunteersView.render();
+                    self.projectAttachmentsView.render();
                     window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                 });
                 _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
@@ -3949,6 +3993,8 @@
                 App.Vars.mainAppDoneLoading = true;
                 _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
             }
+            // Hack to force grid columns to work
+            $('body').trigger('resize');
             return this;
         }
     });

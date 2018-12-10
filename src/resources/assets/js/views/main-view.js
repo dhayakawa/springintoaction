@@ -44,6 +44,8 @@
                 App.Vars.mainAppDoneLoading = true;
                 _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
             }
+            // Hack to force grid columns to work
+            $('body').trigger('resize');
             return this;
         }
     });
