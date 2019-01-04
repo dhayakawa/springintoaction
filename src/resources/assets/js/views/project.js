@@ -63,12 +63,12 @@
         addGridRow: function (e) {
             let self = this;
             e.preventDefault();
-            $('#sia-modal').one('show.bs.modal', function (event) {
+            $('#sia-modal').off().one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('New Project');
                 modal.find('.modal-body').html(App.Views.projectsView.getModalForm());
 
-                modal.find('.save.btn').one('click', function (e) {
+                modal.find('.save.btn').off().one('click', function (e) {
                     e.preventDefault();
                     App.Views.projectsView.create($.unserialize(modal.find('form').serialize()));
                     $('#sia-modal').modal('hide');
@@ -81,14 +81,20 @@
         editGridRow: function (e) {
             let self = this;
             e.preventDefault();
-            $('#sia-modal').one('show.bs.modal', function (event) {
+            $('#sia-modal').off().one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('Edit Project');
                 modal.find('.modal-body').html(App.Views.projectsView.getEditForm());
 
-                modal.find('.save.btn').one('click', function (e) {
+                modal.find('.save.btn').off().one('click', function (e) {
                     e.preventDefault();
-                    App.Views.projectsView.saveEditForm($.unserialize(modal.find('form').serialize()));
+
+                    let data = $.unserialize(modal.find('form').serialize());
+                    // fix multi valued select values
+                    data.BudgetSources = modal.find('form').find('[name="BudgetSources"]').val().join();
+                    data.PrimarySkillNeeded = modal.find('form').find('[name="PrimarySkillNeeded"]').val().join();
+
+                    App.Views.projectsView.saveEditForm(data);
                     $('#sia-modal').modal('hide');
                 });
 
