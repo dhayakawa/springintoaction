@@ -155,23 +155,20 @@
     </div>
 </form>
 <script type="text/javascript">
-let bSetValues = <%= bSetValues %>;
-
-if(bSetValues) {
+if(<%= bSetValues %>) {
     $('[name="Active"]').val('<%= data.Active %>');
     $('[name="ChildFriendly"]').val('<%= data.ChildFriendly %>');
 
-    let primarySkills = '<%= data.PrimarySkillNeeded %>';
-    $.each(primarySkills.split(","), function (i, e) {
+    $.each('<%= data.PrimarySkillNeeded %>'.split(","), function (i, e) {
         $('[name="PrimarySkillNeeded"] option[value="' + e + '"]').prop("selected", true);
     });
-    let budgetSources = '<%= data.BudgetSources %>';
-    $.each(budgetSources.split(","), function (i, e) {
+
+    $.each('<%= data.BudgetSources %>'.split(","), function (i, e) {
         $('[name="BudgetSources"] option[value="' + e + '"]').prop("selected", true);
     });
-    let status = '<%= data.Status %>';
-    if (status !== '') {
-        $('[name="Status"]').val(status);
+
+    if ('<%= data.Status %>' !== '') {
+        $('[name="Status"]').val('<%= data.Status %>');
     }
     $('[name="NeedsToBeStartedEarly"]').val('<%= data.NeedsToBeStartedEarly %>');
     $('[name="CostEstimateDone"]').val('<%= data.CostEstimateDone %>');

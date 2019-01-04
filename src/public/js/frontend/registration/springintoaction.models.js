@@ -53,7 +53,8 @@
                 'Finish Carpentry':'<i title="Finish Carpentry" data-toggle="tooltip" data-placement="top" class="skills-icon finish-carpentry-icon"></i>',
                 'Landscaping':'<i title="Landscaping" data-toggle="tooltip" data-placement="top" class="skills-icon landscaping-icon"></i>',
                 'Construction':'<i title="Construction" data-toggle="tooltip" data-placement="top" class="skills-icon construction-icon"></i>',
-                'Cabinetry':'<i title="Cabinetry" data-toggle="tooltip" data-placement="top" class="skills-icon cabinetry-icon"></i>'
+                'Cabinetry':'<i title="Cabinetry" data-toggle="tooltip" data-placement="top" class="skills-icon cabinetry-icon"></i>',
+                'Cleaning': '<i title="Cleaning" data-toggle="tooltip" data-placement="top" class="skills-icon cleaning-icon"></i>'
             };
             let filteredCnt = filtered.length;
             _.each(filtered,  function (value, key) {

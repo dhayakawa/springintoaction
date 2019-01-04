@@ -81,7 +81,9 @@ trait ProjectRegistrationHelper
                 )->get();
             $ProjectSkillNeededOptions = $ProjectSkillNeededOptions ? $ProjectSkillNeededOptions->toArray() : [];
             foreach ($ProjectSkillNeededOptions as $option) {
-                $aProjectSkillNeededOptions[$option['option_label']] = $option['option_value'];
+                if (!empty($option['option_label'])) {
+                    $aProjectSkillNeededOptions[$option['option_label']] = $option['option_value'];
+                }
             }
         } catch (\Exception $e) {
             $aProjectSkillNeededOptions = [];
@@ -174,6 +176,7 @@ trait ProjectRegistrationHelper
             'Landscaping' => '<i title="Landscaping" class="skills-icon filter-list-item-icon landscaping-icon"></i>',
             'Construction' => '<i title="Construction" class="skills-icon filter-list-item-icon construction-icon"></i>',
             'Cabinetry' => '<i title="Cabinetry" class="skills-icon filter-list-item-icon cabinetry-icon"></i>',
+            'Cleaning' => '<i title="Cleaning" class="skills-icon filter-list-item-icon cleaning-icon"></i>',
         ];
         $aSkillAdded = [];
         foreach ($aProjectSkillNeededOptions as $skill => $skillID) {

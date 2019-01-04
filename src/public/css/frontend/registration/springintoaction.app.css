@@ -1194,6 +1194,9 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
 .sia-registration-app .skills-icon.cabinetry-icon {
   background: url(/images/cabinet-bold.svg?06a55903baf64cf7956f3ceea7eaf766);
 }
+.sia-registration-app .skills-icon.cleaning-icon {
+  background: url(/images/bucket-with-bubbles.svg?88be9dccc335f9fa3aac26ffe1f6ddf3);
+}
 .sia-registration-app .project-list-filters-title {
   font-family: 'Raleway', sans-serif;
 }
