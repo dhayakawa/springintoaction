@@ -1077,6 +1077,7 @@
         },
         events: {
             'click #btnAddProject': 'addGridRow',
+            'click #btnEditProject': 'editGridRow',
             'click #btnDeleteCheckedProjects': 'deleteCheckedRows',
             'click #btnClearStored': 'clearStoredColumnState',
         },
@@ -1136,6 +1137,24 @@
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
                     App.Views.projectsView.create($.unserialize(modal.find('form').serialize()));
+                    $('#sia-modal').modal('hide');
+                });
+
+            });
+            $('#sia-modal').modal('show');
+
+        },
+        editGridRow: function (e) {
+            let self = this;
+            e.preventDefault();
+            $('#sia-modal').one('show.bs.modal', function (event) {
+                let modal = $(this);
+                modal.find('.modal-title').html('Edit Project');
+                modal.find('.modal-body').html(App.Views.projectsView.getEditForm());
+
+                modal.find('.save.btn').one('click', function (e) {
+                    e.preventDefault();
+                    App.Views.projectsView.saveEditForm($.unserialize(modal.find('form').serialize()));
                     $('#sia-modal').modal('hide');
                 });
 
@@ -1441,6 +1460,39 @@
                     });
             }
         },
+        saveEditForm: function(data) {
+            let self = this;
+            let bSave = true;
+            if (bSave) {
+                let bFetchCollection = true;
+                window.ajaxWaiting('show', '.projects-backgrid-wrapper');
+                App.Models.projectModel.url = '/admin/project/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                App.Models.projectModel.save(_.extend({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)}, data),
+                    {
+                        success: function (model, response, options) {
+                            if (bFetchCollection) {
+                                response.msg = response.msg + ' The list is being refreshed.'
+                            }
+                            growl(response.msg, response.success ? 'success' : 'error');
+                            if (bFetchCollection) {
+
+                                self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
+                                $.when(
+                                    self.collection.fetch({reset: true})
+                                ).then(function () {
+                                    //initialize your views here
+                                    _log('App.Views.Project.update.event', 'project updated. project collection fetch promise done');
+                                    window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                                });
+                            }
+                        },
+                        error: function (model, response, options) {
+                            growl(response.msg, 'error');
+                            window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+                        }
+                    });
+            }
+        },
         getModalForm: function () {
             let template      = window.template('newProjectTemplate');
             let contactSelect = new App.Views.Select({
@@ -1452,9 +1504,9 @@
                 optionLabelModelAttrName: ['LastName', 'FirstName', 'Title']
             });
 
-            let sequenceNumber = _.max(App.PageableCollections.projectCollection.fullCollection.models, function (project) {
+            let sequenceNumber = App.PageableCollections.projectCollection.fullCollection.models.length > 0 ? _.max(App.PageableCollections.projectCollection.fullCollection.models, function (project) {
                 return parseInt(project.get("SequenceNumber"));
-            }).get('SequenceNumber');
+            }).get('SequenceNumber') : 1;
 
             let tplVars = {
                 SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
@@ -1467,9 +1519,107 @@
                 projectSendOptions: App.Models.projectModel.getSendOptions(true),
                 budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
                 SequenceNumber: parseInt(sequenceNumber) + 1,
-                testString: '',
-                testNumber: '0',
-                testFloat: '0.00'
+                OriginalRequest: '',
+                ProjectDescription: '',
+                Comments: '',
+                VolunteersNeededEst: '',
+                VolunteersAssigned: '',
+                StatusReason: '',
+                MaterialsNeeded: '',
+                EstimatedCost: '',
+                ActualCost: '',
+                BudgetAvailableForPC: '',
+                VolunteersLastYear: '',
+                SpecialEquipmentNeeded: '',
+                PermitsOrApprovalsNeeded: '',
+                PrepWorkRequiredBeforeSIA: '',
+                SetupDayInstructions: '',
+                SIADayInstructions: '',
+                Area: '',
+                PaintOrBarkEstimate: '',
+                PaintAlreadyOnHand: '',
+                PaintOrdered: '',
+                FinalCompletionAssessment: '',
+                bSetValues: false,
+                data: {
+                    Active: '',
+                    ChildFriendly: '',
+                    PrimarySkillNeeded: '',
+                    BudgetSources: '',
+                    Status: '',
+                    NeedsToBeStartedEarly: '',
+                    CostEstimateDone: '',
+                    MaterialListDone: '',
+                    BudgetAllocationDone: '',
+                    VolunteerAllocationDone: '',
+                    NeedSIATShirtsForPC: '',
+                    ProjectSend: '',
+                    FinalCompletionStatus: '',
+                    PCSeeBeforeSIA: ''
+                }
+            };
+            return template(tplVars);
+        },
+        getEditForm: function (){
+            let template = window.template('newProjectTemplate');
+            let contactSelect = new App.Views.Select({
+                el: '',
+                attributes: {id: 'ContactID', name: 'selectContactID', class: 'form-control'},
+                buildHTML: true,
+                collection: App.Collections.contactsManagementCollection,
+                optionValueModelAttrName: 'ContactID',
+                optionLabelModelAttrName: ['LastName', 'FirstName', 'Title']
+            });
+
+            let tplVars = {
+                SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
+                SiteStatusID: App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute),
+                yesNoIsActiveOptions: App.Models.projectModel.getYesNoOptions(true, 'Yes'),
+                yesNoOptions: App.Models.projectModel.getYesNoOptions(true),
+                contactSelect: contactSelect.getHtml(),
+                primarySkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
+                statusOptions: App.Models.projectModel.getStatusOptions(true, 'Pending'),
+                projectSendOptions: App.Models.projectModel.getSendOptions(true),
+                budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
+                SequenceNumber: App.Models.projectModel.get("SequenceNumber"),
+                OriginalRequest: App.Models.projectModel.get("OriginalRequest"),
+                ProjectDescription: App.Models.projectModel.get("ProjectDescription"),
+                Comments: App.Models.projectModel.get("Comments"),
+                VolunteersNeededEst: App.Models.projectModel.get("VolunteersNeededEst"),
+                VolunteersAssigned: App.Models.projectModel.get("VolunteersAssigned"),
+                StatusReason: App.Models.projectModel.get("StatusReason"),
+                MaterialsNeeded: App.Models.projectModel.get("MaterialsNeeded"),
+                EstimatedCost: App.Models.projectModel.get("EstimatedCost"),
+                ActualCost: App.Models.projectModel.get("ActualCost"),
+                BudgetAvailableForPC: App.Models.projectModel.get("BudgetAvailableForPC"),
+                VolunteersLastYear: App.Models.projectModel.get("VolunteersLastYear"),
+                SpecialEquipmentNeeded: App.Models.projectModel.get("SpecialEquipmentNeeded"),
+                PermitsOrApprovalsNeeded: App.Models.projectModel.get("PermitsOrApprovalsNeeded"),
+                PrepWorkRequiredBeforeSIA: App.Models.projectModel.get("PrepWorkRequiredBeforeSIA"),
+                SetupDayInstructions: App.Models.projectModel.get("SetupDayInstructions"),
+                SIADayInstructions: App.Models.projectModel.get("SIADayInstructions"),
+                Area: App.Models.projectModel.get("Area"),
+                PaintOrBarkEstimate: App.Models.projectModel.get("PaintOrBarkEstimate"),
+                PaintAlreadyOnHand: App.Models.projectModel.get("PaintAlreadyOnHand"),
+                PaintOrdered: App.Models.projectModel.get("PaintOrdered"),
+                FinalCompletionAssessment: App.Models.projectModel.get("FinalCompletionAssessment"),
+                bSetValues: true,
+                data: {
+                    Active: App.Models.projectModel.get("Active"),
+                    ChildFriendly: App.Models.projectModel.get("ChildFriendly"),
+                    PrimarySkillNeeded: App.Models.projectModel.get("PrimarySkillNeeded"),
+                    BudgetSources: App.Models.projectModel.get("BudgetSources"),
+                    Status: App.Models.projectModel.get("Status"),
+                    NeedsToBeStartedEarly: App.Models.projectModel.get("NeedsToBeStartedEarly"),
+                    CostEstimateDone: App.Models.projectModel.get("CostEstimateDone"),
+                    MaterialListDone: App.Models.projectModel.get("MaterialListDone"),
+                    BudgetAllocationDone: App.Models.projectModel.get("BudgetAllocationDone"),
+                    VolunteerAllocationDone: App.Models.projectModel.get("VolunteerAllocationDone"),
+                    NeedSIATShirtsForPC: App.Models.projectModel.get("NeedSIATShirtsForPC"),
+                    ProjectSend: App.Models.projectModel.get("ProjectSend"),
+                    FinalCompletionStatus: App.Models.projectModel.get("FinalCompletionStatus"),
+                    PCSeeBeforeSIA: App.Models.projectModel.get("PCSeeBeforeSIA")
+                }
             };
             return template(tplVars);
         },

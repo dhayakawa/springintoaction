@@ -93,8 +93,13 @@ class GroveApi
         } else {
             $response = $this->curlPost($uri, $aData);
         }
-        $xml = simplexml_load_string($response);
-        $json = json_encode($xml);
+
+        if (is_string($response)) {
+            $xml = simplexml_load_string($response);
+            $json = json_encode($xml);
+        } else {
+            $json = json_encode($response);
+        }
 
         return json_decode($json, true);
     }
@@ -139,6 +144,7 @@ class GroveApi
             $output = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         } catch (\Exception $e) {
+            return ['error' => 'Curl Exception', 'description' => $e->getMessage()];
         }
         if ($httpCode == "201") {
             return $output;
@@ -182,9 +188,12 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+
         return $this->getResponse('get', $srv, $aData);
     }
 
@@ -211,7 +220,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -220,7 +231,8 @@ class GroveApi
 
     /**
      * Group Participants
-     * The Group Participants service allows you to pass in a group ID and have the list of members associated with that group returned.
+     * The Group Participants service allows you to pass in a group ID and have the list of members associated with
+     * that group returned.
      *
      * Service Name
      * group_participants
@@ -240,7 +252,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -273,7 +287,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -282,7 +298,8 @@ class GroveApi
 
     /**
      * Add Significant Event for Individual
-     * The Add Significant Event for Individual service creates a significant event record for the specified individual. The list of acceptable event_id values comes from the Significant Event List service.
+     * The Add Significant Event for Individual service creates a significant event record for the specified
+     * individual. The list of acceptable event_id values comes from the Significant Event List service.
      *
      * Service Name
      * add_individual_significant_event
@@ -302,7 +319,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -375,12 +394,13 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
         return $this->getResponse('post', $srv, $aData);
-
     }
 
     /**
@@ -398,14 +418,16 @@ class GroveApi
      * name    type
      * include_inactive    boolean
      */
-    public function execute_search()
+    public function execute_search($id,$name=null,$include_interactive=null)
     {
         $srv = 'execute_search';
         $aParams = array_map(
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -425,14 +447,16 @@ class GroveApi
      * Optional Parameters
      * none
      */
-    public function family_detail()
+    public function family_detail($family_id)
     {
         $srv = 'family_detail';
         $aParams = array_map(
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -452,14 +476,16 @@ class GroveApi
      * family_id    int
      * modified_since    datetime
      */
-    public function family_list()
+    public function family_list($family_id = null, $modified_since = null)
     {
         $srv = 'family_list';
         $aParams = array_map(
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -479,7 +505,7 @@ class GroveApi
      * login    string    Must be sent via HTTP POST
      * password    string    Must be sent via HTTP POST
      */
-    public function individual_profile_from_login_password()
+    public function individual_profile_from_login_password($login, $password)
     {
         // POST data: login=myusername&password=mypassword
         $srv = 'individual_profile_from_login_password';
@@ -487,7 +513,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -520,7 +548,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -559,7 +589,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -589,7 +621,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 
@@ -616,7 +650,9 @@ class GroveApi
             function ($parameter) {
                 return $parameter->name;
             },
-            (new \ReflectionFunction(__METHOD__))->getParameters()
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
         );
         $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
 

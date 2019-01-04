@@ -45,7 +45,13 @@
             $this->publishes([__DIR__ . '/Models' => app_path('Models')], 'models');
             $this->publishes([__DIR__ . '/migrations' => app_path('migrations')], 'migrations');
             $this->publishes([__DIR__ . '/webpack.mix.js' => base_path('webpack.mix.js')], 'webpack');
-
+            $this->publishes(
+                [
+                    __DIR__ . '/resources/views/vendor/springintoaction' => resource_path(
+                        'views/vendor/springintoaction'
+                    ),
+                ]
+            );
 
             // If routes file has been published, load routes from the published file
             if(is_file(base_path('routes/springintoaction.php'))) {
@@ -61,9 +67,7 @@
             $this->loadViewsFrom(__DIR__ . '/resources/views/vendor/springintoaction', 'springintoaction');
             $this->loadTranslationsFrom(__DIR__ . '/resources/lang/vendor/springintoaction', 'springintoaction');
 
-            $this->publishes([
-                __DIR__ . '/resources/views/vendor/springintoaction' => resource_path('views/vendor/springintoaction'),
-            ]);
+
 
             Blade::if(
                 'env',

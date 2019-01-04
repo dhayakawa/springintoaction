@@ -56,4 +56,9 @@ class ProjectStatusOptions extends Model
 
         return $this->defaultRecordData;
     }
+
+    public function getOptionIDByLabel($option_label)
+    {
+        return self::where('option_label', $option_label)->get()->first()->id;
+    }
 }
