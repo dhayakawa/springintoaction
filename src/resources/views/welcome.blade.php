@@ -15,6 +15,7 @@
             <a href="mailto:david.hayakawa@gmail.com">david.hayakawa@gmail.com</a>
         </div>
         @endauth
+
         <div class="title m-b-md">
             <span style="z-index:2">Spring Into Action</span>
         </div>
@@ -22,6 +23,8 @@
         <div class="welcome-links">
             <a href="https://woodlandschurch.org">Woodlands Church</a>
         </div>
+        @includeWhen($bShowProjectRegistration, 'springintoaction::frontend.project_registration')
+
     </div>
 </div>
 @endsection

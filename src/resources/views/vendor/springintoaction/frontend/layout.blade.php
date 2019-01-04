@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }} | {{ config('app.name') }}</title>
-    <link rel="stylesheet" href="{{ mix('/css/springintoaction.fonts.css') }}"  type="text/css"/>
     <link rel="stylesheet" href="{{ asset('css/boilerplate.min.css') }}" type="text/css">
-<!--    <link href="https://fonts.googleapis.com/css?family=Raleway:100,400,600" rel="stylesheet" type="text/css">-->
+    <link rel="stylesheet" href="{{ mix('/css/springintoaction.fonts.css') }}"  type="text/css"/>
+    <link href="https://fonts.googleapis.com/css?family=Raleway:100,400,600" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="{{ mix('/css/springintoaction.frontend.css') }}" type="text/css"/>
     @stack('css')
 </head>
@@ -41,7 +41,7 @@
                 @elseenv('testing')
 
                 @else
-                
+
 <!--                <li><a href="{{ route('login') }}">Login</a></li>-->
 <!--                <li><a href="{{ route('register') }}">Register</a></li>-->
                 @endenv
@@ -52,6 +52,11 @@
     </div>
     @endif
     @yield('content')
+    <div class="row">
+        <div class="col-xs-12 clearfix">
+            @yield('footer')
+        </div>
+    </div>
 </div>
 <script type="text/javascript" src="{{ asset('js/plugins/jQuery/jquery-2.2.3.min.js') }}"></script>
 <script type="text/javascript">

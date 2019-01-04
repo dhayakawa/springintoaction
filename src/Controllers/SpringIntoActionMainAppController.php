@@ -60,6 +60,38 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $sites = Site::orderBy('SiteName', 'asc')->get()->toArray();
+            // Automatically create the site status for a new year
+            foreach($sites as $aSite){
+                try {
+                    $tmpSite = Site::findOrFail($aSite['SiteID'])->status()->where('Year', $Year)->get()->toArray();
+                    if(empty($tmpSite)){
+                        $siteStatusRecordData =
+                            [
+                                'SiteID' => $aSite['SiteID'],
+                                'Year' => $Year,
+                                'ProjectDescriptionComplete' => 0,
+                                'BudgetEstimationComplete' => 0,
+                                'VolunteerEstimationComplete' => 0,
+                                'VolunteerAssignmentComplete' => 0,
+                                'BudgetActualComplete' => 0,
+                                'EstimationComments' => '',
+                                'created_at' => '',
+                                'updated_at' => ''
+                            ];
+                        $oSiteStatus = new SiteStatus();
+                        $oSiteStatus->fill($siteStatusRecordData);
+                        $oSiteStatus->save();
+                    }
+                } catch (\Exception $e) {
+                    report($e);
+                }
+            }
+            $siteStatusRecordData = null;
+            unset($siteStatusRecordData);
+            $oSiteStatus = null;
+            unset($oSiteStatus);
+            $tmpSite=null;
+            unset($tmpSite);
             $site = current($sites);
         } catch (\Exception $e) {
             $sites = [];
@@ -67,6 +99,7 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
+
             $siteStatus =
                 current(
                     Site::find($site['SiteID'])
@@ -87,6 +120,7 @@ class SpringIntoActionMainAppController extends BaseController
                     'Year',
                     'desc'
                 )->get()->toArray();
+
         } catch (\Exception $e) {
             $site_years = [];
             report($e);

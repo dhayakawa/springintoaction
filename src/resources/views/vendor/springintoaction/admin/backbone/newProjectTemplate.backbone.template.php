@@ -16,15 +16,16 @@
     </div>
     <div class="form-group">
         <label for="inputOriginalRequest">Original Request</label>
-        <textarea name="OriginalRequest" class="form-control" id="inputOriginalRequest"><%= testString %></textarea>
+        <textarea name="OriginalRequest" class="form-control" id="inputOriginalRequest"><%= OriginalRequest %></textarea>
     </div>
     <div class="form-group">
         <label for="inputProjectDescription">Project Description</label>
-        <textarea name="ProjectDescription" class="form-control" id="inputProjectDescription"><%= testString %></textarea>
+        <textarea name="ProjectDescription" class="form-control" id="inputProjectDescription"><%= ProjectDescription %></textarea>
+        <p class="help-block">This description will be the one on the registration page. Try to keep it short and simple. Do not add comments that are not applicable to registration.</p>
     </div>
     <div class="form-group">
         <label for="inputComments">Comments</label>
-        <textarea name="Comments" class="form-control" id="inputComments"><%= testString %></textarea>
+        <textarea name="Comments" class="form-control" id="inputComments"><%= Comments %></textarea>
     </div>
     <div class="form-group">
         <label for="inputChildFriendly">Child Friendly</label>
@@ -32,43 +33,49 @@
     </div>
     <div class="form-group">
         <label for="inputPrimarySkillNeeded">Primary Skill Needed</label>
-        <select name="PrimarySkillNeeded" class="form-control" id="inputPrimarySkillNeeded"><%= primarySkillNeededOptions %></select>
+        <select name="PrimarySkillNeeded" multiple class="form-control" id="inputPrimarySkillNeeded"><%= primarySkillNeededOptions %></select>
+        <p class="help-block">Hold down the Ctrl key to click multiple options .</p>
     </div>
     <div class="form-group">
         <label for="inputVolunteersNeededEst">Volunteers Needed Est</label>
-        <input type="text" name="VolunteersNeededEst" class="form-control" id="inputVolunteersNeededEst" placeholder="numbers only" value="<%= testNumber %>"/>
+        <input type="text" name="VolunteersNeededEst" class="form-control" id="inputVolunteersNeededEst" placeholder="numbers only" value="<%= VolunteersNeededEst %>"/>
     </div>
     <div class="form-group">
         <label for="inputVolunteersAssigned">Volunteers Assigned</label>
-        <input type="text" name="VolunteersAssigned" class="form-control" id="inputVolunteersAssigned" placeholder="numbers only" value="<%= testNumber %>"/>
+        <input type="text" name="VolunteersAssigned" class="form-control" id="inputVolunteersAssigned" placeholder="numbers only" value="<%= VolunteersAssigned %>"/>
     </div>
     <div class="form-group">
         <label for="inputStatus">Status</label>
         <select name="Status" class="form-control" id="inputStatus"><%= statusOptions %></select>
     </div>
-    <div class="form-group">
+    <div class="form-group status-reason">
         <label for="inputStatusReason">Status Reason</label>
-        <textarea name="StatusReason" class="form-control" id="inputStatusReason"><%= testString %></textarea>
+        <textarea name="StatusReason" class="form-control" id="inputStatusReason"><%= StatusReason %></textarea>
+    </div>
+    <div class="form-group">
+        <label for="BudgetSources">Budget Sources</label>
+        <select name="BudgetSources" multiple class="form-control" id="BudgetSources"><%= budgetSourceOptions %></select>
+        <p class="help-block">Hold down the Ctrl key to click multiple options .</p>
     </div>
     <div class="form-group">
         <label for="inputMaterialsNeeded">Materials Needed</label>
-        <input type="text" name="MaterialsNeeded" class="form-control" id="inputMaterialsNeeded" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <textarea name="MaterialsNeeded" class="form-control" id="inputMaterialsNeeded" placeholder="Describe If Applicable"><%= MaterialsNeeded %></textarea>
     </div>
     <div class="form-group">
         <label for="inputEstimatedCost">Estimated Cost</label>
-        <input type="text" name="EstimatedCost" class="form-control" id="inputEstimatedCost" placeholder="no $, numbers and decimal only. example: 10.00" value="<%= testFloat %>"/>
+        <input type="text" name="EstimatedCost" class="form-control" id="inputEstimatedCost" placeholder="no $, numbers and decimal only. example: 10.00" value="<%= EstimatedCost %>"/>
     </div>
     <div class="form-group">
         <label for="inputActualCost">Actual Cost</label>
-        <input type="text" name="ActualCost" class="form-control" id="inputActualCost" placeholder="no $, numbers and decimal only. example: 10.00" value="<%= testFloat %>"/>
+        <input type="text" name="ActualCost" class="form-control" id="inputActualCost" placeholder="no $, numbers and decimal only. example: 10.00" value="<%= ActualCost %>"/>
     </div>
     <div class="form-group">
         <label for="inputBudgetAvailableForPC">Budget Available For PC</label>
-        <input type="text" name="BudgetAvailableForPC" class="form-control" id="inputBudgetAvailableForPC" placeholder="no $, numbers and decimal only. example: 10.00" value="<%= testFloat %>"/>
+        <input type="text" name="BudgetAvailableForPC" class="form-control" id="inputBudgetAvailableForPC" placeholder="no $, numbers and decimal only. example: 10.00" value="<%= BudgetAvailableForPC %>"/>
     </div>
     <div class="form-group">
         <label for="inputVolunteersLastYear">Volunteers Last Year</label>
-        <input type="text" name="VolunteersLastYear" class="form-control" id="inputVolunteersLastYear" placeholder="numbers only" value="<%= testNumber %>"/>
+        <input type="text" name="VolunteersLastYear" class="form-control" id="inputVolunteersLastYear" placeholder="numbers only" value="<%= VolunteersLastYear %>"/>
     </div>
     <div class="form-group">
         <label for="inputNeedsToBeStartedEarly">Needs To Be Started Early</label>
@@ -80,39 +87,39 @@
     </div>
     <div class="form-group">
         <label for="inputSpecialEquipmentNeeded">Special Equipment Needed</label>
-        <input type="text" name="SpecialEquipmentNeeded" class="form-control" id="inputSpecialEquipmentNeeded" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <textarea name="SpecialEquipmentNeeded" class="form-control" id="inputSpecialEquipmentNeeded" placeholder="Describe If Applicable"><%= SpecialEquipmentNeeded %></textarea>
     </div>
     <div class="form-group">
         <label for="inputPermitsOrApprovalsNeeded">Permits Or Approvals Needed</label>
-        <input type="text" name="PermitsOrApprovalsNeeded" class="form-control" id="inputPermitsOrApprovalsNeeded" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <input type="text" name="PermitsOrApprovalsNeeded" class="form-control" id="inputPermitsOrApprovalsNeeded" placeholder="Describe If Applicable" value="<%= PermitsOrApprovalsNeeded %>"/>
     </div>
     <div class="form-group">
         <label for="inputPrepWorkRequiredBeforeSIA">Prep Work Required Before SIA</label>
-        <input type="text" name="PrepWorkRequiredBeforeSIA" class="form-control" id="inputPrepWorkRequiredBeforeSIA" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <textarea name="PrepWorkRequiredBeforeSIA" class="form-control" id="inputPrepWorkRequiredBeforeSIA" placeholder="Describe If Applicable"><%= PrepWorkRequiredBeforeSIA %></textarea>
     </div>
     <div class="form-group">
         <label for="inputSetupDayInstructions">Setup Day Instructions</label>
-        <input type="text" name="SetupDayInstructions" class="form-control" id="inputSetupDayInstructions" value="<%= testString %>"/>
+        <textarea name="SetupDayInstructions" class="form-control" id="inputSetupDayInstructions" placeholder="Describe If Applicable"><%= SetupDayInstructions %></textarea>
     </div>
     <div class="form-group">
         <label for="inputSIADayInstructions">SIA Day Instructions</label>
-        <input type="text" name="SIADayInstructions" class="form-control" id="inputSIADayInstructions" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <textarea name="SIADayInstructions" class="form-control" id="inputSIADayInstructions" placeholder="Describe If Applicable"><%= SIADayInstructions %></textarea>
     </div>
     <div class="form-group">
         <label for="inputArea">Area</label>
-        <input type="text" name="Area" class="form-control" id="inputArea" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <input type="text" name="Area" class="form-control" id="inputArea" placeholder="Describe If Applicable" value="<%= Area %>"/>
     </div>
     <div class="form-group">
         <label for="inputPaintOrBarkEstimate">Paint Or Bark Estimate</label>
-        <input type="text" name="PaintOrBarkEstimate" class="form-control" id="inputPaintOrBarkEstimate" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <input type="text" name="PaintOrBarkEstimate" class="form-control" id="inputPaintOrBarkEstimate" placeholder="Describe If Applicable" value="<%= PaintOrBarkEstimate %>"/>
     </div>
     <div class="form-group">
         <label for="inputPaintAlreadyOnHand">Paint Already On Hand</label>
-        <input type="text" name="PaintAlreadyOnHand" class="form-control" id="inputPaintAlreadyOnHand" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <input type="text" name="PaintAlreadyOnHand" class="form-control" id="inputPaintAlreadyOnHand" placeholder="Describe If Applicable" value="<%= PaintAlreadyOnHand %>"/>
     </div>
     <div class="form-group">
         <label for="inputPaintOrdered">Paint Ordered</label>
-        <input type="text" name="PaintOrdered" class="form-control" id="inputPaintOrdered" placeholder="Describe If Applicable" value="<%= testString %>"/>
+        <input type="text" name="PaintOrdered" class="form-control" id="inputPaintOrdered" placeholder="Describe If Applicable" value="<%= PaintOrdered %>"/>
     </div>
     <div class="form-group">
         <label for="inputCostEstimateDone">Cost Estimate Done</label>
@@ -144,6 +151,54 @@
     </div>
     <div class="form-group">
         <label for="inputFinalCompletionAssessment">Final Completion Assessment</label>
-        <textarea name="FinalCompletionAssessment" class="form-control" id="inputFinalCompletionAssessment"><%= testString %></textarea>
+        <textarea name="FinalCompletionAssessment" class="form-control" id="inputFinalCompletionAssessment"><%= FinalCompletionAssessment %></textarea>
     </div>
 </form>
+<script type="text/javascript">
+let bSetValues = <%= bSetValues %>;
+
+if(bSetValues) {
+    $('[name="Active"]').val('<%= data.Active %>');
+    $('[name="ChildFriendly"]').val('<%= data.ChildFriendly %>');
+
+    let primarySkills = '<%= data.PrimarySkillNeeded %>';
+    $.each(primarySkills.split(","), function (i, e) {
+        $('[name="PrimarySkillNeeded"] option[value="' + e + '"]').prop("selected", true);
+    });
+    let budgetSources = '<%= data.BudgetSources %>';
+    $.each(budgetSources.split(","), function (i, e) {
+        $('[name="BudgetSources"] option[value="' + e + '"]').prop("selected", true);
+    });
+    let status = '<%= data.Status %>';
+    if (status !== '') {
+        $('[name="Status"]').val(status);
+    }
+    $('[name="NeedsToBeStartedEarly"]').val('<%= data.NeedsToBeStartedEarly %>');
+    $('[name="CostEstimateDone"]').val('<%= data.CostEstimateDone %>');
+    $('[name="MaterialListDone"]').val('<%= data.MaterialListDone %>');
+    $('[name="BudgetAllocationDone"]').val('<%= data.BudgetAllocationDone %>');
+    $('[name="VolunteerAllocationDone"]').val('<%= data.VolunteerAllocationDone %>');
+    $('[name="NeedSIATShirtsForPC"]').val('<%= data.NeedSIATShirtsForPC %>');
+    $('[name="ProjectSend"]').val('<%= data.ProjectSend %>');
+    $('[name="FinalCompletionStatus"]').val('<%= data.FinalCompletionStatus %>');
+    $('[name="PCSeeBeforeSIA"]').val('<%= data.PCSeeBeforeSIA %>');
+
+    let APPROVED = '7';
+    let PENDING = '6';
+    let statusValue = $('[name="Status"]').val();
+
+    if(statusValue === PENDING || statusValue === APPROVED || statusValue === ''){
+        $('.status-reason').hide();
+    } else {
+        $('.status-reason').show();
+    }
+    $('[name="Status"]').on('change',function(e){
+        let statusValue = $(this).val();
+        if (statusValue === PENDING || statusValue === APPROVED || statusValue === '') {
+            $('.status-reason').hide();
+        } else {
+            $('.status-reason').show();
+        }
+    });
+}
+</script>

@@ -21,7 +21,7 @@ class CheckSessionAjaxRequests
     public function handle($request, \Closure $next)
     {
 
-        if ($request->ajax()) {
+        if ($request->ajax() && preg_match("/^admin/", $request->path())) {
             if (empty(\Auth::user())) {
                 return response()->json(
                     [

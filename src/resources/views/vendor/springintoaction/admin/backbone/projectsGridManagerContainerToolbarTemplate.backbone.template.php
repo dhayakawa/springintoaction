@@ -1,5 +1,6 @@
 <div class="pull-right projects-pagination-controls"></div>
 <button id="btnAddProject" type="button" class="btn btn-xs btn-primary">Add Project</button>
+<button id="btnEditProject" type="button" class="btn btn-xs btn-primary">Edit Project</button>
 <button id="btnDeleteCheckedProjects" type="button" class="disabled btn btn-xs btn-danger">Delete Chosen Projects</button>
 <button id="btnClearStored" type="button" class="btn btn-xs btn-default">Reset Columns</button>
 <div class="file-upload-container">
