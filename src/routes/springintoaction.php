@@ -19,7 +19,7 @@ $adminDefault = array_merge(
 Route::group(
     array_merge($default, ['middleware' => ['web', 'ajax.request']]),
     function () {
-        Route::patch(
+        Route::get(
             '/',
             [
                 'as' => 'springintoaction.index',
@@ -89,6 +89,16 @@ Route::group(
             ['as' => 'project.request', 'uses' => 'ProjectRequestController@showProjectRequestForm']
         );
         Route::post('project_request', ['as' => 'project.store', 'uses' => 'ProjectRequestController@store']);
+        Route::get(
+            'project_registration',
+            ['as' => 'project.registration', 'uses' => 'ProjectRegistrationController@showProjectRegistrationForm']
+        );
+        Route::get('project_registration/filter_project_list', ['as' => 'project.registration.filter_project_list', 'uses' => 'ProjectRegistrationController@getFilteredProjectList']);
+        Route::post('project_registration', ['as' => 'project.registration.store', 'uses' => 'ProjectRegistrationController@store']);
+        Route::post('project_registration/reserve', ['as' => 'project.registration.reserve', 'uses' => 'ProjectRegistrationController@reserve']);
+        Route::post('project_registration/grove_login', ['as' => 'project.registration.grove_login', 'uses' => 'ProjectRegistrationController@groveLogin']);
+        Route::get('project_registration/delete_reservation/{ProjectID}', ['as' => 'project.registration.delete_reservation', 'uses' => 'ProjectRegistrationController@deleteReservation']);
+
 
         //onedrive routes.
         Route::get('onedrive_callback', ['as' => 'onedrive.callback', 'uses' => 'OneDriveController@callback']);

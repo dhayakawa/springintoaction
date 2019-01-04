@@ -34,7 +34,8 @@ mix.scripts([
     'resources/assets/js/BackgridHTMLCell.js',
     'resources/assets/js/jquery-file-upload/js/vendor/jquery.ui.widget.js',
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
-    'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js'
+    'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
+    'resources/assets/js/frontend/registration/confirm.jquery.js'
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
     'node_modules/lodash/lodash.min.js',
@@ -57,7 +58,8 @@ mix.scripts([
     'resources/assets/js/BackgridHTMLCell.js',
     'resources/assets/js/jquery-file-upload/js/vendor/jquery.ui.widget.js',
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
-    'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js'
+    'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
+    'resources/assets/js/frontend/registration/confirm.jquery.js'
 ], 'public/js/springintoaction.packages.min.js');
 mix.scripts([
     'resources/assets/js/models/dashboard.js',
@@ -89,7 +91,7 @@ mix.scripts([
     'resources/assets/js/collections/project-volunteer.js',
     'resources/assets/js/collections/site-volunteer.js',
     'resources/assets/js/collections/report.js',
-    'resources/assets/js/models/init-collections.js'
+    'resources/assets/js/collections/init-collections.js'
 ], 'public/js/springintoaction.collections.js');
 mix.scripts([
     'resources/assets/js/views/dashboard.js',
@@ -125,7 +127,38 @@ mix.scripts([
 mix.scripts([
     'resources/assets/js/frontend/springintoaction.project-request.js'
 ], 'public/js/frontend/springintoaction.project-request.js');
+mix.scripts([
+    'resources/assets/js/frontend/springintoaction.project-registration.js'
+], 'public/js/frontend/springintoaction.project-registration.js');
+/**
+ * Registration app
+ */
+mix.scripts([
+    'resources/assets/js/frontend/registration/models/project.js',
+    'resources/assets/js/models/project-volunteer.js',
+    'resources/assets/js/models/volunteer.js',
+    'resources/assets/js/frontend/registration/models/init-models.js'
+], 'public/js/frontend/registration/springintoaction.models.js');
+mix.scripts([
+    'resources/assets/js/frontend/registration/collections/project.js',
+    'resources/assets/js/frontend/registration/collections/volunteer.js',
+    'resources/assets/js/frontend/registration/models/init-collections.js'
+], 'public/js/frontend/registration/springintoaction.collections.js');
+mix.scripts([
+    'resources/assets/js/frontend/registration/views/project.js',
+    'resources/assets/js/frontend/registration/views/registration.js',
 
+    'resources/assets/js/frontend/registration/views/main-view.js'
+], 'public/js/frontend/registration/springintoaction.views.js');
+mix.scripts([
+    'resources/assets/js/frontend/registration/init.js',
+    'resources/assets/js/browser.console.logging.js',
+    'resources/assets/js/views/select.js'
+], 'public/js/frontend/registration/springintoaction.init.js');
+mix.scripts([
+    'resources/assets/js/frontend/registration/routes/route.js',
+    'resources/assets/js/frontend/registration/app.js'
+], 'public/js/frontend/registration/springintoaction.main.js');
 // These copies are for local dev only so we can debug styles. uncomment as needed
 // .copy('node_modules/bootstrap/dist/css/bootstrap.min.css.map', 'public/css/bootstrap.min.css.map', false)
 // .copy('node_modules/backgrid/lib/backgrid.min.css', 'public/css/backgrid.min.css', false)
@@ -144,6 +177,7 @@ mix.scripts([
 // This is not just dev, this is for production
 mix.less('resources/assets/less/onedrive.less', 'public/css/springintoaction.onedrive.css');
 mix.less('resources/assets/less/sia_app.less', 'public/css/springintoaction.app.css');
+mix.less('resources/assets/less/frontend/registration/registration_app.less', 'public/css/frontend/registration/springintoaction.app.css');
 mix.less('resources/assets/less/frontend/fonts.less', 'public/css/springintoaction.fonts.css');
 mix.less('resources/assets/less/sia_frontend.less', 'public/css/springintoaction.frontend.css');
 mix.styles([
@@ -164,8 +198,15 @@ mix.styles([
 
 mix.copy('resources/assets/fonts','public/fonts');
 mix.copy('resources/assets/js/springintoaction.templates.js','public/js/springintoaction.templates.js');
-mix.copy('resources/assets/js/app-initial-model-vars-data.js','public/js/app-initial-model-vars-data.js');
+mix.copy('resources/assets/js/app-initial-models-vars-data.js','public/js/app-initial-models-vars-data.js');
 mix.copy('resources/assets/js/app-initial-collections-view-data.js','public/js/app-initial-collections-view-data.js');
+/**
+ * Registration app
+ */
+mix.copy('resources/assets/js/frontend/registration/springintoaction.templates.js', 'public/js/frontend/registration/springintoaction.templates.js');
+mix.copy('resources/assets/js/frontend/registration/app-initial-models-vars-data.js', 'public/js/frontend/registration/app-initial-models-vars-data.js');
+mix.copy('resources/assets/js/frontend/registration/app-initial-collections-view-data.js', 'public/js/frontend/registration/app-initial-collections-view-data.js');
+
 mix.version();
 
 // mix.copy('resources/assets/js/test/test.js','public/js/test/test.js');

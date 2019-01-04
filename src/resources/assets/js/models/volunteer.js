@@ -47,7 +47,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
-                })
+                }).join('');
             } else {
                 return options;
             }
@@ -57,7 +57,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
-                })
+                }).join('');
             } else {
                 return options;
             }
@@ -84,7 +84,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
-                })
+                }).join('');
             } else {
                 return options;
             }
@@ -94,7 +94,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
-                })
+                }).join('');
             } else {
 
                 return options;
@@ -106,7 +106,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
-                })
+                }).join('');
             } else {
                 return options;
             }
@@ -117,7 +117,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
-                })
+                }).join('');
             } else {
                 return options;
             }
@@ -127,7 +127,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     return "<option value='" + value[1] + "'>" + value[0] + "</option>";
-                })
+                }).join('');
             } else {
                 return options;
             }
