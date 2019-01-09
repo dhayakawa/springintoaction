@@ -204,7 +204,7 @@ let Ferrari = Car.fullExtend({
 var _log = function () {console.log('!!_log feature is not working!!',arguments)};
 function getSIAModal(){
     let $modalCopy = $('#sia-modal');
-    $modalCopy.modal({
+    $modalCopy.SIAModal({
         backdrop: 'static',
         show: false,
         keyboard: false
@@ -213,12 +213,12 @@ function getSIAModal(){
 }
 
 function getSIAConfirmModal(){
-    let $modalCopy = $('#sia-confirm');
-    $modalCopy.confirm({
+    let $confirm = $('#sia-confirm');
+    $confirm.confirm({
         backdrop: false,
         show: false,
         keyboard: false
     });
 
-    return $modalCopy;
+    return $confirm;
 }

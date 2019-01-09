@@ -35,7 +35,8 @@ mix.scripts([
     'resources/assets/js/jquery-file-upload/js/vendor/jquery.ui.widget.js',
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
-    'resources/assets/js/frontend/registration/confirm.jquery.js'
+    'resources/assets/js/frontend/registration/confirm.jquery.js',
+    'resources/assets/js/frontend/registration/siaModal.jquery.js'
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
     'node_modules/lodash/lodash.min.js',
@@ -59,7 +60,8 @@ mix.scripts([
     'resources/assets/js/jquery-file-upload/js/vendor/jquery.ui.widget.js',
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
-    'resources/assets/js/frontend/registration/confirm.jquery.js'
+    'resources/assets/js/frontend/registration/confirm.jquery.js',
+    'resources/assets/js/frontend/registration/siaModal.jquery.js'
 ], 'public/js/springintoaction.packages.min.js');
 mix.scripts([
     'resources/assets/js/models/dashboard.js',

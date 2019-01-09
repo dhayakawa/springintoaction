@@ -13,11 +13,11 @@
     // MODAL CLASS DEFINITION
     // ======================
 
-    var Confirm = function (element, options) {
+    var SIAModal = function (element, options) {
         this.options = options
         this.$body = $(document.body)
         this.$element = $(element)
-        this.$dialog = this.$element.find('.confirm-dialog')
+        this.$dialog = this.$element.find('.modal-dialog')
         this.$backdrop = null
         this.isShown = null
         this.originalBodyPad = null
@@ -26,49 +26,48 @@
 
         if (this.options.remote) {
             this.$element
-                .find('.confirm-content')
+                .find('.modal-content')
                 .load(this.options.remote, $.proxy(function () {
-                    this.$element.trigger('loaded.bs.confirm')
+                    this.$element.trigger('loaded.bs.modal')
                 }, this))
         }
     }
 
-    Confirm.VERSION = '3.3.7'
+    SIAModal.VERSION = '3.3.7'
 
-    Confirm.TRANSITION_DURATION = 300
-    Confirm.BACKDROP_TRANSITION_DURATION = 150
+    SIAModal.TRANSITION_DURATION = 300
+    SIAModal.BACKDROP_TRANSITION_DURATION = 150
 
-    Confirm.DEFAULTS = {
+    SIAModal.DEFAULTS = {
         backdrop: true,
         keyboard: true,
         show: true
     }
 
-    Confirm.prototype.toggle = function (_relatedTarget) {
+    SIAModal.prototype.toggle = function (_relatedTarget) {
         return this.isShown ? this.hide() : this.show(_relatedTarget)
     }
 
-    Confirm.prototype.show = function (_relatedTarget) {
+    SIAModal.prototype.show = function (_relatedTarget) {
         var that = this
-        var e = $.Event('show.bs.confirm', {relatedTarget: _relatedTarget})
+        var e = $.Event('show.bs.modal', {relatedTarget: _relatedTarget})
 
         this.$element.trigger(e)
-
         if (this.isShown || e.isDefaultPrevented()) return
 
         this.isShown = true
 
         this.checkScrollbar()
         this.setScrollbar()
-        this.$body.addClass('confirm-open')
+        this.$body.addClass('modal-open')
 
         this.escape()
         this.resize()
 
-        this.$element.on('click.dismiss.bs.confirm', '[data-dismiss="confirm"]', $.proxy(this.hide, this))
+        this.$element.on('click.dismiss.bs.modal', '[data-dismiss="sia-modal"]', $.proxy(this.hide, this))
 
-        this.$dialog.on('mousedown.dismiss.bs.confirm', function () {
-            that.$element.one('mouseup.dismiss.bs.confirm', function (e) {
+        this.$dialog.on('mousedown.dismiss.bs.modal', function () {
+            that.$element.one('mouseup.dismiss.bs.modal', function (e) {
                 if ($(e.target).is(that.$element)) that.ignoreBackdropClick = true
             })
         })
@@ -94,25 +93,24 @@
 
             that.enforceFocus()
 
-            var e = $.Event('shown.bs.confirm', {relatedTarget: _relatedTarget})
+            var e = $.Event('shown.bs.modal', {relatedTarget: _relatedTarget})
 
             transition ?
                 that.$dialog // wait for modal to slide in
                     .one('bsTransitionEnd', function () {
                         that.$element.trigger('focus').trigger(e)
                     })
-                    .emulateTransitionEnd(Confirm.TRANSITION_DURATION) :
+                    .emulateTransitionEnd(SIAModal.TRANSITION_DURATION) :
                 that.$element.trigger('focus').trigger(e)
         })
     }
 
-    Confirm.prototype.hide = function (e) {
+    SIAModal.prototype.hide = function (e) {
         if (e) e.preventDefault()
 
-        e = $.Event('hide.bs.confirm')
+        e = $.Event('hide.bs.modal')
 
         this.$element.trigger(e)
-
         if (!this.isShown || e.isDefaultPrevented()) return
 
         this.isShown = false
@@ -120,26 +118,26 @@
         this.escape()
         this.resize()
 
-        $(document).off('focusin.bs.confirm')
+        $(document).off('focusin.bs.modal')
 
         this.$element
             .removeClass('in')
-            .off('click.dismiss.bs.confirm')
-            .off('mouseup.dismiss.bs.confirm')
+            .off('click.dismiss.bs.modal')
+            .off('mouseup.dismiss.bs.modal')
 
-        this.$dialog.off('mousedown.dismiss.bs.confirm')
+        this.$dialog.off('mousedown.dismiss.bs.modal')
 
         $.support.transition && this.$element.hasClass('fade') ?
             this.$element
-                .one('bsTransitionEnd', $.proxy(this.hideConfirm, this))
-                .emulateTransitionEnd(Confirm.TRANSITION_DURATION) :
-            this.hideConfirm()
+                .one('bsTransitionEnd', $.proxy(this.hideSIAModal, this))
+                .emulateTransitionEnd(SIAModal.TRANSITION_DURATION) :
+            this.hideSIAModal()
     }
 
-    Confirm.prototype.enforceFocus = function () {
+    SIAModal.prototype.enforceFocus = function () {
         $(document)
-            .off('focusin.bs.confirm') // guard against infinite focus loop
-            .on('focusin.bs.confirm', $.proxy(function (e) {
+            .off('focusin.bs.modal') // guard against infinite focus loop
+            .on('focusin.bs.modal', $.proxy(function (e) {
                 if (document !== e.target &&
                     this.$element[0] !== e.target &&
                     !this.$element.has(e.target).length) {
@@ -148,41 +146,41 @@
             }, this))
     }
 
-    Confirm.prototype.escape = function () {
+    SIAModal.prototype.escape = function () {
         if (this.isShown && this.options.keyboard) {
-            this.$element.on('keydown.dismiss.bs.confirm', $.proxy(function (e) {
+            this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {
                 e.which == 27 && this.hide()
             }, this))
         } else if (!this.isShown) {
-            this.$element.off('keydown.dismiss.bs.confirm')
+            this.$element.off('keydown.dismiss.bs.modal')
         }
     }
 
-    Confirm.prototype.resize = function () {
+    SIAModal.prototype.resize = function () {
         if (this.isShown) {
-            $(window).on('resize.bs.confirm', $.proxy(this.handleUpdate, this))
+            $(window).on('resize.bs.modal', $.proxy(this.handleUpdate, this))
         } else {
-            $(window).off('resize.bs.confirm')
+            $(window).off('resize.bs.modal')
         }
     }
 
-    Confirm.prototype.hideConfirm = function () {
+    SIAModal.prototype.hideSIAModal = function () {
         var that = this
         this.$element.hide()
         this.backdrop(function () {
-            that.$body.removeClass('confirm-open')
+            that.$body.removeClass('modal-open')
             that.resetAdjustments()
             that.resetScrollbar()
-            that.$element.trigger('hidden.bs.confirm')
+            that.$element.trigger('hidden.bs.modal')
         })
     }
 
-    Confirm.prototype.removeBackdrop = function () {
+    SIAModal.prototype.removeBackdrop = function () {
         this.$backdrop && this.$backdrop.remove()
         this.$backdrop = null
     }
 
-    Confirm.prototype.backdrop = function (callback) {
+    SIAModal.prototype.backdrop = function (callback) {
         var that = this
         var animate = this.$element.hasClass('fade') ? 'fade' : ''
 
@@ -190,10 +188,10 @@
             var doAnimate = $.support.transition && animate
 
             this.$backdrop = $(document.createElement('div'))
-                .addClass('confirm-backdrop ' + animate)
+                .addClass('modal-backdrop ' + animate)
                 .appendTo(this.$body)
 
-            this.$element.on('click.dismiss.bs.confirm', $.proxy(function (e) {
+            this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
                 if (this.ignoreBackdropClick) {
                     this.ignoreBackdropClick = false
                     return
@@ -213,7 +211,7 @@
             doAnimate ?
                 this.$backdrop
                     .one('bsTransitionEnd', callback)
-                    .emulateTransitionEnd(Confirm.BACKDROP_TRANSITION_DURATION) :
+                    .emulateTransitionEnd(SIAModal.BACKDROP_TRANSITION_DURATION) :
                 callback()
 
         } else if (!this.isShown && this.$backdrop) {
@@ -226,7 +224,7 @@
             $.support.transition && this.$element.hasClass('fade') ?
                 this.$backdrop
                     .one('bsTransitionEnd', callbackRemove)
-                    .emulateTransitionEnd(Confirm.BACKDROP_TRANSITION_DURATION) :
+                    .emulateTransitionEnd(SIAModal.BACKDROP_TRANSITION_DURATION) :
                 callbackRemove()
 
         } else if (callback) {
@@ -236,27 +234,27 @@
 
     // these following methods are used to handle overflowing modals
 
-    Confirm.prototype.handleUpdate = function () {
+    SIAModal.prototype.handleUpdate = function () {
         this.adjustDialog()
     }
 
-    Confirm.prototype.adjustDialog = function () {
-        var confirmIsOverflowing = this.$element[0].scrollHeight > document.documentElement.clientHeight
+    SIAModal.prototype.adjustDialog = function () {
+        var modalIsOverflowing = this.$element[0].scrollHeight > document.documentElement.clientHeight
 
         this.$element.css({
-            paddingLeft: !this.bodyIsOverflowing && confirmIsOverflowing ? this.scrollbarWidth : '',
-            paddingRight: this.bodyIsOverflowing && !confirmIsOverflowing ? this.scrollbarWidth : ''
+            paddingLeft: !this.bodyIsOverflowing && modalIsOverflowing ? this.scrollbarWidth : '',
+            paddingRight: this.bodyIsOverflowing && !modalIsOverflowing ? this.scrollbarWidth : ''
         })
     }
 
-    Confirm.prototype.resetAdjustments = function () {
+    SIAModal.prototype.resetAdjustments = function () {
         this.$element.css({
             paddingLeft: '',
             paddingRight: ''
         })
     }
 
-    Confirm.prototype.checkScrollbar = function () {
+    SIAModal.prototype.checkScrollbar = function () {
         var fullWindowWidth = window.innerWidth
         if (!fullWindowWidth) { // workaround for missing window.innerWidth in IE8
             var documentElementRect = document.documentElement.getBoundingClientRect()
@@ -266,19 +264,19 @@
         this.scrollbarWidth = this.measureScrollbar()
     }
 
-    Confirm.prototype.setScrollbar = function () {
+    SIAModal.prototype.setScrollbar = function () {
         var bodyPad = parseInt((this.$body.css('padding-right') || 0), 10)
         this.originalBodyPad = document.body.style.paddingRight || ''
         if (this.bodyIsOverflowing) this.$body.css('padding-right', bodyPad + this.scrollbarWidth)
     }
 
-    Confirm.prototype.resetScrollbar = function () {
+    SIAModal.prototype.resetScrollbar = function () {
         this.$body.css('padding-right', this.originalBodyPad)
     }
 
-    Confirm.prototype.measureScrollbar = function () { // thx walsh
+    SIAModal.prototype.measureScrollbar = function () { // thx walsh
         var scrollDiv = document.createElement('div')
-        scrollDiv.className = 'confirm-scrollbar-measure'
+        scrollDiv.className = 'modal-scrollbar-measure'
         this.$body.append(scrollDiv)
         var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth
         this.$body[0].removeChild(scrollDiv)
@@ -290,29 +288,28 @@
     // =======================
 
     function Plugin(option, _relatedTarget) {
-
         return this.each(function () {
             var $this = $(this)
-            var data = $this.data('bs.confirm')
-            var options = $.extend({}, Confirm.DEFAULTS, $this.data(), typeof option == 'object' && option)
+            var data = $this.data('bs.modal')
+            var options = $.extend({}, SIAModal.DEFAULTS, $this.data(), typeof option == 'object' && option)
 
-            if (!data) $this.data('bs.confirm', (data = new Confirm(this, options)))
+            if (!data) $this.data('bs.modal', (data = new SIAModal(this, options)))
             if (typeof option == 'string') data[option](_relatedTarget)
             else if (options.show) data.show(_relatedTarget)
         })
     }
 
-    var old = $.fn.confirm
+    var old = $.fn.modal
 
-    $.fn.confirm = Plugin
-    $.fn.confirm.Constructor = Confirm
+    $.fn.SIAModal = Plugin
+    $.fn.SIAModal.Constructor = SIAModal
 
 
     // CONFIRM NO CONFLICT
     // =================
 
-    $.fn.confirm.noConflict = function () {
-        $.fn.confirm = old
+    $.fn.SIAModal.noConflict = function () {
+        $.fn.SIAModal = old
         return this
     }
 
@@ -320,17 +317,18 @@
     // CONFIRM DATA-API
     // ==============
 
-    $(document).on('click.bs.confirm.data-api', '[data-toggle="confirm"]', function (e) {
+    $(document).on('click.bs.modal.data-api', '[data-toggle="sia-modal"]', function (e) {
         var $this = $(this)
         var href = $this.attr('href')
         var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) // strip for ie7
-        var option = $target.data('bs.confirm') ? 'toggle' : $.extend({remote: !/#/.test(href) && href}, $target.data(), $this.data())
+        var option = $target.data('bs.modal') ? 'toggle' : $.extend({remote: !/#/.test(href) && href}, $target.data(), $this.data())
 
         if ($this.is('a')) e.preventDefault()
 
-        $target.one('show.bs.confirm', function (showEvent) {
-            if (showEvent.isDefaultPrevented()) return // only register focus restorer if confirm will actually get shown
-            $target.one('hidden.bs.confirm', function () {
+        $target.one('show.bs.modal', function (showEvent) {
+
+            if (showEvent.isDefaultPrevented()) return // only register focus restorer if modal will actually get shown
+            $target.one('hidden.bs.modal', function () {
                 $this.is(':visible') && $this.trigger('focus')
             })
         })

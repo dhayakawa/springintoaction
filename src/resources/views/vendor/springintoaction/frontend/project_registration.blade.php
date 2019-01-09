@@ -16,7 +16,7 @@
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
-<div class="modal fade" id="sia-modal" tabindex="-1" role="dialog" >
+<div class="modal fade" id="sia-modal" tabindex="-1" role="sia-dialog" >
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">

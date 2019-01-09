@@ -137,13 +137,15 @@ trait ProjectRegistrationHelper
         $aSiteNames = array_values(array_unique($this->getArrayFieldValues('SiteName', $all_projects)));
         sort($aSiteNames);
         foreach ($aSiteNames as $siteName) {
+            $fieldID = $this->findArrayKeyByFieldValue('SiteID', 'SiteName', $siteName, $sites);
             $projectFilters['site'][] = [
                 'filterIcon' => '',
                 'filterName' => 'filter[site][]',
+                'filterId' => 'filter_site_' . $fieldID,
                 'filterLabel' => $siteName,
                 'FilterIsChecked' => '',
                 'Field' => 'sites.SiteName',
-                'FieldID' => $this->findArrayKeyByFieldValue('SiteID', 'SiteName', $siteName, $sites),
+                'FieldID' => $fieldID,
             ];
         }
 
@@ -186,6 +188,7 @@ trait ProjectRegistrationHelper
                     'filterIcon' => $aFilterIcons[$skill],
                     'filterName' => 'filter[skill][]',
                     'filterLabel' => $skill,
+                    'filterId' => 'filter_skill_' . $skillID,
                     'FilterIsChecked' => '',
                     'Field' => 'projects.PrimarySkillNeeded',
                     'FieldID' => $skillID,
@@ -205,6 +208,7 @@ trait ProjectRegistrationHelper
             $projectFilters['childFriendly'][] = [
                 'filterIcon' => $aChildFriendlyIcons[$childFriendly],
                 'filterName' => 'filter[childFriendly][]',
+                'filterId' => 'filter_childFriendly_' . $childFriendly,
                 'filterLabel' => $childFriendly,
                 'FilterIsChecked' => '',
                 'Field' => 'projects.ChildFriendly',
@@ -214,10 +218,11 @@ trait ProjectRegistrationHelper
 
         $aPeopleNeeded = array_values(array_unique($this->getArrayFieldValues('PeopleNeeded', $all_projects)));
         sort($aChildFriendly);
-        foreach ($aPeopleNeeded as $peopleNeeded) {
+        foreach ($aPeopleNeeded as $idx => $peopleNeeded) {
             $projectFilters['peopleNeeded'][] = [
                 'filterIcon' => '',
                 'filterName' => 'filter[peopleNeeded][]',
+                'filterId' => 'filter_peopleNeeded' . $idx,
                 'filterLabel' => $peopleNeeded,
                 'FilterIsChecked' => '',
                 'Field' => 'projects.PeopleNeeded',

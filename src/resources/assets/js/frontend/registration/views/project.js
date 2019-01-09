@@ -100,6 +100,7 @@
                 bFilterIsChecked: self.model.get('FilterIsChecked'),
                 Field: self.model.get('Field'),
                 filterName: self.model.get('filterName'),
+                filterId: self.model.get('filterId'),
                 filterLabel: self.model.get('filterLabel'),
                 filterValue: filterValue
             };
