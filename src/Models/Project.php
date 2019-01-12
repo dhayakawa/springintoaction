@@ -257,6 +257,14 @@ FROM (
             list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
+        $sSqlProjectsAt80Perc = "(select count(*)
+            from projects p
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year}
+            where p.Active = 1 and `p`.`deleted_at` is null
+              and ((p.VolunteersAssigned + (select count(*) from project_reservations pr where pr.ProjectID = p.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < 5)) / p.VolunteersNeededEst) >= .8)";
+        $sSqlActiveProjects = "(select count(*) from projects p
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} where p.Active = 1 and `p`.`deleted_at` is null)";
+        $sSqlVolunteersNeeded = "(select IF({$sSqlProjectsAt80Perc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * .8)))";
         $projects = self::select(
             [
                 'projects.ProjectID',
@@ -264,19 +272,19 @@ FROM (
                 'projects.ProjectDescription',
                 'projects.PrimarySkillNeeded',
                 'projects.ChildFriendly',
-                'projects.VolunteersNeededEst',
+                DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"),
                 DB::raw(
                     '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
                 ),
                 DB::raw(
-                    '(projects.VolunteersNeededEst - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < '.config('springintoaction.registration.reservation_lifetime_minutes').' )) as PeopleNeeded'
+                    "({$sSqlVolunteersNeeded} - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < ".config('springintoaction.registration.reservation_lifetime_minutes')." )) as PeopleNeeded"
                 )
             ]
         )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
             'site_status.Year',
             $Year
         )->join('sites', 'site_status.SiteID', '=', 'sites.SiteID')->where(
-            DB::raw('(projects.VolunteersNeededEst - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < '.config('springintoaction.registration.reservation_lifetime_minutes').' ))'),
+            DB::raw("({$sSqlVolunteersNeeded} - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < ".config('springintoaction.registration.reservation_lifetime_minutes')." ))"),
             '>',
             0
         )->where('projects.Active', 1)->where('projects.Status', $ProjectStatusOptionID);
@@ -342,6 +350,8 @@ FROM (
                 $order['direction']
             );
         }
+        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+            $projects->toSql()]);
         $all_projects = $projects->get()->toArray();
         if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
             $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
