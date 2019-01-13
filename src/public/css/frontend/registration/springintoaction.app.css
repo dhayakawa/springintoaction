@@ -905,7 +905,7 @@ fieldset[disabled] .filters-navbar-inverse .btn-link:focus {
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1050;
+  z-index: 2050;
   -webkit-overflow-scrolling: touch;
   outline: 0;
 }
@@ -1117,6 +1117,9 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .grove-login
 }
 form[name="newProjectRegistration"] .registration-form-body-wrapper .grove-register {
   display: none;
+}
+form[name="newProjectRegistration"] .registration-form-body-wrapper .grove-contacts-confirm-list tr td:nth-child(n+2) label {
+  font-weight: 400;
 }
 form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-register-list {
   padding: 0;

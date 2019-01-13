@@ -356,12 +356,10 @@ Route::group(
         Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
 
         Route::get(
-            'report/projects/{Year}/{SiteID}/{ProjectID}',
-            ['as' => 'report.project', 'uses' => 'ReportsController@getYearSiteProjectReportUrl']
+            'report/{ReportType}/{Year}/{SiteID?}/{ProjectID?}/{pdf?}',
+            ['as' => 'report', 'uses' => 'ReportsController@getReport']
         );
-        Route::get(
-            'report/sites/{Year}/{SiteID}',
-            ['as' => 'report.site', 'uses' => 'ReportsController@getYearSiteReportUrl']
-        );
+
+
     }
 );

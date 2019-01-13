@@ -92,8 +92,8 @@
                 <div class="personal-contact-info-wrapper"></div>
                 <div class="row bottom-nav-btns">
                     <div class="col-sm-12 text-right">
-                        <button class="go-to-step-two-btn btn btn-default btn-sm">Register Others</button>&nbsp;
-                        <button class="go-to-step-three-btn btn btn-primary btn-sm">Confirm and Register</button>
+                        <button class="register-others btn btn-default btn-sm">Register Others</button>&nbsp;
+                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm and Register</button>
                     </div>
                 </div>
             </div>
@@ -177,10 +177,10 @@
                 </div>
                 <div class="row bottom-nav-btns">
                     <div class="col-xs-6 text-left">
-                        <button class="back-to-step-one-btn btn btn-primary btn-sm">Back to Personal Contact Info</button>
+                        <button class="back-to-contact-info-btn btn btn-primary btn-sm">Back to Personal Contact Info</button>
                     </div>
                     <div class="col-xs-6 text-right">
-                        <button class="go-to-step-three-btn btn btn-primary btn-sm">Confirm and Register</button>
+                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm and Register</button>
                     </div>
                 </div>
             </div>
@@ -202,7 +202,7 @@
                 </div>
                 <div class="row bottom-nav-btns">
                     <div class="col-xs-6 text-left">
-                        <button class="back-to-step-two-btn btn btn-primary btn-sm">Back to Register Others</button>
+                        <button class="back-to-register-others-btn btn btn-primary btn-sm">Back to Register Others</button>
                     </div>
                     <div class="col-xs-6 text-right">
                         <button class="submit-registration-btn btn btn-primary btn-sm">Register</button>

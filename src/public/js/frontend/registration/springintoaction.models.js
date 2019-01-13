@@ -5,6 +5,7 @@
         defaults: {
             'filterIcon':'',
             'filterName':'',
+            'filterId':'',
             'filterLabel':'',
             'FilterIsChecked':'',
             'Field':'',

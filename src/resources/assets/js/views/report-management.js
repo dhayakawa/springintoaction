@@ -64,7 +64,7 @@
             this.options = options;
             this.viewClassName = this.options.viewClassName;
             this.modelNameLabel = this.options.modelNameLabel;
-            this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
+            this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase().replace(' ','_');
             this.viewName = 'App.Views.ReportsManagement';
             this.localStorageKey = this.modelNameLabel;
             this.backgridWrapperClassSelector = '.backgrid-wrapper';
@@ -114,6 +114,12 @@
             } else {
                 this.$('.project-dropdown').show();
             }
+
+            if (this.reportType === 'sites') {
+                this.$('.site-management-selects').hide();
+            }
+            this.$('.site-management-selects').hide();
+            this.$('.project-dropdown').hide();
             this.handleSiteStatusIDChange();
             window.ajaxWaiting('remove', self.ajaxWaitingSelector);
 
@@ -143,17 +149,22 @@
                     App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
                     break;
                 default:
-                    App.Models.reportModel.url = '/admin/report/sites/' + Year + '/' + SiteID ;
+                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
             }
+            self.$('.download-pdf').attr('href', App.Models.reportModel.url + '/pdf');
             // fetch new report
+            $.ajax({
+                type: "get",
+                dataType: "html",
+                url: App.Models.reportModel.url,
+                success: function (response) {
+                    self.$('.report-wrapper').html(response)
+                },
+                fail: function (response) {
+                    console.error(response)
+                }
+            })
 
-            $.when(
-                App.Models.reportModel.fetch({reset: true})
-            ).then(function () {
-                //initialize your views here
-                _log('App.Views.ProjectsDropDown.fetch.event', 'reportModel fetch promise done');
-                self.$('#reports-iframe-view').attr('src', App.Models.reportModel.get('ReportUrl'))
-            });
         }
     });
 
