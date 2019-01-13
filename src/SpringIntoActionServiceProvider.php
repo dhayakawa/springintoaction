@@ -94,5 +94,10 @@
             ]);
             $this->router->aliasMiddleware('guest', Middleware\RedirectIfAuthenticated::class);
             $this->router->aliasMiddleware('ajax.request', Middleware\CheckSessionAjaxRequests::class);
+
+            $this->app->register(\Orchestra\Html\HtmlServiceProvider::class);
+            $this->loader->alias('Form', \Orchestra\Support\Facades\Form::class);
+            $this->loader->alias('HTML', \Orchestra\Support\Facades\HTML::class);
+            $this->loader->alias('Table', \Orchestra\Support\Facades\Table::class);
         }
     }

@@ -123,15 +123,60 @@
                                             'route': 'view/reports/management/sites'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Projects',
+                                            'linkText': 'Project List',
                                             'badgeCount': '1',
                                             'route': 'view/reports/management/projects'
                                         }),
-                                        // new App.Models.DashboardPanelLinksListItem({
-                                        //     'linkText': 'Volunteers',
-                                        //     'badgeCount': '0',
-                                        //     'route': 'view/reports/management/volunteers'
-                                        // })
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Budget Allocation',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/budget'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Budget and Volunteer Estimates',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/budget_and_volunteer'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Early Start',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/early_start'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Estimator',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/estimator'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Project List - Final Completion Assessment',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/projects_final_completion_assessment'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteer Assignment - Alpha Order - For Packets',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/volunteer_assignment_for_packets'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteer Assignment - For Mailmerge - Packets',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/volunteer_assignment_for_mailmerge'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteer Assignment',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/volunteer_assignment'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteers Needed',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/volunteesr_needed'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Scout-Liaison Estimator',
+                                            'badgeCount': '1',
+                                            'route': 'view/reports/management/scout_liaison_estimator'
+                                        }),
                                     ])
                                 }).render().$el.html()
                             })
