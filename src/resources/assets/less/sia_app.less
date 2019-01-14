@@ -40,6 +40,10 @@
         }
         .table{
             table-layout: fixed;}
+
+        .table > thead > tr > th {
+            border-bottom: 2px solid #f4f4f4;
+        }
         .table .table {
             background-color: transparent;
         }
@@ -49,10 +53,28 @@
         .table-striped .table-striped > tbody > tr:nth-of-type(odd) {
             background-color: #ebe5cd;
         }
-        .no-tbody-border {
+        table.no-tbody-border > tbody > tr > td {
             border: 0;
         }
-        h3.Assigned-Volunteers {
+
+        div.Volunteer-Assignment {
+            border-top: 3px solid black;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        div.Volunteer-Assignment:nth-of-type(odd) {
+            background-color: #f9f9f9;
+        }
+
+        div.Volunteer-Assignment .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: #ebe5cd;
+        }
+
+        table.Volunteer-Headers {
+            margin-bottom:0;
+        }
+        h4.Assigned-Volunteers {
             margin: 0;
         }
         .Name, .Full-Name {

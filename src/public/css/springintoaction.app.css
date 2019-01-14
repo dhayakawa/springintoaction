@@ -20,6 +20,9 @@
 .sia-main-app .reports-management-view .table {
   table-layout: fixed;
 }
+.sia-main-app .reports-management-view .table > thead > tr > th {
+  border-bottom: 2px solid #f4f4f4;
+}
 .sia-main-app .reports-management-view .table .table {
   background-color: transparent;
 }
@@ -29,10 +32,24 @@
 .sia-main-app .reports-management-view .table-striped .table-striped > tbody > tr:nth-of-type(odd) {
   background-color: #ebe5cd;
 }
-.sia-main-app .reports-management-view .no-tbody-border {
+.sia-main-app .reports-management-view table.no-tbody-border > tbody > tr > td {
   border: 0;
 }
-.sia-main-app .reports-management-view h3.Assigned-Volunteers {
+.sia-main-app .reports-management-view div.Volunteer-Assignment {
+  border-top: 3px solid black;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+.sia-main-app .reports-management-view div.Volunteer-Assignment:nth-of-type(odd) {
+  background-color: #f9f9f9;
+}
+.sia-main-app .reports-management-view div.Volunteer-Assignment .table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #ebe5cd;
+}
+.sia-main-app .reports-management-view table.Volunteer-Headers {
+  margin-bottom: 0;
+}
+.sia-main-app .reports-management-view h4.Assigned-Volunteers {
   margin: 0;
 }
 .sia-main-app .reports-management-view .Name,
