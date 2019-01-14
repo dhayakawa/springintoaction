@@ -99,7 +99,7 @@ class ReportsController extends BaseController
                 $reportHtml = $this->getVolunteerAssignmentForPacketsReport($Year, $bReturnArray);
                 break;
             case 'volunteer_assignment_for_mailmerge':
-                $reportName = 'Project Estimator Report';
+                $reportName = 'Volunteer Assignment Report';
                 $reportHtml = $this->getVolunteerAssignmentForMailMergeReport(
                     $Year,
                     $SiteID = null,
@@ -708,7 +708,7 @@ class ReportsController extends BaseController
                     'project_roles.ProjectRoleID',
                     '=',
                     'project_volunteer_role.ProjectRoleID'
-                )->where('project_volunteers.ProjectID','=', $ProjectID)->orderBy('volunteers.LastName', 'asc');
+                )->where('project_volunteers.ProjectID','=', $ProjectID)->orderBy('volunteers.LastName', 'desc');
                 $aVolunteers = $Volunteers->get()->toArray();
 
                 foreach ($aVolunteers as $key => $aVolunteer) {
@@ -717,15 +717,6 @@ class ReportsController extends BaseController
                             'id',
                             preg_split("/,/", $aVolunteer['Age Range'])
                         )->get()->toArray();
-                    \Illuminate\Support\Facades\Log::debug(
-                        '',
-                        [
-                            'File:' . __FILE__,
-                            'Method:' . __METHOD__,
-                            'Line:' . __LINE__,
-                            $aAgeRanges,
-                        ]
-                    );
                     $aVolunteers[$key]['Age Range'] = join(',', array_column($aAgeRanges, 'option_label'));
                 }
                 $budgetAmt = 0.00;
@@ -738,16 +729,16 @@ class ReportsController extends BaseController
                     }
                 }
                 $volunteersTable = $this->getResultsHtmlTable($aVolunteers);
-                $aVolunteerHeaders = [['<h3 class="Assigned-Volunteers">Assigned Volunteers</h3>', '<strong>Assigned Volunteer count w/ Project Coordinator:</strong> ' . count(
+                $aVolunteerHeaders = [['<h4 class="Assigned-Volunteers">Assigned Volunteers</h4>', '<strong>Assigned Volunteer count w/ Project Coordinator:</strong> ' . count(
                         $aVolunteers), '<strong>Budget Available:</strong> $' . $budgetAmt ]];
-                $volunteerHeaders = $this->getResultsHtmlTable($aVolunteerHeaders, false, 'no-tbody-border');
-                $aProjectRows[] = $projectTable . $volunteerHeaders . $volunteersTable;
+                $volunteerHeaders = $this->getResultsHtmlTable($aVolunteerHeaders, false, 'no-tbody-border Volunteer-Headers');
+                $aProjectRows[] = "<div class=\"Volunteer-Assignment\">" . $projectTable . $volunteerHeaders . $volunteersTable . "</div>";
             }
             if ($bReturnArray) {
                 $html[] = $site['SiteName'];
                 $html = array_merge($html, $aProjectRows);
             } else {
-                $response = $this->getResultsHtmlTable($aProjectRows, true, 'no-padding');
+                $response =  join('', $aProjectRows);
                 $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
                 $html .= $response;
             }
@@ -819,7 +810,7 @@ body{line-height:.85;}
 .table .table{background-color:#fff}
 .table-condensed>tbody>tr>td,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>td,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>thead>tr>th{padding:2px}
 .table-bordered,.table-bordered>tbody>tr>td,.table-bordered>tbody>tr>th,.table-bordered>tfoot>tr>td,.table-bordered>tfoot>tr>th,.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border:1px solid #ddd}
-.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border-bottom-width:2px}
+.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border-bottom-width:2px;border-color:#9f9f9f}
 .table-striped>tbody>tr:nth-of-type(odd){background-color:#f9f9f9}
 .table-hover>tbody>tr:hover,.table>tbody>tr.active>td,.table>tbody>tr.active>th,.table>tbody>tr>td.active,.table>tbody>tr>th.active,.table>tfoot>tr.active>td,.table>tfoot>tr.active>th,.table>tfoot>tr>td.active,.table>tfoot>tr>th.active,.table>thead>tr.active>td,.table>thead>tr.active>th,.table>thead>tr>td.active,.table>thead>tr>th.active{background-color:#f5f5f5}
 .table-hover>tbody>tr.active:hover>td,.table-hover>tbody>tr.active:hover>th,.table-hover>tbody>tr:hover>.active,.table-hover>tbody>tr>td.active:hover,.table-hover>tbody>tr>th.active:hover{background-color:#e8e8e8}
@@ -831,34 +822,49 @@ body{line-height:.85;}
 .table-hover>tbody>tr.warning:hover>td,.table-hover>tbody>tr.warning:hover>th,.table-hover>tbody>tr:hover>.warning,.table-hover>tbody>tr>td.warning:hover,.table-hover>tbody>tr>th.warning:hover{background-color:#faf2cc}
 .table>tbody>tr.danger>td,.table>tbody>tr.danger>th,.table>tbody>tr>td.danger,.table>tbody>tr>th.danger,.table>tfoot>tr.danger>td,.table>tfoot>tr.danger>th,.table>tfoot>tr>td.danger,.table>tfoot>tr>th.danger,.table>thead>tr.danger>td,.table>thead>tr.danger>th,.table>thead>tr>td.danger,.table>thead>tr>th.danger{background-color:#f2dede}
 .table-hover>tbody>tr.danger:hover>td,.table-hover>tbody>tr.danger:hover>th,.table-hover>tbody>tr:hover>.danger,.table-hover>tbody>tr>td.danger:hover,.table-hover>tbody>tr>th.danger:hover{background-color:#ebcccc}
-td.Name,td.Site-Name,td.Contact-Phone{
-white-space: nowrap;
-}
-.table.no-padding>tbody>tr>td {
-    padding:0;
-}
-.table .table {
-    background-color: transparent;
 
-}
-.table-striped .table-striped > tbody > tr:nth-of-type(odd) {
-    background-color: #ebe5cd;
-}
-.no-tbody-border {
-    border: 0;
-}
-h3.Assigned-Volunteers {
-    margin: 0;
-}
+.table .table {
+            background-color: transparent;
+        }
+        .table.no-padding > tbody > tr > td {
+            padding: 0;
+        }
+        .table-striped .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: #ebe5cd;
+        }
+        table.no-tbody-border > tbody > tr > td {
+            border: 0;
+        }
+        
+        div.Volunteer-Assignment {
+            border-top: 3px solid black;
+            padding-bottom:5px;
+            margin-bottom:10px;
+        }
+        div.Volunteer-Assignment:nth-of-type(odd) {
+            background-color: #f9f9f9;
+        }
+        div.Volunteer-Assignment .table-striped > tbody > tr:nth-of-type(odd) {
+            background-color: #ebe5cd;
+        }
+        table.Volunteer-Headers {
+            margin-bottom:0;
+        }
+        h4.Assigned-Volunteers {
+            margin: 0;
+        }
+
 .Name, .Full-Name {
     max-width: 150px;
-    
+    white-space: nowrap;
 }
 .Contact-Phone {
     max-width: 130px;
+    white-space: nowrap;
 }
 .Site-Name {
     max-width: 200px;
+    white-space: nowrap;
 }
 .Proj-Num {
     max-width:75px;
@@ -886,16 +892,18 @@ h3.Assigned-Volunteers {
 }
 .Role {
     max-width: 30px;
-    
+    white-space: nowrap;
 }
 .Additional-Information {
     width:100%;
 }
 .Email {
     max-width: 255px;
+    white-space: nowrap;
 }
 .Age-Range {
     max-width: 100px;
+    white-space: nowrap;
 }
 
 CSS;
@@ -922,6 +930,14 @@ CSS;
         $dompdf = new Dompdf($options);
         //
         $fm = $dompdf->getFontMetrics();
+        $fm->registerFont(
+            ['family' => 'Source Sans Pro', 'weight' => 'normal', 'style' => ''],
+            public_path() . '/fonts/source-sans-pro-release/TTF/SourceSansPro-Regular.ttf'
+        );
+        $fm->registerFont(
+            ['family' => 'Source Sans Pro', 'weight' => 'normal', 'style' => 'italic'],
+            public_path() . '/fonts/source-sans-pro-release/TTF/SourceSansPro-It.ttf'
+        );
         $fm->registerFont(
             ['family' => 'Source Sans Pro', 'weight' => 'bold', 'style' => ''],
             public_path() . '/fonts/source-sans-pro-release/TTF/SourceSansPro-Semibold.ttf'
