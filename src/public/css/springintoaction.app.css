@@ -14,10 +14,69 @@
 .sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-desc {
   display: none;
 }
-.sia-main-app .reports-management-view #reports-iframe-view {
-  width: 100%;
-  height: 80vh;
-  border: thin solid #d8d8d8;
+.sia-main-app .reports-management-view .report-download {
+  padding: 0 5px;
+}
+.sia-main-app .reports-management-view .table {
+  table-layout: fixed;
+}
+.sia-main-app .reports-management-view .table .table {
+  background-color: transparent;
+}
+.sia-main-app .reports-management-view .table.no-padding > tbody > tr > td {
+  padding: 0;
+}
+.sia-main-app .reports-management-view .table-striped .table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #ebe5cd;
+}
+.sia-main-app .reports-management-view .no-tbody-border {
+  border: 0;
+}
+.sia-main-app .reports-management-view h3.Assigned-Volunteers {
+  margin: 0;
+}
+.sia-main-app .reports-management-view .Name,
+.sia-main-app .reports-management-view .Full-Name {
+  width: 150px;
+}
+.sia-main-app .reports-management-view .Contact-Phone {
+  width: 130px;
+}
+.sia-main-app .reports-management-view .Site-Name {
+  width: 200px;
+}
+.sia-main-app .reports-management-view .Proj-Num {
+  width: 75px;
+}
+.sia-main-app .reports-management-view .Est-Cost {
+  width: 75px;
+}
+.sia-main-app .reports-management-view .Volunteers-Needed-Est {
+  width: 75px;
+}
+.sia-main-app .reports-management-view .Budget-Sources {
+  width: 75px;
+}
+.sia-main-app .reports-management-view .Budget-Allocate {
+  width: 75px;
+}
+.sia-main-app .reports-management-view .Estimator-Project-Contact {
+  width: 125px;
+}
+.sia-main-app .reports-management-view .Status {
+  width: 100px;
+}
+.sia-main-app .reports-management-view .StatusReason {
+  width: 150px;
+}
+.sia-main-app .reports-management-view .Role {
+  width: 115px;
+}
+.sia-main-app .reports-management-view .Email {
+  width: 225px;
+}
+.sia-main-app .reports-management-view .Age-Range {
+  width: 100px;
 }
 .sia-main-app .site-management-selects {
   width: 200px;

@@ -4080,13 +4080,13 @@
             let self = this;
             switch (self.reportType) {
                 case 'sites':
-                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID;
+                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
                     break;
                 case 'projects':
                     App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
                     break;
                     case 'early_start_projects':
-                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year;
+                    App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
                     break;
                 case 'volunteers':
                     App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
@@ -4095,6 +4095,8 @@
                     App.Models.reportModel.url = '/admin/report/'+ self.reportType+'/' + Year + '/' + SiteID + '/' + ProjectID;
             }
             self.$('.download-pdf').attr('href', App.Models.reportModel.url + '/pdf');
+            self.$('.download-csv').attr('href', App.Models.reportModel.url + '/csv');
+            self.$('.download-spreadsheet').attr('href', App.Models.reportModel.url + '/spreadsheet');
             // fetch new report
             $.ajax({
                 type: "get",
