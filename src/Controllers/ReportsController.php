@@ -12,6 +12,8 @@ use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseControl
 use Illuminate\Support\Facades\Log;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Dhayakawa\SpringIntoAction\Models\Project;
@@ -24,6 +26,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectRole;
 use Dhayakawa\SpringIntoAction\Models\SiteRole;
 use Dhayakawa\SpringIntoAction\Models\SiteVolunteerRole;
 use Dhayakawa\SpringIntoAction\Models\Volunteer;
+use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
 use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
 use \Dhayakawa\SpringIntoAction\Models\BudgetSourceOptions;
 use \Dhayakawa\SpringIntoAction\Models\BudgetStatusOptions;
@@ -38,6 +41,11 @@ use \Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
 class ReportsController extends BaseController
 {
     /**
+     * @var string
+     */
+    private $downloadType = '';
+
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
@@ -47,59 +55,95 @@ class ReportsController extends BaseController
         //
     }
 
-    public function getReport(Request $request, $ReportType, $Year, $SiteID = null, $ProjectID = null, $pdf = '')
-    {
+    public function getReport(
+        Request $request,
+        $ReportType,
+        $Year,
+        $SiteID = null,
+        $ProjectID = null,
+        $downloadType = ''
+    ) {
         $SiteID = !is_numeric($SiteID) ? null : $SiteID;
         $ProjectID = !is_numeric($ProjectID) ? null : $ProjectID;
-        $html = '';
-        $reportHtml = '';
+        $bReturnArray = $downloadType === 'csv';
+        $html = $bReturnArray ? [] : '';
+        $reportHtml = $bReturnArray ? [] : '';
         $date = date('l, F d, Y');
+        $this->downloadType = $downloadType;
 
         switch ($ReportType) {
             case 'projects':
                 $reportName = 'Project Report by Year, Site and Project';
-                $reportHtml = $this->getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null);
+                $reportHtml = $this->getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray);
                 break;
             case 'budget':
                 $reportName = 'Budget Allocation';
-                $reportHtml = $this->getBudgetAllocationReport($Year, $SiteID = null, $ProjectID = null);
+                $reportHtml = $this->getBudgetAllocationReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray);
                 break;
             case 'budget_and_volunteer':
                 $reportName = 'Budget, Estimation and Early Work Needed';
-                $reportHtml = $this->getBudgetAndVolunteerReport($Year, $SiteID = null, $ProjectID = null);
+                $reportHtml =
+                    $this->getBudgetAndVolunteerReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray);
                 break;
             case 'early_start':
                 $reportName = 'Projects Needing Early Start';
-                $reportHtml = $this->getEarlyStartProjectsReport($Year, $SiteID = null, $ProjectID = null);
+                $reportHtml =
+                    $this->getEarlyStartProjectsReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray);
                 break;
             case 'sites':
                 $reportName = 'Site Report by Year';
-                $reportHtml = $this->getYearSiteReport($Year);
+                $reportHtml = $this->getYearSiteReport($Year, $bReturnArray);
                 break;
             case 'volunteer_assignment_for_packets':
                 $reportName = 'Volunteer Assignment Report - Alpha - All Sites and Projects';
-                $reportHtml = $this->getVolunteerAssignmentForPacketsReport($Year);
+                $reportHtml = $this->getVolunteerAssignmentForPacketsReport($Year, $bReturnArray);
+                break;
+            case 'volunteer_assignment_for_mailmerge':
+                $reportName = 'Project Estimator Report';
+                $reportHtml = $this->getVolunteerAssignmentForMailMergeReport(
+                    $Year,
+                    $SiteID = null,
+                    $ProjectID = null,
+                    $bReturnArray
+                );
                 break;
             default:
                 $reportName = 'Unknown Report:' . $ReportType;
+                if ($bReturnArray) {
+                    $reportHtml = [];
+                }
         }
-        $html .= '<h1 style="text-align:center;">Spring Into Action ' .
-                 $Year .
-                 "<br>{$reportName}<br><small>" .
-                 $date .
-                 '</small></h1>';
-        $html .= $reportHtml;
+        if (empty($reportHtml)) {
+            $reportHtml = "No Results found.";
+            if ($bReturnArray) {
+                $reportHtml = [$reportHtml];
+            }
+        }
+        if ($bReturnArray) {
+            $html = array_merge(["Spring Into Action $Year $date"], $reportHtml);
+        } else {
+            $html .= '<h2 class="report-title" style="text-align:center;">Spring Into Action ' .
+                     $Year .
+                     "<br>{$reportName}<br><small>" .
+                     $date .
+                     '</small></h2>';
+            $html .= $reportHtml;
+        }
 
-        if (!empty($pdf)) {
-            return $this->getPDF($html);
+        if (!empty($this->downloadType) && $this->downloadType === 'pdf') {
+            return $this->getPDF($html, $reportName);
+        } elseif (!empty($this->downloadType) && $this->downloadType === 'csv') {
+            return $this->getCSV($html, $reportName);
+        } elseif (!empty($this->downloadType) && $this->downloadType === 'spreadsheet') {
+            return $this->getSpreadsheet($html, $reportName);
         } else {
             return $html;
         }
     }
 
-    public function getBudgetAllocationReport($Year, $SiteID = null, $ProjectID = null)
+    public function getBudgetAllocationReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
-        $html = '';
+        $html = $bReturnArray ? [] : '';
         //'Project Report by Year, Site and Project'
         $site = Site::join(
             'site_status',
@@ -190,36 +234,53 @@ class ReportsController extends BaseController
             if (empty(array_filter(array_column($aProjects, 'Paint Ordered')))) {
                 $this->deleteColumn($aProjects, 'Paint Ordered');
             }
-            $response = $this->getResultsHtmlTable($aProjects);
-            $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
-            $html .= $response;
-            $html .= "<table class=\"table\">";
-            $html .= "<tr>
+
+            if ($bReturnArray) {
+                $html[] = $site['SiteName'];
+                $html = array_merge($html, $aProjects);
+                $tmp = '';
+                foreach (array_keys($aAmounts) as $budgetSrc) {
+                    $tmp .= "{$budgetSrc},";
+                }
+
+                $html[] = "Totals for Site:, Estimated Cost,Total Allocated," . rtrim($tmp, ',');
+                $tmp = '';
+                foreach ($aAmounts as $budgetTotal) {
+                    $tmp .= "\${$budgetTotal},";
+                }
+                $html[] = ",\${$estimatedCost},\${$totalAllocated}," . rtrim($tmp, ',');
+            } else {
+                $response = $this->getResultsHtmlTable($aProjects);
+                $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
+                $html .= $response;
+                $html .= "<table class=\"table\">";
+                $html .= "<tr>
                         <td rowspan='2' align='right'><h2>Totals for Site:</h2></td>
                         <td>Estimated Cost</td>
                         <td>Total Allocated</td>";
-            foreach (array_keys($aAmounts) as $budgetSrc) {
-                $html .= "<td>{$budgetSrc}</td>";
-            }
-            $html .= "</tr>";
+                foreach (array_keys($aAmounts) as $budgetSrc) {
+                    $html .= "<td>{$budgetSrc}</td>";
+                }
+                $html .= "</tr>";
 
-            $html .= "<tr>
+                $html .= "<tr>
                         
                         <td>\${$estimatedCost}</td>
                         <td>\${$totalAllocated}</td>";
-            foreach ($aAmounts as $budgetTotal) {
-                $html .= "<td>\${$budgetTotal}</td>";
+                foreach ($aAmounts as $budgetTotal) {
+                    $html .= "<td>\${$budgetTotal}</td>";
+                }
+                $html .= "</tr>";
+                $html .= "</table>";
             }
-            $html .= "</tr>";
-            $html .= "</table>";
         }
 
         return $html;
     }
 
-    public function getBudgetAndVolunteerReport($Year, $SiteID = null, $ProjectID = null)
+    public function getBudgetAndVolunteerReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
-        $html = '';
+        $html = $bReturnArray ? [] : '';
         //'Project Report by Year, Site and Project'
         $site = Site::join(
             'site_status',
@@ -350,17 +411,22 @@ class ReportsController extends BaseController
             if (empty(array_filter(array_column($aProjects, 'Prep work before SIA Sunday')))) {
                 $this->deleteColumn($aProjects, 'Prep work before SIA Sunday');
             }
-            $response = $this->getResultsHtmlTable($aProjects);
-            $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
-            $html .= $response;
+            if ($bReturnArray) {
+                $html[] = $site['SiteName'];
+                $html = array_merge($html, $aProjects);
+            } else {
+                $response = $this->getResultsHtmlTable($aProjects);
+                $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
+                $html .= $response;
+            }
         }
 
         return $html;
     }
 
-    public function getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null)
+    public function getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
-        $html = '';
+        $html = $bReturnArray ? [] : '';
         //'Project Report by Year, Site and Project'
         $site = Site::join(
             'site_status',
@@ -397,15 +463,20 @@ class ReportsController extends BaseController
                 'asc'
             )->get()->toArray();
 
-            $response = $this->getResultsHtmlTable($aProjects);
-            $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
-            $html .= $response;
+            if ($bReturnArray) {
+                $html[] = $site['SiteName'];
+                $html = array_merge($html, $aProjects);
+            } else {
+                $response = $this->getResultsHtmlTable($aProjects);
+                $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
+                $html .= $response;
+            }
         }
 
         return $html;
     }
 
-    public function getYearSiteReport($Year)
+    public function getYearSiteReport($Year, $bReturnArray)
     {
         $aSites = Site::select('SiteName')->join(
             'site_status',
@@ -417,12 +488,12 @@ class ReportsController extends BaseController
             $Year
         )->orderBy('SiteName', 'asc')->get()->toArray();
 
-        return $this->getResultsHtmlTable($aSites);
+        return $bReturnArray ? $aSites : $this->getResultsHtmlTable($aSites);
     }
 
-    public function getEarlyStartProjectsReport($Year, $SiteID = null, $ProjectID = null)
+    public function getEarlyStartProjectsReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
-        $html = '';
+        $html = $bReturnArray ? [] : '';
         //'Project Report by Year, Site and Project'
         $site = Site::join(
             'site_status',
@@ -509,25 +580,29 @@ class ReportsController extends BaseController
                     }
                 }
                 $aProjects[$key]["Project Contact"] = "{$contact}";
-                $aSkillsNeeded =
-                    ProjectSkillNeededOptions::select('option_label')->whereIn('id', preg_split('/,/', $aaProject['Primary Skill Needed']))
-                                             ->get()
-                                             ->toArray();
-                $aProjects[$key]["Primary Skill Needed"] = join('<br>', array_column($aSkillsNeeded,'option_label'));
+                $aSkillsNeeded = ProjectSkillNeededOptions::select('option_label')->whereIn(
+                    'id',
+                    preg_split('/,/', $aaProject['Primary Skill Needed'])
+                )->get()->toArray();
+                $aProjects[$key]["Primary Skill Needed"] = join('<br>', array_column($aSkillsNeeded, 'option_label'));
             }
             $this->deleteColumn($aProjects, 'ProjectID');
 
-            $response = $this->getResultsHtmlTable($aProjects);
-            $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
-            $html .= $response;
+            if ($bReturnArray) {
+                $html[] = $site['SiteName'];
+                $html = array_merge($html, $aProjects);
+            } else {
+                $response = $this->getResultsHtmlTable($aProjects);
+                $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
+                $html .= $response;
+            }
         }
 
         return $html;
     }
 
-    public function getVolunteerAssignmentForPacketsReport($Year)
+    public function getVolunteerAssignmentForPacketsReport($Year, $bReturnArray)
     {
-        $html = '';
         $aVolunteers = Volunteer::select(
             DB::raw("concat(volunteers.LastName,', ',volunteers.FirstName) as Name"),
             'volunteers.MobilePhoneNumber as Contact Phone',
@@ -554,48 +629,160 @@ class ReportsController extends BaseController
             'sites.SiteID',
             '=',
             'site_status.SiteID'
-        )->where('site_status.Year',$Year)->orderBy('volunteers.LastName','asc')->get()->toArray();
+        )->where('site_status.Year', $Year)->orderBy('volunteers.LastName', 'asc')->get()->toArray();
 
-        $html = $this->getResultsHtmlTable($aVolunteers);
+        if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
+            return "This report is too big to download as a PDF. Please choose a different download type.";
+        }
+
+        return $bReturnArray ? $aVolunteers : $this->getResultsHtmlTable($aVolunteers);
+    }
+
+    public function getVolunteerAssignmentForMailMergeReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
+    {
+        $html = $bReturnArray ? [] : '';
+
+        $site = Site::join(
+            'site_status',
+            'sites.SiteID',
+            '=',
+            'site_status.SiteID'
+        )->where(
+            'site_status.Year',
+            $Year
+        )->orderBy('SiteName', 'asc');
+        if ($SiteID) {
+            //$site->where('sites.SiteID', $SiteID);
+        }
+        $aSites = $site->get()->toArray();
+        foreach ($aSites as $site) {
+            $aProjectRows = [];
+            $aProjects = Project::select(
+                'projects.ProjectID',
+                'projects.SequenceNumber as Proj Num',
+                'projects.OriginalRequest',
+                'projects.ProjectDescription as Project Description'
+            )->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->join(
+                'project_status_options',
+                'projects.Status',
+                '=',
+                'project_status_options.id'
+            )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
+                'projects.SequenceNumber',
+                'asc'
+            )->get()->toArray();
+
+            foreach ($aProjects as $aProject) {
+                $ProjectID = $aProject['ProjectID'];
+                unset($aProject['ProjectID']);
+
+                $projectTable = $this->getResultsHtmlTable([$aProject], false);
+                $Volunteers = ProjectVolunteer::select(
+                    'project_roles.Role',
+                    DB::raw("concat(volunteers.LastName,', ',volunteers.FirstName) as `Full Name`"),
+                    'volunteers.MobilePhoneNumber as Contact Phone',
+                    'volunteers.Email',
+                    'volunteers.AgeRange as Age Range',
+                    'volunteers.Equipment as Additional Information'
+                )->join(
+                    'volunteers',
+                    'project_volunteers.VolunteerID',
+                    '=',
+                    'volunteers.VolunteerID'
+                )->join(
+                    'project_volunteer_role',
+                    function ($join) use ($ProjectID) {
+                        $join->on(
+                            'project_volunteer_role.VolunteerID',
+                            '=',
+                            'volunteers.VolunteerID'
+                        )->where('project_volunteer_role.ProjectID', '=', $ProjectID);
+                    }
+                )->join(
+                    'project_roles',
+                    'project_roles.ProjectRoleID',
+                    '=',
+                    'project_volunteer_role.ProjectRoleID'
+                )->where('project_volunteers.ProjectID','=', $ProjectID)->orderBy('volunteers.LastName', 'asc');
+                $aVolunteers = $Volunteers->get()->toArray();
+
+                foreach ($aVolunteers as $key => $aVolunteer) {
+                    $aAgeRanges =
+                        VolunteerAgeRangeOptions::select('option_label')->whereIn(
+                            'id',
+                            preg_split("/,/", $aVolunteer['Age Range'])
+                        )->get()->toArray();
+                    \Illuminate\Support\Facades\Log::debug(
+                        '',
+                        [
+                            'File:' . __FILE__,
+                            'Method:' . __METHOD__,
+                            'Line:' . __LINE__,
+                            $aAgeRanges,
+                        ]
+                    );
+                    $aVolunteers[$key]['Age Range'] = join(',', array_column($aAgeRanges, 'option_label'));
+                }
+                $budgetAmt = 0.00;
+                $aBudgets = Budget::where('ProjectID', $ProjectID)
+                          ->get()
+                          ->toArray();
+                if (!empty($aBudgets)) {
+                    foreach ($aBudgets as $aaBudget) {
+                        $budgetAmt += $aaBudget['BudgetAmount'];
+                    }
+                }
+                $volunteersTable = $this->getResultsHtmlTable($aVolunteers);
+                $aVolunteerHeaders = [['<h3 class="Assigned-Volunteers">Assigned Volunteers</h3>', '<strong>Assigned Volunteer count w/ Project Coordinator:</strong> ' . count(
+                        $aVolunteers), '<strong>Budget Available:</strong> $' . $budgetAmt ]];
+                $volunteerHeaders = $this->getResultsHtmlTable($aVolunteerHeaders, false, 'no-tbody-border');
+                $aProjectRows[] = $projectTable . $volunteerHeaders . $volunteersTable;
+            }
+            if ($bReturnArray) {
+                $html[] = $site['SiteName'];
+                $html = array_merge($html, $aProjectRows);
+            } else {
+                $response = $this->getResultsHtmlTable($aProjectRows, true, 'no-padding');
+                $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
+                $html .= $response;
+            }
+        }
 
         return $html;
     }
 
-    public function getSiteProjects($SiteStatusID)
+    public function getResultsHtmlTable($aaRows, $bStripeTable = true, $addClasses = '')
     {
-        return $projects = Project::select('projects.ProjectID', 'projects.SequenceNumber')
-                                  ->join(
-                                      'site_status',
-                                      'projects.SiteStatusID',
-                                      '=',
-                                      'site_status.SiteStatusID'
-                                  )
-                                  ->where('site_status.SiteStatusID', $SiteStatusID)
-                                  ->orderBy('projects.SequenceNumber', 'asc')
-                                  ->get()
-                                  ->toArray();
-    }
-
-    public function getResultsHtmlTable($aaRows)
-    {
+        $tableStripeClass = $bStripeTable ? 'table-striped' : '';
         $aTableResults = [];
-        $aTableResults[] = "<table class='table table-striped'>";
+        $aTableResults[] = "<table class=\"table {$tableStripeClass} {$addClasses}\">";
         $j = 0;
-
+        $aKeys = [];
         foreach ($aaRows as $aaRow) {
-            $aKeys = array_keys($aaRow);
-            if ($j == 0) {
-                $aTableResults[] = "<thead><tr>";
-                foreach ($aKeys as $sKeyStr):
-                    $aTableResults[] = "<th>{$sKeyStr}</th>";
-                endforeach;
-                $aTableResults[] = "</tr></thead>";
+            if (is_array($aaRow) && !\is_numeric(\key($aaRow))) {
+                $aKeys = array_keys($aaRow);
+                if ($j == 0) {
+                    $aTableResults[] = "<thead><tr>";
+                    foreach ($aKeys as $sKeyStr):
+                        $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
+                        $aTableResults[] = "<th class=\"{$colName}\">{$sKeyStr}</th>";
+                    endforeach;
+                    $aTableResults[] = "</tr></thead>";
+                }
             }
             $aTableResults[] = "<tr>";
-            $i=0;
+            $i = 0;
+            if (is_string($aaRow)) {
+                $aaRow = [$aaRow];
+            }
             foreach ($aaRow as $sTableField => $sStr):
                 $sStr = empty($sStr) ? '&nbsp;' : $sStr;
-                $colName = str_replace(' ', '-', $aKeys[$i]);
+                $colName = !empty($aKeys) ? preg_replace("/( |\/)/", '-', $aKeys[$i]) : '';
                 $aTableResults[] = "<td class=\"{$colName}\">{$sStr}</td>";
                 $i++;
             endforeach;
@@ -621,14 +808,16 @@ class ReportsController extends BaseController
     public function getBootstrapTableClasses()
     {
         return <<<CSS
+body{line-height:.85;}
+.report-title{line-height:.85;}      
+.report-title small{font-size: 0.67em;color:#777777;}
 .table{width:100%;max-width:100%;margin-bottom:20px;border-spacing: 0;border-collapse: collapse;}
-
-.table>tbody>tr>td,.table>tbody>tr>th,.table>tfoot>tr>td,.table>tfoot>tr>th,.table>thead>tr>td,.table>thead>tr>th{padding:8px;line-height:1.42857143;vertical-align:top;border-top:1px solid #ddd}
+.table>tbody>tr>td,.table>tbody>tr>th,.table>tfoot>tr>td,.table>tfoot>tr>th,.table>thead>tr>td,.table>thead>tr>th{padding:2px;line-height:.85;vertical-align:top;border-top:1px solid #ddd}
 .table>thead>tr>th{vertical-align:bottom;border-bottom:2px solid #ddd}
 .table>caption+thead>tr:first-child>td,.table>caption+thead>tr:first-child>th,.table>colgroup+thead>tr:first-child>td,.table>colgroup+thead>tr:first-child>th,.table>thead:first-child>tr:first-child>td,.table>thead:first-child>tr:first-child>th{border-top:0}
 .table>tbody+tbody{border-top:2px solid #ddd}
 .table .table{background-color:#fff}
-.table-condensed>tbody>tr>td,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>td,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>thead>tr>th{padding:5px}
+.table-condensed>tbody>tr>td,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>td,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>thead>tr>th{padding:2px}
 .table-bordered,.table-bordered>tbody>tr>td,.table-bordered>tbody>tr>th,.table-bordered>tfoot>tr>td,.table-bordered>tfoot>tr>th,.table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border:1px solid #ddd}
 .table-bordered>thead>tr>td,.table-bordered>thead>tr>th{border-bottom-width:2px}
 .table-striped>tbody>tr:nth-of-type(odd){background-color:#f9f9f9}
@@ -645,30 +834,230 @@ class ReportsController extends BaseController
 td.Name,td.Site-Name,td.Contact-Phone{
 white-space: nowrap;
 }
+.table.no-padding>tbody>tr>td {
+    padding:0;
+}
+.table .table {
+    background-color: transparent;
+
+}
+.table-striped .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: #ebe5cd;
+}
+.no-tbody-border {
+    border: 0;
+}
+h3.Assigned-Volunteers {
+    margin: 0;
+}
+.Name, .Full-Name {
+    max-width: 150px;
+    
+}
+.Contact-Phone {
+    max-width: 130px;
+}
+.Site-Name {
+    max-width: 200px;
+}
+.Proj-Num {
+    max-width:75px;
+}
+.Est-Cost {
+    max-width: 75px;
+}
+.Volunteers-Needed-Est{
+    max-width: 75px;
+}
+.Budget-Sources {
+   max-width: 75px;
+}
+.Budget-Allocate {
+    max-width: 75px;
+}
+.Estimator-Project-Contact{
+    max-width: 125px;
+}
+.Status {
+    max-width:100px;
+}
+.StatusReason {
+    width: auto;
+}
+.Role {
+    max-width: 30px;
+    
+}
+.Additional-Information {
+    width:100%;
+}
+.Email {
+    max-width: 255px;
+}
+.Age-Range {
+    max-width: 100px;
+}
+
 CSS;
     }
 
-    public function getPDF($html)
+    public function getPDF($html, $reportName)
     {
         $options = new Options();
-        $options->set('defaultFont', 'DejaVu Sans');
+        //$options->set('defaultFont', 'DejaVu Sans');
+        $options->set('defaultFont', 'Source Sans Pro');
         $options->set('isHtml5ParserEnabled', true);
+        // $pathPrefix = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix() . '/dompdf/';
+        // $options->set('tempDir', $pathPrefix);
+        // $options->set('debugKeepTemp', true);
+        $options->set('isFontSubsettingEnabled', true);
+
+        //$options->set('debugCss', true);
+        // $options->set('debugLayout', true);
+        // $options->set('debugLayoutLines', true);
+        // $options->set('debugLayoutBlocks', true);
+        // $options->set('debugLayoutInline', true);
+        // $options->set('debugLayoutPaddingBox', true);
         // instantiate and use the dompdf class
         $dompdf = new Dompdf($options);
+        //
+        $fm = $dompdf->getFontMetrics();
+        $fm->registerFont(
+            ['family' => 'Source Sans Pro', 'weight' => 'bold', 'style' => ''],
+            public_path() . '/fonts/source-sans-pro-release/TTF/SourceSansPro-Semibold.ttf'
+        );
+        $fm->registerFont(
+            ['family' => 'Source Sans Pro', 'weight' => 'bold', 'style' => 'italic'],
+            public_path() . '/fonts/source-sans-pro-release/TTF/SourceSansPro-SemiboldIt.ttf'
+        );
+        $dompdf->setFontMetrics($fm);
         $stylesheet = new \Dompdf\Css\Stylesheet($dompdf);
+        $stylesheet->load_css_file(public_path() . '/fonts/source-sans-pro-release/source-sans-pro-dompdf.css');
         $style = $stylesheet->create_style();
-        $style->set_font_size('x-small');
-        $stylesheet->add_style('body', $style);
+        $style->set_font_size('xx-small');
+        //$style->set_font_family('Source Sans Pro');
+        //$stylesheet->add_style('body', $style);
+
         $css = $this->getBootstrapTableClasses();
+
         $stylesheet->load_css($css);
+
         $dompdf->setCss($stylesheet);
         //$dompdf->setPaper('letter', 'landscape');
         $dompdf->loadHtml($html);
 
         // Render the HTML as PDF
         $dompdf->render();
-
+        $filename = self::getDownloadFileName($reportName) . ".pdf";
         // Output the generated PDF to Browser
-        $dompdf->stream();
+        $dompdf->stream($filename);
+    }
+
+    public static function getDownloadFileName($reportName)
+    {
+        $reportName = trim(strtolower($reportName));
+        $reportName = str_replace(' ', '-', $reportName);
+        $reportName = preg_replace("/[^a-z\-]/", "", $reportName);
+        $reportName = preg_replace("/-+/", "-", $reportName);
+
+        return $reportName;
+    }
+
+    /**
+     * Creates, logs and returns the result of fputcsv() for debugging purposes
+     *
+     * @param array $fields
+     * @param string $reportName
+     *
+     * @return bool|string
+     */
+    public function getCSV(array $fields, $reportName)
+    {
+        $f = fopen('php://memory', 'r+');
+        foreach ($fields as $line) {
+            $line = !is_array($line) ? [$line] : $line;
+            if (fputcsv($f, $line) === false) {
+                return 'CSV Failed to write';
+            }
+        }
+        rewind($f);
+        $csvContent = stream_get_contents($f);
+        ob_start();
+        if (headers_sent()) {
+            die("Unable to stream csv: headers already sent");
+        }
+        header_remove("Content-Type");
+        header("Cache-Control: private");
+        header("Content-Type: application/csv");
+        header("Content-Length: " . mb_strlen($csvContent, "8bit"));
+
+        $filename = self::getDownloadFileName($reportName) . ".csv";
+        $attachment = "attachment";
+        header(self::buildContentDispositionHeader($attachment, $filename));
+
+        echo $csvContent;
+        flush();
+    }
+
+    public function getSpreadsheet($html, $reportName)
+    {
+        ob_start();
+        if (headers_sent()) {
+            die("Unable to stream spreadsheet: headers already sent");
+        }
+        header_remove("Content-Type");
+        header("Cache-Control: private");
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Length: " . mb_strlen($html, "8bit"));
+
+        $filename = self::getDownloadFileName($reportName) . ".xls";
+        $attachment = "attachment";
+        header(self::buildContentDispositionHeader($attachment, $filename));
+
+        echo $html;
+        flush();
+    }
+
+    /**
+     * Builds a HTTP Content-Disposition header string using `$dispositionType`
+     * and `$filename`.
+     *
+     * If the filename contains any characters not in the ISO-8859-1 character
+     * set, a fallback filename will be included for clients not supporting the
+     * `filename*` parameter.
+     *
+     * @param string $dispositionType
+     * @param string $filename
+     *
+     * @return string
+     */
+    public static function buildContentDispositionHeader($dispositionType, $filename)
+    {
+        $encoding = mb_detect_encoding($filename);
+        $fallbackfilename = mb_convert_encoding($filename, "ISO-8859-1", $encoding);
+        $fallbackfilename = str_replace("\"", "", $fallbackfilename);
+        $encodedfilename = rawurlencode($filename);
+
+        $contentDisposition = "Content-Disposition: $dispositionType; filename=\"$fallbackfilename\"";
+        if ($fallbackfilename !== $filename) {
+            $contentDisposition .= "; filename*=UTF-8''$encodedfilename";
+        }
+
+        return $contentDisposition;
+    }
+
+    public function getSiteProjects($SiteStatusID)
+    {
+        return $projects = Project::select('projects.ProjectID', 'projects.SequenceNumber')
+                                  ->join(
+                                      'site_status',
+                                      'projects.SiteStatusID',
+                                      '=',
+                                      'site_status.SiteStatusID'
+                                  )
+                                  ->where('site_status.SiteStatusID', $SiteStatusID)
+                                  ->orderBy('projects.SequenceNumber', 'asc')
+                                  ->get()
+                                  ->toArray();
     }
 }

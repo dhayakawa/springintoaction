@@ -143,11 +143,6 @@
                                             'route': 'view/reports/management/early_start'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Estimator',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/estimator'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
                                             'linkText': 'Project List - Final Completion Assessment',
                                             'badgeCount': '1',
                                             'route': 'view/reports/management/projects_final_completion_assessment'
