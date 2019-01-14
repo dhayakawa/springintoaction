@@ -356,7 +356,7 @@ Route::group(
         Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
 
         Route::get(
-            'report/{ReportType}/{Year}/{SiteID?}/{ProjectID?}/{pdf?}',
+            'report/{ReportType}/{Year}/{SiteID?}/{ProjectID?}/{downloadType?}',
             ['as' => 'report', 'uses' => 'ReportsController@getReport']
         );
 
