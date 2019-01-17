@@ -41,10 +41,6 @@
         <input type="text" name="VolunteersNeededEst" class="form-control" id="inputVolunteersNeededEst" placeholder="numbers only" value="<%= VolunteersNeededEst %>"/>
     </div>
     <div class="form-group">
-        <label for="inputVolunteersAssigned">Volunteers Assigned</label>
-        <input type="text" name="VolunteersAssigned" class="form-control" id="inputVolunteersAssigned" placeholder="numbers only" value="<%= VolunteersAssigned %>"/>
-    </div>
-    <div class="form-group">
         <label for="inputStatus">Status</label>
         <select name="Status" class="form-control" id="inputStatus"><%= statusOptions %></select>
     </div>
@@ -54,8 +50,7 @@
     </div>
     <div class="form-group">
         <label for="BudgetSources">Budget Sources</label>
-        <select name="BudgetSources" multiple class="form-control" id="BudgetSources"><%= budgetSourceOptions %></select>
-        <p class="help-block">Hold down the Ctrl key to click multiple options .</p>
+        Please use the Project Details Budget Allocation tab to add Budget Sources
     </div>
     <div class="form-group">
         <label for="inputMaterialsNeeded">Materials Needed</label>
@@ -72,10 +67,6 @@
     <div class="form-group">
         <label for="inputBudgetAvailableForPC">Budget Available For PC</label>
         <input type="text" name="BudgetAvailableForPC" class="form-control" id="inputBudgetAvailableForPC" placeholder="no $, numbers and decimal only. example: 10.00" value="<%= BudgetAvailableForPC %>"/>
-    </div>
-    <div class="form-group">
-        <label for="inputVolunteersLastYear">Volunteers Last Year</label>
-        <input type="text" name="VolunteersLastYear" class="form-control" id="inputVolunteersLastYear" placeholder="numbers only" value="<%= VolunteersLastYear %>"/>
     </div>
     <div class="form-group">
         <label for="inputNeedsToBeStartedEarly">Needs To Be Started Early</label>
