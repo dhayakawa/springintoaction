@@ -91,7 +91,6 @@
 
                     let data = $.unserialize(modal.find('form').serialize());
                     // fix multi valued select values
-                    data.BudgetSources = modal.find('form').find('[name="BudgetSources"]').val().join();
                     data.PrimarySkillNeeded = modal.find('form').find('[name="PrimarySkillNeeded"]').val().join();
 
                     App.Views.projectsView.saveEditForm(data);
@@ -173,8 +172,7 @@
                 nextColIdx + ')').remove();
 
             $tCloneWrapper.append($tClone);
-            console.log('$backgridTable', $backgridTable, backgridTableHeight)
-            console.log('$tCloneWrapper', $tCloneWrapper)
+
         }
 
     });
@@ -457,19 +455,16 @@
                 primarySkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true, ''),
                 statusOptions: App.Models.projectModel.getStatusOptions(true, 'Pending'),
                 projectSendOptions: App.Models.projectModel.getSendOptions(true),
-                budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
                 SequenceNumber: parseInt(sequenceNumber) + 1,
                 OriginalRequest: '',
                 ProjectDescription: '',
                 Comments: '',
                 VolunteersNeededEst: '',
-                VolunteersAssigned: '',
                 StatusReason: '',
                 MaterialsNeeded: '',
                 EstimatedCost: '',
                 ActualCost: '',
                 BudgetAvailableForPC: '',
-                VolunteersLastYear: '',
                 SpecialEquipmentNeeded: '',
                 PermitsOrApprovalsNeeded: '',
                 PrepWorkRequiredBeforeSIA: '',
@@ -485,7 +480,6 @@
                     Active: '',
                     ChildFriendly: '',
                     PrimarySkillNeeded: '',
-                    BudgetSources: '',
                     Status: '',
                     NeedsToBeStartedEarly: '',
                     CostEstimateDone: '',
@@ -520,19 +514,16 @@
                 primarySkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
                 statusOptions: App.Models.projectModel.getStatusOptions(true, 'Pending'),
                 projectSendOptions: App.Models.projectModel.getSendOptions(true),
-                budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
                 SequenceNumber: App.Models.projectModel.get("SequenceNumber"),
                 OriginalRequest: App.Models.projectModel.get("OriginalRequest"),
                 ProjectDescription: App.Models.projectModel.get("ProjectDescription"),
                 Comments: App.Models.projectModel.get("Comments"),
                 VolunteersNeededEst: App.Models.projectModel.get("VolunteersNeededEst"),
-                VolunteersAssigned: App.Models.projectModel.get("VolunteersAssigned"),
                 StatusReason: App.Models.projectModel.get("StatusReason"),
                 MaterialsNeeded: App.Models.projectModel.get("MaterialsNeeded"),
                 EstimatedCost: App.Models.projectModel.get("EstimatedCost"),
                 ActualCost: App.Models.projectModel.get("ActualCost"),
                 BudgetAvailableForPC: App.Models.projectModel.get("BudgetAvailableForPC"),
-                VolunteersLastYear: App.Models.projectModel.get("VolunteersLastYear"),
                 SpecialEquipmentNeeded: App.Models.projectModel.get("SpecialEquipmentNeeded"),
                 PermitsOrApprovalsNeeded: App.Models.projectModel.get("PermitsOrApprovalsNeeded"),
                 PrepWorkRequiredBeforeSIA: App.Models.projectModel.get("PrepWorkRequiredBeforeSIA"),
@@ -548,7 +539,6 @@
                     Active: App.Models.projectModel.get("Active"),
                     ChildFriendly: App.Models.projectModel.get("ChildFriendly"),
                     PrimarySkillNeeded: App.Models.projectModel.get("PrimarySkillNeeded"),
-                    BudgetSources: App.Models.projectModel.get("BudgetSources"),
                     Status: App.Models.projectModel.get("Status"),
                     NeedsToBeStartedEarly: App.Models.projectModel.get("NeedsToBeStartedEarly"),
                     CostEstimateDone: App.Models.projectModel.get("CostEstimateDone"),
