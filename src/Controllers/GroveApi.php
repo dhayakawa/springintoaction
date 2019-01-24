@@ -9,11 +9,16 @@
 namespace Dhayakawa\SpringIntoAction\Controllers;
 
 use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Dhayakawa\SpringIntoAction\Models\LifeGroups;
+use Dhayakawa\SpringIntoAction\Models\GroveIndividual;
 
 class GroveApi
 {
-    private $groveAdminUsername = '';
-    private $groveAdminUserPassword = '';
+    private $groveAdminUsername = 'springintoaction';
+    private $groveAdminUserPassword = 'ynkp=9z##%4d!V24';
     const API_MESSAGE_INVALID_CONNECTION = '001';
     const API_MESSAGE_INVALID_LOGIN_OR_PASSWORD = '002';
     const API_MESSAGE_API_NOT_ACTIVE = '003';
@@ -74,17 +79,42 @@ class GroveApi
     ];
     private $apiUrl = 'https://woodlandschurch.ccbchurch.com/api.php';
     private $apiDoc = 'http://designccb.s3.amazonaws.com/helpdesk/files/official_docs/api.html';
+    //curl -u springintoaction:ynkp=9z##%4d!V24 -d "" "https://woodlandschurch.ccbchurch.com/api.php?srv=api_status"
+    private $bReturnXML = false;
+    // around 60 calls
+    private $xRateLimitLimit = null;
+    private $xRateLimitRemaining = null;
+    private $xRateLimitReset = null;
+    private $xRateLimitRetryAfter = null;
+    private $iRateLimitSleep = 7;
+    private $bTooManyRequests = false;
 
     /**
-     * @param $method
-     * @param $service
-     * @param $aData
+     * @param       $method
+     * @param       $service
+     * @param array $aData
      *
      * @return mixed
+     * @throws \Exception
      */
     public function getResponse($method, $service, $aData = [])
     {
+        ini_set("max_execution_time", 0);
+        ini_set("memory_limit", "2512M");
+        ini_set('display_errors', 1);
+        // This should set the current rate limits
+        $this->rate_limit_test();
+        if ($this->bTooManyRequests) {
+            if (!$this->getIsAfterRetryTime()) {
+                return [
+                    'error' => 'Too many Grove requests',
+                    'description' => '',
+                    'output' => '',
+                ];
+            }
+        }
         $uri = "{$this->apiUrl}?srv={$service}";
+
         if ('get' === strtolower($method)) {
             if (!empty($aData)) {
                 $uri .= "&" . http_build_query($aData);
@@ -93,15 +123,19 @@ class GroveApi
         } else {
             $response = $this->curlPost($uri, $aData);
         }
-
+        Storage::disk('local')->append('grove_uri.log', date('Y-m-d') . " {$method} " . $uri . PHP_EOL);
         if (is_string($response)) {
-            $xml = simplexml_load_string($response);
-            $json = json_encode($xml);
+            if ($this->bReturnXML) {
+                return $response;
+            }
+            $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+            $aResponse = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
         } else {
-            $json = json_encode($response);
+            // If it's not a string it's an error from the curlGet or curlPost call
+            $aResponse = $response;
         }
 
-        return json_decode($json, true);
+        return isset($aResponse['response']) ? $aResponse['response'] : $aResponse;
     }
 
     protected function curlGet($uri, $expectedStatusCode = "HTTP/1.1 200 OK")
@@ -109,19 +143,46 @@ class GroveApi
         $httpCode = '';
         $output = "";
         try {
+            $header = [
+                'Authorization: Basic ' . base64_encode("{$this->groveAdminUsername}:{$this->groveAdminUserPassword}"),
+            ];
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $uri);
-            curl_setopt($ch, CURLOPT_USERNAME, $this->groveAdminUsername);
-            curl_setopt($ch, CURLOPT_USERPWD, $this->groveAdminUserPassword);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+            curl_setopt($ch, CURLOPT_USERPWD, "{$this->groveAdminUsername}:{$this->groveAdminUserPassword}");
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $aResponseHeaders = [];
+            // this function is called by curl for each header received
+            curl_setopt(
+                $ch,
+                CURLOPT_HEADERFUNCTION,
+                function ($curl, $header) use (&$aResponseHeaders) {
+                    $len = strlen($header);
+                    $header = explode(':', $header, 2);
+                    if (count($header) < 2) // ignore invalid headers
+                    {
+                        return $len;
+                    }
+
+                    $name = strtolower(trim($header[0]));
+                    if (!array_key_exists($name, $aResponseHeaders)) {
+                        $aResponseHeaders[$name] = [trim($header[1])];
+                    } else {
+                        $aResponseHeaders[$name][] = trim($header[1]);
+                    }
+
+                    return $len;
+                }
+            );
             $output = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $this->setRateLimits($aResponseHeaders, $httpCode);
         } catch (\Exception $e) {
         }
-        if ($httpCode == "201") {
+        if ($httpCode == "200") {
             return $output;
         } else {
-            return ['error' => 'HTTP status code not expected - got ', 'description' => $httpCode];
+            return ['error' => 'HTTP status code not expected - got ', 'description' => $httpCode, 'output' => $output];
         }
     }
 
@@ -129,12 +190,38 @@ class GroveApi
     {
         $httpCode = '';
         try {
+            $header = [
+                'Authorization: Basic ' . base64_encode("{$this->groveAdminUsername}:{$this->groveAdminUserPassword}"),
+            ];
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $uri);
-            curl_setopt($ch, CURLOPT_USERNAME, $this->groveAdminUsername);
-            curl_setopt($ch, CURLOPT_USERPWD, $this->groveAdminUserPassword);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+            curl_setopt($ch, CURLOPT_USERPWD, "{$this->groveAdminUsername}:{$this->groveAdminUserPassword}");
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
+            $aResponseHeaders = [];
+            // this function is called by curl for each header received
+            curl_setopt(
+                $ch,
+                CURLOPT_HEADERFUNCTION,
+                function ($curl, $header) use (&$aResponseHeaders) {
+                    $len = strlen($header);
+                    $header = explode(':', $header, 2);
+                    if (count($header) < 2) // ignore invalid headers
+                    {
+                        return $len;
+                    }
+
+                    $name = strtolower(trim($header[0]));
+                    if (!array_key_exists($name, $aResponseHeaders)) {
+                        $aResponseHeaders[$name] = [trim($header[1])];
+                    } else {
+                        $aResponseHeaders[$name][] = trim($header[1]);
+                    }
+
+                    return $len;
+                }
+            );
             if (!empty($inputArray)) {
                 if (is_array($inputArray)) {
                     $inputArray = http_build_query($inputArray);
@@ -143,14 +230,651 @@ class GroveApi
             }
             $output = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $this->setRateLimits($aResponseHeaders, $httpCode);
         } catch (\Exception $e) {
             return ['error' => 'Curl Exception', 'description' => $e->getMessage()];
         }
-        if ($httpCode == "201") {
+        if ($httpCode == "200") {
             return $output;
         } else {
-            return ['error' => 'HTTP status code not expected - got ', 'description' => $httpCode];
+            return ['error' => 'HTTP status code not expected - got ', 'description' => $httpCode, 'output' => $output];
         }
+    }
+
+    /**
+     * @param $aResponseHeaders
+     * @param $httpCode
+     */
+    private function setRateLimits($aResponseHeaders, $httpCode)
+    {
+        $this->xRateLimitLimit =
+            isset($aResponseHeaders['x-ratelimit-limit']) ? $aResponseHeaders['x-ratelimit-limit'] : false;
+        $this->xRateLimitRemaining =
+            isset($aResponseHeaders['x-ratelimit-remaining']) ? $aResponseHeaders['x-ratelimit-remaining'] : false;
+        $this->xRateLimitReset =
+            isset($aResponseHeaders['x-ratelimit-reset']) ? $aResponseHeaders['x-ratelimit-reset'] : false;
+        $this->xRateLimitRetryAfter =
+            isset($aResponseHeaders['retry-after']) ? $aResponseHeaders['retry-after'] : false;
+
+        if ($this->xRateLimitRetryAfter || (int) $httpCode === 429) {
+            $this->bTooManyRequests = true;
+        } else {
+            $this->bTooManyRequests = false;
+        }
+        Storage::disk('local')->put(
+            'grove_rate_limits.log',
+            date('Y-m-d') . " " . $httpCode . PHP_EOL . print_r(
+                $aResponseHeaders,
+                true
+            ) . PHP_EOL
+        );
+    }
+
+    public function getRateLimit()
+    {
+        if ($this->xRatelimitLimit === null) {
+            $this->rate_limit_test();
+        }
+
+        return $this->xRatelimitLimit;
+    }
+
+    public function getRateLimitRemaining()
+    {
+        if ($this->xRatelimitRemaining === null) {
+            $this->rate_limit_test();
+        }
+
+        return $this->xRatelimitRemaining;
+    }
+
+    public function getRateLimitReset()
+    {
+        if ($this->xRatelimitReset === null) {
+            $this->rate_limit_test();
+        }
+
+        return $this->xRatelimitReset;
+    }
+
+    public function getRateLimitRetryAfter​()
+    {
+        if ($this->xRateLimitRetryAfter​ === null) {
+            $this->rate_limit_test();
+        }
+
+        return $this->xRateLimitRetryAfter​;
+    }
+
+    public function getRateLimitSleep()
+    {
+        return $this->iRateLimitSleep;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsAfterRetryTime()
+    {
+        if ($this->xRateLimitRetryAfter) {
+            $datetime2 = date_create(date('Y-m-d H:i:s'));
+            $datetime1 = date_create(date('Y-m-d H:i:s', $this->xRateLimitRetryAfter));
+            $interval = date_diff($datetime1, $datetime2);
+            $age = $interval->format('%R%s');
+
+            return (int) $age <= 0;
+        }
+
+        return true;
+    }
+
+    public function rate_limit_test()
+    {
+        $srv = 'rate_limit_test';
+        $uri = "{$this->apiUrl}?srv={$srv}";
+        $response = $this->curlGet($uri);
+
+        return $response;
+    }
+
+    public function importIndividuals($bSaveToDb = true, $bShowOutput = false)
+    {
+        // We must force the $bUseLogFile so we can clean up the xml. otherwise it takes too long
+        $bUseLogFile = true;
+        $bForceRebuild = true;
+        $bRebuildLogFiles = false;
+        $modifiedSince = '2015-02-09';
+        $iRecordsPerPage = 100;
+        $iInfiniteLoopLimitMax = 100;
+
+        $iExpectedFiles[100] = 86;
+        // rounded down to nearest hundred
+        $iExpectedRecordCnt = 8500;
+        $groveCount = GroveIndividual::select(DB::raw('count(*) as count'))->first()->toArray()['count'];
+        if($groveCount >= $iExpectedRecordCnt) {
+            $groveMaxUpdateAt = GroveIndividual::select(DB::raw('max(updated_at) as max_update_at'))->first()->toArray()['max_update_at'];
+            list($modifiedSince, $timeJunk) = preg_split("/ /", $groveMaxUpdateAt);
+        }
+        $localPath = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
+        // Let the long running script finish
+        set_time_limit(0);
+
+        if ($bUseLogFile) {
+            $aSavedLogFilePaths = glob($localPath . "saved_grove_individual_profiles_*.log");
+            if (!empty($aSavedLogFilePaths)) {
+                foreach ($aSavedLogFilePaths as $aLogFilePath) {
+                    unlink($aLogFilePath);
+                }
+            }
+            $aRawLogFilePaths = glob($localPath . "raw_grove_individual_profiles_*.log");
+            if (!empty($aRawLogFilePaths)) {
+                foreach ($aRawLogFilePaths as $aLogFilePath) {
+                    unlink($aLogFilePath);
+                }
+            }
+            if($bForceRebuild){
+                $aLogFilePaths = glob($localPath . "grove_individual_profiles_*.log");
+                if ($bForceRebuild || $bRebuildLogFiles) {
+                    if (!empty($aLogFilePaths)) {
+                        foreach ($aLogFilePaths as $aLogFilePath) {
+                            unlink($aLogFilePath);
+                        }
+                    }
+                }
+            }
+            $hoursLogIsValid = 12;
+
+            clearstatcache();
+            $filename = $localPath . 'grove_individual_profiles_1.log';
+            if (\file_exists($filename)) {
+                $timestamp = filemtime($filename);
+
+                $datetime1 = date_create(date('Y-m-d H:i'));
+                $datetime2 = date_create(date('Y-m-d H:i', $timestamp));
+
+                $interval = date_diff($datetime1, $datetime2);
+
+                $age = $interval->format('%h');
+
+                $bRebuildLogFiles = $age > $hoursLogIsValid;
+                $aLogFilePaths = glob($localPath . "grove_individual_profiles_*.log");
+
+                if ($bForceRebuild || $bRebuildLogFiles) {
+                    if (!empty($aLogFilePaths)) {
+                        foreach ($aLogFilePaths as $aLogFilePath) {
+                            unlink($aLogFilePath);
+                        }
+                    }
+                }
+            } else {
+                $bRebuildLogFiles = true;
+            }
+
+            if ($bForceRebuild || $bRebuildLogFiles) {
+
+                $iPageNum = 1;
+                $this->bReturnXML = true;
+                do {
+                    $logName = 'grove_individual_profiles_' . $iPageNum . '.log';
+                    $iTestDataSetupStart = microtime(1);
+                    $response = $this->individual_profiles(
+                        [
+                            'page' => $iPageNum,
+                            'per_page' => $iRecordsPerPage,
+                            'include_inactive' => false,
+                            'modified_since' => $modifiedSince,
+                        ]
+                    );
+                    if (is_array($response)) {
+                        if (isset($response['error'])) {
+                            die($response['error']);
+                        }
+                        break;
+                    }
+                    $iTestDataSetupEnd = microtime(1);
+                    $iTestDataSetupTime = $iTestDataSetupEnd - $iTestDataSetupStart;
+                    $sFormattedSetupTime = $this->formatSeconds($iTestDataSetupTime);
+                    //echo "It took {$sFormattedSetupTime} to complete grove call<br>\n";
+                    Storage::disk('local')->put(str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName), $response);
+                    $iTestDataSetupStart = microtime(1);
+                    $xml = new \SimpleXMLElement($response);
+                    $xpathIndividual = "/ccb_api/response/individuals/individual";
+                    $result = $xml->xpath($xpathIndividual);
+                    if (!$result || count($result) < 1) {
+                        // break out of loop to stop
+                        $iPageNum = $iInfiniteLoopLimitMax;
+                    } else {
+                        $aRemoveNodes = [
+                            'sync_id',
+                            'other_id',
+                            'giving_number',
+                            'family_image',
+                            'family_position',
+                            'family_members',
+                            'middle_name',
+                            'legal_first_name',
+                            'full_name',
+                            'salutation',
+                            'suffix',
+                            'image',
+                            'allergies',
+                            'confirmed_no_allergies',
+                            'addresses',
+                            'mobile_carrier',
+                            'gender',
+                            'marital_status',
+                            'emergency_contact_name',
+                            'anniversary',
+                            'baptized',
+                            'limited_access_user',
+                            'deceased',
+                            'membership_type',
+                            'membership_date',
+                            'membership_end',
+                            'receive_email_from_church',
+                            'default_new_group_messages',
+                            'default_new_group_comments',
+                            'default_new_group_digest',
+                            'default_new_group_sms',
+                            'privacy_settings',
+                            'active',
+                            'creator',
+                            'modifier',
+                            'created',
+                            'user_defined_text_fields',
+                            'user_defined_date_fields',
+                            'user_defined_pulldown_fields',
+                        ];
+                        foreach ($aRemoveNodes as $node) {
+                            $nodeXpath = "{$xpathIndividual}/{$node}";
+                            $result = $xml->xpath($nodeXpath);
+                            if ($result) {
+                                foreach ($result as $node) {
+                                    unset($node[0]);
+                                }
+                            } else {
+                                echo "Failed nodeXpath: $nodeXpath<br>";
+                            }
+                        }
+                        $response = $xml->asXml();
+
+                        Storage::disk('local')->put($logName, $response);
+                        try {
+                            $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+                        } catch (Exception $e) {
+                            $aResponse = [];
+                        }
+                        $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
+                        if (!isset($response['individuals'])) {
+                            echo '<h1>individuals node is missing in rebuild</h1>';
+                            echo '<pre>' . print_r($response, true) . '</pre>';
+                            // break out of loop to stop
+                            $iPageNum = $iInfiniteLoopLimitMax;
+                        }
+                    }
+
+                    $iPageNum++;
+                    $bInfiniteLoopLimit = ($iPageNum > $iInfiniteLoopLimitMax) || ($iPageNum > $iRecordsPerPage);
+                    $bNoMoreRecords =
+                        isset($response['individuals']['@attributes']['count']) ?
+                            $response['individuals']['@attributes']['count'] < 1 : true;
+                    $bContinue = !empty($response) && !$bNoMoreRecords && !$bInfiniteLoopLimit;
+                    if ($bContinue) {
+                        sleep($this->getRateLimitSleep());
+                    }
+                } while ($bContinue);
+                $this->bReturnXML = false;
+            }
+        }
+        if ($bShowOutput) {
+            // Allow us to send content to the browser before the script is done
+            ini_set(
+                "implicit_flush",
+                true
+            );
+            // remove all existing buffers or else the implicit flush doesn't work for some reason.
+            // ** Make sure you don't need these buffers... at the time I wrote this, this method is meant to run on stand alone scripts
+            do {
+                echo ob_get_contents();
+            } while (@ob_end_clean());
+            // This is the magic. Output 1019 characters to the browser so it triggers the page to load. 1019 is a value I found
+            // in a forum post. There is an actual required amout of data that needs to be sent or the browser will ignore it and wait
+            // for more data. I think the different browsers require different amounts of data. 1019 worked for firefox and I didn't do
+            // any discovery to see what the least amount of data was required.
+            print(str_repeat(" ", 1019) . "\n");
+            flush();// Flush all output to browser now.
+            echo "<ol>";
+            print(str_repeat(" ", 1019) . "\n");
+            flush();// Flush all output to browser now.
+        }
+        $aLogFilePaths = glob($localPath . "grove_individual_profiles_*.log");
+        if(count($aLogFilePaths)===0){
+            return true;
+        }
+        $iIndividualCnt = 1;
+        $iPageNum = 1;
+        do {
+            if ($bUseLogFile) {
+                $logName = 'grove_individual_profiles_' . $iPageNum . '.log';
+                $exists = Storage::disk('local')->exists($logName);
+                if ($exists) {
+                    $response = Storage::disk('local')->get($logName);
+                    $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+                    $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
+                } else {
+                    $response = [];
+
+                    $iPageNum = $iInfiniteLoopLimitMax;
+                }
+            } else {
+                $response = $this->individual_profiles(
+                    [
+                        'page' => $iPageNum,
+                        'per_page' => $iRecordsPerPage,
+                        'include_inactive' => false,
+                        'modified_since' => $modifiedSince,
+                    ]
+                );
+            }
+            $aIndividuals = [];
+            if (isset($response['individuals']['individual'])) {
+                $aIndividuals = $response['individuals']['individual'];
+            }
+            foreach ($aIndividuals as $aIndividual) {
+                $data = [
+                    'id' => $aIndividual['@attributes']['id'],
+                    'family_id' => $aIndividual['family']['@attributes']['id'],
+                    'campus' => $aIndividual['campus']['@attributes']['id'],
+                    'first_name' => $aIndividual['first_name'],
+                    'last_name' => $aIndividual['last_name'],
+                    'login' => $aIndividual['login'],
+                    'email' => $aIndividual['email'],
+                    'mobile_phone' => $this->findPhoneTypeFromProfile($aIndividual, $type = 'mobile', $defaultTo = ''),
+                    'home_phone' => $this->findPhoneTypeFromProfile($aIndividual, $type = 'home', $defaultTo = ''),
+                    'contact_phone' => $this->findPhoneTypeFromProfile(
+                        $aIndividual,
+                        $type = 'contact',
+                        $defaultTo = ''
+                    ),
+                    'birthday' => $aIndividual['birthday'],
+                    'modified' => $aIndividual['modified'],
+                ];
+
+                $err =
+                    !isset($aIndividual['@attributes']['id']) ? 'missing individual_id on page ' . $iPageNum . PHP_EOL :
+                        '';
+                        $iIndividualCnt++;
+                if ($bShowOutput) {
+                    echo '<li>' . $iIndividualCnt . '<pre>' . $err . print_r($aIndividual, true) . '</pre>';
+                }
+
+                if ($bSaveToDb) {
+                    $individual_id = $data['id'];
+                    $groveIndividual = GroveIndividual::find($data['id']);
+                    if ($groveIndividual) {
+                        unset($data['id']);
+                    } else {
+                        $groveIndividual = new GroveIndividual();
+                    }
+
+                    $groveIndividual->fill($data);
+                    $success = $groveIndividual->save();
+                    if ($bShowOutput) {
+                        if ($success) {
+                            echo "$iIndividualCnt. Saved {$individual_id}<br>";
+                        } else {
+                            echo "Save failed {$individual_id}<br>";
+                        }
+                    }
+                    if(!$success){
+                        die("Save failed {$individual_id}");
+                    }
+                }
+                if ($bShowOutput) {
+                    echo '</li>';
+                    print(str_repeat(" ", 1019) . "\n");
+                    flush();// Flush all output to browser now.
+                }
+            }
+            if (Storage::disk('local')->exists($logName)) {
+                Storage::move(
+                    $logName,
+                    str_replace('grove_individual_profiles', 'saved_grove_individual_profiles', $logName)
+                );
+            }
+            if (Storage::disk('local')->exists(
+                str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName))) {
+                Storage::disk('local')->delete(
+                    str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName)
+                );
+            }
+            $iPageNum++;
+            $bInfiniteLoopLimit = $iPageNum > $iInfiniteLoopLimitMax;
+
+            $bNoMoreRecords = isset($response['individuals']['@attributes']['count']) ? $response['individuals']['@attributes']['count'] < 1 : true;
+        } while (!$bNoMoreRecords && !$bInfiniteLoopLimit);
+
+        if ($bShowOutput) {
+            echo "</ol>";
+            print(str_repeat(" ", 1019) . "\n");
+            flush();// Flush all output to browser now.
+            ini_restore('implicit_flush');
+        }
+
+        ini_set('max_execution_time', 160);
+    }
+
+    public function importLifeGroups($bSaveToDb = true, $bUseLogFile = false, $bShowOutput = false)
+    {
+        $iInfiniteLoopLimitMax = 100;
+        $lifeGroupDepartmentId = 10;
+        $aImportGroupDepartments = [$lifeGroupDepartmentId];
+        $localPath = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
+        // Let the long running script finish
+        set_time_limit(0);
+        if ($bSaveToDb) {
+            DB::table('life_groups')->truncate();
+        }
+        if ($bUseLogFile) {
+            $hoursLogIsValid = 12;
+            $iExpectedLogs = 38;
+            clearstatcache();
+            $filename = $localPath . 'grove_group_profiles_1.log';
+            if (\file_exists($filename)) {
+                $timestamp = filemtime($filename);
+
+                $datetime1 = date_create(date('Y-m-d H:i'));
+                $datetime2 = date_create(date('Y-m-d H:i', $timestamp));
+
+                $interval = date_diff($datetime1, $datetime2);
+
+                $age = $interval->format('%h');
+                $bRebuildLogFiles = $age > $hoursLogIsValid;
+                $aLogFilePaths = glob($localPath . "grove_group_profiles_*.log");
+                if (count($aLogFilePaths) < $iExpectedLogs) {
+                    $bRebuildLogFiles = true;
+                }
+                if ($bRebuildLogFiles) {
+                    if (!empty($aLogFilePaths)) {
+                        foreach ($aLogFilePaths as $aLogFilePath) {
+                            unlink($aLogFilePath);
+                        }
+                    }
+                }
+            } else {
+                $bRebuildLogFiles = true;
+            }
+            if ($bRebuildLogFiles) {
+                $iPageNum = 1;
+                $this->bReturnXML = true;
+                do {
+                    $logName = 'grove_group_profiles_' . $iPageNum . '.log';
+                    $response = $this->group_profiles(['page' => $iPageNum]);
+
+                    Storage::disk('local')->put($logName, $response);
+                    try {
+                        $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+                    } catch (Exception $e) {
+                        $aResponse = [];
+                    }
+                    $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
+
+                    $iPageNum++;
+                    $bInfiniteLoopLimit = $iPageNum > $iInfiniteLoopLimitMax;
+                    $bNoMoreRecords =
+                        isset($response['groups']['@attributes']['count']) ?
+                            $response['groups']['@attributes']['count'] < 1 : true;
+                } while (!empty($response) && !$bNoMoreRecords && !$bInfiniteLoopLimit);
+                $this->bReturnXML = false;
+            }
+        }
+        if ($bShowOutput) {
+            // Allow us to send content to the browser before the script is done
+            ini_set(
+                "implicit_flush",
+                true
+            );
+            // remove all existing buffers or else the implicit flush doesn't work for some reason.
+            // ** Make sure you don't need these buffers... at the time I wrote this, this method is meant to run on stand alone scripts
+            do {
+                echo ob_get_contents();
+            } while (@ob_end_clean());
+            // This is the magic. Output 1019 characters to the browser so it triggers the page to load. 1019 is a value I found
+            // in a forum post. There is an actual required amout of data that needs to be sent or the browser will ignore it and wait
+            // for more data. I think the different browsers require different amounts of data. 1019 worked for firefox and I didn't do
+            // any discovery to see what the least amount of data was required.
+            print(str_repeat(" ", 1019) . "\n");
+            flush();// Flush all output to browser now.
+            echo "<ol>";
+            print(str_repeat(" ", 1019) . "\n");
+            flush();// Flush all output to browser now.
+        }
+
+        $iParticipantCnt = 1;
+        $iPageNum = 1;
+        do {
+            if ($bUseLogFile) {
+                $logName = 'grove_group_profiles_' . $iPageNum . '.log';
+                $exists = Storage::disk('local')->exists($logName);
+                if ($exists) {
+                    $response = Storage::disk('local')->get($logName);
+                    $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+                    $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
+                } else {
+                    $response = [];
+                }
+            } else {
+                $response = $this->group_profiles(['page' => $iPageNum]);
+            }
+            $aGroups = [];
+            if (isset($response['groups']['group'])) {
+                $aGroups = $response['groups']['group'];
+            }
+            foreach ($aGroups as $idx => $aGroup) {
+                $department_id = $aGroup['department']['@attributes']['id'];
+                $bImportAllowed = in_array($department_id, $aImportGroupDepartments);
+                if ($bImportAllowed && ($aGroup['inactive'] == false || $aGroup['inactive'] == 'false')) {
+                    $aParticipants = [];
+                    $group_id = $aGroup['@attributes']['id'];
+                    $group_name = $aGroup['name'];
+                    if (isset($aGroup['main_leader'])) {
+                        $aMainLeader = $aGroup['main_leader'];
+                        $aParticipants[] = $aMainLeader;
+                    }
+                    $aLeaders = isset($aGroup['leaders']['leader']) ? $aGroup['leaders']['leader'] : [];
+                    if (!empty($aLeaders)) {
+                        if (isset($aLeaders['first_name'])) {
+                            $aParticipants[] = $aLeaders;
+                        } else {
+                            $aParticipants = array_merge($aParticipants, $aLeaders);
+                        }
+                    }
+                    $aGroupParticipants =
+                        isset($aGroup['participants']['participant']) ? $aGroup['participants']['participant'] : [];
+                    if (!empty($aGroupParticipants)) {
+                        if (isset($aGroupParticipants['first_name'])) {
+                            $aParticipants[] = $aGroupParticipants;
+                        } else {
+                            $aParticipants = array_merge($aParticipants, $aGroupParticipants);
+                        }
+                    }
+                    // echo "$group_id :: $group_name <br>";
+                    // echo '<pre>' . print_r($aParticipants, true) . '</pre>';
+
+                    foreach ($aParticipants as $aParticipant) {
+                        $data = [];
+                        $data['group_id'] = $group_id;
+                        $data['group_name'] = $group_name;
+                        $data['individual_id'] = $aParticipant['@attributes']['id'];
+                        $data['first_name'] = $aParticipant['first_name'];
+                        $data['last_name'] = $aParticipant['last_name'];
+                        $data['email'] = $aParticipant['email'];
+                        $err =
+                            !isset($aParticipant['@attributes']['id']) ?
+                                'missing individual_id on page ' . $iPageNum . PHP_EOL : '';
+                        if ($bShowOutput) {
+                            echo '<li>' . $iParticipantCnt++ . '<pre>' . $err . print_r($data, true) . '</pre>';
+                        }
+
+                        if ($bSaveToDb) {
+                            $lifeGroup = new LifeGroups();
+                            $lifeGroup->fill($data);
+                            $success = $lifeGroup->save();
+                            if ($bShowOutput) {
+                                if ($success) {
+                                    echo "Saved $group_id :: $group_name :: {$data['individual_id']}";
+                                } else {
+                                    echo "Save failed $group_id :: $group_name {$data['individual_id']}";
+                                }
+                            }
+                        }
+                        if ($bShowOutput) {
+                            echo '</li>';
+                            print(str_repeat(" ", 1019) . "\n");
+                            flush();// Flush all output to browser now.
+                        }
+                    }
+                }
+            }
+            $iPageNum++;
+            $bInfiniteLoopLimit = $iPageNum > $iInfiniteLoopLimitMax;
+            $bNoMoreRecords = $response['groups']['@attributes']['count'] < 1;
+        } while (!$bNoMoreRecords && !$bInfiniteLoopLimit);
+
+        if ($bShowOutput) {
+            echo "</ol>";
+            print(str_repeat(" ", 1019) . "\n");
+            flush();// Flush all output to browser now.
+            ini_restore('implicit_flush');
+        }
+
+        ini_set('max_execution_time', 160);
+    }
+
+    /**
+     * @param        $aProfile
+     * @param string $type [mobile|home|work|emergency|contact]
+     *
+     * @return string
+     */
+    public function findPhoneTypeFromProfile($aProfile, $type = 'mobile', $defaultTo = 'contact')
+    {
+        $aPhones = isset($aProfile['phones']['phone']) ? $aProfile['phones']['phone'] : [];
+
+        for ($x = 0; $x < count($aPhones); $x++) {
+            if ($aPhones[$x]['@attributes']['type'] === $type) {
+                return $aPhones[$x]['@value'];
+            }
+        }
+        if ($defaultTo !== '') {
+            for ($x = 0; $x < count($aPhones); $x++) {
+                if ($aPhones[$x]['@attributes']['type'] === $defaultTo) {
+                    return $aPhones[$x]['@value'];
+                }
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -192,7 +916,13 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('get', $srv, $aData);
     }
@@ -224,7 +954,13 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('get', $srv, $aData);
     }
@@ -245,7 +981,7 @@ class GroveApi
      * include_inactive    boolean
      * modified_since    datetime
      */
-    public function group_participants()
+    public function group_participants($id)
     {
         $srv = 'group_participants';
         $aParams = array_map(
@@ -256,7 +992,13 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('get', $srv, $aData);
     }
@@ -283,17 +1025,19 @@ class GroveApi
     public function group_profiles()
     {
         $srv = 'group_profiles';
-        $aParams = array_map(
-            function ($parameter) {
-                return $parameter->name;
-            },
-            (new \ReflectionMethod(
-                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
-            ))->getParameters()
-        );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        $args = current($func_args);
 
-        return $this->getResponse('get', $srv, $aData);
+        return $this->getResponse('get', $srv, $args);
+    }
+
+    public function group_search()
+    {
+        $srv = 'group_search';
+        $func_args = \func_get_args();
+        $args = current($func_args);
+
+        return $this->getResponse('get', $srv, $args);
     }
 
     /**
@@ -323,7 +1067,13 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('get', $srv, $aData);
     }
@@ -398,7 +1148,13 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('post', $srv, $aData);
     }
@@ -412,13 +1168,12 @@ class GroveApi
      * execute_search
      *
      * Required Parameters
-     * name    type
      * id    integer
      * Optional Parameters
      * name    type
      * include_inactive    boolean
      */
-    public function execute_search($id,$name=null,$include_interactive=null)
+    public function execute_search($id, $name = null, $include_interactive = null)
     {
         $srv = 'execute_search';
         $aParams = array_map(
@@ -429,7 +1184,13 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('get', $srv, $aData);
     }
@@ -458,7 +1219,14 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('get', $srv, $aData);
     }
@@ -487,7 +1255,13 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('get', $srv, $aData);
     }
@@ -517,9 +1291,44 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('post', $srv, $aData);
+    }
+
+    /**
+     * @param      $individual_id
+     * @param null $include_inactive
+     *
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    public function individual_profile_from_id($individual_id, $include_inactive = null)
+    {
+        $srv = 'individual_profile_from_id';
+        $aParams = array_map(
+            function ($parameter) {
+                return $parameter->name;
+            },
+            (new \ReflectionMethod(
+                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
+            ))->getParameters()
+        );
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
+
+        return $this->getResponse('get', $srv, $aData);
     }
 
     /**
@@ -544,17 +1353,10 @@ class GroveApi
     public function individual_profiles()
     {
         $srv = 'individual_profiles';
-        $aParams = array_map(
-            function ($parameter) {
-                return $parameter->name;
-            },
-            (new \ReflectionMethod(
-                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
-            ))->getParameters()
-        );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        $args = current($func_args);
 
-        return $this->getResponse('get', $srv, $aData);
+        return $this->getResponse('get', $srv, $args);
     }
 
     /**
@@ -585,6 +1387,16 @@ class GroveApi
     public function individual_search()
     {
         $srv = 'individual_search';
+
+        $func_args = \func_get_args();
+        $args = current($func_args);
+
+        return $this->getResponse('get', $srv, $args);
+    }
+
+    public function individual_groups($individual_id)
+    {
+        $srv = 'individual_groups';
         $aParams = array_map(
             function ($parameter) {
                 return $parameter->name;
@@ -593,9 +1405,15 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
 
-        return $this->getResponse('get', $srv, $aData);
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
+
+        return $this->getResponse('post', $srv, $aData);
     }
 
     /**
@@ -625,7 +1443,13 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('post', $srv, $aData);
     }
@@ -654,8 +1478,33 @@ class GroveApi
                 $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
             ))->getParameters()
         );
-        $aData = !empty($aParams) ? array_combine($aParams, \func_get_args()) : null;
+        $func_args = \func_get_args();
+        if (count($func_args) < count($aParams)) {
+            $func_args =
+                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
+        }
+
+        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
 
         return $this->getResponse('get', $srv, $aData);
+    }
+
+    public function formatSeconds($iTime, $sTimeIncrement = 'seconds')
+    {
+        if ($sTimeIncrement == 'seconds') {
+            switch (true) {
+                case $iTime < 60:
+                    $sDateFormat = 's \s\e\c\o\n\d\s';
+                    break;
+                case $iTime >= 60 && $iTime < 3600:
+                    $sDateFormat = 'i \m\i\n s \s\e\c\o\n\d\s';
+                    break;
+                case $iTime > 3600:
+                    $sDateFormat = 'H \h\o\u\r\s i \m\i\n s \s\e\c\o\n\d\s';
+                    break;
+            }
+        }
+
+        return date($sDateFormat, $iTime);
     }
 }
