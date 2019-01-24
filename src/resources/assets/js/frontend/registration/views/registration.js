@@ -162,7 +162,7 @@
             'hidden.bs.collapse #collapseProjectDescription': 'toggleProjectDescriptionCollapseIcon',
             'shown.bs.collapse #collapseProjectDescription': 'toggleProjectDescriptionCollapseIcon',
             'click form[name="newProjectReservation"] button': 'makeReservations',
-            'click [name="register-process-type[]"]': 'handleRegisterProcessType',
+            'click [name="register-process-type"]': 'handleRegisterProcessType',
             'click .submit-grove-login-btn': 'handleGroveLogin',
 
         },
@@ -392,7 +392,7 @@
                     _token: $('meta[name="csrf-token"]').attr('content'),
                     GroveEmail: $('[name="GroveEmail"]').val(),
                     GrovePassword: $('[name="GrovePassword"]').val(),
-                    RegisterProcessType: $('[name="register-process-type[]"]').val()
+                    RegisterProcessType: $('[name="register-process-type"]:checked').val()
                 },
                 success: function (response) {
                     $submitBtn.siblings('.spinner').remove();

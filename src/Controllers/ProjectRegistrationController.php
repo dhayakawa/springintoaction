@@ -59,8 +59,8 @@ class ProjectRegistrationController extends BaseController
 
         if (is_array($aContactInfo)) {
             foreach ($aContactInfo as $contactInfo) {
-                $volunteer = Volunteer::where('Email',$contactInfo['Email'])->get()->first();
-                if(!empty($volunteer)){
+                $volunteer = Volunteer::where('Email', $contactInfo['Email'])->get()->first();
+                if (!empty($volunteer)) {
                     $volunteerID = $volunteer->VolunteerID;
                 } else {
                     $model = new Volunteer;
@@ -102,14 +102,14 @@ class ProjectRegistrationController extends BaseController
                     [
                         'VolunteerID' => $volunteerID,
                         'ProjectID' => $ProjectID,
-                        'ProjectRoleID' => $ProjectRoleID
+                        'ProjectRoleID' => $ProjectRoleID,
                     ]
                 );
                 $success = $model->save();
                 if (!$success) {
                     $batchSuccess = false;
                 } else {
-                    $volunteerCnt = ProjectVolunteer::where('ProjectID',$ProjectID)->get()->count();
+                    $volunteerCnt = ProjectVolunteer::where('ProjectID', $ProjectID)->get()->count();
                     $projectModel = Project::find($ProjectID);
                     $projectModel->VolunteersAssigned = $volunteerCnt;
                     $projectModel->save();
@@ -123,8 +123,11 @@ class ProjectRegistrationController extends BaseController
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Registration Not Implemented Yet.'];
         } elseif ($success) {
-            $response = ['success' => true, 'msg' => 'Thank you for volunteering! We\'ll be sending a confirmation
-                            email and notifications as we get closer to the date.'];
+            $response = [
+                'success' => true,
+                'msg' => 'Thank you for volunteering! We\'ll be sending a confirmation
+                            email and notifications as we get closer to the date.',
+            ];
         } else {
             $response = ['success' => false, 'msg' => 'Project Registration Failed.'];
         }
@@ -173,8 +176,10 @@ class ProjectRegistrationController extends BaseController
 
     public function deleteReservation(Request $request, $ProjectID)
     {
-        $success = ProjectReservation::where('session_id', $request->session()->getId())
-                                     ->where('ProjectID', $ProjectID)->delete();
+        $success =
+            ProjectReservation::where('session_id', $request->session()->getId())
+                              ->where('ProjectID', $ProjectID)
+                              ->delete();
 
         if ($success) {
             $response = ['success' => true, 'msg' => 'Project Reservation Delete Succeeded.'];
@@ -185,23 +190,113 @@ class ProjectRegistrationController extends BaseController
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
 
-    public function groveLogin(Request $request){
+    public function groveLogin(Request $request)
+    {
         $login = $request->GroveEmail;
         $password = $request->GrovePassword;
         $RegisterProcessType = $request->RegisterProcessType;
-        // $groveApi = new GroveApi();
-        // $response = $groveApi->individual_profile_from_login_password($login, $password);
-        $success = true;
-        $contact_info = [];
-        for($i=0;$i<10;$i++){
-            $contact_info[]= [
-                'Church' => 'woodlands',
-                'MobilePhoneNumber' => '7153054840',
-                'FirstName' => 'David' . $i,
-                'LastName' => 'Hayakawa' . $i,
-                'Email' => 'david.hayakawa+siaregister' . $i . '@gmail.com'
-            ]  ;
+
+        $groveApi = new GroveApi();
+        $response = $groveApi->individual_profile_from_login_password($login, $password);
+        \Illuminate\Support\Facades\Log::debug(
+            '',
+            [
+                'File:' . __FILE__,
+                'Method:' . __METHOD__,
+                'Line:' . __LINE__,
+                $login,
+                $password,
+                $RegisterProcessType,
+                $response,
+            ]
+        );
+        $bGroveLoginSuccessful = $response["individuals"]['@attributes']['count'] === '1';
+        if ($bGroveLoginSuccessful) {
+            $individual = $response["individuals"]["individual"];
+            $phone = $groveApi->findPhoneTypeFromProfile($individual);
+            $email = $individual['email'];
+            $firstName = $individual['first_name'];
+            $lastName = $individual['last_name'];
+            $groveId = $individual["@attributes"]['id'];
+            $contact_info = [];
+
+            $success = true;
+            if ($RegisterProcessType === 'family') {
+                $family_id = $individual['family']['@attributes']['id'];
+                $responseFamily = $groveApi->family_list($family_id);
+                $aFamilyMembers =
+                    isset($responseFamily['families']['family']["individuals"]["individual"]) ?
+                        $responseFamily['families']['family']["individuals"]["individual"] : [];
+                for ($x = 0; $x < count($aFamilyMembers); $x++) {
+                    $bSet = false;
+                    $groveUserId = $aFamilyMembers[$x]['@attributes']['id'];
+                    $firstName = $aFamilyMembers[$x]['first_name'];
+                    $lastName = $aFamilyMembers[$x]['last_name'];
+                    $responseFamilyMember =
+                        $groveApi->individual_search(
+                            ['family_id' => $family_id, 'first_name' => $firstName, 'last_name' => $lastName]
+                        );
+                    $familyMember =
+                        isset($responseFamilyMember["individuals"]["individual"]) ? $responseFamilyMember["individuals"]["individual"] : [];
+                    if (!empty($familyMember)) {
+                        if (isset($familyMember['birthday'])) {
+                            $birthday = $familyMember['birthday'];
+                            $datetime1 = date_create(date('Y-m-d'));
+                            $datetime2 = date_create($birthday);
+                            $interval = date_diff($datetime1, $datetime2);
+                            $age = $interval->format('%y');
+                            $bSet = $age >= 16;
+                        } else {
+                            // $bSet = true;
+                        }
+                    }
+                    if ($bSet) {
+                        $phone = $groveApi->findPhoneTypeFromProfile($familyMember);
+                        $email = $familyMember['email'];
+                        $firstName = $familyMember['first_name'];
+                        $lastName = $familyMember['last_name'];
+                        $contact_info[] = [
+                            'Church' => 'woodlands',
+                            'MobilePhoneNumber' => $phone,
+                            'FirstName' => $firstName,
+                            'LastName' => $lastName,
+                            'Email' => $email,
+                        ];
+                    }
+                }
+            } elseif ($RegisterProcessType === 'lifegroup') {
+            }
+            //$response = $groveApi->api_status();
+            \Illuminate\Support\Facades\Log::debug(
+                '',
+                [
+                    'File:' . __FILE__,
+                    'Method:' . __METHOD__,
+                    'Line:' . __LINE__,
+                    [
+                        '$phone' => $phone,
+                        '$email' => $email,
+                        '$firstName' => $firstName,
+                        '$lastName' => $lastName,
+                        '$groveId' => $groveId,
+                        '$RegisterProcessType' => $RegisterProcessType,
+                    ],
+                ]
+            );
+        } else {
+            $success = false;
         }
+
+        // $contact_info = [];
+        // for($i=0;$i<10;$i++){
+        //     $contact_info[]= [
+        //         'Church' => 'woodlands',
+        //         'MobilePhoneNumber' => '7153054840',
+        //         'FirstName' => 'David' . $i,
+        //         'LastName' => 'Hayakawa' . $i,
+        //         'Email' => 'david.hayakawa+siaregister' . $i . '@gmail.com'
+        //     ]  ;
+        // }
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Grove Login Not Implemented Yet.'];
         } elseif ($success) {

@@ -70,6 +70,25 @@ class ProjectsController extends BaseController
                 if (is_string($value)) {
                     $value = \urldecode($value);
                 }
+                $a = [
+                    'ChildFriendly' => 0,
+                    'VolunteersNeededEst' => 0,
+                    'VolunteersAssigned' => 0,
+                    'EstimatedCost' => 0.00,
+                    'ActualCost' => 0.00,
+                    'BudgetAvailableForPC' => 0.00,
+                    'VolunteersLastYear' => 0,
+                    'NeedsToBeStartedEarly' => 0,
+                    'PCSeeBeforeSIA' => 0,
+                    'CostEstimateDone' => 0,
+                    'MaterialListDone' => 0,
+                    'BudgetAllocationDone' => 0,
+                    'VolunteerAllocationDone' => 0,
+                    'NeedSIATShirtsForPC' => 0,
+                    'FinalCompletionStatus' => 0];
+                if(\array_key_exists($key, $a) && $value == ''){
+                    $value = $a[$key];
+                }
             }
         );
         $project->fill($data);
