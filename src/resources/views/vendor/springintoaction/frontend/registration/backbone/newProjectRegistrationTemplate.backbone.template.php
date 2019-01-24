@@ -110,19 +110,19 @@
                         <div class="radio">
                             <label><input
                                     type="radio"
-                                    name="register-process-type[]"
+                                    name="register-process-type"
                                     class="auto-register"
                                     id="auto-register-family"
                                     value="family"/> I would you like to try and automatically register my family by logging into the Grove.</label>
                             <label><input
                                     type="radio"
-                                    name="register-process-type[]"
+                                    name="register-process-type"
                                     class="auto-register"
                                     id="auto-register-lifegroup"
                                     value="lifegroup"/> I would you like to try and automatically register my life group by logging into the Grove.</label>
                             <label><input
                                     type="radio"
-                                    name="register-process-type[]"
+                                    name="register-process-type"
                                     class="manual-register"
                                     id="auto-register-manual"
                                     value="manual"/> No, thanks, just let me enter manually enter in the contact information.</label>
@@ -135,6 +135,7 @@
                             <label for="inputGroveEmail">Grove Email:</label>
                             <input type="text"
                                    name="GroveEmail"
+                                   autocomplete="off"
                                    class="form-control"
                                    id="inputGroveEmail"
                                    placeholder="Grove Email"
@@ -147,6 +148,7 @@
                             <label for="inputGrovePassword">Grove Password:</label>
                             <input type="password"
                                    name="GrovePassword"
+                                   autocomplete="off"
                                    class="form-control"
                                    id="inputGrovePassword"
                                    placeholder="Grove Password"
