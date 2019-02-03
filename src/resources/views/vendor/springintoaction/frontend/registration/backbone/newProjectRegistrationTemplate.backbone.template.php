@@ -92,8 +92,10 @@
                 <div class="personal-contact-info-wrapper"></div>
                 <div class="row bottom-nav-btns">
                     <div class="col-sm-12 text-right">
-                        <button class="register-others btn btn-default btn-sm">Register Others</button>&nbsp;
-                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm and Register</button>
+                        <button class="register-others btn btn-default btn-sm">Register Others
+                            <i class="fas fa-arrow-alt-circle-right"></i></button>&nbsp;
+                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm and Register
+                            <i class="fas fa-arrow-alt-circle-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -125,7 +127,7 @@
                                     name="register-process-type"
                                     class="manual-register"
                                     id="auto-register-manual"
-                                    value="manual"/> No, thanks, just let me enter manually enter in the contact information.</label>
+                                    value="manual"/> No, thanks, just let me enter in the contact information for everyone.</label>
                         </div>
                     </div>
                 </div>
@@ -179,10 +181,12 @@
                 </div>
                 <div class="row bottom-nav-btns">
                     <div class="col-xs-6 text-left">
-                        <button class="back-to-contact-info-btn btn btn-primary btn-sm">Back to Personal Contact Info</button>
+                        <button class="back-to-contact-info-btn btn btn-primary btn-sm">
+                            <i class="fas fa-arrow-alt-circle-left"></i> Personal Contact Info</button>
                     </div>
                     <div class="col-xs-6 text-right">
-                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm and Register</button>
+                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm and Register
+                            <i class="fas fa-arrow-alt-circle-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -204,10 +208,12 @@
                 </div>
                 <div class="row bottom-nav-btns">
                     <div class="col-xs-6 text-left">
-                        <button class="back-to-register-others-btn btn btn-primary btn-sm">Back to Register Others</button>
+                        <button class="back-to-contact-info-btn btn btn-primary btn-sm"><i class="fas fa-arrow-alt-circle-left"></i> Personal Contact Info</button>
+                        <button class="back-to-register-others-btn btn btn-primary btn-sm">
+                            <i class="fas fa-arrow-alt-circle-left"></i> Register Others</button>
                     </div>
                     <div class="col-xs-6 text-right">
-                        <button class="submit-registration-btn btn btn-primary btn-sm">Register</button>
+                        <button class="submit-registration-btn btn btn-success btn-sm"><i class="fas fa-check-circle"></i> Register</button>
                     </div>
                 </div>
             </div>

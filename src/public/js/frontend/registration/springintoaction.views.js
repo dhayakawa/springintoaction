@@ -221,17 +221,21 @@
                 $churchSelect.siblings('label').removeClass('text-danger');
             }
 
-            let alertMessage = 'Please enter all required information';
+            let alertMessage = '';
             if (fieldValidationErrors.length) {
+                alertMessage = 'Please enter all required information';
                 alertMessage += '<br>';
                 $.each(fieldValidationErrors, function (idx, msg) {
                     alertMessage += msg + ' is missing<br>';
                 });
                 fieldValidationErrors = [];
             }
-            let $alertHtml = $('<div class="alert alert-danger contact-info-error" role="alert">' + alertMessage + '</div>');
+
             self.$el.find('.contact-info-error').remove();
-            self.$el.append($alertHtml);
+            if (alertMessage !== '') {
+                let $alertHtml = $('<div class="alert alert-danger contact-info-error" role="alert">' + alertMessage + '</div>');
+                self.$el.append($alertHtml);
+            }
 
             return iInvalidFields === 0;
         },
@@ -269,7 +273,8 @@
                 'handleRegisterProcessType',
                 'handleGroveLogin',
                 'submitRegistration',
-                'makeReservations'
+                'makeReservations',
+                'deleteRegistrationContactListItem'
             );
             this.fieldValidationErrors = [];
             this.bIsWoodlands = false;
@@ -281,6 +286,9 @@
             this.groveContacts = [];
             this.groveContactsFinal = [];
             App.Vars.reservationTimeoutExpire = 1000 * 60;
+            App.Vars.reservedProjectID = null;
+            clearTimeout(App.Vars.reservationTimeout);
+            clearInterval(App.Vars.reservationInterval);
             $('body').addClass('project-registration-page');
 
             _log('App.Views.Registration.initialize', options);
@@ -307,7 +315,7 @@
             'click form[name="newProjectReservation"] button': 'makeReservations',
             'click [name="register-process-type"]': 'handleRegisterProcessType',
             'click .submit-grove-login-btn': 'handleGroveLogin',
-
+            'click .manual-delete-registration-contact': 'deleteRegistrationContactListItem'
         },
         render: function () {
             let self = this;
@@ -324,23 +332,32 @@
 
             };
             $(this.el).html(this.template(tplVars));
-
-            self.contactInfoViews[0] = new App.Views.ContactInfo({
-                el: self.$el.find('.personal-contact-info-wrapper'),
-                parentView: self,
-                contactInfoIdx: 0,
-                contactInfoData: {
+            let contactInfoDataValues = {
+                Church: '',
+                ChurchOther: '',
+                MobilePhoneNumber: '',
+                FirstName: '',
+                LastName: '',
+                Email: ''
+            };
+            if (App.Vars.devMode){
+                contactInfoDataValues = {
                     Church: 'woodlands',
                     ChurchOther: '',
                     MobilePhoneNumber: '7153054840',
                     FirstName: 'David',
                     LastName: 'Hayakawa',
                     Email: 'david.hayakawa@gmail.com'
-                }
+                };
+            }
+            self.contactInfoViews[0] = new App.Views.ContactInfo({
+                el: self.$el.find('.personal-contact-info-wrapper'),
+                parentView: self,
+                contactInfoIdx: 0,
+                contactInfoData: contactInfoDataValues
             });
 
             self.$el.find('.personal-contact-info-wrapper').replaceWith(self.contactInfoViews[0].render().el);
-
 
             return this;
         },
@@ -401,43 +418,49 @@
         confirmReservationTimeout: function () {
             let self = this;
             clearTimeout(App.Vars.reservationTimeout);
-            let confirmModal = getSIAConfirmModal();
+            let $confirmReservationTimeoutModal = getSIAConfirmModal('confirmReservationTimeout');
 
-            confirmModal.on('show.bs.confirm', function (event) {
+            $confirmReservationTimeoutModal.on('show.bs.confirm', function (event) {
                 let $confirm = $(this);
-
                 let iCountDown = 60;
                 $confirm.find('.confirm-body').find('.confirm-question').html('<div>You will automatically lose your reserved spots in <span class="reservation-countdown">' + iCountDown + '</span> seconds. Would you like another 5 minutes?</div>');
-
-                let reservationInterval = setInterval(function () {
+                clearInterval(App.Vars.reservationInterval);
+                App.Vars.reservationInterval = setInterval(function () {
                     $confirm.find('.confirm-body').find('.reservation-countdown').text(iCountDown--);
                     if (iCountDown <= 0) {
                         self.parentView.removeReservations();
-                        clearInterval(reservationInterval);
+                        clearInterval(App.Vars.reservationInterval);
                         $confirm.find('.confirm-body').find('.confirm-question').html('<div>Your reservation has expired.</div>');
-
                         $confirm.find('.confirm-body').find('button.btn-yes').remove();
                         $confirm.find('.confirm-body').find('button.btn-no').text('OK');
                     }
                 }, 1000);
-                $confirm.find('.confirm-body').find('button').one('click', function (e) {
+                $confirm.find('.confirm-body').find('button').on('click', function (e) {
                     e.preventDefault();
-                    clearInterval(reservationInterval);
+                    clearInterval(App.Vars.reservationInterval);
                     if ($(this).hasClass('btn-yes')) {
                         App.Vars.reservationTimeout = setTimeout(self.confirmReservationTimeout, App.Vars.reservationTimeoutExpire);
                     } else {
                         self.parentView.removeReservations();
                     }
-                    confirmModal.confirm('hide');
+                    $confirm.confirm('hide');
                 });
 
             });
-            confirmModal.confirm('show');
-
+            if (!self.$el.is(':visible')) {
+                clearTimeout(App.Vars.reservationTimeout);
+                clearInterval(App.Vars.reservationInterval);
+                App.Vars.reservedProjectID = null;
+                return true;
+            } else {
+                $confirmReservationTimeoutModal.confirm('show');
+            }
         },
         updateStepsView: function () {
             let self = this;
             if (self.iReserved < 2) {
+                $('.register-others.btn').hide();
+                $('.back-to-register-others-btn').hide();
                 $('.go-to-step-two-btn').hide();
                 $('.back-to-step-two-btn').hide();
                 $('.step-two').hide();
@@ -469,28 +492,28 @@
             let iExtraRegistrations = self.iReserved - 1;
             self.$el.find('.manual-multiple-register .multiple-register-list').empty();
             self.contactInfoIdx = 1;
-            for (let i = 0; i <= iExtraRegistrations; i++) {
-                let contact = null;
-                if (typeof contacts !== 'undefined' && typeof contacts[i] !== 'undefined') {
-                    contact = contacts[i];
 
-                    self.contactInfoViews[self.contactInfoIdx] = new App.Views.ContactInfo({
-                        parentView: self,
-                        contactInfoIdx: self.contactInfoIdx,
-                        contactInfoData: {
-                            Church: !_.isUndefined(contact['Church']) ? contact['Church'] : '',
-                            ChurchOther: !_.isUndefined(contact['ChurchOther']) ? contact['ChurchOther'] : '',
-                            MobilePhoneNumber: !_.isUndefined(contact['MobilePhoneNumber']) ? contact['MobilePhoneNumber'] : '',
-                            FirstName: !_.isUndefined(contact['FirstName']) ? contact['FirstName'] : '',
-                            LastName: !_.isUndefined(contact['LastName']) ? contact['LastName'] : '',
-                            Email: !_.isUndefined(contact['Email']) ? contact['Email'] : ''
-                        }
-                    });
+            for (let i = 0; i < iExtraRegistrations; i++) {
+                let contact = typeof contacts !== 'undefined' && typeof contacts[i] !== 'undefined' ? contacts[i] : {};
 
-                    self.$el.find('.manual-multiple-register .multiple-register-list').append($('<li>').append(self.contactInfoViews[self.contactInfoIdx].render().el));
-                    self.contactInfoIdx++;
-                }
+                self.contactInfoViews[self.contactInfoIdx] = new App.Views.ContactInfo({
+                    parentView: self,
+                    contactInfoIdx: self.contactInfoIdx,
+                    contactInfoData: {
+                        Church: !_.isUndefined(contact['Church']) ? contact['Church'] : '',
+                        ChurchOther: !_.isUndefined(contact['ChurchOther']) ? contact['ChurchOther'] : '',
+                        MobilePhoneNumber: !_.isUndefined(contact['MobilePhoneNumber']) ? contact['MobilePhoneNumber'] : '',
+                        FirstName: !_.isUndefined(contact['FirstName']) ? contact['FirstName'] : '',
+                        LastName: !_.isUndefined(contact['LastName']) ? contact['LastName'] : '',
+                        Email: !_.isUndefined(contact['Email']) ? contact['Email'] : ''
+                    }
+                });
+                let $deleteBtn = $('<a href="#" class="manual-delete-registration-contact text-danger"><i class="fas fa-trash"></i> delete</a>');
+                self.$el.find('.manual-multiple-register .multiple-register-list').append($('<li>').append($deleteBtn).append(self.contactInfoViews[self.contactInfoIdx].render().el));
+                self.contactInfoIdx++;
+
             }
+
         },
         setUpRegisterOthers: function () {
             let self = this;
@@ -617,6 +640,18 @@
 
             return self.groveContacts;
         },
+        deleteRegistrationContactListItem: function (e) {
+            let self = this;
+            e.preventDefault();
+            $(e.currentTarget).parent('li').remove();
+            if (App.Vars.bTooManyRegistrants) {
+                let numberOfRegistrants = self.$el.find('.manual-multiple-register .multiple-register-list li').length;
+                // remove error notice if it's fixed
+                if (self.iReserved > numberOfRegistrants) {
+                    $('#auto-register').find('.auto-register-too-many-registrants-error').remove();
+                }
+            }
+        },
         registerAndConfirm: function (e) {
             let self = this;
             e.preventDefault();
@@ -637,16 +672,16 @@
                     valid += self.contactInfoViews[i].validateContactInfo() ? 1 : 0;
                 }
             }
-            let bTooManyRegistrants = false;
+            App.Vars.bTooManyRegistrants = false;
             if (self.iReserved < self.contactInfoViews.length) {
-                bTooManyRegistrants = true;
+                App.Vars.bTooManyRegistrants = true;
                 valid = 0;
                 let over = self.contactInfoViews.length - self.iReserved;
 
                 let alertMessage = 'Sorry, there are only ' + self.iReserved + ' spots reserved.  Please remove ' + over + ' of your registrations ' +
                                    'or choose a different project.';
-                let $alertHtml = $('<div class="alert alert-danger auto-register-error" role="alert">' + alertMessage + '</div>');
-                $('#auto-register').find('.auto-register-error').remove();
+                let $alertHtml = $('<div class="alert alert-danger auto-register-too-many-registrants-error" role="alert">' + alertMessage + '</div>');
+                $('#auto-register').find('.auto-register-too-many-registrants-error').remove();
                 $('#auto-register').find('.bottom-nav-btns').before($alertHtml);
             }
             if (valid) {
@@ -656,12 +691,14 @@
                 self.updateActiveStep('.step-three.steps')
             } else {
                 if (self.bIsGroveImport) {
-                    if (self.groveContacts.length && bTooManyRegistrants) {
+                    if (self.groveContacts.length && App.Vars.bTooManyRegistrants) {
                         self.$el.find('.manual-multiple-register .multiple-register-list').empty();
                         // keep the person registering
                         self.contactInfoViews = [self.contactInfoViews[0]];
                         $('.manual-multiple-register').hide();
                     }
+                } else {
+
                 }
                 self.setStepAsInValid('.step-two.steps', $(e.currentTarget));
             }
@@ -705,6 +742,7 @@
                         App.Vars.reservedProjectID = null;
                         App.Vars.registrationProcessType = null;
                         clearTimeout(App.Vars.reservationTimeout);
+                        clearInterval(App.Vars.reservationInterval);
                         let iCountDown = 5;
                         let $alertHtml = $('<div class="alert alert-success registration-success-alert" role="alert">Project Registration Succeeded</div><div class="registration-success-msg">' + response.msg + '</div>');
 
@@ -723,7 +761,7 @@
 
                         let reloadInterval = setInterval(function () {
                             App.Vars.Modal.find('.reload-msg > span').text(iCountDown--);
-                            if (iCountDown === 0) {
+                            if (iCountDown <= 0) {
                                 if (!bSkipCloseAndReload) {
                                     App.Vars.Modal.modal('hide');
                                     location.reload(true);
@@ -753,7 +791,9 @@
 
             this.parentView = this.options.parentView;
             this.projectModelToRegister = null;
+            clearTimeout(App.Vars.reservationTimeout);
             clearInterval(App.Vars.checkRegistrationsInterval);
+            clearInterval(App.Vars.reservationInterval);
             App.Vars.checkRegistrationsInterval = setInterval(this.checkProjectRegistrations, App.Vars.checkRegistrationsIntervalSeconds);
             _log('App.Views.Registration.initialize', options);
         },
@@ -872,48 +912,46 @@
 
             self.projectModelToRegister = e.model;
 
-            App.Vars.Modal = getSIAModal();
-            App.Vars.Modal.on('show.bs.modal', function (event) {
+            App.Vars.SIAModalRegistrationForm = getSIAModal('RegistrationForm');
+
+            App.Vars.SIAModalRegistrationForm.on('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('Project Registration');
                 modal.find('.modal-body').html(self.getRegistrationForm());
-
                 modal.find('.save.btn').off().on('click', function (e) {
                     e.preventDefault();
                     self.create($.unserialize(modal.find('form').serialize()));
-                    App.Vars.Modal.SIAModal('hide');
+                    App.Vars.SIAModalRegistrationForm.SIAModal('hide');
                 });
 
             });
-            App.Vars.Modal.SIAModal('show');
+            App.Vars.SIAModalRegistrationForm.SIAModal('show');
 
-            App.Vars.Modal.find('button[data-dismiss="modal"]').off().on('click', function (e) {
+            App.Vars.SIAModalRegistrationForm.find('button[data-dismiss="modal"]').off().on('click', function (e) {
                 e.preventDefault();
                 if (typeof App.Vars.reservedProjectID !== 'undefined' && App.Vars.reservedProjectID !== null) {
-                    let confirmModal = getSIAConfirmModal();
+                    let $confirmCloseRegistrationFormModal = getSIAConfirmModal('confirmCloseRegistrationForm');
 
-                    confirmModal.off().on('show.bs.confirm', function (event) {
-                        let modal = $(this);
-                        let iCountDown = 60;
-                        console.log('App.Vars.reservationTimeout',App.Vars.reservationTimeout,'App.Vars.reservedProjectID', App.Vars.reservedProjectID)
-                        modal.find('.confirm-body').find('.confirm-question').html("If you close the registration form now you will lose your reserved spots for this project.<br><br>Do you still wish to close?");
+                    $confirmCloseRegistrationFormModal.on('show.bs.confirm', function (event) {
+                        let $confirmModal = $(this);
 
-                        modal.find('.confirm-body').find('button').off().on('click', function (e) {
+                        _log('App.Vars.reservationTimeout', App.Vars.reservationTimeout, 'App.Vars.reservedProjectID', App.Vars.reservedProjectID);
+                        $confirmModal.find('.confirm-body').find('.confirm-question').html("If you close the registration form now you will lose your reserved spots for this project.<br><br>Do you still wish to close?");
+                        $confirmModal.find('.confirm-body').find('button').on('click', function (e) {
                             e.preventDefault();
                             if ($(this).hasClass('btn-yes')) {
-                                confirmModal.confirm('hide');
-                                App.Vars.Modal.SIAModal('hide');
+                                $confirmModal.confirm('hide');
+                                App.Vars.SIAModalRegistrationForm.SIAModal('hide');
                                 $('.modal-backdrop').remove();
                                 self.removeReservations();
                             } else {
-                                confirmModal.confirm('hide');
+                                $confirmModal.confirm('hide');
                             }
                         });
-
                     });
-                    confirmModal.confirm('show');
+                    $confirmCloseRegistrationFormModal.confirm('show');
                 } else {
-                    App.Vars.Modal.SIAModal('hide');
+                    App.Vars.SIAModalRegistrationForm.SIAModal('hide');
                 }
             });
 
@@ -929,8 +967,10 @@
                     self.checkProjectRegistrations();
                 },
                 fail: function (response) {
-                    console.error(response)
-                    alert('removingReservations error' + response)
+                    if (App.Vars.devMode) {
+                        console.error(response);
+                        alert('removingReservations error' + response);
+                    }
                 }
             })
         }

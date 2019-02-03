@@ -3,7 +3,7 @@
 'bodyClass' => 'project-registration-page'
 ])
 @push('js')
-<div class="confirm fade" id="sia-confirm" tabindex="-1" role="confirm" >
+<div style="display:none" id="sia-confirm-template">
     <div class="confirm-dialog" role="document">
         <div class="confirm-content">
             <div class="confirm-body">
@@ -16,7 +16,7 @@
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
-<div class="modal fade" id="sia-modal" tabindex="-1" role="sia-dialog" >
+<div style="display:none" id="sia-modal-template">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">

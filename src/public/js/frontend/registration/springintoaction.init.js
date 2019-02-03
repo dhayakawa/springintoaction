@@ -202,18 +202,20 @@ let Ferrari = Car.fullExtend({
 // exists in case dhayakawa/springintoaction/src/resources/assets/js/browser.console.logging.js
 // goes missing somehow. browser.console.logging.js will override this function.
 var _log = function () {console.log('!!_log feature is not working!!',arguments)};
-function getSIAModal(){
-    let $modalCopy = $('#sia-modal');
-    $modalCopy.SIAModal({
+function getSIAModal(id){
+    $('#sia-modal-' + id).remove();
+    let $modal = $('<div class="modal fade" id="sia-modal-' + id + '" tabindex="-1">').append($('#sia-modal-template').html());
+    $modal.SIAModal({
         backdrop: 'static',
         show: false,
         keyboard: false
     });
-    return $modalCopy;
+    return $modal;
 }
 
-function getSIAConfirmModal(){
-    let $confirm = $('#sia-confirm');
+function getSIAConfirmModal(id){
+    $('#sia-confirm-' + id).remove();
+    let $confirm = $('<div class="confirm fade" id="sia-confirm-'+id+'" tabindex="-1">').append($('#sia-confirm-template').html());
     $confirm.confirm({
         backdrop: false,
         show: false,
