@@ -39378,8 +39378,6 @@ let HtmlCell = Backgrid.HtmlCell = Backgrid.Cell.extend({
 
             that.$element.addClass('in')
 
-            that.enforceFocus()
-
             var e = $.Event('shown.bs.confirm', {relatedTarget: _relatedTarget})
 
             transition ?
@@ -39420,18 +39418,6 @@ let HtmlCell = Backgrid.HtmlCell = Backgrid.Cell.extend({
                 .one('bsTransitionEnd', $.proxy(this.hideConfirm, this))
                 .emulateTransitionEnd(Confirm.TRANSITION_DURATION) :
             this.hideConfirm()
-    }
-
-    Confirm.prototype.enforceFocus = function () {
-        $(document)
-            .off('focusin.bs.confirm') // guard against infinite focus loop
-            .on('focusin.bs.confirm', $.proxy(function (e) {
-                if (document !== e.target &&
-                    this.$element[0] !== e.target &&
-                    !this.$element.has(e.target).length) {
-                    this.$element.trigger('focus')
-                }
-            }, this))
     }
 
     Confirm.prototype.escape = function () {
@@ -39718,8 +39704,6 @@ let HtmlCell = Backgrid.HtmlCell = Backgrid.Cell.extend({
 
             that.$element.addClass('in')
 
-            that.enforceFocus()
-
             var e = $.Event('shown.bs.modal', {relatedTarget: _relatedTarget})
 
             transition ?
@@ -39759,18 +39743,6 @@ let HtmlCell = Backgrid.HtmlCell = Backgrid.Cell.extend({
                 .one('bsTransitionEnd', $.proxy(this.hideSIAModal, this))
                 .emulateTransitionEnd(SIAModal.TRANSITION_DURATION) :
             this.hideSIAModal()
-    }
-
-    SIAModal.prototype.enforceFocus = function () {
-        $(document)
-            .off('focusin.bs.modal') // guard against infinite focus loop
-            .on('focusin.bs.modal', $.proxy(function (e) {
-                if (document !== e.target &&
-                    this.$element[0] !== e.target &&
-                    !this.$element.has(e.target).length) {
-                    this.$element.trigger('focus')
-                }
-            }, this))
     }
 
     SIAModal.prototype.escape = function () {

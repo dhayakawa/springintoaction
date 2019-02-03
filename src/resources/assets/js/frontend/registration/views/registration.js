@@ -268,8 +268,11 @@
 
                 let reservationInterval = setInterval(function () {
                     $confirm.find('.confirm-body').find('.reservation-countdown').text(iCountDown--);
-                    if (iCountDown === 0) {
+                    if (iCountDown <= 0) {
+                        self.parentView.removeReservations();
                         clearInterval(reservationInterval);
+                        $confirm.find('.confirm-body').find('.confirm-question').html('<div>Your reservation has expired.</div>');
+
                         $confirm.find('.confirm-body').find('button.btn-yes').remove();
                         $confirm.find('.confirm-body').find('button.btn-no').text('OK');
                     }
@@ -279,6 +282,8 @@
                     clearInterval(reservationInterval);
                     if ($(this).hasClass('btn-yes')) {
                         App.Vars.reservationTimeout = setTimeout(self.confirmReservationTimeout, App.Vars.reservationTimeoutExpire);
+                    } else {
+                        self.parentView.removeReservations();
                     }
                     confirmModal.confirm('hide');
                 });
@@ -747,6 +752,7 @@
                     confirmModal.off().on('show.bs.confirm', function (event) {
                         let modal = $(this);
                         let iCountDown = 60;
+                        console.log('App.Vars.reservationTimeout',App.Vars.reservationTimeout,'App.Vars.reservedProjectID', App.Vars.reservedProjectID)
                         modal.find('.confirm-body').find('.confirm-question').html("If you close the registration form now you will lose your reserved spots for this project.<br><br>Do you still wish to close?");
 
                         modal.find('.confirm-body').find('button').off().on('click', function (e) {

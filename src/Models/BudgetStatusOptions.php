@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BudgetStatusOptions extends Model
 {
+    use \Dhayakawa\SpringIntoAction\Helpers\OptionsTrait;
     /**
      * The table associated with the model.
      *
@@ -28,4 +29,6 @@ class BudgetStatusOptions extends Model
         'option_label',
         'DisplaySequence'
     ];
+
+
 }

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProjectStatusOptions extends Model
 {
+    use \Dhayakawa\SpringIntoAction\Helpers\OptionsTrait;
     /**
      * The table associated with the model.
      *
@@ -61,4 +62,5 @@ class ProjectStatusOptions extends Model
     {
         return self::where('option_label', $option_label)->get()->first()->id;
     }
+
 }

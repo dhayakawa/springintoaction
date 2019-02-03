@@ -1,4 +1,5 @@
 (function (App) {
+    App.Models.siteSettingModel = new App.Models.SiteSetting();
     App.Models.siteModel = new App.Models.Site();
     App.Models.siteStatusModel = new App.Models.SiteStatus();
     App.Models.projectModel = new App.Models.Project();

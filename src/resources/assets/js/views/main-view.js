@@ -1,10 +1,5 @@
 (function (App) {
     App.Views.mainApp = Backbone.View.extend({
-        dashboardViewClass: App.Views.Dashboard,
-        siteManagementViewClass: App.Views.SiteManagement,
-        contactsManagementViewClass: App.Views.ContactsManagement,
-        volunteersManagementViewClass: App.Views.VolunteersManagement,
-        annualBudgetsManagementViewClass: App.Views.AnnualBudgetsManagement,
         el: $(".sia-main-app"),
         initialize: function (options) {
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');

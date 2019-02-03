@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class VolunteerSkillLevelOptions extends Model
 {
+    use \Dhayakawa\SpringIntoAction\Helpers\OptionsTrait;
     /**
      * The table associated with the model.
      *
@@ -56,4 +57,6 @@ class VolunteerSkillLevelOptions extends Model
 
         return $this->defaultRecordData;
     }
+
+
 }

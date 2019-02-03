@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Dhayakawa\SpringIntoAction\Models\SiteSetting;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Dhayakawa\SpringIntoAction\Models\Site;
 use Dhayakawa\SpringIntoAction\Models\SiteStatus;
@@ -36,6 +37,8 @@ use \Laratrust\LaratrustRole;
 
 class SpringIntoActionMainAppController extends BaseController
 {
+
+
     public function index(Request $request)
     {
         /*\Illuminate\Support\Facades\Log::debug(
@@ -47,6 +50,7 @@ class SpringIntoActionMainAppController extends BaseController
                 bcrypt('pointamber'),
             ]
         );*/
+        $this->fixProjectData();
         $year = $request->input('year');
         if (!$year) {
             $yearNow = date('Y');
@@ -59,25 +63,30 @@ class SpringIntoActionMainAppController extends BaseController
             $Year = $year;
         }
         try {
+            $site_settings = SiteSetting::get()->toArray();
+        } catch (\Exception $e) {
+            report($e);
+            $site_settings = [];
+        }
+        try {
             $sites = Site::orderBy('SiteName', 'asc')->get()->toArray();
             // Automatically create the site status for a new year
-            foreach($sites as $aSite){
+            foreach ($sites as $aSite) {
                 try {
                     $tmpSite = Site::findOrFail($aSite['SiteID'])->status()->where('Year', $Year)->get()->toArray();
-                    if(empty($tmpSite)){
-                        $siteStatusRecordData =
-                            [
-                                'SiteID' => $aSite['SiteID'],
-                                'Year' => $Year,
-                                'ProjectDescriptionComplete' => 0,
-                                'BudgetEstimationComplete' => 0,
-                                'VolunteerEstimationComplete' => 0,
-                                'VolunteerAssignmentComplete' => 0,
-                                'BudgetActualComplete' => 0,
-                                'EstimationComments' => '',
-                                'created_at' => '',
-                                'updated_at' => ''
-                            ];
+                    if (empty($tmpSite)) {
+                        $siteStatusRecordData = [
+                            'SiteID' => $aSite['SiteID'],
+                            'Year' => $Year,
+                            'ProjectDescriptionComplete' => 0,
+                            'BudgetEstimationComplete' => 0,
+                            'VolunteerEstimationComplete' => 0,
+                            'VolunteerAssignmentComplete' => 0,
+                            'BudgetActualComplete' => 0,
+                            'EstimationComments' => '',
+                            'created_at' => '',
+                            'updated_at' => '',
+                        ];
                         $oSiteStatus = new SiteStatus();
                         $oSiteStatus->fill($siteStatusRecordData);
                         $oSiteStatus->save();
@@ -90,7 +99,7 @@ class SpringIntoActionMainAppController extends BaseController
             unset($siteStatusRecordData);
             $oSiteStatus = null;
             unset($oSiteStatus);
-            $tmpSite=null;
+            $tmpSite = null;
             unset($tmpSite);
             $site = current($sites);
         } catch (\Exception $e) {
@@ -99,16 +108,9 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
-
-            $siteStatus =
-                current(
-                    Site::find($site['SiteID'])
-                        ->status()
-                        ->where('Year', $Year)
-                        ->orderBy('Year', 'desc')
-                        ->get()
-                        ->toArray()
-                );
+            $siteStatus = current(
+                Site::find($site['SiteID'])->status()->where('Year', $Year)->orderBy('Year', 'desc')->get()->toArray()
+            );
         } catch (\Exception $e) {
             $siteStatus = [];
             report($e);
@@ -120,7 +122,6 @@ class SpringIntoActionMainAppController extends BaseController
                     'Year',
                     'desc'
                 )->get()->toArray();
-
         } catch (\Exception $e) {
             $site_years = [];
             report($e);
@@ -138,25 +139,32 @@ class SpringIntoActionMainAppController extends BaseController
             $projectModel = Project::select(
                 'projects.*',
                 DB::raw(
+                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = 391) as BudgetSources'
+                ),
+                DB::raw(
+                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
+                ),
+                DB::raw(
                     '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
                 )
             )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
                 'site_status.SiteStatusID',
                 $siteStatus['SiteStatusID']
             )->orderBy('projects.SequenceNumber', 'asc');
+
             $projects = $projectModel->get()->toArray();
 
             $project = current($projects);
-            $projects_dropdown =
-                Project::select('projects.ProjectID', 'projects.SequenceNumber')->join(
-                    'site_status',
-                    'projects.SiteStatusID',
-                    '=',
-                    'site_status.SiteStatusID'
-                )->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy(
-                    'projects.SequenceNumber',
-                    'asc'
-                )->get()->toArray();
+
+            $projects_dropdown = Project::select('projects.ProjectID', 'projects.SequenceNumber')->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy(
+                'projects.SequenceNumber',
+                'asc'
+            )->get()->toArray();
         } catch (\Exception $e) {
             $projects = [];
             $project = [];
@@ -165,6 +173,12 @@ class SpringIntoActionMainAppController extends BaseController
         try {
             $all_projects = Project::select(
                 'projects.*',
+                DB::raw(
+                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = 391) as BudgetSources'
+                ),
+                DB::raw(
+                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
+                ),
                 DB::raw(
                     '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
                 )
@@ -260,11 +274,10 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $project_roles = [];
-            $projectRoles =
-                ProjectRole::select('ProjectRoleID AS option_value', 'Role AS option_label')->orderBy(
-                    'DisplaySequence',
-                    'asc'
-                )->get();
+            $projectRoles = ProjectRole::select('ProjectRoleID AS option_value', 'Role AS option_label')->orderBy(
+                'DisplaySequence',
+                'asc'
+            )->get();
             $projectRoles = $projectRoles ? $projectRoles->toArray() : [];
             foreach ($projectRoles as $role) {
                 $project_roles[$role['option_label']] = $role['option_value'];
@@ -345,11 +358,10 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aVolunteerAgeRangeOptions = [];
-            $VolunteerAgeRangeOptions =
-                VolunteerAgeRangeOptions::select('id AS option_value', 'option_label')->orderBy(
-                    'DisplaySequence',
-                    'asc'
-                )->get();
+            $VolunteerAgeRangeOptions = VolunteerAgeRangeOptions::select('id AS option_value', 'option_label')->orderBy(
+                'DisplaySequence',
+                'asc'
+            )->get();
             $VolunteerAgeRangeOptions = $VolunteerAgeRangeOptions ? $VolunteerAgeRangeOptions->toArray() : [];
             foreach ($VolunteerAgeRangeOptions as $option) {
                 $aVolunteerAgeRangeOptions[$option['option_label']] = $option['option_value'];
@@ -405,11 +417,10 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $site_roles = [];
-            $siteRoles =
-                SiteRole::select('SiteRoleID AS option_value', 'Role AS option_label')->orderBy(
-                    'DisplaySequence',
-                    'asc'
-                )->get();
+            $siteRoles = SiteRole::select('SiteRoleID AS option_value', 'Role AS option_label')->orderBy(
+                'DisplaySequence',
+                'asc'
+            )->get();
             $siteRoles = $siteRoles ? $siteRoles->toArray() : [];
             foreach ($siteRoles as $role) {
                 $site_roles[$role['option_label']] = $role['option_value'];
@@ -420,21 +431,20 @@ class SpringIntoActionMainAppController extends BaseController
         }
         $bIsLocalEnv = App::environment('local');
         $random = rand(0, time());
-        $select_options =
-            [
-                'site_roles' => $site_roles,
-                'project_roles' => $project_roles,
-                'projects_dropdown' => $projects_dropdown,
-                'BudgetSourceOptions' => $aBudgetSourceOptions,
-                'BudgetStatusOptions' => $aBudgetStatusOptions,
-                'ProjectSkillNeededOptions' => $aProjectSkillNeededOptions,
-                'ProjectStatusOptions' => $aProjectStatusOptions,
-                'SendStatusOptions' => $aSendStatusOptions,
-                'VolunteerAgeRangeOptions' => $aVolunteerAgeRangeOptions,
-                'VolunteerPrimarySkillOptions' => $aVolunteerPrimarySkillOptions,
-                'VolunteerSkillLevelOptions' => $aVolunteerSkillLevelOptions,
-                'VolunteerStatusOptions' => $aVolunteerStatusOptions,
-            ];
+        $select_options = [
+            'site_roles' => $site_roles,
+            'project_roles' => $project_roles,
+            'projects_dropdown' => $projects_dropdown,
+            'BudgetSourceOptions' => $aBudgetSourceOptions,
+            'BudgetStatusOptions' => $aBudgetStatusOptions,
+            'ProjectSkillNeededOptions' => $aProjectSkillNeededOptions,
+            'ProjectStatusOptions' => $aProjectStatusOptions,
+            'SendStatusOptions' => $aSendStatusOptions,
+            'VolunteerAgeRangeOptions' => $aVolunteerAgeRangeOptions,
+            'VolunteerPrimarySkillOptions' => $aVolunteerPrimarySkillOptions,
+            'VolunteerSkillLevelOptions' => $aVolunteerSkillLevelOptions,
+            'VolunteerStatusOptions' => $aVolunteerStatusOptions,
+        ];
         $aPermissionNames = LaratrustPermission::select('name')->get()->toArray();
         $auth = [];
         foreach ($aPermissionNames as $permission) {
@@ -450,35 +460,35 @@ class SpringIntoActionMainAppController extends BaseController
             $auth[$key] = Auth::guard()->user()->hasRole($role['name']);
         }
 
-        $appInitialData =
-            compact(
-                [
-                    'bIsLocalEnv',
-                    'random',
-                    'auth',
-                    'Year',
-                    'site',
-                    'site_years',
-                    'siteStatus',
-                    'contacts',
-                    'project',
-                    'projects',
-                    'all_projects',
-                    'sites',
-                    'project_leads',
-                    'project_budgets',
-                    'project_contacts',
-                    'project_volunteers',
-                    'project_attachments',
-                    'volunteers',
-                    'all_contacts',
-                    'annual_budget',
-                    'annual_budgets',
-                    'select_options',
-                    'site_volunteers',
-                    'site_volunteer',
-                ]
-            );
+        $appInitialData = compact(
+            [
+                'bIsLocalEnv',
+                'random',
+                'auth',
+                'Year',
+                'site_settings',
+                'site',
+                'site_years',
+                'siteStatus',
+                'contacts',
+                'project',
+                'projects',
+                'all_projects',
+                'sites',
+                'project_leads',
+                'project_budgets',
+                'project_contacts',
+                'project_volunteers',
+                'project_attachments',
+                'volunteers',
+                'all_contacts',
+                'annual_budget',
+                'annual_budgets',
+                'select_options',
+                'site_volunteers',
+                'site_volunteer',
+            ]
+        );
         $this->makeJsFiles(compact('appInitialData'));
 
         return view('springintoaction::admin.main.app', $request, compact('appInitialData'));
@@ -495,12 +505,11 @@ class SpringIntoActionMainAppController extends BaseController
                 \glob(base_path() . "/resources/views/vendor/springintoaction/admin/backbone/*.backbone.template.php");
             foreach ($files as $file) {
                 $templateID = str_replace('.backbone.template.php', '', basename($file));
-                $fileContents =
-                    preg_replace(
-                        ["/(\r\n|\n)/", "/\s+/", "/> </"],
-                        ["", " ", "><"],
-                        addcslashes(\file_get_contents($file), '"')
-                    );
+                $fileContents = preg_replace(
+                    ["/(\r\n|\n)/", "/\s+/", "/> </"],
+                    ["", " ", "><"],
+                    addcslashes(\file_get_contents($file), '"')
+                );
                 $content .= "window.JST['{$templateID}'] = _.template(
                         \"{$fileContents}\"
                     );" . \PHP_EOL;
@@ -539,5 +548,212 @@ class SpringIntoActionMainAppController extends BaseController
         } catch (\Exception $e) {
             report($e);
         }
+    }
+
+    private function fixProjectField($aConfig)
+    {
+        $sFieldNameToFix = $aConfig['sFieldNameToFix'];
+        $bIsMultiValueField = $aConfig['bIsMultiValueField'];
+        $aFieldNameToFixOptionIds = $aConfig['FieldNameToFixOptionModelClass']::getOptionLabelsArray();
+        $defaultFieldNameToFixOptionId = $aFieldNameToFixOptionIds[$aConfig['defaultFieldNameToFixOptionLabelText']];
+        $iBlankFieldNameToFixOptionId = $aFieldNameToFixOptionIds[''];
+        $sql =
+            "select p.ProjectID,p.{$sFieldNameToFix} from projects p where (p.{$sFieldNameToFix} regexp '[a-zA-Z]' or p.{$sFieldNameToFix} = '') and p.deleted_at is null;";
+        $rsFixes = DB::select($sql);
+
+        foreach ($rsFixes as $fix) {
+            $currentValue = trim($fix->$sFieldNameToFix);
+            $newValue = $defaultFieldNameToFixOptionId;
+            if (empty($currentValue)) {
+                $newValue = $defaultFieldNameToFixOptionId;
+            } else {
+                if ($bIsMultiValueField) {
+                    $aMultiValue = preg_split('/;/', $currentValue);
+                    $newValue = join(
+                        ',',
+                        array_map(
+                            function ($value) use ($aFieldNameToFixOptionIds) {
+                                return $aFieldNameToFixOptionIds[trim($value)];
+                            },
+                            $aMultiValue
+                        )
+                    );
+                } else {
+                    $newValue = $aFieldNameToFixOptionIds[$currentValue];
+                }
+            }
+
+            if ($fix->ProjectID) {
+                try {
+                    $projectModel = Project::find($fix->ProjectID);
+                    if ($projectModel) {
+                        $projectModel->setAttribute($sFieldNameToFix, $newValue);
+                        $projectModel->save();
+                        //echo "updated ProjectID:{$fix->ProjectID} projects.{$sFieldNameToFix}:{$newValue}<br>";
+                    } else {
+                        //echo "check where condition in query, probably having deleted_at issues. CANNOT update ProjectID:{$fix->ProjectID} projects.{$sFieldNameToFix}:{$newValue}<br>";
+                    }
+                } catch (\Exception $e) {
+                    report($e);
+                }
+            }
+        }
+
+        if ($aConfig['bUpdateBlankFieldNameToFixOptionId'] &&
+            $iBlankFieldNameToFixOptionId &&
+            $defaultFieldNameToFixOptionId !== $iBlankFieldNameToFixOptionId
+        ) {
+            // Fix fields that has the blank fields as one of the multi field options
+            if (Project::where($sFieldNameToFix, 'REGEXP', (string) "{$iBlankFieldNameToFixOptionId},")->get()->count(
+            )
+            ) {
+                $affected = DB::update(
+                    "update projects p set p.{$sFieldNameToFix} = REPLACE(p.{$sFieldNameToFix}, '{$iBlankFieldNameToFixOptionId},', '') where p.{$sFieldNameToFix} REGEXP '{$iBlankFieldNameToFixOptionId}'"
+                );
+            }
+            /**
+             * If the blank option exists and is not the default, Do not let it be a valid value in the db and set it to the default
+             */
+            $affected = DB::update(
+                "update projects p set p.{$sFieldNameToFix} = '$defaultFieldNameToFixOptionId' where p.{$sFieldNameToFix} = '$iBlankFieldNameToFixOptionId'"
+            );
+            //echo "{$affected} {$sFieldNameToFix} set {$defaultFieldNameToFixOptionId} where {$iBlankFieldNameToFixOptionId}<br>";
+        }
+
+        if (isset($aConfig['update_table_relationship'])) {
+            /**
+             * Assuming the data is good, now we need to create any missing records in the foreign table that exist in the projects table
+             */
+
+            $tableToUpdate = $aConfig['update_table_relationship']['tableToUpdate'];
+            $tableToUpdateForeignKeyField = $aConfig['update_table_relationship']['tableToUpdateForeignKeyField'];
+            $aDefaultInsertRecordData =
+                isset($aConfig['update_table_relationship']['aDefaultInsertRecordData']) ?
+                    $aConfig['update_table_relationship']['aDefaultInsertRecordData'] : [];
+
+            $sql = "select p.ProjectID,p.{$sFieldNameToFix} from projects p where p.deleted_at is null;";
+            $rsProjects = DB::select($sql);
+            foreach ($rsProjects as $oProject) {
+                $aForeignKeyIds =
+                    $bIsMultiValueField ? preg_split('/,/', $oProject->$sFieldNameToFix) :
+                        [$oProject->$sFieldNameToFix];
+                $aWhereOr = [];
+                $aJoins = [];
+                $aSelectFields = [];
+                foreach ($aForeignKeyIds as $foreignKeyId) {
+                    $tableAlias = "{$tableToUpdate}{$foreignKeyId}";
+                    $aSelectFields[] =
+                        "{$tableAlias}.{$tableToUpdateForeignKeyField} as {$tableToUpdateForeignKeyField}{$foreignKeyId}";
+                    $aJoins[] =
+                        "LEFT join {$tableToUpdate} {$tableAlias} on {$tableAlias}.ProjectID = p.ProjectID and {$tableAlias}.{$tableToUpdateForeignKeyField} = {$foreignKeyId} and {$tableAlias}.deleted_at is null";
+                    $aWhereOr[] = "{$tableAlias}.ProjectID is null";
+                }
+                $sSelectFields = join(',', $aSelectFields);
+                $sWhereOr = join(' or ', $aWhereOr);
+                $sFieldNameToFixAlias = "Project{$sFieldNameToFix}";
+                $sql = "select p.ProjectID,p.{$sFieldNameToFix} as {$sFieldNameToFixAlias},{$sSelectFields}
+                        from projects p" . PHP_EOL;
+                $sql .= join(PHP_EOL, $aJoins) . PHP_EOL;
+                $sql .= "where p.ProjectID = {$oProject->ProjectID} and ({$sWhereOr}) and p.deleted_at is null;";
+
+
+                $rsMissingRecords = DB::select($sql);
+
+                foreach ($rsMissingRecords as $oProjectFixData) {
+                    $aMissingProjectForeignKeyIds = preg_split('/,/', $oProjectFixData->$sFieldNameToFixAlias);
+
+                    foreach ($aMissingProjectForeignKeyIds as $iMissingProjectForeignKeyId) {
+                        $colAlias = "{$tableToUpdateForeignKeyField}{$iMissingProjectForeignKeyId}";
+                        $aliasColValue = $oProjectFixData->$colAlias;
+                        if (empty($aliasColValue)) {
+                            $aInsertData = [
+                                'ProjectID' => $oProjectFixData->ProjectID,
+                                $tableToUpdateForeignKeyField => $iMissingProjectForeignKeyId
+                            ];
+                            try {
+                                DB::table($tableToUpdate)->insert(
+                                    array_merge($aInsertData, $aDefaultInsertRecordData)
+                                );
+                                
+                            } catch (\Exception $e) {
+                                report($e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private function fixProjectData()
+    {
+        /**
+         * This is for copying.
+         * Remove the update_table_relationship if there isn't one to update
+         */
+        $_aConfig = [
+            'sFieldNameToFix' => '',
+            'bIsMultiValueField' => false,
+            'FieldNameToFixOptionModelClass' => '',
+            'defaultFieldNameToFixOptionLabelText' => '',
+            'bUpdateBlankFieldNameToFixOptionId' => true,
+            'update_table_relationship' => [
+                'tableToUpdate' => '',
+                'tableToUpdateForeignKeyField' => '',
+                'aDefaultInsertRecordData' => [],
+            ]
+        ];
+        try {
+            /**
+             * The projects.BudgetSources field should be eventually dropped since its value is the results of a subquery
+             * of a different table
+             */
+            //$this->fixBudgetSources();
+            $aConfig = [
+                'sFieldNameToFix' => 'BudgetSources',
+                'bIsMultiValueField' => true,
+                'FieldNameToFixOptionModelClass' => BudgetSourceOptions::class,
+                'defaultFieldNameToFixOptionLabelText' => 'Unknown',
+                'bUpdateBlankFieldNameToFixOptionId' => true,
+                'update_table_relationship' => [
+                    'tableToUpdate' => 'budgets',
+                    'tableToUpdateForeignKeyField' => 'BudgetSource',
+                    'aDefaultInsertRecordData' => [
+                        'BudgetAmount' => 0.00,
+                        'Status' => BudgetStatusOptions::getOptionLabelsArray()['Needs To Be Proposed'],
+                        'Comments' => 'Hayakawa- This budget source/allocation was automatically imported as a result of a database update and should be reviewed.'
+                    ],
+                ]
+            ];
+            $this->fixProjectField($aConfig);
+        } catch (\Exception $e) {
+            report($e);
+        }
+        $aConfig = [
+            'sFieldNameToFix' => 'Status',
+            'bIsMultiValueField' => false,
+            'FieldNameToFixOptionModelClass' => ProjectStatusOptions::class,
+            'defaultFieldNameToFixOptionLabelText' => 'Pending',
+            'bUpdateBlankFieldNameToFixOptionId' => true
+        ];
+        $this->fixProjectField($aConfig);
+
+        $aConfig = [
+            'sFieldNameToFix' => 'PrimarySkillNeeded',
+            'bIsMultiValueField' => false,
+            'FieldNameToFixOptionModelClass' => ProjectSkillNeededOptions::class,
+            'defaultFieldNameToFixOptionLabelText' => 'General',
+            'bUpdateBlankFieldNameToFixOptionId' => true
+        ];
+        $this->fixProjectField($aConfig);
+
+        $aConfig = [
+            'sFieldNameToFix' => 'ProjectSend',
+            'bIsMultiValueField' => false,
+            'FieldNameToFixOptionModelClass' => SendStatusOptions::class,
+            'defaultFieldNameToFixOptionLabelText' => 'Not Ready',
+            'bUpdateBlankFieldNameToFixOptionId' => true
+        ];
+        $this->fixProjectField($aConfig);
     }
 }

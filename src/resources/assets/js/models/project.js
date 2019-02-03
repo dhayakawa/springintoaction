@@ -28,7 +28,6 @@
             'PrepWorkRequiredBeforeSIA': '',
             'SetupDayInstructions': '',
             'SIADayInstructions': '',
-            'Attachments': '',
             'Area': '',
             'PaintOrBarkEstimate': '',
             'PaintAlreadyOnHand': '',
