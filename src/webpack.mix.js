@@ -202,6 +202,7 @@ mix.styles([
 
 
 mix.copy('resources/assets/fonts','public/fonts');
+mix.copy('resources/assets/images', 'public/images');
 mix.copy('resources/assets/js/springintoaction.templates.js','public/js/springintoaction.templates.js');
 mix.copy('resources/assets/js/app-initial-models-vars-data.js','public/js/app-initial-models-vars-data.js');
 mix.copy('resources/assets/js/app-initial-collections-view-data.js','public/js/app-initial-collections-view-data.js');
