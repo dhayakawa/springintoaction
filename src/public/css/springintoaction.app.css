@@ -14,6 +14,9 @@
 .sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-desc {
   display: none;
 }
+.sia-main-app .site-settings-management-view .form-group.site-setting-value-label {
+  margin-bottom: 0;
+}
 .sia-main-app .reports-management-view .report-download {
   padding: 0 5px;
 }

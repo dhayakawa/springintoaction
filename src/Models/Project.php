@@ -8,14 +8,18 @@
 
 namespace Dhayakawa\SpringIntoAction\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use \Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
-use \Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
+use Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
+use Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
+use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
+use Dhayakawa\SpringIntoAction\Models\Budget;
 
 class Project extends Model
 {
     use \Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
+
     use \Illuminate\Database\Eloquent\SoftDeletes;
     protected $dates = ['deleted_at'];
     /**
@@ -37,11 +41,9 @@ class Project extends Model
         'OriginalRequest',
         'ProjectDescription',
         'Comments',
-        'BudgetSources',
         'ChildFriendly',
         'PrimarySkillNeeded',
         'VolunteersNeededEst',
-        'VolunteersAssigned',
         'Status',
         'StatusReason',
         'MaterialsNeeded',
@@ -56,7 +58,6 @@ class Project extends Model
         'PrepWorkRequiredBeforeSIA',
         'SetupDayInstructions',
         'SIADayInstructions',
-        'Attachments',
         'Area',
         'PaintOrBarkEstimate',
         'PaintAlreadyOnHand',
@@ -78,11 +79,9 @@ class Project extends Model
         'OriginalRequest' => '',
         'ProjectDescription' => '',
         'Comments' => '',
-        'BudgetSources' => '',
         'ChildFriendly' => 0,
         'PrimarySkillNeeded' => '',
         'VolunteersNeededEst' => 0,
-        'VolunteersAssigned' => 0,
         'Status' => '',
         'StatusReason' => '',
         'MaterialsNeeded' => '',
@@ -97,7 +96,6 @@ class Project extends Model
         'PrepWorkRequiredBeforeSIA' => '',
         'SetupDayInstructions' => '',
         'SIADayInstructions' => '',
-        'Attachments' => '',
         'Area' => '',
         'PaintOrBarkEstimate' => '',
         'PaintAlreadyOnHand' => '',
@@ -115,6 +113,45 @@ class Project extends Model
      * @var array
      */
     private $aSortedProjectSkillNeededOptionsOrder = [];
+
+    public function getVolunteersAssignedAttribute($value)
+    {
+        \Illuminate\Support\Facades\Log::debug(
+            '',
+            ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $value]
+        );
+        return ProjectVolunteer::where('ProjectID', '=', $this->attributes['ProjectID'])->get()->count();
+    }
+
+    public function getBudgetSourcesAttribute($value)
+    {
+        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$value]);
+        $sBudgetSources = '';
+        try {
+            $aBudgets =
+                Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')
+                      ->join(
+                          'budget_status_options',
+                          function ($join) {
+                              $join->on('budget_status_options.id', '=', 'budgets.Status')->where(
+                                  'option_label',
+                                  '=',
+                                  'Approved'
+                              );
+                          }
+                      )
+                      ->where('ProjectID', '=', $this->attributes['ProjectID'])
+                      ->get()
+                      ->pluck('id');
+            if(!empty($aBudgets)){
+                // return a string formatted for the grid
+                $sBudgetSources = trim(join('; ', $aBudgets));
+            }
+        } catch (\Exception $e) {
+        }
+
+        return $sBudgetSources;
+    }
 
     /**
      * @param null|array $defaults
@@ -217,7 +254,7 @@ FROM (
      */
     public function updateVolunteersAssigned($Year)
     {
-        $projectStatusOptions = new ProjectStatusOptions();
+        /*$projectStatusOptions = new ProjectStatusOptions();
         $ProjectStatusOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
         $all_projects = Project::select(
             'projects.*'
@@ -232,8 +269,9 @@ FROM (
                 $projectModel->VolunteersAssigned = $volunteerCnt;
                 $projectModel->save();
             }
-        }
+        }*/
     }
+
     /**
      * @param       $Year
      * @param array $filter
@@ -261,10 +299,11 @@ FROM (
             from projects p
                    join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year}
             where p.Active = 1 and `p`.`deleted_at` is null
-              and ((p.VolunteersAssigned + (select count(*) from project_reservations pr where pr.ProjectID = p.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < 5)) / p.VolunteersNeededEst) >= .8)";
+              and (((select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) + (select count(*) from project_reservations pr where pr.ProjectID = p.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < 5)) / p.VolunteersNeededEst) >= .8)";
         $sSqlActiveProjects = "(select count(*) from projects p
                    join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} where p.Active = 1 and `p`.`deleted_at` is null)";
-        $sSqlVolunteersNeeded = "(select IF({$sSqlProjectsAt80Perc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * .8)))";
+        $sSqlVolunteersNeeded =
+            "(select IF({$sSqlProjectsAt80Perc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * .8)))";
         $projects = self::select(
             [
                 'projects.ProjectID',
@@ -277,14 +316,20 @@ FROM (
                     '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
                 ),
                 DB::raw(
-                    "({$sSqlVolunteersNeeded} - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < ".config('springintoaction.registration.reservation_lifetime_minutes')." )) as PeopleNeeded"
-                )
+                    "({$sSqlVolunteersNeeded} - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < " .
+                    config('springintoaction.registration.reservation_lifetime_minutes') .
+                    " )) as PeopleNeeded"
+                ),
             ]
         )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
             'site_status.Year',
             $Year
         )->join('sites', 'site_status.SiteID', '=', 'sites.SiteID')->where(
-            DB::raw("({$sSqlVolunteersNeeded} - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < ".config('springintoaction.registration.reservation_lifetime_minutes')." ))"),
+            DB::raw(
+                "({$sSqlVolunteersNeeded} - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < " .
+                config('springintoaction.registration.reservation_lifetime_minutes') .
+                " ))"
+            ),
             '>',
             0
         )->where('projects.Active', 1)->where('projects.Status', $ProjectStatusOptionID);
@@ -365,13 +410,13 @@ FROM (
         $this->aSortedProjectSkillNeededOptionsOrder = $this->getSortedProjectSkillNeededOptionIds($direction);
 
         usort($all_projects, [$this, "custom_compare"]);
+
         return $all_projects;
     }
 
     private function custom_compare($a, $b)
     {
-
-        $a = array_search(substr($a["PrimarySkillNeeded"],0,1), $this->aSortedProjectSkillNeededOptionsOrder);
+        $a = array_search(substr($a["PrimarySkillNeeded"], 0, 1), $this->aSortedProjectSkillNeededOptionsOrder);
         $b = array_search(substr($b["PrimarySkillNeeded"], 0, 1), $this->aSortedProjectSkillNeededOptionsOrder);
         if ($a === false && $b === false) { // both items are dont cares
             return 0;                      // a == b
@@ -392,11 +437,10 @@ FROM (
     {
         try {
             $aProjectSkillNeededOptions = [];
-            $ProjectSkillNeededOptions =
-                ProjectSkillNeededOptions::select('id')->orderBy(
-                    'option_label',
-                    $direction
-                )->get();
+            $ProjectSkillNeededOptions = ProjectSkillNeededOptions::select('id')->orderBy(
+                'option_label',
+                $direction
+            )->get();
             $ProjectSkillNeededOptions = $ProjectSkillNeededOptions ? $ProjectSkillNeededOptions->toArray() : [];
             foreach ($ProjectSkillNeededOptions as $option) {
                 $aProjectSkillNeededOptions[] = $option['id'];

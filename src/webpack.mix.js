@@ -65,6 +65,7 @@ mix.scripts([
 ], 'public/js/springintoaction.packages.min.js');
 mix.scripts([
     'resources/assets/js/models/dashboard.js',
+    'resources/assets/js/models/site-setting.js',
     'resources/assets/js/models/project-attachment.js',
     'resources/assets/js/models/annual-budget.js',
     'resources/assets/js/models/budget.js',
@@ -84,6 +85,7 @@ mix.scripts([
 ], 'public/js/springintoaction.models.js');
 mix.scripts([
     'resources/assets/js/collections/dashboard.js',
+    'resources/assets/js/collections/site-setting.js',
     'resources/assets/js/collections/project-attachment.js',
     'resources/assets/js/collections/budget.js',
     'resources/assets/js/collections/project.js',
@@ -97,6 +99,7 @@ mix.scripts([
 ], 'public/js/springintoaction.collections.js');
 mix.scripts([
     'resources/assets/js/views/dashboard.js',
+    'resources/assets/js/views/site-settings-management.js',
     'resources/assets/js/views/annual-budget.js',
     'resources/assets/js/views/annual-budgets.js',
     'resources/assets/js/views/grid-manager-container-toolbar.js',

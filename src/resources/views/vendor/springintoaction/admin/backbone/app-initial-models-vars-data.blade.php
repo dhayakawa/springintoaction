@@ -1,7 +1,7 @@
 (function (App) {
 
 
-/**
+    /**
      * Bootstap Backbone models & collections for initial page load
      */
 
@@ -10,6 +10,7 @@
     App.Vars.devMode = App.Vars.appInitialData['bIsLocalEnv'];
     App.Vars.selectOptions = App.Vars.appInitialData['select_options'];
 
+    App.Models.siteSettingModel = new App.Models.SiteSetting(@json(current($appInitialData['site_settings'])));
     App.Models.siteModel = new App.Models.Site(@json($appInitialData['site']));
     App.Models.siteStatusModel = new App.Models.SiteStatus(@json($appInitialData['siteStatus']));
     App.Models.projectModel = new App.Models.Project(@json($appInitialData['project']));

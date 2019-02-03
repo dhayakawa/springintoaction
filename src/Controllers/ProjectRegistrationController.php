@@ -45,18 +45,20 @@ use Dhayakawa\SpringIntoAction\Models\ProjectAttachment;
 use Dhayakawa\SpringIntoAction\Requests\ProjectRequestPost;
 use Dhayakawa\SpringIntoAction\Models\ProjectReservation;
 use Dhayakawa\SpringIntoAction\Controllers\GroveApi;
+use Dhayakawa\SpringIntoAction\Models\LifeGroups;
+use Dhayakawa\SpringIntoAction\Models\GroveIndividual;
 
 class ProjectRegistrationController extends BaseController
 {
     use \Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
-
+    
     public function store(Request $request)
     {
         $params = $request->all();
         $aContactInfo = $params['contact_info'];
         $ProjectID = $params['ProjectID'];
         $ProjectRoleID = 4;
-
+        
         if (is_array($aContactInfo)) {
             foreach ($aContactInfo as $contactInfo) {
                 $volunteer = Volunteer::where('Email', $contactInfo['Email'])->get()->first();
@@ -64,13 +66,13 @@ class ProjectRegistrationController extends BaseController
                     $volunteerID = $volunteer->VolunteerID;
                 } else {
                     $model = new Volunteer;
-
+                    
                     $defaultData = $model->getDefaultRecordData();
                     $contactInfo = array_merge($defaultData, $contactInfo);
                     $contactInfo['Active'] = 1;
                     $contactInfo['Status'] = 5;
                     $contactInfo['FullName'] = "{$contactInfo['FirstName']} {$contactInfo['LastName']}";
-
+                    
                     if (isset($contactInfo['PreferredSiteID']) && $contactInfo['PreferredSiteID'] === '') {
                         $contactInfo['PreferredSiteID'] = 0;
                     }
@@ -88,7 +90,7 @@ class ProjectRegistrationController extends BaseController
                             }
                         }
                     );
-
+                    
                     $model->fill($aContactInfo);
                     $model->save();
                     $volunteerID = $model->VolunteerID;
@@ -96,7 +98,7 @@ class ProjectRegistrationController extends BaseController
                 $model = new ProjectVolunteer;
                 $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $ProjectID]);
                 $success = $model->save();
-
+                
                 $model = new ProjectVolunteerRole;
                 $model->fill(
                     [
@@ -113,13 +115,13 @@ class ProjectRegistrationController extends BaseController
                     $projectModel = Project::find($ProjectID);
                     $projectModel->VolunteersAssigned = $volunteerCnt;
                     $projectModel->save();
-
+                    
                     ProjectReservation::where('session_id', $request->session()->getId())->delete();
                     $request->session()->regenerate();
                 }
             }
         }
-
+        
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Registration Not Implemented Yet.'];
         } elseif ($success) {
@@ -131,22 +133,22 @@ class ProjectRegistrationController extends BaseController
         } else {
             $response = ['success' => false, 'msg' => 'Project Registration Failed.'];
         }
-
+        
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
-
+    
     public function getFilteredProjectList(Request $request)
     {
         $requestData = $request->all();
-
+        
         $aFilter = isset($requestData['filter']) ? $requestData['filter'] : [];
         $sortBy = isset($requestData['sort_by']) && !empty($requestData['sort_by']) ? $requestData['sort_by'] : null;
-
+        
         $all_projects = $this->getProjectList($aFilter, $sortBy);
-
+        
         return $all_projects;
     }
-
+    
     public function reserve(Request $request)
     {
         try {
@@ -157,12 +159,12 @@ class ProjectRegistrationController extends BaseController
             $model = new ProjectReservation;
             $data = $request->only($model->getFillable());
             $data['session_id'] = $request->session()->getId();
-
+            
             $model->fill($data);
         }
-
+        
         $success = $model->save();
-
+        
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Reservation Not Implemented Yet.'];
         } elseif ($success) {
@@ -170,32 +172,32 @@ class ProjectRegistrationController extends BaseController
         } else {
             $response = ['success' => false, 'msg' => 'Project Reservation Failed.'];
         }
-
+        
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
-
+    
     public function deleteReservation(Request $request, $ProjectID)
     {
         $success =
             ProjectReservation::where('session_id', $request->session()->getId())
                               ->where('ProjectID', $ProjectID)
                               ->delete();
-
+        
         if ($success) {
             $response = ['success' => true, 'msg' => 'Project Reservation Delete Succeeded.'];
         } else {
             $response = ['success' => false, 'msg' => 'Project Reservation Delete Failed.'];
         }
-
+        
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
-
+    
     public function groveLogin(Request $request)
     {
         $login = $request->GroveEmail;
         $password = $request->GrovePassword;
         $RegisterProcessType = $request->RegisterProcessType;
-
+        
         $groveApi = new GroveApi();
         $response = $groveApi->individual_profile_from_login_password($login, $password);
         \Illuminate\Support\Facades\Log::debug(
@@ -219,53 +221,43 @@ class ProjectRegistrationController extends BaseController
             $lastName = $individual['last_name'];
             $groveId = $individual["@attributes"]['id'];
             $contact_info = [];
-
+            
             $success = true;
+            
             if ($RegisterProcessType === 'family') {
-                $family_id = $individual['family']['@attributes']['id'];
-                $responseFamily = $groveApi->family_list($family_id);
-                $aFamilyMembers =
-                    isset($responseFamily['families']['family']["individuals"]["individual"]) ?
-                        $responseFamily['families']['family']["individuals"]["individual"] : [];
-                for ($x = 0; $x < count($aFamilyMembers); $x++) {
-                    $bSet = false;
-                    $groveUserId = $aFamilyMembers[$x]['@attributes']['id'];
-                    $firstName = $aFamilyMembers[$x]['first_name'];
-                    $lastName = $aFamilyMembers[$x]['last_name'];
-                    $responseFamilyMember =
-                        $groveApi->individual_search(
-                            ['family_id' => $family_id, 'first_name' => $firstName, 'last_name' => $lastName]
-                        );
-                    $familyMember =
-                        isset($responseFamilyMember["individuals"]["individual"]) ? $responseFamilyMember["individuals"]["individual"] : [];
-                    if (!empty($familyMember)) {
-                        if (isset($familyMember['birthday'])) {
-                            $birthday = $familyMember['birthday'];
-                            $datetime1 = date_create(date('Y-m-d'));
-                            $datetime2 = date_create($birthday);
-                            $interval = date_diff($datetime1, $datetime2);
-                            $age = $interval->format('%y');
-                            $bSet = $age >= 16;
-                        } else {
-                            // $bSet = true;
-                        }
-                    }
-                    if ($bSet) {
-                        $phone = $groveApi->findPhoneTypeFromProfile($familyMember);
-                        $email = $familyMember['email'];
-                        $firstName = $familyMember['first_name'];
-                        $lastName = $familyMember['last_name'];
-                        $contact_info[] = [
-                            'Church' => 'woodlands',
-                            'MobilePhoneNumber' => $phone,
-                            'FirstName' => $firstName,
-                            'LastName' => $lastName,
-                            'Email' => $email,
-                        ];
-                    }
+                $aMembers = $this->getFamilyFromDb(
+                    $individual['family']['@attributes']['id']
+                );
+                foreach ($aMembers as $aMember) {
+                    $phone = $aMember['phone'];
+                    $email = $aMember['email'];
+                    $firstName = $aMember['first_name'];
+                    $lastName = $aMember['last_name'];
+                    $contact_info[] = [
+                        'Church' => 'woodlands',
+                        'MobilePhoneNumber' => $phone,
+                        'FirstName' => $firstName,
+                        'LastName' => $lastName,
+                        'Email' => $email,
+                    ];
                 }
             } elseif ($RegisterProcessType === 'lifegroup') {
+                $aMembers = $this->getLifeGroupFromDb($groveId);
+                foreach ($aMembers as $aMember) {
+                    $phone = $aMember['phone'];
+                    $email = $aMember['email'];
+                    $firstName = $aMember['first_name'];
+                    $lastName = $aMember['last_name'];
+                    $contact_info[] = [
+                        'Church' => 'woodlands',
+                        'MobilePhoneNumber' => $phone,
+                        'FirstName' => $firstName,
+                        'LastName' => $lastName,
+                        'Email' => $email,
+                    ];
+                }
             }
+            //$contact_info = array_unique($contact_info);
             //$response = $groveApi->api_status();
             \Illuminate\Support\Facades\Log::debug(
                 '',
@@ -286,7 +278,7 @@ class ProjectRegistrationController extends BaseController
         } else {
             $success = false;
         }
-
+        
         // $contact_info = [];
         // for($i=0;$i<10;$i++){
         //     $contact_info[]= [
@@ -304,7 +296,101 @@ class ProjectRegistrationController extends BaseController
         } else {
             $response = ['success' => false, 'msg' => 'Grove Login Failed.'];
         }
-
+        
         return view('springintoaction::frontend.json_response', $request, compact('response'));
+    }
+    
+    public function getLifeGroupFromDb($groveId)
+    {
+        $loggedInLifeGroup = LifeGroups::where('individual_id', '=', $groveId)->get()->first();
+        $aLifeGroupMembers = LifeGroups::where('group_id', '=', $loggedInLifeGroup->group_id)->join(
+                'grove_individuals',
+                'grove_individuals.id',
+                '=',
+                'life_groups.individual_id'
+            )->get()->toArray();
+        foreach ($aLifeGroupMembers as $idx => $aMember) {
+            $aLifeGroupMembers[$idx]['Church'] = 'woodlands';
+            $aLifeGroupMembers[$idx]['phone'] =
+                !empty($aMember['mobile_phone']) ? $aMember['mobile_phone'] : $aMember['contact_phone'];
+            if ($aMember['family_member_type'] === 'child' && !$this->getMeetsAgeRequirement($aMember['birthday'])) {
+                unset($aLifeGroupMembers[$idx]);
+            }
+        }
+        
+        return $aLifeGroupMembers;
+    }
+    
+    public function getFamilyFromDb($family_id)
+    {
+        $GroveIndividual = new GroveIndividual();
+        $aFamilyMembers = $GroveIndividual->getFamilyMembers($family_id);
+        foreach ($aFamilyMembers as $idx => $aFamilyMember) {
+            $aFamilyMembers[$idx]['Church'] = 'woodlands';
+            $aFamilyMembers[$idx]['phone'] =
+                !empty($aFamilyMember['mobile_phone']) ? $aFamilyMember['mobile_phone'] :
+                    $aFamilyMember['contact_phone'];
+            if ($aFamilyMember['family_member_type'] === 'child' &&
+                !$this->getMeetsAgeRequirement($aFamilyMember['birthday'])
+            ) {
+                unset($aFamilyMembers[$idx]);
+            }
+        }
+        
+        return $aFamilyMembers;
+    }
+    
+    public function getFamilyFromGroveApi($family_id)
+    {
+        $family_members = [];
+        $groveApi = new GroveApi();
+        $responseFamily = $groveApi->family_list($family_id);
+        $aFamilyMembers =
+            isset($responseFamily['families']['family']["individuals"]["individual"]) ?
+                $responseFamily['families']['family']["individuals"]["individual"] : [];
+        for ($x = 0; $x < count($aFamilyMembers); $x++) {
+            $bSet = false;
+            $groveUserId = $aFamilyMembers[$x]['@attributes']['id'];
+            $firstName = $aFamilyMembers[$x]['first_name'];
+            $lastName = $aFamilyMembers[$x]['last_name'];
+            $responseFamilyMember = $groveApi->individual_search(
+                ['family_id' => $family_id, 'first_name' => $firstName, 'last_name' => $lastName]
+            );
+            $familyMember =
+                isset($responseFamilyMember["individuals"]["individual"]) ?
+                    $responseFamilyMember["individuals"]["individual"] : [];
+            if (!empty($familyMember)) {
+                if (isset($familyMember['birthday'])) {
+                    $bSet = $this->getMeetsAgeRequirement($familyMember['birthday']);
+                } else {
+                    // $bSet = true;
+                }
+            }
+            if ($bSet) {
+                $phone = $groveApi->findPhoneTypeFromProfile($familyMember);
+                $email = $familyMember['email'];
+                $firstName = $familyMember['first_name'];
+                $lastName = $familyMember['last_name'];
+                $family_members[] = [
+                    'Church' => 'woodlands',
+                    'phone' => $phone,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $email,
+                ];
+            }
+        }
+        
+        return $family_members;
+    }
+    
+    public function getMeetsAgeRequirement($birthday)
+    {
+        $datetime1 = date_create(date('Y-m-d'));
+        $datetime2 = date_create($birthday);
+        $interval = date_diff($datetime1, $datetime2);
+        $age = $interval->format('%y');
+        
+        return $age >= 16;
     }
 }

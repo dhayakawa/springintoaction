@@ -1,20 +1,22 @@
 (function (App) {
     App.BackboneRouter = Backbone.Router.extend({
         dashboardViewClass: App.Views.Dashboard,
-        siteManagementViewClass: App.Views.SiteManagement,
-        projectManagementViewClass: App.Views.ProjectManagement,
-        siteProjectTabsViewClass: App.Views.SiteProjectTabs,
-        contactsManagementViewClass: App.Views.ContactsManagement,
-        volunteersManagementViewClass: App.Views.VolunteersManagement,
-        annualBudgetsManagementViewClass: App.Views.AnnualBudgetsManagement,
-        reportsManagementViewClass: App.Views.ReportsManagement,
         dashboardView: null,
+        siteSettingsManagementViewClass: App.Views.SiteSettingsManagement,
+        siteSettingsManagementView: null,
+        siteManagementViewClass: App.Views.SiteManagement,
         siteManagementView: null,
+        projectManagementViewClass: App.Views.ProjectManagement,
         projectManagementView: null,
+        siteProjectTabsViewClass: App.Views.SiteProjectTabs,
         siteProjectTabsView: null,
+        contactsManagementViewClass: App.Views.ContactsManagement,
         contactsManagementView: null,
+        volunteersManagementViewClass: App.Views.VolunteersManagement,
         volunteersManagementView: null,
+        annualBudgetsManagementViewClass: App.Views.AnnualBudgetsManagement,
         annualBudgetsManagementView: null,
+        reportsManagementViewClass: App.Views.ReportsManagement,
         reportsManagementView: [],
         bRouteViewRendered: false,
         routeRequested: '',
@@ -57,6 +59,9 @@
             //growl('SIA index route has been called');
             if (self.dashboardView === null) {
                 let aDashboardPanelViews = [];
+                /**
+                 * Put new dashboard panel below.
+                 */
                 if (App.Vars.Auth.bCanSiteManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
@@ -107,76 +112,6 @@
                             })
                     }).render().$el.html());
                 }
-                if (App.Vars.Auth.bCanProjectManagement) {
-                    aDashboardPanelViews.push(new App.Views.DashboardPanel({
-                        model:
-                            new App.Models.DashboardPanel({
-                                'panelBgColor': 'orange',
-                                'panelFAIconClass': 'fa-bar-chart',
-                                'panelName': 'Reports',
-                                'panelDescription': '',
-                                'panelLinksListView': new App.Views.DashboardPanelLinksList({
-                                    collection: new App.Collections.DashboardPanelLinksListItem([
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Sites',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/sites'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Project List',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/projects'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Budget Allocation',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/budget'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Budget and Volunteer Estimates',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/budget_and_volunteer'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Early Start',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/early_start'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Project List - Final Completion Assessment',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/projects_final_completion_assessment'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteer Assignment - Alpha Order - For Packets',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/volunteer_assignment_for_packets'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteer Assignment - For Mailmerge - Packets',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/volunteer_assignment_for_mailmerge'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteer Assignment',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/volunteer_assignment'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteers Needed',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/volunteesr_needed'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Scout-Liaison Estimator',
-                                            'badgeCount': '1',
-                                            'route': 'view/reports/management/scout_liaison_estimator'
-                                        }),
-                                    ])
-                                }).render().$el.html()
-                            })
-                    }).render().$el.html());
-                }
                 if (App.Vars.Auth.bCanBudgetManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
@@ -192,6 +127,96 @@
                                             'badgeCount': '$' + App.Vars.appInitialData.annual_budget[0].BudgetAmount,
                                             'route': 'view/budget/management'
                                         })
+                                    ])
+                                }).render().$el.html()
+                            })
+                    }).render().$el.html());
+                }
+                if (App.Vars.Auth.bCanSiteManagement) {
+                    aDashboardPanelViews.push(new App.Views.DashboardPanel({
+                        model:
+                            new App.Models.DashboardPanel({
+                                'panelBgColor': 'maroon',
+                                'panelFAIconClass': 'fa-cogs',
+                                'panelName': 'SIA Settings Management',
+                                'panelDescription': '',
+                                'panelLinksListView': new App.Views.DashboardPanelLinksList({
+                                    collection: new App.Collections.DashboardPanelLinksListItem([
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Settings',
+                                            'badgeCount': '',
+                                            'route': 'view/settings/management'
+                                        }),
+                                    ])
+                                }).render().$el.html()
+                            })
+                    }).render().$el.html());
+                }
+                if (App.Vars.Auth.bCanProjectManagement) {
+                    aDashboardPanelViews.push(new App.Views.DashboardPanel({
+                        model:
+                            new App.Models.DashboardPanel({
+                                'panelBgColor': 'orange',
+                                'panelFAIconClass': 'fa-bar-chart',
+                                'panelName': 'Reports',
+                                'panelDescription': '',
+                                'panelLinksListView': new App.Views.DashboardPanelLinksList({
+                                    collection: new App.Collections.DashboardPanelLinksListItem([
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Sites',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/sites'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Project List',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/projects'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Budget Allocation',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/budget'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Budget and Volunteer Estimates',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/budget_and_volunteer'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Early Start',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/early_start'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Project List - Final Completion Assessment',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/projects_final_completion_assessment'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteer Assignment - Alpha Order - For Packets',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/volunteer_assignment_for_packets'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteer Assignment - For Mailmerge - Packets',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/volunteer_assignment_for_mailmerge'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteer Assignment',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/volunteer_assignment'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteers Needed',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/volunteesr_needed'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Scout-Liaison Estimator',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/scout_liaison_estimator'
+                                        }),
                                     ])
                                 }).render().$el.html()
                             })
@@ -220,6 +245,19 @@
 
             try {
                 switch (self.routeRequested) {
+                    case 'settings_management':
+                        if (self.siteSettingsManagementView === null) {
+                            App.Views.siteSettingsManagementView = self.siteSettingsManagementView = new self.siteSettingsManagementViewClass({
+                                model: App.Models.siteSettingModel,
+                                mainAppEl: self.mainApp.el,
+                                mainApp: self.mainApp,
+                                modelNameLabel: 'Site Settings Management',
+                                collection: App.Collections.siteSettingsCollection
+                            });
+                        }
+
+                        routeView = self.siteSettingsManagementView;
+                        break;
                     case 'site_management':
                         if (self.siteManagementView === null) {
                             App.Views.siteManagementView = self.siteManagementView = new self.siteManagementViewClass({
@@ -325,7 +363,7 @@
                     self.mainApp.setRouteView(routeView).render();
                     self.bRouteViewRendered = true;
                 } catch (e) {
-                    console.log('self.mainApp.setRouteView render exception:', e);
+                    console.log('self.mainApp.setRouteView render exception for routeView:' + routeView, e);
                     self.bRouteViewRendered = false;
                 }
 

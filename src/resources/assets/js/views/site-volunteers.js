@@ -16,7 +16,6 @@
         },
         render: function () {
             this.$el.html(this.template());
-            console.log('SiteVolunteerGridManagerContainerToolbar',this.el,this.$el)
             // initialize all file upload inputs on the page at load time
             //this.initializeFileUploadObj(this.$el.find('input[type="file"]'));
             return this;
@@ -98,7 +97,7 @@
             this.modelNameLabel = this.options.modelNameLabel;
             this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
             this.routeName = 'site_volunteer';
-            console.log('SiteVolunteer',this.el,this.$el)
+
             _log('App.Views.SiteVolunteer.initialize', options);
         },
         events: {

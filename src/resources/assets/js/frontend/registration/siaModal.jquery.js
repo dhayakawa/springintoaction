@@ -91,8 +91,6 @@
 
             that.$element.addClass('in')
 
-            that.enforceFocus()
-
             var e = $.Event('shown.bs.modal', {relatedTarget: _relatedTarget})
 
             transition ?
@@ -132,18 +130,6 @@
                 .one('bsTransitionEnd', $.proxy(this.hideSIAModal, this))
                 .emulateTransitionEnd(SIAModal.TRANSITION_DURATION) :
             this.hideSIAModal()
-    }
-
-    SIAModal.prototype.enforceFocus = function () {
-        $(document)
-            .off('focusin.bs.modal') // guard against infinite focus loop
-            .on('focusin.bs.modal', $.proxy(function (e) {
-                if (document !== e.target &&
-                    this.$element[0] !== e.target &&
-                    !this.$element.has(e.target).length) {
-                    this.$element.trigger('focus')
-                }
-            }, this))
     }
 
     SIAModal.prototype.escape = function () {

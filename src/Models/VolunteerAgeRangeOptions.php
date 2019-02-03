@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class VolunteerAgeRangeOptions extends Model
 {
+    use \Dhayakawa\SpringIntoAction\Helpers\OptionsTrait;
     /**
      * The table associated with the model.
      *

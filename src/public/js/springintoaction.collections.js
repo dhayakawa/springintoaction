@@ -8,6 +8,12 @@
 })(window.App);
 
 (function (App) {
+    App.Collections.SiteSetting = Backbone.Collection.extend({
+        model: App.Models.SiteSetting
+    });
+})(window.App);
+
+(function (App) {
     App.Collections.ProjectAttachment = Backbone.Collection.extend({
         model: App.Models.ProjectAttachment
     });
@@ -570,16 +576,6 @@
             resizeable: true,
             orderable: true,
             width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "Attachments",
-            label: "Attachments",
-            cell: "string",
-            editable: false,
-            resizeable: true,
-            orderable: true,
-            width: "100",
             displayOrder: displayOrderCnt++
         },
         {

@@ -21,6 +21,21 @@
 })(window.App);
 
 (function (App) {
+    App.Models.SiteSetting = Backbone.Model.extend({
+        url: '/admin/site_setting',
+        idAttribute: "SiteSettingID",
+        defaults: {
+            'setting':'',
+            'value':'',
+            'description':'',
+            'message':'',
+            'sunrise':'',
+            'sunset':''
+        }
+    });
+})(window.App);
+
+(function (App) {
     App.Models.ProjectAttachment = Backbone.Model.extend({
         url: '/admin/project_attachment',
         idAttribute: "ProjectAttachmentID",
@@ -137,7 +152,6 @@
             'PrepWorkRequiredBeforeSIA': '',
             'SetupDayInstructions': '',
             'SIADayInstructions': '',
-            'Attachments': '',
             'Area': '',
             'PaintOrBarkEstimate': '',
             'PaintAlreadyOnHand': '',
@@ -488,6 +502,7 @@
 })(window.App);
 
 (function (App) {
+    App.Models.siteSettingModel = new App.Models.SiteSetting();
     App.Models.siteModel = new App.Models.Site();
     App.Models.siteStatusModel = new App.Models.SiteStatus();
     App.Models.projectModel = new App.Models.Project();

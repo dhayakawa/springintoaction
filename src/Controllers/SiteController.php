@@ -3,7 +3,7 @@
     namespace Dhayakawa\SpringIntoAction\Controllers;
 
     use Illuminate\Support\Facades\DB;
-    use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
+    use Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Models\Site;
     use Dhayakawa\SpringIntoAction\Models\SiteStatus;
