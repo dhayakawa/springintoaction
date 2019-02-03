@@ -31,9 +31,7 @@
         },
         registerForProject: function () {
             let self = this;
-            alert('Sorry, Registration is closed');
-            return;
-            //console.log('registerForProject button click', this.model)
+
             self.trigger('register-for-project', {model: this.model});
         }
     });

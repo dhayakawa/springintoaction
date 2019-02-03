@@ -1,6 +1,7 @@
 // Global object for spring into action backbone app
 window.App = {
     Models: {
+        siteSettingModel: null,
         siteModel: null,
         siteStatusModel: null,
         projectModel: null,
@@ -27,6 +28,7 @@ window.App = {
         projectAttachmentsCollection: null
     },
     Collections: {
+        siteSettingsCollection: null,
         allProjectsCollection: null,
         annualBudgetsManagementCollection: null,
         contactsManagementCollection: null,
@@ -38,6 +40,7 @@ window.App = {
     },
     Views: {
         dashboardView: {},
+        settingsManagementView: {},
         siteManagementView: {},
         siteYearsDropDownView: {},
         projectManagementView: {},

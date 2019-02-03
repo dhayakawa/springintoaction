@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SendStatusOptions extends Model
 {
+    use \Dhayakawa\SpringIntoAction\Helpers\OptionsTrait;
     /**
      * The table associated with the model.
      *
@@ -56,4 +57,5 @@ class SendStatusOptions extends Model
 
         return $this->defaultRecordData;
     }
+
 }

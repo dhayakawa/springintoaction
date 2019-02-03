@@ -2,8 +2,9 @@
 'title' => 'Spring Into Action',
 'subtitle' => ''
 ])
-@push('js')
+@include('boilerplate::load.datepicker')
 @include('boilerplate::load.icheck')
+@push('js')
 <div id="sia-modal" class="sia-modal modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">

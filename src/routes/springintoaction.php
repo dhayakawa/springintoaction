@@ -141,7 +141,10 @@ Route::group(
             'project/batch/destroy',
             ['as' => 'project.batch.destroy', 'uses' => 'ProjectsController@batchDestroy']
         );
-
+        
+        Route::put('site_setting/{SiteSettingID}',['as' => 'site.setting.update', 'uses' => 'SiteSettingsManagement@update']);
+        Route::get('site_setting/list/all',['as' => 'site.setting.list.all', 'uses' => 'SiteSettingsManagement@getSettings']);
+        
         //Route::resource('site', 'SiteController');
         Route::get('site/{SiteID}', ['as' => 'site', 'uses' => 'SiteController@show']);
         Route::delete('site/{SiteID}', ['as' => 'site.destroy', 'uses' => 'SiteController@destroy']);

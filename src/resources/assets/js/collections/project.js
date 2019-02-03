@@ -346,16 +346,6 @@
             displayOrder: displayOrderCnt++
         },
         {
-            name: "Attachments",
-            label: "Attachments",
-            cell: "string",
-            editable: false,
-            resizeable: true,
-            orderable: true,
-            width: "100",
-            displayOrder: displayOrderCnt++
-        },
-        {
             name: "Area",
             label: "Area",
             cell: "string",

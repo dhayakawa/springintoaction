@@ -1,4 +1,5 @@
 (function (App) {
+    App.Collections.siteSettingsCollection = new App.Collections.SiteSetting(@json($appInitialData['site_settings']));
     App.Collections.sitesDropDownCollection = new App.Collections.Site(@json($appInitialData['sites']));
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear(@json($appInitialData['site_years']));
     App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown(@json($appInitialData['select_options']['projects_dropdown']));
@@ -29,6 +30,7 @@
     App.PageableCollections.unassignedProjectVolunteersCollection.fetch({reset: true});
     // Predefining the view so they exist on load
     App.Views.dashboardView = {};
+    App.Views.settingsManagementView = {};
     App.Views.siteManagementView = {};
     App.Views.siteYearsDropDownView = {};
     App.Views.projectManagementView = {};
