@@ -52,7 +52,7 @@
                     <tbody>
                     <% for (let i=0; i < projectCnt; i++) { %>
                     <tr>
-                        <td><i data-toggle="tooltip" title="<%= projects[i].ProjectDescription.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {return '&#'+i.charCodeAt(0)+';';}).replace('"','&quot;') %>" class="fa fa-info-circle <%= projects[i].descriptionState %> pull-left"></i><%= projects[i].SequenceNumber %></td>
+                        <td><i data-toggle="tooltip" title="<%= projects[i].ProjectDescriptionToolTipContent %>" class="<%= projects[i].projectDescriptionState %> pull-left"></i><%= projects[i].SequenceNumber %></td>
                         <td><%= projects[i].PM %></td>
                         <td><i class="<%= projects[i].statusState %>"></i></td>
                         <td><i class="<%= projects[i].costEstimateState %>"></i></td>
