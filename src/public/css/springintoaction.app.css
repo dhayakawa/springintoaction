@@ -14,6 +14,31 @@
 .sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-desc {
   display: none;
 }
+.sia-main-app .status-legend-wrapper {
+  top: 5px;
+  margin-right: 50px;
+  position: relative;
+}
+.sia-main-app .status-legend-wrapper .status-legend {
+  margin-right: 20px;
+}
+.sia-main-app .status-management-wrapper .table {
+  table-layout: fixed;
+}
+.sia-main-app .status-management-wrapper .table th,
+.sia-main-app .status-management-wrapper .table td {
+  text-align: center;
+}
+.sia-main-app .status-management-wrapper .table td .fa-info-circle {
+  position: relative;
+  top: 3px;
+}
+.sia-main-app .status-management-wrapper .table.project-status td:nth-of-type(1) {
+  width: 75px;
+}
+.sia-main-app .status-management-wrapper .table.project-status td:nth-of-type(2) {
+  min-width: 130px;
+}
 .sia-main-app .site-settings-management-view .form-group.site-setting-value-label {
   margin-bottom: 0;
 }

@@ -1409,10 +1409,17 @@
 })(window.App);
 
 (function (App) {
+    App.Collections.StatusManagement = Backbone.Collection.extend({
+        model: App.Models.StatusManagement
+    });
+})(window.App);
+
+(function (App) {
     App.Collections.sitesDropDownCollection = new App.Collections.Site();
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear();
     App.PageableCollections.projectCollection = new App.PageableCollections.Project();
     App.Collections.allProjectsCollection = new App.Collections.Project();
+    App.Collections.statusManagementCollection = new App.Collections.StatusManagement();
     App.PageableCollections.siteVolunteersCollection = new App.PageableCollections.SiteVolunteer();
 
     // project tabs

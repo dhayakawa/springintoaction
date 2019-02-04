@@ -13,7 +13,8 @@ window.App = {
         projectVolunteerModel: null,
         projectVolunteerRoleModel: null,
         annualBudgetModel: null,
-        reportModel: null
+        reportModel: null,
+        statusManagementModel: null
     },
     PageableCollections: {
         backGridFiltersPanelCollection: null,
@@ -36,7 +37,8 @@ window.App = {
         sitesDropDownCollection: null,
         siteYearsDropDownCollection: null,
         reportsManagementCollection: null,
-        projectsDropDownCollection:null
+        projectsDropDownCollection:null,
+        statusManagementCollection:null
     },
     Views: {
         dashboardView: {},
@@ -49,7 +51,8 @@ window.App = {
         contactsManagementView: {},
         volunteersManagementView: {},
         budgetManagementView: {},
-        reportsManagementView: []
+        reportsManagementView: [],
+        statusManagementView: {}
     },
     Templates: {},
     Router: {},

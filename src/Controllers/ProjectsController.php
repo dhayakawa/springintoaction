@@ -214,16 +214,7 @@ class ProjectsController extends BaseController
 
     public function getSiteProjects($SiteStatusID)
     {
-        return $projects =
-            Project::select(
-                'projects.*',
-                DB::raw(
-                    '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
-                )
-            )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-                    'site_status.SiteStatusID',
-                    $SiteStatusID
-                )->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+        return Project::getSiteProjects($SiteStatusID, true);
     }
 
     public function getLeadVolunteers($ProjectID)
