@@ -136,23 +136,7 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
-            $projectModel = Project::select(
-                'projects.*',
-                DB::raw(
-                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = 391) as BudgetSources'
-                ),
-                DB::raw(
-                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
-                ),
-                DB::raw(
-                    '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
-                )
-            )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-                'site_status.SiteStatusID',
-                $siteStatus['SiteStatusID']
-            )->orderBy('projects.SequenceNumber', 'asc');
-
-            $projects = $projectModel->get()->toArray();
+            $projects = Project::getSiteProjects($siteStatus['SiteStatusID'], true);
 
             $project = current($projects);
 
@@ -191,6 +175,8 @@ class SpringIntoActionMainAppController extends BaseController
 
             report($e);
         }
+        $projectModel = new Project();
+        $status_management_records = $projectModel->getStatusManagementRecords();
         try {
             $contacts = Site::find($site['SiteID'])->contacts;
             $contacts = $contacts ? $contacts->toArray() : [];
@@ -487,6 +473,7 @@ class SpringIntoActionMainAppController extends BaseController
                 'select_options',
                 'site_volunteers',
                 'site_volunteer',
+                'status_management_records'
             ]
         );
         $this->makeJsFiles(compact('appInitialData'));
@@ -674,7 +661,7 @@ class SpringIntoActionMainAppController extends BaseController
                                 DB::table($tableToUpdate)->insert(
                                     array_merge($aInsertData, $aDefaultInsertRecordData)
                                 );
-                                
+
                             } catch (\Exception $e) {
                                 report($e);
                             }

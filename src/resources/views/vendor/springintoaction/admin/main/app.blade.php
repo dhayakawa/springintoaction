@@ -35,6 +35,7 @@
 @endpush
 
 @push('css')
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous"/>
 <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400" rel="stylesheet" />
 <link rel="stylesheet" href="{{ mix('/css/springintoaction.packages.css') }}"/>
 <link rel="stylesheet" href="{{ mix('/css/springintoaction.app.css') }}"/>

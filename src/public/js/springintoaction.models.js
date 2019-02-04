@@ -502,6 +502,16 @@
 })(window.App);
 
 (function (App) {
+    App.Models.StatusManagement = Backbone.Model.extend({
+        url: '/admin/status_management',
+        idAttribute: "SiteID",
+        defaults: {
+
+        }
+    });
+})(window.App);
+
+(function (App) {
     App.Models.siteSettingModel = new App.Models.SiteSetting();
     App.Models.siteModel = new App.Models.Site();
     App.Models.siteStatusModel = new App.Models.SiteStatus();
@@ -523,5 +533,6 @@
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
     App.Models.annualBudgetModel = new App.Models.AnnualBudget();
     App.Models.reportModel = new App.Models.Report();
+    App.Models.statusManagementModel = new App.Models.StatusManagement();
 
 })(window.App);

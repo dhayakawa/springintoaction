@@ -1,5 +1,6 @@
 (function (App) {
     App.Collections.siteSettingsCollection = new App.Collections.SiteSetting(@json($appInitialData['site_settings']));
+    App.Collections.statusManagementCollection = new App.Collections.StatusManagement(@json($appInitialData['status_management_records']));
     App.Collections.sitesDropDownCollection = new App.Collections.Site(@json($appInitialData['sites']));
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear(@json($appInitialData['site_years']));
     App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown(@json($appInitialData['select_options']['projects_dropdown']));
@@ -41,4 +42,5 @@
     App.Views.budgetManagementView = {};
     App.Views.reportsManagementView = [];
     App.Views.projectsDropDownView = {};
+    App.Views.statusManagementView = {};
 })(window.App);

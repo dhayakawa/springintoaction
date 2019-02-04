@@ -33,30 +33,70 @@
         }
 
     }
-    .site-settings-management-view {
-        .form-group.site-setting-value-label{
-            margin-bottom:0;
+    .status-legend-wrapper{
+        top: 5px;
+        margin-right: 50px;
+        position: relative;
+        .status-legend{
+            margin-right:20px;
         }
     }
-    .reports-management-view {
-        .report-download{
-            padding:0 5px;
+    .status-management-wrapper {
+        .table {
+            table-layout:fixed;
+            th, td {
+                text-align: center;
+            }
+
+            td {
+                .fa-info-circle {
+                    position: relative;
+                    top: 3px;
+                }
+            }
+            &.project-status {
+                td:nth-of-type(1){
+                    width: 75px;
+                }
+
+                td:nth-of-type(2) {
+                    min-width: 130px;
+                }
+            }
         }
-        .table{
-            table-layout: fixed;}
+    }
+
+    .site-settings-management-view {
+        .form-group.site-setting-value-label {
+            margin-bottom: 0;
+        }
+    }
+
+    .reports-management-view {
+        .report-download {
+            padding: 0 5px;
+        }
+
+        .table {
+            table-layout: fixed;
+        }
 
         .table > thead > tr > th {
             border-bottom: 2px solid #f4f4f4;
         }
+
         .table .table {
             background-color: transparent;
         }
+
         .table.no-padding > tbody > tr > td {
             padding: 0;
         }
+
         .table-striped .table-striped > tbody > tr:nth-of-type(odd) {
             background-color: #ebe5cd;
         }
+
         table.no-tbody-border > tbody > tr > td {
             border: 0;
         }
@@ -76,50 +116,65 @@
         }
 
         table.Volunteer-Headers {
-            margin-bottom:0;
+            margin-bottom: 0;
         }
+
         h4.Assigned-Volunteers {
             margin: 0;
         }
+
         .Name, .Full-Name {
             width: 150px;
         }
+
         .Contact-Phone {
             width: 130px;
         }
+
         .Site-Name {
             width: 200px;
         }
+
         .Proj-Num {
-            width:75px;
+            width: 75px;
         }
+
         .Est-Cost {
             width: 75px;
         }
-        .Volunteers-Needed-Est{
+
+        .Volunteers-Needed-Est {
             width: 75px;
         }
+
         .Budget-Sources {
             width: 75px;
         }
+
         .Budget-Allocate {
             width: 75px;
         }
-        .Estimator-Project-Contact{
+
+        .Estimator-Project-Contact {
             width: 125px;
         }
+
         .Status {
-            width:100px;
+            width: 100px;
         }
+
         .StatusReason {
             width: 150px;
         }
+
         .Role {
             width: 115px;
         }
+
         .Email {
             width: 225px;
         }
+
         .Age-Range {
             width: 100px;
         }

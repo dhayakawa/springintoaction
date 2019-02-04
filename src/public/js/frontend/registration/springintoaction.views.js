@@ -911,7 +911,6 @@
             let self = this;
 
             self.projectModelToRegister = e.model;
-
             App.Vars.SIAModalRegistrationForm = getSIAModal('RegistrationForm');
 
             App.Vars.SIAModalRegistrationForm.on('show.bs.modal', function (event) {

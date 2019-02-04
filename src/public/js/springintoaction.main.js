@@ -18,6 +18,8 @@
         annualBudgetsManagementView: null,
         reportsManagementViewClass: App.Views.ReportsManagement,
         reportsManagementView: [],
+        statusManagementViewClass: App.Views.StatusManagement,
+        statusManagementView: null,
         bRouteViewRendered: false,
         routeRequested: '',
         initialize: function (options) {
@@ -81,6 +83,11 @@
                                             'linkText': 'Projects',
                                             'badgeCount': App.Vars.appInitialData.all_projects.length,
                                             'route': 'view/project/management'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Projects Status',
+                                            'badgeCount': '',
+                                            'route': 'view/project/status'
                                         })
                                     ])
                                 }).render().$el.html()
@@ -276,6 +283,17 @@
                         }
 
                         routeView = self.projectManagementView;
+
+                        break;
+                    case 'project_status':
+                        if (self.statusManagementView === null) {
+                            App.Views.statusManagementView = self.statusManagementView = new self.statusManagementViewClass({
+                                mainApp: self.mainApp,
+                                collection: App.Collections.statusManagementCollection
+                            });
+                        }
+
+                        routeView = self.statusManagementView;
 
                         break;
                     case 'site_contacts_management':
