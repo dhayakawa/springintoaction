@@ -38,7 +38,7 @@
             let iVolunteerAssignmentCompleteCnt = 0;
 
             for (let i = 0; i < projectCnt; i++) {
-                
+
                 switch (modelAttributes.projects[i].Status) {
                     case '1':
                         modelAttributes.projects[i].statusState = self.notDoneIcon + ' blank';
@@ -116,7 +116,7 @@
                 modelAttributes.projects[i].projectSendState = self.notDoneIcon + ' not-ready-state';
                 if (modelAttributes.projects[i].ProjectSend === '4' || modelAttributes.projects[i].ProjectSend === 4) {
                     modelAttributes.projects[i].projectSendState = self.doneIcon + ' sent-state';
-                } else if (modelAttributes.projects[i].ProjectSend === '2' || modelAttributes.projects[i].ProjectSend === 2) {
+                } else if (modelAttributes.projects[i].ProjectSend === '3' || modelAttributes.projects[i].ProjectSend === 3) {
                     modelAttributes.projects[i].projectSendState = self.validateIcon + ' ready-state';
                 }
 
