@@ -62,7 +62,7 @@ Copy and paste these example properties into the existing property list and upda
 Please follow the existing naming conventions.  
 `
 myDashboardViewClass: App.Views.MyDashboard,
-myDashboardView: [],
+myDashboardView: null,
 `
 
 **Copy/paste the code below into the BackboneRouter.dashboard method**  

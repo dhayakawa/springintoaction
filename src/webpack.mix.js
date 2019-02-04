@@ -81,6 +81,7 @@ mix.scripts([
     'resources/assets/js/models/site-role.js',
     'resources/assets/js/models/site-volunteer.js',
     'resources/assets/js/models/report.js',
+    'resources/assets/js/models/status-management.js',
     'resources/assets/js/models/init-models.js'
 ], 'public/js/springintoaction.models.js');
 mix.scripts([
@@ -95,6 +96,7 @@ mix.scripts([
     'resources/assets/js/collections/project-volunteer.js',
     'resources/assets/js/collections/site-volunteer.js',
     'resources/assets/js/collections/report.js',
+    'resources/assets/js/collections/status-management.js',
     'resources/assets/js/collections/init-collections.js'
 ], 'public/js/springintoaction.collections.js');
 mix.scripts([
@@ -118,6 +120,7 @@ mix.scripts([
     'resources/assets/js/views/volunteer-management.js',
     'resources/assets/js/views/contact-management.js',
     'resources/assets/js/views/report-management.js',
+    'resources/assets/js/views/status-management.js',
     'resources/assets/js/views/main-view.js'
 ], 'public/js/springintoaction.views.js');
 mix.scripts([

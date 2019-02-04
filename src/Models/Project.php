@@ -15,6 +15,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
 use Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
 use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
 use Dhayakawa\SpringIntoAction\Models\Budget;
+use Dhayakawa\SpringIntoAction\Models\SiteStatus;
 
 class Project extends Model
 {
@@ -120,30 +121,30 @@ class Project extends Model
             '',
             ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $value]
         );
+
         return ProjectVolunteer::where('ProjectID', '=', $this->attributes['ProjectID'])->get()->count();
     }
 
     public function getBudgetSourcesAttribute($value)
     {
-        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$value]);
+        \Illuminate\Support\Facades\Log::debug(
+            '',
+            ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $value]
+        );
         $sBudgetSources = '';
         try {
             $aBudgets =
-                Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')
-                      ->join(
-                          'budget_status_options',
-                          function ($join) {
-                              $join->on('budget_status_options.id', '=', 'budgets.Status')->where(
-                                  'option_label',
-                                  '=',
-                                  'Approved'
-                              );
-                          }
-                      )
-                      ->where('ProjectID', '=', $this->attributes['ProjectID'])
-                      ->get()
-                      ->pluck('id');
-            if(!empty($aBudgets)){
+                Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')->join(
+                    'budget_status_options',
+                    function ($join) {
+                        $join->on('budget_status_options.id', '=', 'budgets.Status')->where(
+                            'option_label',
+                            '=',
+                            'Approved'
+                        );
+                    }
+                )->where('ProjectID', '=', $this->attributes['ProjectID'])->get()->pluck('id');
+            if (!empty($aBudgets)) {
                 // return a string formatted for the grid
                 $sBudgetSources = trim(join('; ', $aBudgets));
             }
@@ -456,5 +457,92 @@ FROM (
     public function getRegistrationSkillsNeededFilters($Year)
     {
         $all_projects = $this->getRegistrationProjects($Year);
+    }
+
+    public static function getBaseProjectModelForQuery()
+    {
+        return self::select(
+            'projects.*',
+            DB::raw(
+                '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = 391) as BudgetSources'
+            ),
+            DB::raw(
+                '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
+            ),
+            DB::raw(
+                '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
+            )
+        );
+    }
+
+    public static function getSiteProjects($SiteStatusID, $bReturnArr = true)
+    {
+        try {
+            $projects = self::getBaseProjectModelForQuery()->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->where(
+                'site_status.SiteStatusID',
+                $SiteStatusID
+            )->orderBy('projects.SequenceNumber', 'asc')->get();
+
+            return $bReturnArr ? $projects->toArray() : $projects;
+        } catch (\Exception $e) {
+            return $bReturnArr ? [] : null;
+        }
+    }
+
+    public function getProjectsByYear($Year, $bReturnArr = true)
+    {
+        try {
+            $projects = self::getBaseProjectModelForQuery()->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->where(
+                'site_status.Year',
+                $Year
+            )->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get();
+
+            return $bReturnArr ? $projects->toArray() : $projects;
+        } catch (\Exception $e) {
+            return $bReturnArr ? [] : null;
+        }
+    }
+
+    public function getStatusManagementRecords()
+    {
+        $Year = $this->getCurrentYear();
+        $sites = SiteStatus::join(
+            'sites',
+            'sites.SiteID',
+            '=',
+            'site_status.SiteID'
+        )->where('Year', $Year)->orderBy('sites.SiteName', 'asc')->get()->toArray();
+
+        foreach ($sites as $key => $data) {
+            $sites[$key]['projects'] = self::getBaseProjectModelForQuery()->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->addSelect(
+                DB::raw(
+                    "(select CONCAT(volunteers.FirstName, ' ', volunteers.LastName)
+                            from project_volunteer_role pvr
+                                   join project_roles pr on pr.ProjectRoleID = pvr.ProjectRoleID and pr.Role = 'Project Manager'
+                                   join volunteers on volunteers.VolunteerID = pvr.VolunteerID  where pvr.ProjectID = projects.ProjectID
+                           ) as `PM`"
+                )
+            )->where(
+                'site_status.SiteStatusID',
+                $data['SiteStatusID']
+            )->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+        }
+
+        return $sites;
     }
 }
