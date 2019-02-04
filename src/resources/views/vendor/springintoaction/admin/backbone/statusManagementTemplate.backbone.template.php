@@ -3,12 +3,12 @@
     <div class="pull-right">
         <a href="#" class="btn btn-box-tool"><i class="fa fa-times"></i></a>
     </div>
-    <div class="pull-left status-legend-wrapper">
+    <div class="pull-right status-legend-wrapper">
         <div class="pull-right status-legend">
             <i class="fa fa-circle text-danger"></i> Not Ready/Done/Complete
         </div>
         <div class="pull-right status-legend">
-            <i class="fas fa-dot-circle text-warning"></i> Possibly done but not checked yet
+            <i class="fas fa-dot-circle text-warning"></i> Current entry needs validation and then Ready/Done/Complete to be checked.
         </div>
         <div class="pull-right status-legend">
             <i class="fa fa-circle text-warning"></i> Pending
