@@ -3,7 +3,7 @@
     <div class="pull-right">
         <a href="#" class="btn btn-box-tool"><i class="fa fa-times"></i></a>
     </div>
-    <div class="pull-right status-legend-wrapper">
+    <!--<div class="pull-right status-legend-wrapper">
         <div class="pull-right status-legend">
             <i class="fa fa-circle text-danger"></i> Not Ready/Done/Complete
         </div>
@@ -16,7 +16,7 @@
         <div class="pull-right status-legend">
             <i class="fa fa-circle text-success"></i> Ready/Done/Complete
         </div>
-    </div>
+    </div>-->
 </div>
 <div class="box-body">
     <div class="row">
