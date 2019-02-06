@@ -35533,30 +35533,34 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Loop state
 	  var ordered = false;
-	  _.each(this.state, function(columnState) {
-	    // Find column
-	    var column = self.columns.findWhere({
-	      name: columnState.name
-	    });
 
-	    if (_.has(columnState, "renderable")) {
-	      column.set("renderable", columnState.renderable);
-	    }
-	    if (_.has(columnState, "width")) {
-	      var oldWidth = column.get("width");
-	      column.set("width", columnState.width, {silent: true});
-	      if (oldWidth !== columnState.width) {
-	        column.trigger("resize", column, columnState.width, oldWidth);
-	      }
-	    }
 
-	    if (_.has(columnState, "displayOrder")) {
-	      if (columnState.displayOrder !== column.get("displayOrder")) {
-	        ordered = true;
-	      }
-	      column.set("displayOrder", columnState.displayOrder, {silent: true});
-	    }
-	  });
+			_.each(this.state, function (columnState) {
+				// Find column
+				var column = self.columns.findWhere({
+					name: columnState.name
+				});
+
+					if (_.has(columnState, "renderable")) {
+						column.set("renderable", columnState.renderable);
+					}
+					if (_.has(columnState, "width")) {
+						var oldWidth = column.get("width");
+						column.set("width", columnState.width, {silent: true});
+						if (oldWidth !== columnState.width) {
+							column.trigger("resize", column, columnState.width, oldWidth);
+						}
+					}
+
+					if (_.has(columnState, "displayOrder")) {
+						if (columnState.displayOrder !== column.get("displayOrder")) {
+							ordered = true;
+						}
+						column.set("displayOrder", columnState.displayOrder, {silent: true});
+					}
+
+			});
+
 
 	  if (ordered) {
 	    self.columns.sort();
@@ -36100,6 +36104,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ ])
 });
 ;
+
 /*
  backgrid-sizeable-columns
  https://github.com/WRidder/backgrid-sizeable-columns

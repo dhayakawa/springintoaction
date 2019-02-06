@@ -32,15 +32,45 @@
 .sia-main-app .status-management-wrapper .table td {
   text-align: center;
 }
+.sia-main-app .status-management-wrapper .table td i:hover {
+  cursor: pointer;
+}
 .sia-main-app .status-management-wrapper .table td .fa-info-circle {
   position: relative;
   top: 3px;
+}
+.sia-main-app .status-management-wrapper .table td .fa-info-circle:hover {
+  cursor: default;
 }
 .sia-main-app .status-management-wrapper .table.project-status td:nth-of-type(1) {
   width: 75px;
 }
 .sia-main-app .status-management-wrapper .table.project-status td:nth-of-type(2) {
   min-width: 130px;
+}
+.sia-main-app .status-management-wrapper .tooltip-inner {
+  max-width: 400px;
+  padding: 3px 8px;
+  color: #fff;
+  text-align: center;
+  background-color: #000;
+  border-radius: 4px;
+}
+.sia-main-app .status-management-wrapper .tooltip-table {
+  table-layout: fixed;
+  background: transparent;
+}
+.sia-main-app .status-management-wrapper .tooltip-table th,
+.sia-main-app .status-management-wrapper .tooltip-table td {
+  text-align: left;
+}
+.sia-main-app .status-management-wrapper .tooltip-table tr:last-child td {
+  border: 0;
+}
+.sia-main-app .status-management-wrapper .tooltip-table td.hide-overflow {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .sia-main-app .site-settings-management-view .form-group.site-setting-value-label {
   margin-bottom: 0;
