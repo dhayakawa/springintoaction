@@ -4263,12 +4263,13 @@
             self.pendingIcon = self.defaultStateIcon + ' text-warning';
             self.validateIcon = 'fas fa-dot-circle text-warning';
             self.notDoneIcon = self.defaultStateIcon + ' text-danger';
-            _.bindAll(this, 'render');
+            _.bindAll(this, 'render','setPopOverContent');
         },
         events: {
             'click button': 'update',
             'change .form-control': 'enableSave',
             'change [name="value"]': 'enableSave',
+            'inserted.bs.popover [data-popover="true"]' : 'setPopOverContent'
         },
         render: function () {
             let self = this;
@@ -4329,7 +4330,7 @@
                     modelAttributes.projects[i].costEstimateState = self.validateIcon;
                 } else {
                     modelAttributes.projects[i].costEstimateState = (modelAttributes.projects[i].CostEstimateDone === 1 ? self.doneIcon : self.notDoneIcon);
-                    if (modelAttributes.projects[i].CostEstimateDone === 1){
+                    if (modelAttributes.projects[i].CostEstimateDone === 1) {
                         iBudgetEstimationCompleteCnt++;
                     }
                 }
@@ -4377,13 +4378,33 @@
                     modelAttributes.projects[i].projectDescriptionState = 'fa fa-info-circle text-success';
                     iProjectDescriptionCompleteCnt++;
                 }
-                // Fix string for html element title attribute
-                modelAttributes.projects[i].ProjectDescriptionToolTipContent = modelAttributes.projects[i].ProjectDescription.replace(/[\u00A0-\u9999<>\&]/gim, function (i) {
-                    return '&#' + i.charCodeAt(0) + ';';
-                }).replace('"', '&quot;');
+                /**
+                 * Setup for tooltips
+                 */
+                modelAttributes.projects[i].ProjectDescriptionToolTipContent = self.cleanForToolTip(modelAttributes.projects[i].ProjectDescription);
+                modelAttributes.projects[i].StatusToolTipContent = self.cleanForToolTip(self.getProjectStatusOptionLabel(modelAttributes.projects[i].Status));
+                modelAttributes.projects[i].CostEstimateToolTipContent = self.cleanForToolTip(modelAttributes.projects[i].EstimatedCost);
+                let budgetTotal = 0.00;
+                let budgetToolTip = "<table class='tooltip-table table table-condensed'>";
+                budgetToolTip += '<thead><tr><th>Amt</th><th>Source</th><th>Comment</th></tr></thead><tbody>';
+                let aBudgets = App.Collections.annualBudgetsManagementCollection.where({ProjectID: modelAttributes.projects[i].ProjectID});
+                _.each(aBudgets, function (budget, idx) {
+                    budgetTotal += parseFloat(budget.get('BudgetAmount'));
+                    budgetToolTip += '<tr><td>' + budget.get('BudgetAmount') + '</td><td>' + self.getBudgetSourceOptionLabel(budget.get('BudgetSource')) + '</td><td class=\'hide-overflow\'>' + budget.get('Comments') + '</td></tr>';
+                });
+                budgetToolTip += '<tr><td>' + budgetTotal.toString() + '</td><td colspan=\'2\'><strong>Total</strong></td></tr>';
+                budgetToolTip += '</tbody></table>';
 
+                modelAttributes.projects[i].BudgetAllocationToolTipContent = self.cleanForToolTip(budgetToolTip);
+                modelAttributes.projects[i].MaterialListToolTipContent = self.cleanForToolTip(modelAttributes.projects[i].MaterialsNeeded);
+                modelAttributes.projects[i].VolunteerAllocationToolTipContent = self.cleanForToolTip(modelAttributes.projects[i].VolunteersNeededEst);
+                modelAttributes.projects[i].ProjectSendToolTipContent = self.cleanForToolTip(self.getSendStatusOptionLabel(modelAttributes.projects[i].ProjectSend));
+                modelAttributes.projects[i].FinalCompletionStatusToolTipContent = self.cleanForToolTip(self.getYesNoOptionLabel(modelAttributes.projects[i].FinalCompletionStatus));
             }
 
+            /**
+             * Setup for Site Statuses
+             */
             if (iProjectDescriptionCompleteCnt === projectCnt && modelAttributes.ProjectDescriptionComplete === 0) {
                 modelAttributes.projectDescriptionState = self.validateIcon;
             } else {
@@ -4415,6 +4436,49 @@
             }
 
             return modelAttributes;
+        },
+        getBudgetSourceOptionLabel: function (optionId) {
+            let label = '';
+            _.each(App.Vars.selectOptions['BudgetSourceOptions'], function (val, key) {
+                if (val.toString() === optionId.toString()) {
+                    label = key;
+                }
+            });
+            return label;
+        },
+        getSendStatusOptionLabel: function (optionId) {
+            let label = '';
+            _.each(App.Vars.selectOptions['SendStatusOptions'], function (val, key) {
+                if (val.toString() === optionId.toString()) {
+                    label = key;
+                }
+            });
+            return label;
+        },
+        getProjectStatusOptionLabel: function (optionId) {
+            let label = '';
+            _.each(App.Vars.selectOptions['ProjectStatusOptions'], function (val, key) {
+                if (val.toString() === optionId.toString()) {
+                    label = key;
+                }
+            });
+            return label;
+        },
+        getYesNoOptionLabel: function(optionId) {
+            return optionId.toString() === '1' ? 'Yes' : 'No';
+        },
+        cleanForToolTip: function (str) {
+            return (str === '' || str === null) ? '' : str.toString().replace(/[\u00A0-\u9999<>\&]/gim, function (i) {
+                return '&#' + i.charCodeAt(0) + ';';
+            }).replace('"', '&quot;');
+        },
+        setPopOverContent: function(e){
+            let self = this;
+            let $icon = $(e.currentTarget);
+            let $popover = $icon.siblings('.popover');
+            $popover.find('.popover-title').html('<strong>Update '+ $icon.data('field') +'</strong>');
+            $popover.find('.popover-content').html('<strong>hi</strong>');
+            console.log('setPopOverContent',e, $popover)
         },
         enableSave: function () {
             let self = this;
@@ -4481,7 +4545,8 @@
             // Add template to this views el now so child view el selectors exist when they are instantiated
             self.$el.html(this.template());
             this.addAll();
-            self.$el.find('[data-toggle="tooltip"]').tooltip();
+            self.$el.find('[data-toggle="tooltip"]').tooltip({html: true});
+            self.$el.find('[data-popover="true"]').popover({html: true, title: ''});
             return this;
         },
         addOne: function (StatusManagement) {
