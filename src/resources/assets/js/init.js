@@ -81,6 +81,90 @@ App.CellEditors.Select2CellEditor = Backgrid.Extension.Select2CellEditor.extend(
     }
 });
 
+/**
+ * Overriding to catch missing columns errors
+ * Updates the position of all handlers
+ * @private
+ */
+Backgrid.Extension.OrderableColumns.prototype.updateIndicatorPosition = function () {
+    var self = this;
+    self.indicatorPositions = {};
+
+    _.each(self.indicators, function ($indicator, indx) {
+
+        if (typeof $indicator !== 'undefined') {
+            var cell = $indicator.data("column-cell");
+            var displayOrder = $indicator.data("column-displayOrder");
+
+            var left;
+            try {
+                if (cell) {
+                    left = cell.$el.position().left;
+                } else {
+                    var prevCell = self.indicators[indx - 1].data("column-cell");
+
+                    left = prevCell.$el.position().left + prevCell.$el.width();
+                }
+                self.indicatorPositions[displayOrder] = {
+                    x: left,
+                    $el: $indicator
+                };
+
+                // Get handler for current column and update position
+                $indicator.css("left", left);
+            } catch (e) {
+                //console.log(indx, $indicator, cell, displayOrder,e)
+            }
+        }
+    });
+    self.setIndicatorHeight();
+};
+/**
+ * Overriding to catch missing columns errors
+ * @method applyStateToColumns
+ * @private
+ */
+Backgrid.Extension.ColumnManager.prototype.applyStateToColumns = function () {
+    var self = this;
+
+    // Loop state
+    var ordered = false;
+    try {
+
+        _.each(this.state, function (columnState) {
+            // Find column
+            var column = self.columns.findWhere({
+                name: columnState.name
+            });
+            if (typeof column !== 'undefined') {
+                if (_.has(columnState, "renderable")) {
+                    column.set("renderable", columnState.renderable);
+                }
+                if (_.has(columnState, "width")) {
+                    var oldWidth = column.get("width");
+                    column.set("width", columnState.width, {silent: true});
+                    if (oldWidth !== columnState.width) {
+                        column.trigger("resize", column, columnState.width, oldWidth);
+                    }
+                }
+
+                if (_.has(columnState, "displayOrder")) {
+                    if (columnState.displayOrder !== column.get("displayOrder")) {
+                        ordered = true;
+                    }
+                    column.set("displayOrder", columnState.displayOrder, {silent: true});
+                }
+            }
+        });
+    } catch (e) {
+
+    }
+
+    if (ordered) {
+        self.columns.sort();
+        self.columns.trigger("ordered");
+    }
+};
 
 /**
  * underscore template helper
