@@ -51,14 +51,14 @@ use Dhayakawa\SpringIntoAction\Models\GroveIndividual;
 class ProjectRegistrationController extends BaseController
 {
     use \Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
-    
+
     public function store(Request $request)
     {
         $params = $request->all();
         $aContactInfo = $params['contact_info'];
         $ProjectID = $params['ProjectID'];
         $ProjectRoleID = 4;
-        
+
         if (is_array($aContactInfo)) {
             foreach ($aContactInfo as $contactInfo) {
                 $volunteer = Volunteer::where('Email', $contactInfo['Email'])->get()->first();
@@ -66,13 +66,13 @@ class ProjectRegistrationController extends BaseController
                     $volunteerID = $volunteer->VolunteerID;
                 } else {
                     $model = new Volunteer;
-                    
+
                     $defaultData = $model->getDefaultRecordData();
                     $contactInfo = array_merge($defaultData, $contactInfo);
                     $contactInfo['Active'] = 1;
                     $contactInfo['Status'] = 5;
                     $contactInfo['FullName'] = "{$contactInfo['FirstName']} {$contactInfo['LastName']}";
-                    
+
                     if (isset($contactInfo['PreferredSiteID']) && $contactInfo['PreferredSiteID'] === '') {
                         $contactInfo['PreferredSiteID'] = 0;
                     }
@@ -90,7 +90,7 @@ class ProjectRegistrationController extends BaseController
                             }
                         }
                     );
-                    
+
                     $model->fill($aContactInfo);
                     $model->save();
                     $volunteerID = $model->VolunteerID;
@@ -98,7 +98,7 @@ class ProjectRegistrationController extends BaseController
                 $model = new ProjectVolunteer;
                 $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $ProjectID]);
                 $success = $model->save();
-                
+
                 $model = new ProjectVolunteerRole;
                 $model->fill(
                     [
@@ -111,17 +111,12 @@ class ProjectRegistrationController extends BaseController
                 if (!$success) {
                     $batchSuccess = false;
                 } else {
-                    $volunteerCnt = ProjectVolunteer::where('ProjectID', $ProjectID)->get()->count();
-                    $projectModel = Project::find($ProjectID);
-                    $projectModel->VolunteersAssigned = $volunteerCnt;
-                    $projectModel->save();
-                    
                     ProjectReservation::where('session_id', $request->session()->getId())->delete();
                     $request->session()->regenerate();
                 }
             }
         }
-        
+
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Registration Not Implemented Yet.'];
         } elseif ($success) {
@@ -133,22 +128,22 @@ class ProjectRegistrationController extends BaseController
         } else {
             $response = ['success' => false, 'msg' => 'Project Registration Failed.'];
         }
-        
+
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
-    
+
     public function getFilteredProjectList(Request $request)
     {
         $requestData = $request->all();
-        
+
         $aFilter = isset($requestData['filter']) ? $requestData['filter'] : [];
         $sortBy = isset($requestData['sort_by']) && !empty($requestData['sort_by']) ? $requestData['sort_by'] : null;
-        
+
         $all_projects = $this->getProjectList($aFilter, $sortBy);
-        
+
         return $all_projects;
     }
-    
+
     public function reserve(Request $request)
     {
         try {
@@ -159,12 +154,12 @@ class ProjectRegistrationController extends BaseController
             $model = new ProjectReservation;
             $data = $request->only($model->getFillable());
             $data['session_id'] = $request->session()->getId();
-            
+
             $model->fill($data);
         }
-        
+
         $success = $model->save();
-        
+
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Reservation Not Implemented Yet.'];
         } elseif ($success) {
@@ -172,32 +167,32 @@ class ProjectRegistrationController extends BaseController
         } else {
             $response = ['success' => false, 'msg' => 'Project Reservation Failed.'];
         }
-        
+
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
-    
+
     public function deleteReservation(Request $request, $ProjectID)
     {
         $success =
             ProjectReservation::where('session_id', $request->session()->getId())
                               ->where('ProjectID', $ProjectID)
                               ->delete();
-        
+
         if ($success) {
             $response = ['success' => true, 'msg' => 'Project Reservation Delete Succeeded.'];
         } else {
             $response = ['success' => false, 'msg' => 'Project Reservation Delete Failed.'];
         }
-        
+
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
-    
+
     public function groveLogin(Request $request)
     {
         $login = $request->GroveEmail;
         $password = $request->GrovePassword;
         $RegisterProcessType = $request->RegisterProcessType;
-        
+
         $groveApi = new GroveApi();
         $response = $groveApi->individual_profile_from_login_password($login, $password);
         \Illuminate\Support\Facades\Log::debug(
@@ -221,9 +216,9 @@ class ProjectRegistrationController extends BaseController
             $lastName = $individual['last_name'];
             $groveId = $individual["@attributes"]['id'];
             $contact_info = [];
-            
+
             $success = true;
-            
+
             if ($RegisterProcessType === 'family') {
                 $aMembers = $this->getFamilyFromDb(
                     $individual['family']['@attributes']['id']
@@ -278,7 +273,7 @@ class ProjectRegistrationController extends BaseController
         } else {
             $success = false;
         }
-        
+
         // $contact_info = [];
         // for($i=0;$i<10;$i++){
         //     $contact_info[]= [
@@ -296,10 +291,10 @@ class ProjectRegistrationController extends BaseController
         } else {
             $response = ['success' => false, 'msg' => 'Grove Login Failed.'];
         }
-        
+
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
-    
+
     public function getLifeGroupFromDb($groveId)
     {
         $loggedInLifeGroup = LifeGroups::where('individual_id', '=', $groveId)->get()->first();
@@ -317,10 +312,10 @@ class ProjectRegistrationController extends BaseController
                 unset($aLifeGroupMembers[$idx]);
             }
         }
-        
+
         return $aLifeGroupMembers;
     }
-    
+
     public function getFamilyFromDb($family_id)
     {
         $GroveIndividual = new GroveIndividual();
@@ -336,10 +331,10 @@ class ProjectRegistrationController extends BaseController
                 unset($aFamilyMembers[$idx]);
             }
         }
-        
+
         return $aFamilyMembers;
     }
-    
+
     public function getFamilyFromGroveApi($family_id)
     {
         $family_members = [];
@@ -380,17 +375,17 @@ class ProjectRegistrationController extends BaseController
                 ];
             }
         }
-        
+
         return $family_members;
     }
-    
+
     public function getMeetsAgeRequirement($birthday)
     {
         $datetime1 = date_create(date('Y-m-d'));
         $datetime2 = date_create($birthday);
         $interval = date_diff($datetime1, $datetime2);
         $age = $interval->format('%y');
-        
+
         return $age >= 16;
     }
 }
