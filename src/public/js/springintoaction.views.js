@@ -4263,13 +4263,15 @@
             self.pendingIcon = self.defaultStateIcon + ' text-warning';
             self.validateIcon = 'fas fa-dot-circle text-warning';
             self.notDoneIcon = self.defaultStateIcon + ' text-danger';
-            _.bindAll(this, 'render','setPopOverContent');
+            _.bindAll(this, 'render','setPopOverContent','closeStatusManagementOptionPopover','saveStatusManagementOption');
         },
         events: {
             'click button': 'update',
             'change .form-control': 'enableSave',
             'change [name="value"]': 'enableSave',
-            'inserted.bs.popover [data-popover="true"]' : 'setPopOverContent'
+            'inserted.bs.popover [data-popover="true"]' : 'setPopOverContent',
+            'click .popover-status-management-form .cancel': 'closeStatusManagementOptionPopover',
+            'click .popover-status-management-form .save': 'saveStatusManagementOption',
         },
         render: function () {
             let self = this;
@@ -4289,153 +4291,171 @@
             let iVolunteerAssignmentCompleteCnt = 0;
 
             for (let i = 0; i < projectCnt; i++) {
-
-                switch (modelAttributes.projects[i].Status) {
-                    case '1':
-                        modelAttributes.projects[i].statusState = self.notDoneIcon + ' blank';
-                        break;
-                    case 2:
-                    case '2':
-                        modelAttributes.projects[i].statusState = self.doneIcon + ' dn-district';
-                        break;
-                    case 3:
-                    case '3':
-                        modelAttributes.projects[i].statusState = self.doneIcon + ' dn-woodlands';
-                        break;
-                    case 4:
-                    case '4':
-                        modelAttributes.projects[i].statusState = self.doneIcon + ' na-district';
-                        break;
-                    case 5:
-                    case '5':
-                        modelAttributes.projects[i].statusState = self.doneIcon + ' na-woodlands';
-                        break;
-                    case 6:
-                    case '6':
-                        modelAttributes.projects[i].statusState = self.pendingIcon + ' pending';
-                        break;
-                    case 7:
-                    case '7':
-                        modelAttributes.projects[i].statusState = self.doneIcon + ' approved';
-                        break;
-                    case 8:
-                    case '8':
-                        modelAttributes.projects[i].statusState = self.doneIcon + ' cancelled';
-                        break;
-                    default:
-                        modelAttributes.projects[i].statusState = self.notDoneIcon;
-                }
-
-                if (modelAttributes.projects[i].EstimatedCost !== '0.0000' && modelAttributes.projects[i].CostEstimateDone === 0) {
-                    modelAttributes.projects[i].costEstimateState = self.validateIcon;
-                } else {
-                    modelAttributes.projects[i].costEstimateState = (modelAttributes.projects[i].CostEstimateDone === 1 ? self.doneIcon : self.notDoneIcon);
-                    if (modelAttributes.projects[i].CostEstimateDone === 1) {
-                        iBudgetEstimationCompleteCnt++;
-                    }
-                }
-
-                if (modelAttributes.projects[i].BudgetSources !== '' && modelAttributes.projects[i].BudgetAllocationDone === 0) {
-                    modelAttributes.projects[i].budgetAllocationState = self.validateIcon;
-                } else {
-                    modelAttributes.projects[i].budgetAllocationState = (modelAttributes.projects[i].BudgetAllocationDone === 1 ? self.doneIcon : self.notDoneIcon);
-                    if (modelAttributes.projects[i].BudgetAllocationDone === 1) {
-                        iBudgetActualCompleteCnt++;
-                    }
-                }
-
-                if (modelAttributes.projects[i].MaterialsNeeded !== '' && modelAttributes.projects[i].MaterialListDone === 0) {
-                    modelAttributes.projects[i].materialListState = self.validateIcon;
-                } else {
-                    modelAttributes.projects[i].materialListState = (modelAttributes.projects[i].MaterialListDone === 1 ? self.doneIcon : self.notDoneIcon);
-                }
-
-                if (modelAttributes.projects[i].VolunteersNeededEst !== 0 && modelAttributes.projects[i].VolunteerAllocationDone === 0) {
-                    modelAttributes.projects[i].volunteerAllocationState = self.validateIcon;
-                } else {
-                    modelAttributes.projects[i].volunteerAllocationState = (modelAttributes.projects[i].VolunteerAllocationDone === 1 ? self.doneIcon : self.notDoneIcon);
-                    if (modelAttributes.projects[i].VolunteerAllocationDone === 1) {
-                        iVolunteerEstimationCompleteCnt++;
-                    }
-                }
-                modelAttributes.projects[i].finalCompletionStatusStatus = (modelAttributes.projects[i].FinalCompletionStatus === 1 ? self.doneIcon : self.notDoneIcon);
-
-                if (modelAttributes.projects[i].VolunteersNeededEst !== 0 && modelAttributes.projects[i].VolunteersAssigned === modelAttributes.projects[i].VolunteersNeededEst) {
-                    iVolunteerAssignmentCompleteCnt++;
-                }
-
-                modelAttributes.projects[i].projectSendState = self.notDoneIcon + ' not-ready-state';
-                if (modelAttributes.projects[i].ProjectSend === '4' || modelAttributes.projects[i].ProjectSend === 4) {
-                    modelAttributes.projects[i].projectSendState = self.doneIcon + ' sent-state';
-                } else if (modelAttributes.projects[i].ProjectSend === '3' || modelAttributes.projects[i].ProjectSend === 3) {
-                    modelAttributes.projects[i].projectSendState = self.validateIcon + ' ready-state';
-                }
-
-                if (modelAttributes.projects[i].ProjectDescription === '') {
-                    modelAttributes.projects[i].projectDescriptionState = 'fa fa-info-circle text-danger';
-                    modelAttributes.projects[i].ProjectDescription = 'Project Description is not set yet.';
-                } else {
-                    modelAttributes.projects[i].projectDescriptionState = 'fa fa-info-circle text-success';
-                    iProjectDescriptionCompleteCnt++;
-                }
-                /**
-                 * Setup for tooltips
-                 */
-                modelAttributes.projects[i].ProjectDescriptionToolTipContent = self.cleanForToolTip(modelAttributes.projects[i].ProjectDescription);
-                modelAttributes.projects[i].StatusToolTipContent = self.cleanForToolTip(self.getProjectStatusOptionLabel(modelAttributes.projects[i].Status));
-                modelAttributes.projects[i].CostEstimateToolTipContent = self.cleanForToolTip(modelAttributes.projects[i].EstimatedCost);
-                let budgetTotal = 0.00;
-                let budgetToolTip = "<table class='tooltip-table table table-condensed'>";
-                budgetToolTip += '<thead><tr><th>Amt</th><th>Source</th><th>Comment</th></tr></thead><tbody>';
-                let aBudgets = App.Collections.annualBudgetsManagementCollection.where({ProjectID: modelAttributes.projects[i].ProjectID});
-                _.each(aBudgets, function (budget, idx) {
-                    budgetTotal += parseFloat(budget.get('BudgetAmount'));
-                    budgetToolTip += '<tr><td>' + budget.get('BudgetAmount') + '</td><td>' + self.getBudgetSourceOptionLabel(budget.get('BudgetSource')) + '</td><td class=\'hide-overflow\'>' + budget.get('Comments') + '</td></tr>';
-                });
-                budgetToolTip += '<tr><td>' + budgetTotal.toString() + '</td><td colspan=\'2\'><strong>Total</strong></td></tr>';
-                budgetToolTip += '</tbody></table>';
-
-                modelAttributes.projects[i].BudgetAllocationToolTipContent = self.cleanForToolTip(budgetToolTip);
-                modelAttributes.projects[i].MaterialListToolTipContent = self.cleanForToolTip(modelAttributes.projects[i].MaterialsNeeded);
-                modelAttributes.projects[i].VolunteerAllocationToolTipContent = self.cleanForToolTip(modelAttributes.projects[i].VolunteersNeededEst);
-                modelAttributes.projects[i].ProjectSendToolTipContent = self.cleanForToolTip(self.getSendStatusOptionLabel(modelAttributes.projects[i].ProjectSend));
-                modelAttributes.projects[i].FinalCompletionStatusToolTipContent = self.cleanForToolTip(self.getYesNoOptionLabel(modelAttributes.projects[i].FinalCompletionStatus));
+                [modelAttributes.projects[i], iBudgetEstimationCompleteCnt, iBudgetActualCompleteCnt, iVolunteerEstimationCompleteCnt, iVolunteerAssignmentCompleteCnt, iProjectDescriptionCompleteCnt] = self.setProjectStatus(modelAttributes.projects[i], iBudgetEstimationCompleteCnt, iBudgetActualCompleteCnt, iVolunteerEstimationCompleteCnt, iVolunteerAssignmentCompleteCnt, iProjectDescriptionCompleteCnt);
             }
 
             /**
              * Setup for Site Statuses
              */
             if (iProjectDescriptionCompleteCnt === projectCnt && modelAttributes.ProjectDescriptionComplete === 0) {
-                modelAttributes.projectDescriptionState = self.validateIcon;
+                modelAttributes.projectDescriptionCompleteState = self.validateIcon;
             } else {
-                modelAttributes.projectDescriptionState = (modelAttributes.ProjectDescriptionComplete === 1 ? self.doneIcon : self.notDoneIcon);
+                modelAttributes.projectDescriptionCompleteState = (modelAttributes.ProjectDescriptionComplete === 1 ? self.doneIcon : self.notDoneIcon);
             }
 
             if (iBudgetEstimationCompleteCnt === projectCnt && modelAttributes.BudgetEstimationComplete === 0) {
-                modelAttributes.budgetEstimationState = self.validateIcon;
+                modelAttributes.budgetEstimationCompleteState = self.validateIcon;
             } else {
-                modelAttributes.budgetEstimationState = (modelAttributes.BudgetEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
+                modelAttributes.budgetEstimationCompleteState = (modelAttributes.BudgetEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
             }
 
             if (iBudgetEstimationCompleteCnt === projectCnt && modelAttributes.BudgetActualComplete === 0) {
-                modelAttributes.budgetActualState = self.validateIcon;
+                modelAttributes.budgetActualCompleteState = self.validateIcon;
             } else {
-                modelAttributes.budgetActualState = (modelAttributes.BudgetActualComplete === 1 ? self.doneIcon : self.notDoneIcon);
+                modelAttributes.budgetActualCompleteState = (modelAttributes.BudgetActualComplete === 1 ? self.doneIcon : self.notDoneIcon);
             }
 
             if (iVolunteerEstimationCompleteCnt === projectCnt && modelAttributes.VolunteerEstimationComplete === 0) {
-                modelAttributes.volunteerEstimationState = self.validateIcon;
+                modelAttributes.volunteerEstimationCompleteState = self.validateIcon;
             } else {
-                modelAttributes.volunteerEstimationState = (modelAttributes.VolunteerEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
+                modelAttributes.volunteerEstimationCompleteState = (modelAttributes.VolunteerEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
             }
 
             if (iVolunteerAssignmentCompleteCnt === projectCnt && modelAttributes.VolunteerAssignmentComplete === 0) {
-                modelAttributes.volunteerAssignmentState = self.validateIcon;
+                modelAttributes.volunteerAssignmentCompleteState = self.validateIcon;
             } else {
-                modelAttributes.volunteerAssignmentState = (modelAttributes.VolunteerEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
+                modelAttributes.volunteerAssignmentCompleteState = (modelAttributes.VolunteerEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
             }
 
             return modelAttributes;
+        },
+        setProjectStatus: function(project, iBudgetEstimationCompleteCnt, iBudgetActualCompleteCnt, iVolunteerEstimationCompleteCnt, iVolunteerAssignmentCompleteCnt, iProjectDescriptionCompleteCnt){
+            let self = this;
+            switch (project.Status) {
+                case '1':
+                    project.statusState = self.notDoneIcon + ' blank';
+                    break;
+                case 2:
+                case '2':
+                    project.statusState = self.doneIcon + ' dn-district';
+                    break;
+                case 3:
+                case '3':
+                    project.statusState = self.doneIcon + ' dn-woodlands';
+                    break;
+                case 4:
+                case '4':
+                    project.statusState = self.doneIcon + ' na-district';
+                    break;
+                case 5:
+                case '5':
+                    project.statusState = self.doneIcon + ' na-woodlands';
+                    break;
+                case 6:
+                case '6':
+                    project.statusState = self.pendingIcon + ' pending';
+                    break;
+                case 7:
+                case '7':
+                    project.statusState = self.doneIcon + ' approved';
+                    break;
+                case 8:
+                case '8':
+                    project.statusState = self.doneIcon + ' cancelled';
+                    break;
+                default:
+                    project.statusState = self.notDoneIcon;
+            }
+
+            if (project.EstimatedCost !== '0.0000' && parseInt(project.CostEstimateDone) === 0) {
+                project.costEstimateDoneState = self.validateIcon;
+            } else {
+                project.costEstimateDoneState = (parseInt(project.CostEstimateDone) === 1 ? self.doneIcon : self.notDoneIcon);
+                if (parseInt(project.CostEstimateDone) === 1) {
+                    if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
+                        iBudgetEstimationCompleteCnt++;
+                    }
+                }
+            }
+
+            if (project.BudgetSources !== '' && project.BudgetAllocationDone === 0) {
+                project.budgetAllocationDoneState = self.validateIcon;
+            } else {
+                project.budgetAllocationDoneState = (project.BudgetAllocationDone === 1 ? self.doneIcon : self.notDoneIcon);
+                if (project.BudgetAllocationDone === 1) {
+                    if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
+                        iBudgetActualCompleteCnt++;
+                    }
+                }
+            }
+
+            if (project.MaterialsNeeded !== '' && project.MaterialListDone === 0) {
+                project.materialListDoneState = self.validateIcon;
+            } else {
+                project.materialListDoneState = (project.MaterialListDone === 1 ? self.doneIcon : self.notDoneIcon);
+            }
+
+            if (project.VolunteersNeededEst !== 0 && project.VolunteerAllocationDone === 0) {
+                project.volunteerAllocationDoneState = self.validateIcon;
+            } else {
+                project.volunteerAllocationDoneState = (project.VolunteerAllocationDone === 1 ? self.doneIcon : self.notDoneIcon);
+                if (project.VolunteerAllocationDone === 1) {
+                    if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
+                        iVolunteerEstimationCompleteCnt++;
+                    }
+                }
+            }
+            project.finalCompletionStatusStatus = (project.FinalCompletionStatus === 1 ? self.doneIcon : self.notDoneIcon);
+
+            if (project.VolunteersNeededEst !== 0 && project.VolunteersAssigned === project.VolunteersNeededEst) {
+                if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
+                    iVolunteerAssignmentCompleteCnt++;
+                }
+            }
+
+            project.projectSendState = self.notDoneIcon + ' not-ready-state';
+            if (project.ProjectSend === '4' || project.ProjectSend === 4) {
+                project.projectSendState = self.doneIcon + ' sent-state';
+            } else if (project.ProjectSend === '3' || project.ProjectSend === 3) {
+                project.projectSendState = self.validateIcon + ' ready-state';
+            }
+
+            if (project.ProjectDescription === '') {
+                project.projectDescriptionState = 'fa fa-info-circle text-danger';
+                project.ProjectDescription = 'Project Description is not set yet.';
+            } else {
+                project.projectDescriptionState = 'fa fa-info-circle text-success';
+                if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
+                    iProjectDescriptionCompleteCnt++;
+                }
+            }
+            /**
+             * Setup for tooltips
+             */
+            project.ProjectDescriptionToolTipContent = self.cleanForToolTip(project.ProjectDescription);
+            project.StatusToolTipContent = self.cleanForToolTip(self.getProjectStatusOptionLabel(project.Status));
+            project.CostEstimateToolTipContent = self.cleanForToolTip(project.EstimatedCost);
+            let budgetTotal = 0.00;
+            let budgetToolTip = "<table class='tooltip-table table table-condensed'>";
+            budgetToolTip += '<thead><tr><th>Amt</th><th>Source</th><th>Comment</th></tr></thead><tbody>';
+            let aBudgets = App.Collections.annualBudgetsManagementCollection.where({ProjectID: project.ProjectID});
+            _.each(aBudgets, function (budget, idx) {
+                budgetTotal += parseFloat(budget.get('BudgetAmount'));
+                budgetToolTip += '<tr><td>' + budget.get('BudgetAmount') + '</td><td>' + self.getBudgetSourceOptionLabel(budget.get('BudgetSource')) + '</td><td class=\'hide-overflow\'>' + budget.get('Comments') + '</td></tr>';
+            });
+            budgetToolTip += '<tr><td>' + budgetTotal.toString() + '</td><td colspan=\'2\'><strong>Total</strong></td></tr>';
+            budgetToolTip += '</tbody></table>';
+
+            project.BudgetAllocationToolTipContent = self.cleanForToolTip(budgetToolTip);
+            project.MaterialListToolTipContent = self.cleanForToolTip(project.MaterialsNeeded);
+            project.VolunteerAllocationToolTipContent = self.cleanForToolTip(project.VolunteersNeededEst);
+            project.ProjectSendToolTipContent = self.cleanForToolTip(self.getSendStatusOptionLabel(project.ProjectSend));
+            project.FinalCompletionStatusToolTipContent = self.cleanForToolTip(self.getYesNoOptionLabel(project.FinalCompletionStatus));
+            if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
+                return [project, iBudgetEstimationCompleteCnt, iBudgetActualCompleteCnt, iVolunteerEstimationCompleteCnt, iVolunteerAssignmentCompleteCnt, iProjectDescriptionCompleteCnt];
+            } else {
+                return project;
+            }
         },
         getBudgetSourceOptionLabel: function (optionId) {
             let label = '';
@@ -4474,57 +4494,85 @@
         },
         setPopOverContent: function(e){
             let self = this;
+            let aOptions = [];
+            let aYesNoOptions = [{option_label: 'Yes',option_value: 1}, {option_label: 'No', option_value: 0}];
             let $icon = $(e.currentTarget);
+            if ($icon.data('model') === 'project'){
+                switch ($icon.data('field')) {
+                    case 'CostEstimateDone':
+                    case 'BudgetAllocationDone':
+                    case 'MaterialListDone':
+                    case 'VolunteerAllocationDone':
+                    case 'VolunteerEstimationComplete':
+                    case 'VolunteerAssignmentComplete':
+                    case 'ProjectDescriptionComplete':
+                    case 'BudgetEstimationComplete':
+                        aOptions = aYesNoOptions;
+                        break;
+                    case 'Status':
+                        break;
+                    case 'ProjectSend':
+                        break;
+                }
+            }
             let $popover = $icon.siblings('.popover');
             $popover.find('.popover-title').html('<strong>Update '+ $icon.data('field') +'</strong>');
-            $popover.find('.popover-content').html('<strong>hi</strong>');
-            console.log('setPopOverContent',e, $popover)
+            let sOptions = '';
+            _.each(aOptions,  function (option,key) {
+                let currentValue = App.Collections.allProjectsCollection.get($icon.data('id'));
+                let checked = currentValue.get($icon.data('field')).toString() === option.option_value.toString() ? 'checked' : '';
+                sOptions += '<div class="radio"><label><input type="radio" '+ checked +' name="'+ $icon.data('field')+'" value="' + option.option_value + '"/>'+ option.option_label+'</label></div>';
+            });
+            let sHiddenInputs = '<input type="hidden" name="model" value="'+ $icon.data('model')+'"/><input type="hidden" name="id" value="'+ $icon.data('id')+'"/><input type="hidden" name="field" value="'+ $icon.data('field')+'"/>';
+            let sForm = '<form class="popover-status-management-form" name="status-management-option-update-'+ $icon.data('field')+'-'+ $icon.data('id')+'">'+ sHiddenInputs + sOptions +'<div class="text-right"><button class="cancel btn btn-default">Cancel</button> <button class="save btn btn-primary">Save</button></div></form>';
+            $popover.find('.popover-content').html(sForm);
+
         },
-        enableSave: function () {
+        saveStatusManagementOption: function(e){
             let self = this;
-            //self.$el.find('button').removeClass('disabled');
-        }
-        ,
-        disableSave: function () {
-            let self = this;
-            //self.$el.find('button').addClass('disabled');
-        }
-        ,
-        update: function (e) {
             e.preventDefault();
+            let $form = $(e.currentTarget).parents('form');
+            let modelType = $form.find('[name="model"]').val();
+            let modelField = $form.find('[name="field"]').val();
+            let modelId = $form.find('[name="id"]').val();
+            let modelFieldValue = $form.find('[name="'+ modelField +'"]:checked').val();
+            let $icon = $form.parents('.popover').siblings('i');
+            //console.log(e, modelType, modelField, modelId, modelFieldValue, $form.serialize());
+            if (modelType==='project') {
+                let projectModel = App.Collections.allProjectsCollection.get(modelId);
+                projectModel.url = '/admin/project/' + modelId;
+               console.log({[modelField]: modelFieldValue})
+                projectModel.save({[modelField]: modelFieldValue},
+                    {
+                        success: function (savedModel, response, options) {
+                            growl(response.msg, response.success ? 'success' : 'error');
+                            $icon.trigger('click');
+                            $icon.removeClass();
+                            $icon.addClass(self.getStatusCSS(savedModel, modelType, modelField, modelFieldValue));
+                        },
+                        error: function (model, response, options) {
+                            growl(response.msg, 'error');
+                        }
+                    });
+            }
+        },
+        closeStatusManagementOptionPopover: function (e) {
             let self = this;
+            e.preventDefault();
+            let $icon = $(e.currentTarget).parents('.popover').siblings('i');
+            $icon.trigger('click');
+        },
+        getStatusCSS: function (savedModel, modelType, modelField, modelFieldValue) {
+            let self = this;
+            if (modelType === 'project') {
+                console.log('pre', savedModel.attributes)
+                let savedModelAttributes = self.setProjectStatus(savedModel.attributes);
 
-            /*if ($(e.target).hasClass('disabled')) {
-             return;
-             }
-             let formData = $.unserialize(self.$el.find('form').serialize());
-
-             let currentModelID = formData[self.model.idAttribute];
-
-             let attributes = _.extend({[self.model.idAttribute]: currentModelID}, formData);
-             if (attributes['SiteSettingID'] === '') {
-             attributes['SiteSettingID'] = currentModelID;
-             }
-             _log('App.Views.SiteSetting.update', self.options.tab, e.changed, attributes, this.model);
-             this.model.url = '/admin/site_setting/' + currentModelID;
-             window.ajaxWaiting('show', 'form[name="SiteSetting' + currentModelID + '"]');
-             this.model.save(attributes,
-             {
-             success: function (model, response, options) {
-             _log('App.Views.SiteSetting.update', self.options.tab + ' save', model, response, options);
-             growl(response.msg, response.success ? 'success' : 'error');
-             self.disableSave();
-             window.ajaxWaiting('remove', 'form[name="SiteSetting' + currentModelID + '"]');
-             },
-             error: function (model, response, options) {
-             console.error('App.Views.SiteSetting.update', self.options.tab + ' save', model, response, options);
-             growl(response.msg, 'error');
-             self.disableSave();
-             window.ajaxWaiting('remove', 'form[name="SiteSetting' + currentModelID + '"]');
-             }
-             });*/
-        }
-        ,
+                let fieldStateVar = modelField.charAt(0).toLowerCase() + modelField.slice(1) + 'State';
+                console.log('post', savedModelAttributes, fieldStateVar, savedModelAttributes[fieldStateVar]);
+                return savedModelAttributes[fieldStateVar];
+            }
+        },
     });
 
     App.Views.StatusManagement = Backbone.View.extend({

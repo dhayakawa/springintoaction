@@ -27,11 +27,11 @@
         </thead>
         <tbody>
         <tr>
-            <td><i data-popover="true" class="<%= model.projectDescriptionState %>"></i></td>
-            <td><i data-popover="true" class="<%= model.budgetEstimationState %>"></i></td>
-            <td><i data-popover="true" class="<%= model.budgetActualState %>"></i></td>
-            <td><i data-popover="true" class="<%= model.volunteerEstimationState %>"></i></td>
-            <td><i data-popover="true" class="<%= model.volunteerAssignmentState %>"></i></td>
+            <td><i data-popover="true" class="<%= model.projectDescriptionCompleteState %>"></i></td>
+            <td><i data-popover="true" class="<%= model.budgetEstimationCompleteState %>"></i></td>
+            <td><i data-popover="true" class="<%= model.budgetActualCompleteState %>"></i></td>
+            <td><i data-popover="true" class="<%= model.volunteerEstimationCompleteState %>"></i></td>
+            <td><i data-popover="true" class="<%= model.volunteerAssignmentCompleteState %>"></i></td>
         </tr>
         <tr>
             <td colspan="5">
@@ -55,10 +55,10 @@
                         <td><i data-toggle="tooltip" title="<%= projects[i].ProjectDescriptionToolTipContent %>" class="<%= projects[i].projectDescriptionState %> pull-left"></i><%= projects[i].SequenceNumber %></td>
                         <td><%= projects[i].PM %></td>
                         <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="Status" data-popover="true" data-toggle="tooltip" title="<%= projects[i].StatusToolTipContent %>" class="<%= projects[i].statusState %>"></i></td>
-                        <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="CostEstimateDone" data-popover="true" data-toggle="tooltip" title="<%= projects[i].CostEstimateToolTipContent %>" class="<%= projects[i].costEstimateState %>"></i></td>
-                        <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="BudgetAllocationDone" data-popover="true" data-toggle="tooltip" title="<%= projects[i].BudgetAllocationToolTipContent %>" class="<%= projects[i].budgetAllocationState %>"></i></td>
-                        <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="MaterialListDone" data-popover="true" data-toggle="tooltip" title="<%= projects[i].MaterialListToolTipContent %>" class="<%= projects[i].materialListState %>"></i></td>
-                        <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="VolunteerAllocationDone" data-popover="true" data-toggle="tooltip" title="<%= projects[i].VolunteerAllocationToolTipContent %>" class="<%= projects[i].volunteerAllocationState %>"></i></td>
+                        <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="CostEstimateDone" data-popover="true" data-toggle="tooltip" title="<%= projects[i].CostEstimateToolTipContent %>" class="<%= projects[i].costEstimateDoneState %>"></i></td>
+                        <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="BudgetAllocationDone" data-popover="true" data-toggle="tooltip" title="<%= projects[i].BudgetAllocationToolTipContent %>" class="<%= projects[i].budgetAllocationDoneState %>"></i></td>
+                        <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="MaterialListDone" data-popover="true" data-toggle="tooltip" title="<%= projects[i].MaterialListToolTipContent %>" class="<%= projects[i].materialListDoneState %>"></i></td>
+                        <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="VolunteerAllocationDone" data-popover="true" data-toggle="tooltip" title="<%= projects[i].VolunteerAllocationToolTipContent %>" class="<%= projects[i].volunteerAllocationDoneState %>"></i></td>
                         <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="ProjectSend" data-popover="true" data-toggle="tooltip" title="<%= projects[i].ProjectSendToolTipContent %>" class="<%= projects[i].projectSendState %>"></i></td>
                         <td><i data-model="project" data-id="<%= projects[i].ProjectID %>" data-field="FinalCompletionStatus" data-popover="true" data-toggle="tooltip" title="<%= projects[i].FinalCompletionStatusToolTipContent %>" class="<%= projects[i].finalCompletionStatusStatus %>"></i></td>
                     </tr>
