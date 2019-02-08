@@ -73,7 +73,6 @@ class ProjectsController extends BaseController
                 $a = [
                     'ChildFriendly' => 0,
                     'VolunteersNeededEst' => 0,
-                    'VolunteersAssigned' => 0,
                     'EstimatedCost' => 0.00,
                     'ActualCost' => 0.00,
                     'BudgetAvailableForPC' => 0.00,
@@ -306,6 +305,12 @@ class ProjectsController extends BaseController
         $all_projects =
             Project::select(
                 'projects.*',
+                DB::raw(
+                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = 391) as BudgetSources'
+                ),
+                DB::raw(
+                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
+                ),
                 DB::raw(
                     '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
                 )
