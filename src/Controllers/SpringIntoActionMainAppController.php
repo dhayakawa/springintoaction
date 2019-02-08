@@ -50,7 +50,7 @@ class SpringIntoActionMainAppController extends BaseController
                 bcrypt('pointamber'),
             ]
         );*/
-        $this->fixProjectData();
+        //$this->fixProjectData();
         $year = $request->input('year');
         if (!$year) {
             $yearNow = date('Y');

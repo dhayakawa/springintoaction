@@ -115,45 +115,6 @@ class Project extends Model
      */
     private $aSortedProjectSkillNeededOptionsOrder = [];
 
-    public function getVolunteersAssignedAttribute($value)
-    {
-        \Illuminate\Support\Facades\Log::debug(
-            '',
-            ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $value]
-        );
-
-        return ProjectVolunteer::where('ProjectID', '=', $this->attributes['ProjectID'])->get()->count();
-    }
-
-    public function getBudgetSourcesAttribute($value)
-    {
-        \Illuminate\Support\Facades\Log::debug(
-            '',
-            ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $value]
-        );
-        $sBudgetSources = '';
-        try {
-            $aBudgets =
-                Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')->join(
-                    'budget_status_options',
-                    function ($join) {
-                        $join->on('budget_status_options.id', '=', 'budgets.Status')->where(
-                            'option_label',
-                            '=',
-                            'Approved'
-                        );
-                    }
-                )->where('ProjectID', '=', $this->attributes['ProjectID'])->get()->pluck('id');
-            if (!empty($aBudgets)) {
-                // return a string formatted for the grid
-                $sBudgetSources = trim(join('; ', $aBudgets));
-            }
-        } catch (\Exception $e) {
-        }
-
-        return $sBudgetSources;
-    }
-
     /**
      * @param null|array $defaults
      *
@@ -251,29 +212,6 @@ FROM (
     }
 
     /**
-     * @param $Year
-     */
-    public function updateVolunteersAssigned($Year)
-    {
-        /*$projectStatusOptions = new ProjectStatusOptions();
-        $ProjectStatusOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
-        $all_projects = Project::select(
-            'projects.*'
-        )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-            'site_status.Year',
-            $Year
-        )->where('projects.Active', 1)->where('projects.Status', $ProjectStatusOptionID)->get();
-
-        foreach($all_projects as $projectModel){
-            $volunteerCnt = ProjectVolunteer::where('ProjectID', $projectModel->ProjectID)->get()->count();
-            if ($projectModel->VolunteersAssigned !== $volunteerCnt) {
-                $projectModel->VolunteersAssigned = $volunteerCnt;
-                $projectModel->save();
-            }
-        }*/
-    }
-
-    /**
      * @param       $Year
      * @param array $filter
      * @param null  $orderBy
@@ -282,7 +220,6 @@ FROM (
      */
     public function getRegistrationProjects($Year, $filter = [], $orderBy = null)
     {
-        $this->updateVolunteersAssigned($Year);
         $projectStatusOptions = new ProjectStatusOptions();
         $ProjectStatusOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
         $passedInOrderBy = $orderBy;
@@ -296,6 +233,7 @@ FROM (
             list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
+        $sSqlVolunteersAssigned = "(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID )";
         $sSqlProjectsAt80Perc = "(select count(*)
             from projects p
                    join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year}
@@ -314,10 +252,10 @@ FROM (
                 'projects.ChildFriendly',
                 DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"),
                 DB::raw(
-                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
+                    "{$sSqlVolunteersAssigned} as VolunteersAssigned"
                 ),
                 DB::raw(
-                    "({$sSqlVolunteersNeeded} - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < " .
+                    "({$sSqlVolunteersNeeded} - {$sSqlVolunteersAssigned} - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < " .
                     config('springintoaction.registration.reservation_lifetime_minutes') .
                     " )) as PeopleNeeded"
                 ),
@@ -327,7 +265,7 @@ FROM (
             $Year
         )->join('sites', 'site_status.SiteID', '=', 'sites.SiteID')->where(
             DB::raw(
-                "({$sSqlVolunteersNeeded} - VolunteersAssigned - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < " .
+                "({$sSqlVolunteersNeeded} - {$sSqlVolunteersAssigned} - (select count(*) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < " .
                 config('springintoaction.registration.reservation_lifetime_minutes') .
                 " ))"
             ),
