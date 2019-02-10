@@ -5,6 +5,7 @@
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Models\SiteStatus;
+    use Dhayakawa\SpringIntoAction\Models\Project;
 
     class SiteStatusController extends BaseController {
 
@@ -111,5 +112,10 @@
             $site_years = SiteStatus::select('SiteStatusID', 'SiteID', 'Year')->where('SiteID', $SiteID)->orderBy('Year', 'desc')->get()->toArray();
 
             return $site_years;
+        }
+
+        public function getStatusManagementRecords(){
+            $projectModel = new Project();
+            return $projectModel->getStatusManagementRecords();
         }
     }
