@@ -65,7 +65,7 @@ class ProjectRegistrationController extends BaseController
                 if (!empty($volunteer)) {
                     $volunteerID = $volunteer->VolunteerID;
                 } else {
-                    $model = new Volunteer;
+                    $model = new Volunteer();
 
                     $defaultData = $model->getDefaultRecordData();
                     $contactInfo = array_merge($defaultData, $contactInfo);
@@ -91,7 +91,16 @@ class ProjectRegistrationController extends BaseController
                         }
                     );
 
-                    $model->fill($aContactInfo);
+                    $model->fill($contactInfo);
+
+                    \Illuminate\Support\Facades\Log::debug('',
+                                                           [
+                                                               'File:' . __FILE__,
+                                                               'Method:' . __METHOD__,
+                                                               'Line:' . __LINE__,
+                                                               $contactInfo,$model->toArray()
+                                                           ]
+                    );
                     $model->save();
                     $volunteerID = $model->VolunteerID;
                 }

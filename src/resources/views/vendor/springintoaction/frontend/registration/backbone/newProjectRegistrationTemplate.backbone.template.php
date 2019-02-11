@@ -1,11 +1,12 @@
 <div class="row reservation-wrapper">
     <div class="col-xs-12">
         <p class="steps-help">
-            How many people, 16 years old or older, would you like to register right now? There are currently <%= volunteersNeeded %> open
-            spots. <br>
-            We'll temporarily reserve the spots for you until you finish registering.
+            How many people would you like to register right now? They must be at least 16 years old.<br><br>
+            There are currently <strong><%= volunteersNeeded %></strong> open spots. <br>
+            We'll temporarily reserve the spots for you until you finish registering.<br>
+            <small class="text-muted">*Children under 16 are welcome to participate even though they are not registered.</small>
         </p>
-        <form name="newProjectReservation">
+        <form autocomplete="new-project-reservation-<% print(Math.random().toString()) %>" name="newProjectReservation">
             <input type="hidden" name="_token" value="<%= CsrfToken %>">
             <input type="hidden" name="ProjectID" value="<%= ProjectID %>" />
             <div class="form-group">
@@ -24,7 +25,7 @@
     </div>
 </div>
 <script type="text/javascript">document.newProjectReservation.reserve.focus();</script>
-<form name="newProjectRegistration">
+<form autocomplete="new-project-registration-<% print(Math.random().toString()) %>" name="newProjectRegistration">
     <input type="hidden" name="_token" value="<%= CsrfToken %>">
     <input type="hidden" name="ProjectID" value="<%= ProjectID %>"/>
     <div class="registration-form-body-wrapper">
@@ -103,7 +104,7 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <div class="step-help">
-                            Step help
+                            Please only register children who are 16 and older. All registration fields are required. If you do not have a mobile phone number you can enter your home phone number.
                         </div>
                     </div>
                 </div>
@@ -127,22 +128,22 @@
                                     name="register-process-type"
                                     class="manual-register"
                                     id="auto-register-manual"
-                                    value="manual"/> No, thanks, just let me enter in the contact information for everyone.</label>
+                                    value="manual"/> No thanks, just let me enter in the contact information for everyone.</label>
                         </div>
                     </div>
                 </div>
                 <div class="row grove-login">
                     <div class="col-xs-4">
                         <div class="form-group">
-                            <label for="inputGroveEmail">Grove Email:</label>
+                            <label for="inputGroveEmail">Grove Login:</label>
                             <input type="text"
                                    name="GroveEmail"
-                                   autocomplete="off"
+                                   autocomplete="new-grove-email-<% print(Math.random().toString()) %>"
                                    class="form-control"
                                    id="inputGroveEmail"
-                                   placeholder="Grove Email"
+                                   placeholder="Grove Login"
                                    required
-                                   value="<%= testGroveEmail %>"/>
+                                   />
                         </div>
                     </div>
                     <div class="col-xs-4">
@@ -150,12 +151,12 @@
                             <label for="inputGrovePassword">Grove Password:</label>
                             <input type="password"
                                    name="GrovePassword"
-                                   autocomplete="off"
+                                   autocomplete="new-grove-password-<% print(Math.random().toString()) %>"
                                    class="form-control"
                                    id="inputGrovePassword"
                                    placeholder="Grove Password"
                                    required
-                                   value="<%= testGrovePassword %>"/>
+                                   />
                         </div>
                     </div>
                     <div class="col-xs-4">
@@ -167,7 +168,7 @@
                 </div>
 
                 <div class="row grove-register">
-                    <div class="col-xs-12">
+                    <div class="col-xs-12 table-responsive">
                         Uncheck any people you do not need to register.
                         <table class="grove-contacts-confirm-list table table-striped table-condensed">
                             <tbody></tbody>
@@ -200,7 +201,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-xs-12">
+                    <div class="col-xs-12 table-responsive">
                         <table class="project-registration-confirm-list table table-striped table-condensed">
                             <tbody></tbody>
                         </table>

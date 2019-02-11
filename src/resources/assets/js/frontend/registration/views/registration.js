@@ -5,18 +5,18 @@
         template: template('newProjectRegistrationContactInfoTemplate'),
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            self.options = options;
             _.bindAll(
-                this,
+                self,
                 'render',
             );
-            this.contactInfoIdx = this.options.contactInfoIdx;
-            this.fieldValidationErrors = [];
-            this.bIsWoodlands = false;
-            this.parentView = this.options.parentView;
-            this.contactInfoData = this.options.contactInfoData;
+            self.contactInfoIdx = self.options.contactInfoIdx;
+            self.fieldValidationErrors = [];
+            self.bIsWoodlands = false;
+            self.parentView = self.options.parentView;
+            self.contactInfoData = self.options.contactInfoData;
             self.bIsWoodlands = self.contactInfoData.Church === 'woodlands';
-            this.$el.addClass('contact-info-idx-' + self.contactInfoIdx);
+            self.$el.addClass('contact-info-idx-' + self.contactInfoIdx);
             _log('App.Views.ContactInfo.initialize', options);
         },
         events: {
@@ -35,10 +35,10 @@
 
             };
 
-            let html = this.template(tplVars);
-            $(this.el).html(html);
+            let html = self.template(tplVars);
+            $(self.el).html(html);
 
-            return this;
+            return self;
         },
         handleChurchSelection: function (e) {
             let self = this;
@@ -53,7 +53,8 @@
             }
         },
         getIsWoodlands: function () {
-            return this.bIsWoodlands;
+            let self = this;
+            return self.bIsWoodlands;
         },
         validateContactInfo: function () {
             let self = this;
@@ -118,9 +119,9 @@
         template: template('newProjectRegistrationTemplate'),
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            self.options = options;
             _.bindAll(
-                this,
+                self,
                 'render',
                 'registerOthers',
                 'registerAndConfirm',
@@ -131,18 +132,19 @@
                 'handleGroveLogin',
                 'submitRegistration',
                 'makeReservations',
-                'deleteRegistrationContactListItem'
+                'deleteRegistrationContactListItem',
+                'checkForReturnKey'
             );
-            this.fieldValidationErrors = [];
-            this.bIsWoodlands = false;
-            this.contactInfoIdx = 1;
-            this.contactInfoViews = [];
-            this.parentView = this.options.parentView;
-            this.iReserved = 0;
-            this.bIsGroveImport = false;
-            this.groveContacts = [];
-            this.groveContactsFinal = [];
-            App.Vars.reservationTimeoutExpire = 1000 * 60;
+            self.fieldValidationErrors = [];
+            self.bIsWoodlands = false;
+            self.contactInfoIdx = 1;
+            self.contactInfoViews = [];
+            self.parentView = self.options.parentView;
+            self.iReserved = 0;
+            self.bIsGroveImport = false;
+            self.groveContacts = [];
+            self.groveContactsFinal = [];
+            //App.Vars.reservationTimeoutExpire = 1000 * 60;
             App.Vars.reservedProjectID = null;
             clearTimeout(App.Vars.reservationTimeout);
             clearInterval(App.Vars.reservationInterval);
@@ -172,7 +174,8 @@
             'click form[name="newProjectReservation"] button': 'makeReservations',
             'click [name="register-process-type"]': 'handleRegisterProcessType',
             'click .submit-grove-login-btn': 'handleGroveLogin',
-            'click .manual-delete-registration-contact': 'deleteRegistrationContactListItem'
+            'click .manual-delete-registration-contact': 'deleteRegistrationContactListItem',
+            'keypress [name="GrovePassword"]': 'checkForReturnKey'
         },
         render: function () {
             let self = this;
@@ -184,11 +187,11 @@
                 ProjectDescription: self.model.get('ProjectDescription'),
                 testString: '',
                 testDBID: 0,
-                testGroveEmail: 'david.hayakawa@gmail.com',
-                testGrovePassword: 'jack1455'
+                testGroveEmail: '',
+                testGrovePassword: '',
 
             };
-            $(this.el).html(this.template(tplVars));
+            $(self.el).html(self.template(tplVars));
             let contactInfoDataValues = {
                 Church: '',
                 ChurchOther: '',
@@ -216,7 +219,13 @@
 
             self.$el.find('.personal-contact-info-wrapper').replaceWith(self.contactInfoViews[0].render().el);
 
-            return this;
+            return self;
+        },
+        checkForReturnKey: function(e) {
+            if (e.which == 13 || e.keyCode == 13) {
+                //code to execute here
+                $('#submit-grove-login-btn').trigger('click');
+            }
         },
         makeReservations: function (e) {
             e.preventDefault();
@@ -287,7 +296,8 @@
                     if (iCountDown <= 0) {
                         self.parentView.removeReservations();
                         clearInterval(App.Vars.reservationInterval);
-                        $confirm.find('.confirm-body').find('.confirm-question').html('<div>Your reservation has expired.</div>');
+                        let expirationMsg = 'Your reservation has expired.';
+                        $confirm.find('.confirm-body').find('.confirm-question').html('<div>'+expirationMsg+'</div>');
                         $confirm.find('.confirm-body').find('button.btn-yes').remove();
                         $confirm.find('.confirm-body').find('button.btn-no').text('OK');
                     }
@@ -352,7 +362,7 @@
 
             for (let i = 0; i < iExtraRegistrations; i++) {
                 let contact = typeof contacts !== 'undefined' && typeof contacts[i] !== 'undefined' ? contacts[i] : {};
-
+                console.log('contact',i, contact)
                 self.contactInfoViews[self.contactInfoIdx] = new App.Views.ContactInfo({
                     parentView: self,
                     contactInfoIdx: self.contactInfoIdx,
@@ -387,7 +397,7 @@
         handleRegisterProcessType: function (e) {
             let self = this;
             if (e.currentTarget.id === 'auto-register-manual') {
-                $('.grove-login').hide();
+                self.hideGroveLogin();
                 $('.manual-multiple-register').show();
                 self.buildManualContactInfo();
 
@@ -410,7 +420,7 @@
             e.preventDefault();
             let $submitBtn = $(e.currentTarget);
             $submitBtn.siblings('.spinner').remove();
-            $submitBtn.siblings('.reservation-successful').remove();
+            $submitBtn.siblings('.grove-login-result-msg').remove();
             $submitBtn.after(App.Vars.spinnerHtml);
             $.ajax({
                 type: "post",
@@ -424,22 +434,41 @@
                 },
                 success: function (response) {
                     $submitBtn.siblings('.spinner').remove();
-                    $submitBtn.after('<span class="reservation-successful text-success">Login Successful</span>');
-                    self.bIsGroveImport = true;
 
-                    self.groveContacts = response.contact_info;
-                    self.showGroveContactList();
+                    self.bIsGroveImport = true;
+                    if (response.success) {
+                        $submitBtn.after('<span class="grove-login-result-msg text-success">Login Successful</span>');
+                        self.hideGroveLogin(true);
+                        self.groveContacts = response.contact_info;
+                        self.showGroveContactList();
+                    } else {
+                        $submitBtn.after('<span class="grove-login-result-msg text-danger">Login Failed</span>');
+                    }
                 },
                 fail: function (response) {
                     console.error(response)
+                    $submitBtn.after('<span class="grove-login-result-msg text-danger">Login Error</span>');
                 }
             })
+        },
+        hideGroveLogin: function(bDelayAndFade){
+            if (_.isUndefined(bDelayAndFade) || (!_.isUndefined(bDelayAndFade) && !bDelayAndFade)) {
+                $('.grove-login').hide();
+            } else if (!_.isUndefined(bDelayAndFade) && bDelayAndFade){
+                // wait a couple seconds and then hide the grove login form
+                setTimeout(function () {
+                    $('.grove-login').fadeOut("slow", function () {
+                        // Animation complete.
+                    });
+                }, 2000);
+            }
+            $('.grove-login-result-msg').remove()
         },
         showGroveContactList: function () {
             let self = this;
             let data = {};
             let html = '';
-            if (self.groveContacts.length) {
+            if (_.isArray(self.groveContacts) && self.groveContacts.length) {
                 for (let i = 0; i < self.groveContacts.length; i++) {
                     data = self.groveContacts[i];
                     let iCnt = i + 1;
@@ -541,6 +570,7 @@
                 $('#auto-register').find('.auto-register-too-many-registrants-error').remove();
                 $('#auto-register').find('.bottom-nav-btns').before($alertHtml);
             }
+
             if (valid) {
                 self.setStepAsValidated('.step-two.steps', $(e.currentTarget));
                 self.buildConfirmationList();
@@ -603,24 +633,24 @@
                         let iCountDown = 5;
                         let $alertHtml = $('<div class="alert alert-success registration-success-alert" role="alert">Project Registration Succeeded</div><div class="registration-success-msg">' + response.msg + '</div>');
 
-                        App.Vars.Modal.find('.modal-header').remove();
-                        App.Vars.Modal.find('.modal-footer').find('button').remove();
-                        App.Vars.Modal.find('.modal-body').html($alertHtml);
-                        App.Vars.Modal.find('.modal-footer').append('<div class="reload-msg">This will automatically close in <span>' + iCountDown + '</span> seconds.</div>');
-                        App.Vars.Modal.find('.modal-footer').append('<button class="text-center btn btn-success close-registration-modal">Close</button>');
+                        App.Vars.SIAModalRegistrationForm.find('.modal-header').remove();
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').find('button').remove();
+                        App.Vars.SIAModalRegistrationForm.find('.modal-body').html($alertHtml);
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').append('<div class="reload-msg">This will automatically close in <span>' + iCountDown + '</span> seconds.</div>');
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').append('<button class="text-center btn btn-success close-registration-modal">Close</button>');
                         let bSkipCloseAndReload = false;
-                        App.Vars.Modal.find('.modal-footer').find('.close-registration-modal').on('click', function (e) {
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').find('.close-registration-modal').on('click', function (e) {
                             e.preventDefault();
                             bSkipCloseAndReload = true;
-                            App.Vars.Modal.modal('hide');
+                            App.Vars.SIAModalRegistrationForm.modal('hide');
                             location.reload(true);
                         });
 
                         let reloadInterval = setInterval(function () {
-                            App.Vars.Modal.find('.reload-msg > span').text(iCountDown--);
+                            App.Vars.SIAModalRegistrationForm.find('.reload-msg > span').text(iCountDown--);
                             if (iCountDown <= 0) {
                                 if (!bSkipCloseAndReload) {
-                                    App.Vars.Modal.modal('hide');
+                                    App.Vars.SIAModalRegistrationForm.modal('hide');
                                     location.reload(true);
                                 }
                                 clearInterval(reloadInterval);
@@ -643,15 +673,15 @@
         registrationFormViewClass: App.Views.RegistrationForm,
         initialize: function (options) {
             let self = this;
-            this.options = options;
-            _.bindAll(this, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations');
+            self.options = options;
+            _.bindAll(self, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations');
 
-            this.parentView = this.options.parentView;
-            this.projectModelToRegister = null;
+            self.parentView = self.options.parentView;
+            self.projectModelToRegister = null;
             clearTimeout(App.Vars.reservationTimeout);
             clearInterval(App.Vars.checkRegistrationsInterval);
             clearInterval(App.Vars.reservationInterval);
-            App.Vars.checkRegistrationsInterval = setInterval(this.checkProjectRegistrations, App.Vars.checkRegistrationsIntervalSeconds);
+            App.Vars.checkRegistrationsInterval = setInterval(self.checkProjectRegistrations, App.Vars.checkRegistrationsIntervalSeconds);
             _log('App.Views.Registration.initialize', options);
         },
         events: {
@@ -661,46 +691,46 @@
         render: function (e) {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(this.template());
+            self.$el.html(self.template());
 
-            App.Views.siteFilterGroup = this.siteFilterGroup = new this.projectFilterGroupViewClass({
-                parentView: this,
+            App.Views.siteFilterGroup = self.siteFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
                 collection: App.Collections.siteFiltersCollection,
                 filterGroupName: 'Site'
             });
-            this.$('.project-list-filters-wrapper').append(this.siteFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.siteFilterGroup.render().el);
 
-            App.Views.skillFilterGroup = this.skillFilterGroup = new this.projectFilterGroupViewClass({
-                parentView: this,
+            App.Views.skillFilterGroup = self.skillFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
                 collection: App.Collections.skillFiltersCollection,
                 filterGroupName: 'Skills Needed'
             });
-            this.$('.project-list-filters-wrapper').append(this.skillFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.skillFilterGroup.render().el);
 
-            App.Views.childFriendlyFilterGroup = this.childFriendlyFilterGroup = new this.projectFilterGroupViewClass({
-                parentView: this,
+            App.Views.childFriendlyFilterGroup = self.childFriendlyFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
                 collection: App.Collections.childFriendlyFiltersCollection,
                 filterGroupName: '<i class="fas fa-child"></i> Child Friendly'
             });
-            this.$('.project-list-filters-wrapper').append(this.childFriendlyFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.childFriendlyFilterGroup.render().el);
 
-            App.Views.peopleNeededFilterGroup = this.peopleNeededFilterGroup = new this.projectFilterGroupViewClass({
-                parentView: this,
+            App.Views.peopleNeededFilterGroup = self.peopleNeededFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
                 collection: App.Collections.peopleNeededFiltersCollection,
                 filterGroupName: '<i class="fas fa-users"></i> People Needed'
             });
-            this.$('.project-list-filters-wrapper').append(this.peopleNeededFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.peopleNeededFilterGroup.render().el);
 
-            App.Views.projectListView = this.projectListView = new this.projectListViewClass({
-                el: this.$('.project-list'),
-                parentView: this,
+            App.Views.projectListView = self.projectListView = new self.projectListViewClass({
+                el: self.$('.project-list'),
+                parentView: self,
                 collection: App.Collections.allProjectsCollection,
                 model: App.Models.projectModel
             });
 
-            this.projectListView.render();
-            this.listenTo(App.Views.projectListView, 'register-for-project', this.showRegistrationForm);
-            return this;
+            self.projectListView.render();
+            self.listenTo(App.Views.projectListView, 'register-for-project', self.showRegistrationForm);
+            return self;
         },
         checkProjectRegistrations: function () {
             let formData = $('form[name="filter-project-list-form"]').serialize();
@@ -758,7 +788,7 @@
             let self = this;
 
             App.Views.registrationFormViewClass = new self.registrationFormViewClass({
-                parentView: this,
+                parentView: self,
                 model: self.projectModelToRegister
             });
 
@@ -795,7 +825,8 @@
                         $confirmModal.find('.confirm-body').find('.confirm-question').html("If you close the registration form now you will lose your reserved spots for this project.<br><br>Do you still wish to close?");
                         $confirmModal.find('.confirm-body').find('button').on('click', function (e) {
                             e.preventDefault();
-                            if ($(this).hasClass('btn-yes')) {
+                            let $confirmModalBtn = $(this);
+                            if ($confirmModalBtn.hasClass('btn-yes')) {
                                 $confirmModal.confirm('hide');
                                 App.Vars.SIAModalRegistrationForm.SIAModal('hide');
                                 $('.modal-backdrop').remove();
@@ -825,7 +856,9 @@
                 fail: function (response) {
                     if (App.Vars.devMode) {
                         console.error(response);
-                        alert('removingReservations error' + response);
+                        if (App.Vars.devMode) {
+                            alert('removingReservations error' + response);
+                        }
                     }
                 }
             })

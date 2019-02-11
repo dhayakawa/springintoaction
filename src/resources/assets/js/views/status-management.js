@@ -72,7 +72,7 @@
                     }
                 }
             };
-            _.bindAll(this, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
+            _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
         },
         events: {
             'click button': 'update',
@@ -148,7 +148,8 @@
             return modelAttributes;
         },
         buildStateKey: function (val) {
-            return val.charAt(0).toLowerCase() + val.slice(1) + 'State';
+            return s.decapitalize(val) + 'State';
+            //return val.charAt(0).toLowerCase() + val.slice(1) + 'State';
         },
         buildToolTipContentKey: function (val) {
             return val + 'ToolTipContent';
@@ -159,20 +160,15 @@
         },
         incrementFieldCnt: function (FieldCntName, oFieldCnts) {
             let self = this;
-            oFieldCnts[FieldCntName]++;
+            if (typeof oFieldCnts[FieldCntName] !== 'undefined') {
+                oFieldCnts[FieldCntName]++;
+            }
             return oFieldCnts;
         },
         setProjectStatusStates: function (project, oFieldCnts) {
             let self = this;
             let oMappedFieldCnts = self.oStatusManagementRecordModels.project.oFieldCntsMap;
             let oStatusEntryFields = self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap;
-            // let oStatusEntryFields = {
-            //     ProjectDescription: ['ProjectDescription', ''],
-            //     CostEstimateDone: ['EstimatedCost', '0.0000'],
-            //     BudgetAllocationDone: ['BudgetSources', ''],
-            //     MaterialListDone: ['MaterialsNeeded', ''],
-            //     VolunteerAllocationDone: ['VolunteersNeededEst', '0'],
-            // };
 
             _.each(self.oStatusManagementRecordModels.project.aFields, function (sFieldName, key) {
                 let bFlaggedAsComplete = null;
@@ -357,7 +353,7 @@
                 aOptions.shift();
             }
             let $popover = $icon.siblings('.popover');
-            $popover.find('.popover-title').html('<strong>Update ' + $icon.data('field').split(/(?=[A-Z])/).join(" ") + '</strong>');
+            $popover.find('.popover-title').html('<strong>' + $icon.data('field').split(/(?=[A-Z])/).join(" ") + '</strong>');
             let sOptions = _.map(aOptions, function (option, key) {
                 let checked = $oModel !== null && $oModel.get($icon.data('field')).toString() === option[1].toString() ? 'checked' : '';
                 return '<div class="radio"><label><input type="radio" ' + checked + ' name="' + $icon.data('field') + '" value="' + option[1] + '"/>' + option[0] + '</label></div>';
@@ -429,10 +425,9 @@
                     projectModel.save({[modelField]: modelFieldValue},
                         {
                             success: function (savedModel, response, options) {
-                                App.Collections.statusManagementCollection.url = '/admin/all/statusmanagementrecords';
                                 $.when(
                                     App.Collections.statusManagementCollection.fetch({reset: true})
-                                ).then(function () {
+                                ).then(function (data, textStatus, jqXHR) {
                                     growl(response.msg, response.success ? 'success' : 'error');
                                     self.closeStatusFormPopover($icon);
                                     $icon.removeClass();
@@ -471,15 +466,19 @@
                     ).then(function () {
                         siteStatusModel.save({[modelField]: modelFieldValue}, {
                             success: function (savedModel, response, options) {
-                                growl(response.msg, response.success ? 'success' : 'error');
-                                self.closeStatusFormPopover($icon);
-                                $icon.removeClass();
-                                $icon.addClass(self.getStatusCSS(savedModel, modelType, modelField));
-                                let optionLabel = self.getYesNoOptionLabel(modelFieldValue);
-                                // update tooltip with new status
-                                $icon.attr('title', optionLabel);
-                                $icon.removeAttr('data-original-title');
-                                $icon.tooltip('fixTitle');
+                                $.when(
+                                    App.Collections.statusManagementCollection.fetch({reset: true})
+                                ).then(function (data, textStatus, jqXHR) {
+                                    growl(response.msg, response.success ? 'success' : 'error');
+                                    self.closeStatusFormPopover($icon);
+                                    $icon.removeClass();
+                                    $icon.addClass(self.getStatusCSS(savedModel, modelType, modelField));
+                                    let optionLabel = self.getYesNoOptionLabel(modelFieldValue);
+                                    // update tooltip with new status
+                                    $icon.attr('title', optionLabel);
+                                    $icon.removeAttr('data-original-title');
+                                    $icon.tooltip('fixTitle');
+                                });
                             },
                             error: function (model, response, options) {
                                 growl(response.msg, 'error');
@@ -499,14 +498,14 @@
             let self = this;
             let savedModelAttributes = null;
             if (modelType === 'project') {
-                savedModelAttributes = self.setProjectStatusStates(savedModel.attributes)[0];
+                savedModelAttributes = self.setProjectStatusStates(savedModel.attributes, self.oStatusManagementRecordModels.oFieldCnts)[0];
             } else if (modelType === 'sitestatus') {
                 let $statusManagementRecord = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt(savedModel.get('SiteStatusID'))});
                 savedModelAttributes = self.setSiteStatusStates($statusManagementRecord.attributes);
             }
             let fieldStateVar = self.buildStateKey(modelField);
-            //console.log('getStatusCSS',fieldStateVar, savedModelAttributes[fieldStateVar], savedModelAttributes, savedModel)
-            return savedModelAttributes[fieldStateVar];
+            //console.log('getStatusCSS', fieldStateVar, savedModelAttributes, savedModel)
+            return typeof savedModelAttributes[fieldStateVar] !== 'undefined' ? savedModelAttributes[fieldStateVar] : '';
         },
     });
 
@@ -517,31 +516,34 @@
         template: template('statusManagementTemplate'),
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            self.options = options;
 
-            _.bindAll(this, 'render', 'addOne', 'addAll');
-            this.collection.bind('reset', this.addAll, this);
+            _.bindAll(self, 'render', 'addOne', 'addAll');
+            self.collection.bind('reset', self.addAll, self);
         },
         events: {},
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(this.template());
-            this.addAll();
-            self.$el.find('[data-toggle="tooltip"]').tooltip({html: true});
-            self.$el.find('[data-popover="true"]').popover({html: true, title: ''});
-            return this;
+            self.$el.html(self.template());
+            self.addAll();
+
+            return self;
         },
         addOne: function (StatusManagement) {
+            let self = this;
             if (StatusManagement.attributes.projects.length) {
                 let $settingItem = new App.Views.StatusManagementRecord({model: StatusManagement});
-                this.$el.find('.status-management-wrapper').append($settingItem.render().el);
+                self.$el.find('.status-management-wrapper').append($settingItem.render().el);
             }
         },
         addAll: function () {
-            this.$el.find('.status-management-wrapper').empty();
-            //this.$el.find('.status-management-wrapper').append($('<ul class="nav nav-stacked"></ul>'));
-            this.collection.each(this.addOne);
+            let self = this;
+            self.$el.find('.status-management-wrapper').empty();
+
+            self.collection.each(this.addOne);
+            self.$el.find('[data-toggle="tooltip"]').tooltip({html: true});
+            self.$el.find('[data-popover="true"]').popover({html: true, title: ''});
         }
     });
 })(window.App);

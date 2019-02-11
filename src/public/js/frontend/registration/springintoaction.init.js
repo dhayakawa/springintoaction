@@ -1,7 +1,6 @@
 // Global object for spring into action backbone app
 window.App = {
     Models: {
-
         projectModel: null,
         volunteerModel: null,
         projectFilterModel:null

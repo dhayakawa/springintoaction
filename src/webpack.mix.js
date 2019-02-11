@@ -12,10 +12,15 @@ let mix = require('laravel-mix');
  */
 
 mix.setPublicPath("public");
-
+/**
+ * The node_modules relative path is only valid during package
+ * development and is referencing /laravel/node_modules in the web root.
+ * It is not the /laravel/packages/dhayakawa/springintoaction/src/node_modules path.
+ */
 mix.scripts([
     'node_modules/lodash/lodash.js',
     'node_modules/underscore/underscore.js',
+    'node_modules/underscore.string/dist/underscore.string.js',
     'node_modules/select2/dist/js/select2.full.js',
     'node_modules/select2/dist/js/i18n/en.js',
     'node_modules/backbone/backbone.js',
@@ -41,6 +46,7 @@ mix.scripts([
 mix.scripts([
     'node_modules/lodash/lodash.min.js',
     'node_modules/underscore/underscore-min.js',
+    'node_modules/underscore.string/dist/underscore.string.min.js',
     'node_modules/select2/dist/js/select2.full.min.js',
     'node_modules/select2/dist/js/i18n/en.js',
     'node_modules/backbone/backbone-min.js',

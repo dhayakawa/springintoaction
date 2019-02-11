@@ -1,6 +1,7 @@
 @import '_spinner.less';
 @import '_filters_navbar.less';
 @import '_confirm_modal.less';
+@import '../mixins.less';
 
 @media (max-width: 767px) {
     .page-box {
@@ -35,6 +36,7 @@
 }
 
 form[name="newProjectReservation"] {
+    .required-form-asterisk();
     button {
         margin-right: 20px;
     }
@@ -47,7 +49,7 @@ form[name="newProjectReservation"] {
 }
 
 form[name="newProjectRegistration"] {
-
+    .required-form-asterisk();
     [role="tabpanel"] {
         position: relative;
         padding-bottom: 50px;

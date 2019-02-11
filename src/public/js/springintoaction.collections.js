@@ -68,10 +68,14 @@
 
 (function (App) {
     App.Collections.Budget = Backbone.Collection.extend({
+        url: '/admin/annualbudget/list/all',
         model: App.Models.Budget
     });
 
     App.PageableCollections.Budget = Backbone.PageableCollection.extend({
+        url: function (ProjectID) {
+            return this.document.url() + '/admin/project/budgets/' + ProjectID;
+        },
         model: App.Models.Budget,
         state: {
             pageSize: 10
@@ -899,6 +903,13 @@
         },
         mode: "client" // page entirely on the client side
     });
+    App.PageableCollections.ProjectLead = Backbone.PageableCollection.extend({
+        model: App.Models.Volunteer,
+        state: {
+            pageSize: 10
+        },
+        mode: "client" // page entirely on the client side
+    });
 
     let SkillsCell = Backgrid.Extension.Select2Cell.extend({
         editor: App.CellEditors.Select2CellEditor,
@@ -1410,6 +1421,7 @@
 
 (function (App) {
     App.Collections.StatusManagement = Backbone.Collection.extend({
+        url: '/admin/sitestatus/all/statusmanagementrecords',
         model: App.Models.StatusManagement
     });
 })(window.App);
@@ -1423,7 +1435,7 @@
     App.PageableCollections.siteVolunteersCollection = new App.PageableCollections.SiteVolunteer();
 
     // project tabs
-    App.PageableCollections.projectLeadsCollection = new App.PageableCollections.Volunteer();
+    App.PageableCollections.projectLeadsCollection = new App.PageableCollections.ProjectLead();
     App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget();
     App.PageableCollections.projectContactsCollection = new App.PageableCollections.Contact();
     App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.Volunteer();

@@ -1,9 +1,13 @@
 (function (App) {
     App.Collections.Budget = Backbone.Collection.extend({
+        url: '/admin/annualbudget/list/all',
         model: App.Models.Budget
     });
 
     App.PageableCollections.Budget = Backbone.PageableCollection.extend({
+        url: function (ProjectID) {
+            return this.document.url() + '/admin/project/budgets/' + ProjectID;
+        },
         model: App.Models.Budget,
         state: {
             pageSize: 10
