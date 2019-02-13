@@ -278,6 +278,8 @@
                 'deleteRegistrationContactListItem',
                 'checkForReturnKey'
             );
+            self.bGroveIsLoggedIn = false;
+            self.groveId = null;
             self.fieldValidationErrors = [];
             self.bIsWoodlands = false;
             self.contactInfoIdx = 1;
@@ -304,11 +306,7 @@
                 this.$el.find('[href="#contact-info"]').trigger('click');
                 this.updateActiveStep('.step-one.steps')
             },
-            'click .back-to-register-others-btn': function (e) {
-                e.preventDefault();
-                this.$el.find('[href="#auto-register"]').trigger('click');
-                this.updateActiveStep('.step-two.steps')
-            },
+            'click .back-to-register-others-btn': 'backToRegisterOthers',
             'click .collapse-project-description': function (e) {
                 e.preventDefault();
             },
@@ -343,7 +341,7 @@
                 LastName: '',
                 Email: ''
             };
-            if (App.Vars.devMode){
+            if (App.Vars.devMode) {
                 contactInfoDataValues = {
                     Church: 'woodlands',
                     ChurchOther: '',
@@ -364,7 +362,7 @@
 
             return self;
         },
-        checkForReturnKey: function(e) {
+        checkForReturnKey: function (e) {
             if (e.which == 13 || e.keyCode == 13) {
                 //code to execute here
                 $('#submit-grove-login-btn').trigger('click');
@@ -440,7 +438,7 @@
                         self.parentView.removeReservations();
                         clearInterval(App.Vars.reservationInterval);
                         let expirationMsg = 'Your reservation has expired.';
-                        $confirm.find('.confirm-body').find('.confirm-question').html('<div>'+expirationMsg+'</div>');
+                        $confirm.find('.confirm-body').find('.confirm-question').html('<div>' + expirationMsg + '</div>');
                         $confirm.find('.confirm-body').find('button.btn-yes').remove();
                         $confirm.find('.confirm-body').find('button.btn-no').text('OK');
                     }
@@ -480,6 +478,13 @@
                 $('.step-two').show();
             }
         },
+        backToRegisterOthers: function (e) {
+            let self = this;
+            e.preventDefault();
+            self.setUpRegisterOthers();
+            self.$el.find('[href="#auto-register"]').trigger('click');
+            self.updateActiveStep('.step-two.steps');
+        },
         registerOthers: function (e) {
             let self = this;
             e.preventDefault();
@@ -505,22 +510,29 @@
 
             for (let i = 0; i < iExtraRegistrations; i++) {
                 let contact = typeof contacts !== 'undefined' && typeof contacts[i] !== 'undefined' ? contacts[i] : {};
-                console.log('contact',i, contact)
-                self.contactInfoViews[self.contactInfoIdx] = new App.Views.ContactInfo({
-                    parentView: self,
-                    contactInfoIdx: self.contactInfoIdx,
-                    contactInfoData: {
-                        Church: !_.isUndefined(contact['Church']) ? contact['Church'] : '',
-                        ChurchOther: !_.isUndefined(contact['ChurchOther']) ? contact['ChurchOther'] : '',
-                        MobilePhoneNumber: !_.isUndefined(contact['MobilePhoneNumber']) ? contact['MobilePhoneNumber'] : '',
-                        FirstName: !_.isUndefined(contact['FirstName']) ? contact['FirstName'] : '',
-                        LastName: !_.isUndefined(contact['LastName']) ? contact['LastName'] : '',
-                        Email: !_.isUndefined(contact['Email']) ? contact['Email'] : ''
+                let bSkip = false;
+                if (self.bIsGroveImport) {
+                    if (contact['FirstName'] === '') {
+                        bSkip = true;
                     }
-                });
-                let $deleteBtn = $('<a href="#" class="manual-delete-registration-contact text-danger"><i class="fas fa-trash"></i> delete</a>');
-                self.$el.find('.manual-multiple-register .multiple-register-list').append($('<li>').append($deleteBtn).append(self.contactInfoViews[self.contactInfoIdx].render().el));
-                self.contactInfoIdx++;
+                }
+                if (!bSkip) {
+                    self.contactInfoViews[self.contactInfoIdx] = new App.Views.ContactInfo({
+                        parentView: self,
+                        contactInfoIdx: self.contactInfoIdx,
+                        contactInfoData: {
+                            Church: !_.isUndefined(contact['Church']) ? contact['Church'] : '',
+                            ChurchOther: !_.isUndefined(contact['ChurchOther']) ? contact['ChurchOther'] : '',
+                            MobilePhoneNumber: !_.isUndefined(contact['MobilePhoneNumber']) ? contact['MobilePhoneNumber'] : '',
+                            FirstName: !_.isUndefined(contact['FirstName']) ? contact['FirstName'] : '',
+                            LastName: !_.isUndefined(contact['LastName']) ? contact['LastName'] : '',
+                            Email: !_.isUndefined(contact['Email']) ? contact['Email'] : ''
+                        }
+                    });
+                    let $deleteBtn = $('<a href="#" class="manual-delete-registration-contact text-danger"><i class="fas fa-trash"></i> delete</a>');
+                    self.$el.find('.manual-multiple-register .multiple-register-list').append($('<li>').append($deleteBtn).append(self.contactInfoViews[self.contactInfoIdx].render().el));
+                    self.contactInfoIdx++;
+                }
 
             }
 
@@ -546,8 +558,9 @@
 
             } else {
                 $('.manual-multiple-register').hide();
-                $('.grove-login').show();
                 App.Vars.registrationProcessType = e.currentTarget.id;
+                $('.grove-login').show();
+                $('[name="GroveEmail"]')[0].focus({preventScroll: false});
             }
         },
         setBottomNavBtnsState: function (panel, state) {
@@ -584,6 +597,8 @@
                         self.hideGroveLogin(true);
                         self.groveContacts = response.contact_info;
                         self.showGroveContactList();
+                        self.bGroveIsLoggedIn = true;
+                        self.groveId = response.groveLoggedInId;
                     } else {
                         $submitBtn.after('<span class="grove-login-result-msg text-danger">Login Failed</span>');
                     }
@@ -594,14 +609,15 @@
                 }
             })
         },
-        hideGroveLogin: function(bDelayAndFade){
+        hideGroveLogin: function (bDelayAndFade) {
             if (_.isUndefined(bDelayAndFade) || (!_.isUndefined(bDelayAndFade) && !bDelayAndFade)) {
                 $('.grove-login').hide();
-            } else if (!_.isUndefined(bDelayAndFade) && bDelayAndFade){
+            } else if (!_.isUndefined(bDelayAndFade) && bDelayAndFade) {
                 // wait a couple seconds and then hide the grove login form
                 setTimeout(function () {
                     $('.grove-login').fadeOut("slow", function () {
-                        // Animation complete.
+                        $('[name="GroveEmail"]').val();
+                        $('[name="GrovePassword"]').val();
                     });
                 }, 2000);
             }
@@ -611,18 +627,24 @@
             let self = this;
             let data = {};
             let html = '';
+            let bIsPersonRegistering = false;
+            let personRegistering = self.contactInfoViews[0].contactInfoData;
             if (_.isArray(self.groveContacts) && self.groveContacts.length) {
                 for (let i = 0; i < self.groveContacts.length; i++) {
                     data = self.groveContacts[i];
-                    let iCnt = i + 1;
-                    html = '<tr><td><label>' + iCnt + '. <input type="checkbox" checked class="grove-contact" id="grove_contact_' + i + '" data-contact-idx="' + i + '" name="grove_contact[' + i + '][confirm]" value="1"/></label></td>';
-                    _.each(_.values(data), function (val, key) {
-                        if (val !== 'woodlands') {
-                            html += '<td><label for="grove_contact_' + i + '">' + val + '</label></td>';
-                        }
-                    });
-                    html += '</tr>';
-                    $('.grove-register').find('.grove-contacts-confirm-list tbody').append(html);
+                    bIsPersonRegistering = _.isEqual([personRegistering.FirstName, personRegistering.LastName, personRegistering.Email],[data.FirstName, data.LastName, data.Email]);
+
+                    if (!bIsPersonRegistering) {
+                        let iCnt = i + 1;
+                        html = '<tr><td><label>' + iCnt + '. <input type="checkbox" checked class="grove-contact" id="grove_contact_' + i + '" data-contact-idx="' + i + '" name="grove_contact[' + i + '][confirm]" value="1"/></label></td>';
+                        _.each(data, function (val, key) {
+                            if (val !== 'woodlands' && key !== 'groveId') {
+                                html += '<td><label for="grove_contact_' + i + '">' + val + '</label></td>';
+                            }
+                        });
+                        html += '</tr>';
+                        $('.grove-register').find('.grove-contacts-confirm-list tbody').append(html);
+                    }
                 }
                 $('.grove-register').show();
             }
@@ -639,17 +661,25 @@
             let self = this;
             let data = {};
             let html = '';
-
+            $('.project-registration-confirm-list tbody').empty();
             _.each(self.contactInfoViews, function (val, key) {
                 try {
                     data = val.getContactInfoData();
-
-                    html = '<tr>';
-                    _.each(_.values(data), function (val, key) {
-                        html += '<td>' + val + '</td>';
-                    });
-                    html += '</tr>';
-                    $('.project-registration-confirm-list tbody').append(html);
+                    let bSkip = false;
+                    if (self.bIsGroveImport) {
+                        //console.log(data)
+                        if (data['FirstName']===''){
+                            bSkip = true;
+                        }
+                    }
+                    if (!bSkip) {
+                        html = '<tr>';
+                        _.each(_.values(data), function (val, key) {
+                            html += '<td>' + val + '</td>';
+                        });
+                        html += '</tr>';
+                        $('.project-registration-confirm-list tbody').append(html);
+                    }
                 } catch (e) {
                 } finally {
                 }
@@ -756,6 +786,15 @@
         submitRegistration: function (e) {
             let self = this;
             e.preventDefault();
+            let $submitBtn = $('.submit-registration-btn');
+            if ($submitBtn.hasClass('disabled')) {
+                return;
+            }
+            $submitBtn.addClass('disabled');
+            $submitBtn.siblings('.spinner').remove();
+            let $spinnerWrapper = $('<div style="position:relative;display:inline-block;margin-right:5px;top:3px;"></div>');
+                $spinnerWrapper.append(App.Vars.spinnerHtml);
+            $submitBtn.before($spinnerWrapper);
             let formData = new FormData($('form[name="newProjectRegistration"]')[0]);
             // for (var pair of formData.entries()) {
             //     console.log(pair[0] + ', ' + pair[1]);
@@ -768,7 +807,10 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
+                    $spinnerWrapper.remove();
                     if (response.success) {
+                        $submitBtn.removeClass('disabled');
+                        $submitBtn.siblings('.spinner').remove();
                         App.Vars.reservedProjectID = null;
                         App.Vars.registrationProcessType = null;
                         clearTimeout(App.Vars.reservationTimeout);
@@ -799,12 +841,57 @@
                                 clearInterval(reloadInterval);
                             }
                         }, 1000);
+                    } else {
+                        $submitBtn.removeClass('disabled');
+                        self.$el.find('.submission-error').remove();
+                        let alertMessage = response.msg;
+                        alertMessage += self.buildRegistrationErrorMsg(response);
+                        if (alertMessage !== '') {
+                            let $alertHtml = $('<div class="alert alert-danger submission-error" role="alert">' + alertMessage + '</div>');
+                            $submitBtn.parents('.tab-pane').append($alertHtml);
+                        }
                     }
                 },
                 fail: function (response) {
+                    $spinnerWrapper.remove();
                     console.error(response)
                 }
             });
+        },
+        buildRegistrationErrorMsg: function (response) {
+            let self = this;
+            let sErrorMsg = '';
+            let sAlreadyRegisteredMsg = '';
+            let sRegistrationFailedMsg = '';
+            if (response.aAlreadyRegistered.length) {
+                sAlreadyRegisteredMsg = '<div>The following people were already registered for a project and cannot register again.<ol>';
+                sAlreadyRegisteredMsg += _.map(response.aAlreadyRegistered, function (registrant, idx) {
+                    return '<li>'+ registrant.FirstName + ' ' + registrant.LastName +'</li>';
+                }).join("\n");
+                sAlreadyRegisteredMsg += '</ol></div>';
+            }
+            if (response.aRegistrationFailed.length) {
+                sRegistrationFailedMsg = '<div>An error occurred while attempting to register the following people.<ol>';
+                sRegistrationFailedMsg += _.map(response.aRegistrationFailed, function (registrant, idx) {
+                    return '<li>' + registrant.FirstName + ' ' + registrant.LastName + '</li>';
+                }).join("\n");
+                sRegistrationFailedMsg += '</ol>Please click the [Register] button to try again. If the problem persists, please contact Pastor Doug Schneider and let him know.</div>';
+            }
+            if (response.success){
+                if (self.contactInfoViews.length === 1) {
+                    sErrorMsg += "<div>Sorry, we were not able to complete some of your registrations.</div>";
+                }
+            } else {
+                if (self.contactInfoViews.length === 1){
+                    sErrorMsg += "<div>Sorry, we were not able to complete any of your registrations.</div>";
+                } else {
+                    sErrorMsg += "<div>Sorry, we were not able to complete your registration.</div>";
+                }
+            }
+            sErrorMsg += sAlreadyRegisteredMsg;
+            sErrorMsg += sRegistrationFailedMsg;
+
+            return sErrorMsg;
         }
 
     });

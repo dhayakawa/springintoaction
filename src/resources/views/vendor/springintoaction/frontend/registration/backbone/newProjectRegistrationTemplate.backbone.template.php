@@ -143,6 +143,7 @@
                                    id="inputGroveEmail"
                                    placeholder="Grove Login"
                                    required
+                                   value=""
                                    />
                         </div>
                     </div>
@@ -156,6 +157,7 @@
                                    id="inputGrovePassword"
                                    placeholder="Grove Password"
                                    required
+                                   value = ""
                                    />
                         </div>
                     </div>
@@ -209,7 +211,7 @@
                 </div>
                 <div class="row bottom-nav-btns">
                     <div class="col-xs-6 text-left">
-                        <button class="back-to-contact-info-btn btn btn-primary btn-sm"><i class="fas fa-arrow-alt-circle-left"></i> Personal Contact Info</button>
+                        <button class="back-to-contact-info-btn btn btn-primary btn-sm"><i class="fas fa-arrow-alt-circle-left"></i> Personal Contact Info</button>&nbsp;
                         <button class="back-to-register-others-btn btn btn-primary btn-sm">
                             <i class="fas fa-arrow-alt-circle-left"></i> Register Others</button>
                     </div>

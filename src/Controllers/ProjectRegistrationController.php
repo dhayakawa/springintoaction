@@ -58,12 +58,34 @@ class ProjectRegistrationController extends BaseController
         $aContactInfo = $params['contact_info'];
         $ProjectID = $params['ProjectID'];
         $ProjectRoleID = 4;
-
+        $aRegistered = [];
+        $aRegistrationFailed = [];
+        $aAlreadyRegistered = [];
+        $iSuccessCnt = 0;
         if (is_array($aContactInfo)) {
             foreach ($aContactInfo as $contactInfo) {
-                $volunteer = Volunteer::where('Email', $contactInfo['Email'])->get()->first();
+                $volunteer = Volunteer::where(
+                    [
+                        [
+                            'Email',
+                            '=',
+                            $contactInfo['Email'],
+                        ],
+                        [
+                            'FirstName',
+                            '=',
+                            $contactInfo['FirstName'],
+                        ],
+                        [
+                            'LastName',
+                            '=',
+                            $contactInfo['LastName'],
+                        ],
+                    ]
+                )->get()->first();
                 if (!empty($volunteer)) {
                     $volunteerID = $volunteer->VolunteerID;
+                    $groveId = $volunteer->IndividualID;
                 } else {
                     $model = new Volunteer();
 
@@ -93,36 +115,68 @@ class ProjectRegistrationController extends BaseController
 
                     $model->fill($contactInfo);
 
-                    \Illuminate\Support\Facades\Log::debug('',
-                                                           [
-                                                               'File:' . __FILE__,
-                                                               'Method:' . __METHOD__,
-                                                               'Line:' . __LINE__,
-                                                               $contactInfo,$model->toArray()
-                                                           ]
+                    \Illuminate\Support\Facades\Log::debug(
+                        '',
+                        [
+                            'File:' . __FILE__,
+                            'Method:' . __METHOD__,
+                            'Line:' . __LINE__,
+                            $contactInfo,
+                            $model->toArray(),
+                        ]
                     );
                     $model->save();
                     $volunteerID = $model->VolunteerID;
+                    $groveId = $model->IndividualID;
                 }
-                $model = new ProjectVolunteer;
-                $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $ProjectID]);
-                $success = $model->save();
-
-                $model = new ProjectVolunteerRole;
-                $model->fill(
+                $contactInfo['groveId'] = $groveId;
+                $bProjectVolunteerExists = ProjectVolunteer::where(
                     [
-                        'VolunteerID' => $volunteerID,
-                        'ProjectID' => $ProjectID,
-                        'ProjectRoleID' => $ProjectRoleID,
+                        ['ProjectID', '=', $ProjectID],
+                        ['VolunteerID', '=', $volunteerID],
                     ]
-                );
-                $success = $model->save();
-                if (!$success) {
-                    $batchSuccess = false;
+                )->exists();
+
+                if (!$bProjectVolunteerExists) {
+                    $model = new ProjectVolunteer;
+                    $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $ProjectID]);
+                    $pvSuccess = $model->save();
+                    $pvrSuccess = false;
+                    if ($pvSuccess) {
+                        $model = new ProjectVolunteerRole;
+                        $model->fill(
+                            [
+                                'VolunteerID' => $volunteerID,
+                                'ProjectID' => $ProjectID,
+                                'ProjectRoleID' => $ProjectRoleID,
+                            ]
+                        );
+                        $pvrSuccess = $model->save();
+                    }
+
+                    if ($pvSuccess && $pvrSuccess) {
+                        $iSuccessCnt++;
+                        $aRegistered[] = $contactInfo;
+                    } else {
+                        $aRegistrationFailed[] = $contactInfo;
+                    }
                 } else {
-                    ProjectReservation::where('session_id', $request->session()->getId())->delete();
-                    $request->session()->regenerate();
+                    $aAlreadyRegistered[] = $contactInfo;
                 }
+            }
+            if ($iSuccessCnt) {
+                $success = true;
+                if ($iSuccessCnt + count($aAlreadyRegistered) === count($aContactInfo)) {
+                    ProjectReservation::where('session_id', $request->session()->getId())->delete();
+                    $request->session()->forget('groveId');
+                    $request->session()->regenerate();
+                } elseif ($iSuccessCnt + count($aAlreadyRegistered) < count($aContactInfo)) {
+                    ProjectReservation::where('session_id', $request->session()->getId())->update(
+                        ['reserve' => $iSuccessCnt]
+                    );
+                }
+            } else {
+                $success = false;
             }
         }
 
@@ -133,9 +187,19 @@ class ProjectRegistrationController extends BaseController
                 'success' => true,
                 'msg' => 'Thank you for volunteering! We\'ll be sending a confirmation
                             email and notifications as we get closer to the date.',
+                'aRegistered' => $aRegistered,
+                'aAlreadyRegistered' => $aAlreadyRegistered,
+                'aRegistrationFailed' => $aRegistrationFailed,
+
             ];
         } else {
-            $response = ['success' => false, 'msg' => 'Project Registration Failed.'];
+            $response = [
+                'success' => false,
+                'msg' => 'Project Registration Failed.',
+                'aRegistered' => $aRegistered,
+                'aAlreadyRegistered' => $aAlreadyRegistered,
+                'aRegistrationFailed' => $aRegistrationFailed,
+            ];
         }
 
         return view('springintoaction::frontend.json_response', $request, compact('response'));
@@ -196,41 +260,68 @@ class ProjectRegistrationController extends BaseController
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
 
+    public function groveLogout(Request $request) {
+        $request->session()->forget('groveId');
+        $request->session()->regenerate();
+        $response = ['success' => true, 'msg' => 'Logged out.'];
+        return view('springintoaction::frontend.json_response', $request, compact('response'));
+    }
     public function groveLogin(Request $request)
     {
-        $login = $request->GroveEmail;
-        $password = $request->GrovePassword;
+        $groveLoggedInId = null;
         $RegisterProcessType = $request->RegisterProcessType;
-
-        $groveApi = new GroveApi();
-        $response = $groveApi->individual_profile_from_login_password($login, $password);
-        \Illuminate\Support\Facades\Log::debug(
-            '',
-            [
-                'File:' . __FILE__,
-                'Method:' . __METHOD__,
-                'Line:' . __LINE__,
-                $login,
-                $password,
-                $RegisterProcessType,
-                $response,
-            ]
-        );
-        $bGroveLoginSuccessful = $response["individuals"]['@attributes']['count'] === '1';
-        if ($bGroveLoginSuccessful) {
+        $groveId = isset($request->groveId) ? $request->groveId : null;
+        $bForceLoginEveryTime = true;
+        if ($bForceLoginEveryTime || !$groveId) {
+            $login = $request->GroveEmail;
+            $password = $request->GrovePassword;
+            $groveApi = new GroveApi();
+            $response = $groveApi->individual_profile_from_login_password($login, $password);
+            \Illuminate\Support\Facades\Log::debug(
+                '',
+                [
+                    'File:' . __FILE__,
+                    'Method:' . __METHOD__,
+                    'Line:' . __LINE__,
+                    $login,
+                    $password,
+                    $RegisterProcessType,
+                    $response,
+                ]
+            );
+            $bGroveLoginSuccessful = $response["individuals"]['@attributes']['count'] === '1';
             $individual = $response["individuals"]["individual"];
             $phone = $groveApi->findPhoneTypeFromProfile($individual);
             $email = $individual['email'];
             $firstName = $individual['first_name'];
             $lastName = $individual['last_name'];
+            $familyId = $individual['family']['@attributes']['id'];
             $groveId = $individual["@attributes"]['id'];
+            $request->session()->put('groveId', $groveId);
+        } else {
+            if ($groveId && (string) $request->session()->get('groveId') === (string) $groveId) {
+                $bGroveLoginSuccessful = true;
+                $individual = GroveIndividual::get($groveId)->toArray();
+                $familyId = null;
+                $phone = null;
+                $email = $individual['email'];
+                $firstName = $individual['first_name'];
+                $lastName = $individual['last_name'];
+                $familyId = $individual['family_id'];
+            } else {
+                $bGroveLoginSuccessful = false;
+            }
+        }
+
+        if ($bGroveLoginSuccessful) {
+            $groveLoggedInId = $groveId;
             $contact_info = [];
 
             $success = true;
 
             if ($RegisterProcessType === 'family') {
                 $aMembers = $this->getFamilyFromDb(
-                    $individual['family']['@attributes']['id']
+                    $familyId
                 );
                 foreach ($aMembers as $aMember) {
                     $phone = $aMember['phone'];
@@ -243,6 +334,7 @@ class ProjectRegistrationController extends BaseController
                         'FirstName' => $firstName,
                         'LastName' => $lastName,
                         'Email' => $email,
+                        'groveId' => $aMember['id']
                     ];
                 }
             } elseif ($RegisterProcessType === 'lifegroup') {
@@ -258,6 +350,7 @@ class ProjectRegistrationController extends BaseController
                         'FirstName' => $firstName,
                         'LastName' => $lastName,
                         'Email' => $email,
+                        'groveId' => $aMember['individual_id']
                     ];
                 }
             }
@@ -294,11 +387,21 @@ class ProjectRegistrationController extends BaseController
         //     ]  ;
         // }
         if (!isset($success)) {
-            $response = ['success' => false, 'msg' => 'Grove Login Not Implemented Yet.'];
+            $response =
+                [
+                    'success' => false,
+                    'groveLoggedInId' => $groveLoggedInId,
+                    'msg' => 'Grove Login Not Implemented Yet.',
+                ];
         } elseif ($success) {
-            $response = ['success' => true, 'msg' => 'Grove Login Succeeded.', 'contact_info' => $contact_info];
+            $response = [
+                'success' => true,
+                'msg' => 'Grove Login Succeeded.',
+                'groveLoggedInId' => $groveLoggedInId,
+                'contact_info' => $contact_info,
+            ];
         } else {
-            $response = ['success' => false, 'msg' => 'Grove Login Failed.'];
+            $response = ['success' => false, 'groveLoggedInId' => $groveLoggedInId, 'msg' => 'Grove Login Failed.'];
         }
 
         return view('springintoaction::frontend.json_response', $request, compact('response'));
@@ -308,11 +411,11 @@ class ProjectRegistrationController extends BaseController
     {
         $loggedInLifeGroup = LifeGroups::where('individual_id', '=', $groveId)->get()->first();
         $aLifeGroupMembers = LifeGroups::where('group_id', '=', $loggedInLifeGroup->group_id)->join(
-                'grove_individuals',
-                'grove_individuals.id',
-                '=',
-                'life_groups.individual_id'
-            )->get()->toArray();
+            'grove_individuals',
+            'grove_individuals.id',
+            '=',
+            'life_groups.individual_id'
+        )->get()->toArray();
         foreach ($aLifeGroupMembers as $idx => $aMember) {
             $aLifeGroupMembers[$idx]['Church'] = 'woodlands';
             $aLifeGroupMembers[$idx]['phone'] =
