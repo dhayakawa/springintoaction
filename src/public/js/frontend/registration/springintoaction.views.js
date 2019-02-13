@@ -409,6 +409,7 @@
                         self.updateStepsView();
                         $('.registration-form-body-wrapper').show();
                         $('#collapseProjectDescription').collapse('show');
+                        $('[name="contact_info[0][Church]"]')[0].focus({preventScroll: false});
                     }, 1000);
 
                 },
@@ -1048,6 +1049,11 @@
                 if (typeof App.Vars.reservedProjectID !== 'undefined' && App.Vars.reservedProjectID !== null) {
                     let $confirmCloseRegistrationFormModal = getSIAConfirmModal('confirmCloseRegistrationForm');
 
+                    App.Vars.SIAModalRegistrationForm.on('shown.bs.modal', function (event) {
+                        if ($('[name="reserve"]').length) {
+                            $('[name="reserve"]')[0].focus({preventScroll: false});
+                        }
+                    });
                     $confirmCloseRegistrationFormModal.on('show.bs.confirm', function (event) {
                         let $confirmModal = $(this);
 
