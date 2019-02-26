@@ -220,6 +220,10 @@ FROM (
      */
     public function getRegistrationProjects($Year, $filter = [], $orderBy = null)
     {
+        // handle possible sql injection
+        if(!is_numeric($Year) || strlen($Year) !== 4){
+            $Year = $this->getCurrentYear();
+        }
         $projectStatusOptions = new ProjectStatusOptions();
         $ProjectStatusApprovedOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
         $passedInOrderBy = $orderBy;
@@ -324,10 +328,10 @@ FROM (
                     if (is_array($aFilterValue)) {
                         foreach ($aFilterValue as $filterValue) {
                             if ($iFilterCnt === 0) {
-                                $projects->where('PeopleNeeded', $filterValue);
+                                $projects->whereRaw("({$sSqlPeopleNeeded}) = ?", [$filterValue]);
                                 $iFilterCnt++;
                             } else {
-                                $projects->orWhere('PeopleNeeded', $filterValue);
+                                $projects->orWhereRaw("({$sSqlPeopleNeeded}) = ?", [$filterValue]);
                                 $iFilterCnt++;
                             }
                         }
@@ -341,15 +345,15 @@ FROM (
                 $order['direction']
             );
         }
-        // \Illuminate\Support\Facades\Log::debug(
-        //     '',
-        //     [
-        //         'File:' . __FILE__,
-        //         'Method:' . __METHOD__,
-        //         'Line:' . __LINE__,
-        //         $projects->toSql(),
-        //     ]
-        // );
+        \Illuminate\Support\Facades\Log::debug(
+            '',
+            [
+                'File:' . __FILE__,
+                'Method:' . __METHOD__,
+                'Line:' . __LINE__,
+                $projects->toSql(),
+            ]
+        );
         $all_projects = $projects->get()->toArray();
         if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
             $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);

@@ -14,41 +14,47 @@
 .sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-desc {
   display: none;
 }
-.sia-main-app .status-legend-wrapper {
-  top: 20px;
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record {
+  margin-bottom: 20px;
+}
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record h3.site-name {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .status-legend-wrapper {
   position: relative;
   padding: 5px;
   background: whitesmoke;
   font-size: smaller;
   border: 1px solid #e4e4e4;
 }
-.sia-main-app .status-legend-wrapper .status-legend {
-  margin-right: 20px;
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .status-legend-wrapper .status-legend {
+  margin-right: 8px;
 }
-.sia-main-app .status-management-wrapper .table {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table {
   table-layout: fixed;
 }
-.sia-main-app .status-management-wrapper .table th,
-.sia-main-app .status-management-wrapper .table td {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table th,
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table td {
   text-align: center;
 }
-.sia-main-app .status-management-wrapper .table td i:hover {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table td i:hover {
   cursor: pointer;
 }
-.sia-main-app .status-management-wrapper .table td .fa-info-circle {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table td .fa-info-circle {
   position: relative;
   top: 3px;
 }
-.sia-main-app .status-management-wrapper .table td .fa-info-circle:hover {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table td .fa-info-circle:hover {
   cursor: default;
 }
-.sia-main-app .status-management-wrapper .table.project-status td:nth-of-type(1) {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table.project-status td:nth-of-type(1) {
   width: 75px;
 }
-.sia-main-app .status-management-wrapper .table.project-status td:nth-of-type(2) {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table.project-status td:nth-of-type(2) {
   min-width: 130px;
 }
-.sia-main-app .status-management-wrapper .tooltip-inner {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-inner {
   max-width: 400px;
   padding: 3px 8px;
   color: #fff;
@@ -56,18 +62,18 @@
   background-color: #000;
   border-radius: 4px;
 }
-.sia-main-app .status-management-wrapper .tooltip-table {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table {
   table-layout: fixed;
   background: transparent;
 }
-.sia-main-app .status-management-wrapper .tooltip-table th,
-.sia-main-app .status-management-wrapper .tooltip-table td {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table th,
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table td {
   text-align: left;
 }
-.sia-main-app .status-management-wrapper .tooltip-table tr:last-child td {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table tr:last-child td {
   border: 0;
 }
-.sia-main-app .status-management-wrapper .tooltip-table td.hide-overflow {
+.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table td.hide-overflow {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -256,7 +262,7 @@
 .annual-budget-total-wrapper strong {
   padding-right: 20px;
 }
-.annual-budget-view-contols {
+.annual-budget-view-controls {
   margin-left: 40px;
   display: inline-block;
 }

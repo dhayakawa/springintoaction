@@ -92,7 +92,7 @@
             });
             let annualBudgetAmount = self.model.get('BudgetAmount');
             this.annualBudgetView = new App.Views.AnnualBudgetView({
-                className: 'annual-budget-view-contols',
+                className: 'annual-budget-view-controls',
                 model: self.model
             });
             this.$el.find('.box-title').after(this.annualBudgetView.render().el);
