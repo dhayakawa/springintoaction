@@ -221,7 +221,7 @@ FROM (
     public function getRegistrationProjects($Year, $filter = [], $orderBy = null)
     {
         // handle possible sql injection
-        if(!is_numeric($Year) || strlen($Year) !== 4){
+        if (!is_numeric($Year) || strlen($Year) !== 4) {
             $Year = $this->getCurrentYear();
         }
         $projectStatusOptions = new ProjectStatusOptions();
@@ -251,10 +251,10 @@ FROM (
                    join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year}
             where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null
               and ((" .
-                                str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
-                                " + " .
-                                str_replace('projects.', 'p.', $sSqlProjectReservations) .
-                                ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
+                                 str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
+                                 " + " .
+                                 str_replace('projects.', 'p.', $sSqlProjectReservations) .
+                                 ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
 
         $sSqlActiveProjects = "(select count(*) from projects p
                    join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
@@ -285,59 +285,64 @@ FROM (
         )->where('projects.Active', 1)->where('projects.Status', $ProjectStatusApprovedOptionID);
 
         if (!empty($filter) && is_array($filter)) {
-            $iFilterCnt = 0;
-            foreach ($filter as $filterType => $aFilterValue) {
-                if ($filterType === 'site') {
-                    if (is_array($aFilterValue)) {
-                        foreach ($aFilterValue as $filterValue) {
-                            if ($iFilterCnt === 0) {
-                                $projects->where('sites.SiteName', $filterValue);
-                                $iFilterCnt++;
-                            } else {
-                                $projects->orWhere('sites.SiteName', $filterValue);
-                                $iFilterCnt++;
+            $projects->where(
+                function ($query) use ($filter, $sSqlPeopleNeeded){
+                    $iFilterCnt = 0;
+                    $bForceFilterRequiredToShowInList = false;
+                    foreach ($filter as $filterType => $aFilterValue) {
+                        if ($filterType === 'site') {
+                            if (is_array($aFilterValue)) {
+                                foreach ($aFilterValue as $filterValue) {
+                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
+                                        $query->where('sites.SiteName', $filterValue);
+                                        $iFilterCnt++;
+                                    } else {
+                                        $query->orWhere('sites.SiteName', $filterValue);
+                                        $iFilterCnt++;
+                                    }
+                                }
                             }
-                        }
-                    }
-                } elseif ($filterType === 'skill') {
-                    if (is_array($aFilterValue)) {
-                        foreach ($aFilterValue as $filterValue) {
-                            if ($iFilterCnt === 0) {
-                                $projects->where('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
-                                $iFilterCnt++;
-                            } else {
-                                $projects->orWhere('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
-                                $iFilterCnt++;
+                        } elseif ($filterType === 'skill') {
+                            if (is_array($aFilterValue)) {
+                                foreach ($aFilterValue as $filterValue) {
+                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
+                                        $query->where('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
+                                        $iFilterCnt++;
+                                    } else {
+                                        $query->orWhere('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
+                                        $iFilterCnt++;
+                                    }
+                                }
                             }
-                        }
-                    }
-                } elseif ($filterType === 'childFriendly') {
-                    if (is_array($aFilterValue)) {
-                        foreach ($aFilterValue as $filterValue) {
-                            $filterValue = $filterValue === 'No' ? '0' : '1';
-                            if ($iFilterCnt === 0) {
-                                $projects->where('projects.ChildFriendly', $filterValue);
-                                $iFilterCnt++;
-                            } else {
-                                $projects->orWhere('projects.ChildFriendly', $filterValue);
-                                $iFilterCnt++;
+                        } elseif ($filterType === 'childFriendly') {
+                            if (is_array($aFilterValue)) {
+                                foreach ($aFilterValue as $filterValue) {
+                                    $filterValue = $filterValue === 'No' ? '0' : '1';
+                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
+                                        $query->where('projects.ChildFriendly', $filterValue);
+                                        $iFilterCnt++;
+                                    } else {
+                                        $query->orWhere('projects.ChildFriendly', $filterValue);
+                                        $iFilterCnt++;
+                                    }
+                                }
                             }
-                        }
-                    }
-                } elseif ($filterType === 'peopleNeeded') {
-                    if (is_array($aFilterValue)) {
-                        foreach ($aFilterValue as $filterValue) {
-                            if ($iFilterCnt === 0) {
-                                $projects->whereRaw("({$sSqlPeopleNeeded}) = ?", [$filterValue]);
-                                $iFilterCnt++;
-                            } else {
-                                $projects->orWhereRaw("({$sSqlPeopleNeeded}) = ?", [$filterValue]);
-                                $iFilterCnt++;
+                        } elseif ($filterType === 'peopleNeeded') {
+                            if (is_array($aFilterValue)) {
+                                foreach ($aFilterValue as $filterValue) {
+                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
+                                        $query->whereRaw("({$sSqlPeopleNeeded}) = ?", [$filterValue]);
+                                        $iFilterCnt++;
+                                    } else {
+                                        $query->orWhereRaw("({$sSqlPeopleNeeded}) = ?", [$filterValue]);
+                                        $iFilterCnt++;
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
+            );
         }
         foreach ($orderBy as $order) {
             $projects->orderBy(
