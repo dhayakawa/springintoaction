@@ -2,13 +2,50 @@
     App.Views.mainApp = Backbone.View.extend({
         el: $(".sia-main-app"),
         initialize: function (options) {
+            let self = this;
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
-            _.bindAll(this, 'render', 'setRouteView');
-            this.routeView              = null;
-            this.bOnlyRenderRouteView   = false;
+            _.bindAll(self, 'render', 'setRouteView');
+            self.routeView              = null;
+            self.bOnlyRenderRouteView   = false;
             App.Vars.currentSiteID      = App.Vars.appInitialData.site.SiteID;
             App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
             App.Vars.mainAppDoneLoading = false;
+            self.listenTo(App.Models.projectModel, 'sync', function (e) {
+                App.Collections.statusManagementCollection.fetch({reset: true})
+            });
+            self.listenTo(App.Models.siteStatusModel, 'sync', function (e) {
+                App.Collections.statusManagementCollection.fetch({reset: true})
+            });
+            self.listenTo(App.Models.siteModel, 'sync', function (e) {
+                App.Collections.statusManagementCollection.fetch({reset: true})
+            });
+            self.listenTo(App.Models.projectBudgetModel, 'sync', function (e) {
+                App.Collections.annualBudgetsManagementCollection.fetch({reset: true})
+            });
+            self.checkBrowser();
+            self.checkMobileDevice();
+        },
+        checkBrowser: function(){
+            let bIsChrome = navigator.userAgent.indexOf('Chrome') > -1;
+            let bIsExplorer = navigator.userAgent.indexOf('MSIE') > -1;
+            let bIsFirefox = navigator.userAgent.indexOf('Firefox') > -1;
+            let bIsSafari = navigator.userAgent.indexOf("Safari") > -1;
+            let bIsOpera = navigator.userAgent.toLowerCase().indexOf("op") > -1;
+            if ((bIsChrome) && (bIsSafari)) {
+                bIsSafari = false;
+            }
+            if ((bIsChrome) && (bIsOpera)) {
+                bIsChrome = false;
+            }
+
+            if (bIsSafari) {
+                alert('Sorry, the Safari browser is not supported yet and things will randomly not work if you continue to use it. Please use Chrome or Firefox.');
+            }
+        },
+        checkMobileDevice: function(){
+            if((typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1)){
+                alert('The Spring Into Action admin has not been developed for mobile devices. Use at your own risk.')
+            }
         },
         setRouteView: function (view, bOnlyRenderRouteView) {
             this.routeView = view;

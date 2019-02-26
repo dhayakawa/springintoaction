@@ -22,31 +22,37 @@
             <a class="home-logo" href="{{ url('/') }}"><img src="/images/sia-spring-logo-transparent-big.png" /></a>
             @endif
             <ul class="nav-links">
-            @auth
-            <li><a href="{{ route('logout') }}" class="logout">
-                            <span class="hidden-xs">
-                                <span class="fa fa-power-off"></span> {{ __('boilerplate::layout.logout') }}
-                            </span>
-                </a>
-            </li>
+                @auth
+                @ability('admin,backend_user,project_manager,school_district_manager','backend_access')
                 <li>
-
-            {!! Form::open(['route' => 'logout', 'method' => 'post', 'id' => 'logout-form', 'style'=> 'display:none']) !!}
-            {!! Form::close() !!}
+                    <a href="/admin" class="admin">
+                                <span class="hidden-xs">
+                                    Admin Dashboard
+                                </span>
+                    </a>
                 </li>
-            @else
-                @env('local')
-                <li><a href="{{ route('login') }}">Login</a></li>
-                <li><a href="{{ route('register') }}">Register</a></li>
-                @elseenv('testing')
-
+                @endability
+                <li><a href="{{ route('logout') }}" class="logout">
+                                <span class="hidden-xs">
+                                    <span class="fa fa-power-off"></span> {{ __('boilerplate::layout.logout') }}
+                                </span>
+                    </a>
+                    {!! Form::open(['route' => 'logout', 'method' => 'post', 'id' => 'logout-form', 'style'=> 'display:none']) !!}
+                    {!! Form::close() !!}
+                </li>
                 @else
+                    @env('local')
+                    <!--                <li><a href="{{ route('login') }}">Login</a></li>-->
+                    <!--                <li><a href="{{ route('register') }}">Register</a></li>-->
+                    @elseenv('testing')
 
-<!--                <li><a href="{{ route('login') }}">Login</a></li>-->
-<!--                <li><a href="{{ route('register') }}">Register</a></li>-->
-                @endenv
+                    @else
 
-            @endauth
+                    <!--                <li><a href="{{ route('login') }}">Login</a></li>-->
+                    <!--                <li><a href="{{ route('register') }}">Register</a></li>-->
+                    @endenv
+
+                @endauth
             </ul>
         </div>
     </div>

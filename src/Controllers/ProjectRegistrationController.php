@@ -58,14 +58,38 @@ class ProjectRegistrationController extends BaseController
         $aContactInfo = $params['contact_info'];
         $ProjectID = $params['ProjectID'];
         $ProjectRoleID = 4;
-
+        $aRegistered = [];
+        $aRegistrationFailed = [];
+        $aAlreadyRegistered = [];
+        $iSuccessCnt = 0;
+        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+            $aContactInfo]);
         if (is_array($aContactInfo)) {
             foreach ($aContactInfo as $contactInfo) {
-                $volunteer = Volunteer::where('Email', $contactInfo['Email'])->get()->first();
+                $volunteer = Volunteer::where(
+                    [
+                        [
+                            'Email',
+                            '=',
+                            $contactInfo['Email'],
+                        ],
+                        [
+                            'FirstName',
+                            '=',
+                            $contactInfo['FirstName'],
+                        ],
+                        [
+                            'LastName',
+                            '=',
+                            $contactInfo['LastName'],
+                        ],
+                    ]
+                )->get()->first();
                 if (!empty($volunteer)) {
                     $volunteerID = $volunteer->VolunteerID;
+                    $groveId = $volunteer->IndividualID;
                 } else {
-                    $model = new Volunteer;
+                    $model = new Volunteer();
 
                     $defaultData = $model->getDefaultRecordData();
                     $contactInfo = array_merge($defaultData, $contactInfo);
@@ -79,41 +103,86 @@ class ProjectRegistrationController extends BaseController
                     if (isset($contactInfo['ResponseID']) && $contactInfo['ResponseID'] === '') {
                         $contactInfo['ResponseID'] = 0;
                     }
-                    if (isset($contactInfo['IndividualID']) && $contactInfo['IndividualID'] === '') {
-                        $contactInfo['IndividualID'] = 0;
-                    }
+                    $contactInfo['IndividualID'] = empty($contactInfo['groveId']) ? 0 : $contactInfo['groveId'];
                     array_walk(
                         $contactInfo,
                         function (&$value, $key) {
                             if (is_string($value)) {
                                 $value = \urldecode($value);
                             }
+                            if($key === 'groveId'){
+                                $value = (int) $value;
+                            }
                         }
                     );
 
-                    $model->fill($aContactInfo);
+                    $model->fill($contactInfo);
+
+                    \Illuminate\Support\Facades\Log::debug(
+                        '',
+                        [
+                            'File:' . __FILE__,
+                            'Method:' . __METHOD__,
+                            'Line:' . __LINE__,
+                            $contactInfo,
+                            $model->toArray(),
+                        ]
+                    );
                     $model->save();
                     $volunteerID = $model->VolunteerID;
+                    $groveId = $model->IndividualID;
                 }
-                $model = new ProjectVolunteer;
-                $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $ProjectID]);
-                $success = $model->save();
-
-                $model = new ProjectVolunteerRole;
-                $model->fill(
+                $contactInfo['groveId'] = $groveId;
+                $bProjectVolunteerExists = ProjectVolunteer::where(
                     [
-                        'VolunteerID' => $volunteerID,
-                        'ProjectID' => $ProjectID,
-                        'ProjectRoleID' => $ProjectRoleID,
+                        ['ProjectID', '=', $ProjectID],
+                        ['VolunteerID', '=', $volunteerID],
                     ]
-                );
-                $success = $model->save();
-                if (!$success) {
-                    $batchSuccess = false;
+                )->exists();
+
+                if (!$bProjectVolunteerExists) {
+                    $model = new ProjectVolunteer;
+                    $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $ProjectID]);
+                    $pvSuccess = $model->save();
+                    $pvrSuccess = false;
+                    if ($pvSuccess) {
+                        $model = new ProjectVolunteerRole;
+                        $model->fill(
+                            [
+                                'VolunteerID' => $volunteerID,
+                                'ProjectID' => $ProjectID,
+                                'ProjectRoleID' => $ProjectRoleID,
+                            ]
+                        );
+                        $pvrSuccess = $model->save();
+                    }
+
+                    if ($pvSuccess && $pvrSuccess) {
+                        $iSuccessCnt++;
+                        $aRegistered[] = $contactInfo;
+                    } else {
+                        $aRegistrationFailed[] = $contactInfo;
+                    }
                 } else {
-                    ProjectReservation::where('session_id', $request->session()->getId())->delete();
-                    $request->session()->regenerate();
+                    $aAlreadyRegistered[] = $contactInfo;
                 }
+            }
+            if ($iSuccessCnt) {
+                if ($iSuccessCnt + count($aAlreadyRegistered) === count($aContactInfo)) {
+                    ProjectReservation::where('session_id', $request->session()->getId())->delete();
+                    $request->session()->forget('groveId');
+                    $request->session()->regenerate();
+                } elseif ($iSuccessCnt + count($aAlreadyRegistered) < count($aContactInfo)) {
+                    ProjectReservation::where('session_id', $request->session()->getId())->update(
+                        ['reserve' => $iSuccessCnt]
+                    );
+                }
+            }
+
+            if(count($aRegistered) === count($aContactInfo) && count($aAlreadyRegistered) === 0 && count($aRegistrationFailed) === 0){
+                $success = true;
+            } else {
+                $success = false;
             }
         }
 
@@ -124,9 +193,19 @@ class ProjectRegistrationController extends BaseController
                 'success' => true,
                 'msg' => 'Thank you for volunteering! We\'ll be sending a confirmation
                             email and notifications as we get closer to the date.',
+                'aRegistered' => $aRegistered,
+                'aAlreadyRegistered' => $aAlreadyRegistered,
+                'aRegistrationFailed' => $aRegistrationFailed,
+
             ];
         } else {
-            $response = ['success' => false, 'msg' => 'Project Registration Failed.'];
+            $response = [
+                'success' => false,
+                'msg' => count($aRegistered) ? 'Project Registration Problems.' : 'Project Registration Failed.',
+                'aRegistered' => $aRegistered,
+                'aAlreadyRegistered' => $aAlreadyRegistered,
+                'aRegistrationFailed' => $aRegistrationFailed,
+            ];
         }
 
         return view('springintoaction::frontend.json_response', $request, compact('response'));
@@ -187,12 +266,22 @@ class ProjectRegistrationController extends BaseController
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
 
+    public function groveLogout(Request $request) {
+        $request->session()->forget('groveId');
+        $request->session()->regenerate();
+        $response = ['success' => true, 'msg' => 'Logged out.'];
+        return view('springintoaction::frontend.json_response', $request, compact('response'));
+    }
     public function groveLogin(Request $request)
     {
-        $login = $request->GroveEmail;
-        $password = $request->GrovePassword;
+        $groveLoggedInId = null;
         $RegisterProcessType = $request->RegisterProcessType;
 
+        $login = $request->GroveEmail;
+        $password = $request->GrovePassword;
+        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+            $login,$password,
+            $RegisterProcessType]);
         $groveApi = new GroveApi();
         $response = $groveApi->individual_profile_from_login_password($login, $password);
         \Illuminate\Support\Facades\Log::debug(
@@ -201,27 +290,28 @@ class ProjectRegistrationController extends BaseController
                 'File:' . __FILE__,
                 'Method:' . __METHOD__,
                 'Line:' . __LINE__,
-                $login,
-                $password,
-                $RegisterProcessType,
                 $response,
             ]
         );
         $bGroveLoginSuccessful = $response["individuals"]['@attributes']['count'] === '1';
+        $individual = $response["individuals"]["individual"];
+        $phone = $groveApi->findPhoneTypeFromProfile($individual);
+        $email = $individual['email'];
+        $firstName = $individual['first_name'];
+        $lastName = $individual['last_name'];
+        $familyId = $individual['family']['@attributes']['id'];
+        $groveId = $individual["@attributes"]['id'];
+        $request->session()->put('groveId', $groveId);
+
         if ($bGroveLoginSuccessful) {
-            $individual = $response["individuals"]["individual"];
-            $phone = $groveApi->findPhoneTypeFromProfile($individual);
-            $email = $individual['email'];
-            $firstName = $individual['first_name'];
-            $lastName = $individual['last_name'];
-            $groveId = $individual["@attributes"]['id'];
+            $groveLoggedInId = $groveId;
             $contact_info = [];
 
             $success = true;
 
             if ($RegisterProcessType === 'family') {
                 $aMembers = $this->getFamilyFromDb(
-                    $individual['family']['@attributes']['id']
+                    $familyId
                 );
                 foreach ($aMembers as $aMember) {
                     $phone = $aMember['phone'];
@@ -234,10 +324,11 @@ class ProjectRegistrationController extends BaseController
                         'FirstName' => $firstName,
                         'LastName' => $lastName,
                         'Email' => $email,
+                        'groveId' => $aMember['id']
                     ];
                 }
             } elseif ($RegisterProcessType === 'lifegroup') {
-                $aMembers = $this->getLifeGroupFromDb($groveId);
+                $aMembers = $this->getLifeGroupFromDb($groveId, $familyId);
                 foreach ($aMembers as $aMember) {
                     $phone = $aMember['phone'];
                     $email = $aMember['email'];
@@ -249,6 +340,8 @@ class ProjectRegistrationController extends BaseController
                         'FirstName' => $firstName,
                         'LastName' => $lastName,
                         'Email' => $email,
+                        'groveId' => isset($aMember['individual_id']) ? $aMember['individual_id'] :
+                            $aMember['id']
                     ];
                 }
             }
@@ -273,7 +366,8 @@ class ProjectRegistrationController extends BaseController
         } else {
             $success = false;
         }
-
+\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+    $contact_info]);
         // $contact_info = [];
         // for($i=0;$i<10;$i++){
         //     $contact_info[]= [
@@ -285,25 +379,35 @@ class ProjectRegistrationController extends BaseController
         //     ]  ;
         // }
         if (!isset($success)) {
-            $response = ['success' => false, 'msg' => 'Grove Login Not Implemented Yet.'];
+            $response =
+                [
+                    'success' => false,
+                    'groveLoggedInId' => $groveLoggedInId,
+                    'msg' => 'Grove Login Not Implemented Yet.',
+                ];
         } elseif ($success) {
-            $response = ['success' => true, 'msg' => 'Grove Login Succeeded.', 'contact_info' => $contact_info];
+            $response = [
+                'success' => true,
+                'msg' => 'Grove Login Succeeded.',
+                'groveLoggedInId' => $groveLoggedInId,
+                'contact_info' => $contact_info,
+            ];
         } else {
-            $response = ['success' => false, 'msg' => 'Grove Login Failed.'];
+            $response = ['success' => false, 'groveLoggedInId' => $groveLoggedInId, 'msg' => 'Grove Login Failed.'];
         }
 
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
 
-    public function getLifeGroupFromDb($groveId)
+    public function getLifeGroupFromDb($groveId, $familyId)
     {
         $loggedInLifeGroup = LifeGroups::where('individual_id', '=', $groveId)->get()->first();
         $aLifeGroupMembers = LifeGroups::where('group_id', '=', $loggedInLifeGroup->group_id)->join(
-                'grove_individuals',
-                'grove_individuals.id',
-                '=',
-                'life_groups.individual_id'
-            )->get()->toArray();
+            'grove_individuals',
+            'grove_individuals.id',
+            '=',
+            'life_groups.individual_id'
+        )->get()->toArray();
         foreach ($aLifeGroupMembers as $idx => $aMember) {
             $aLifeGroupMembers[$idx]['Church'] = 'woodlands';
             $aLifeGroupMembers[$idx]['phone'] =
@@ -313,7 +417,9 @@ class ProjectRegistrationController extends BaseController
             }
         }
 
-        return $aLifeGroupMembers;
+        $aFamilyMembers = $this->getFamilyFromDb($familyId);
+
+        return array_merge($aLifeGroupMembers, $aFamilyMembers->toArray());
     }
 
     public function getFamilyFromDb($family_id)

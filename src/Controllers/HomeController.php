@@ -39,6 +39,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectAttachment;
 use Dhayakawa\SpringIntoAction\Requests\ProjectRequestPost;
 use Illuminate\Support\Facades\App;
 use Dhayakawa\SpringIntoAction\Models\SiteSetting;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends BaseController
 {
@@ -64,7 +65,7 @@ class HomeController extends BaseController
         $appInitialData = [];
         $SiteSetting = new SiteSetting();
         $aSiteSettingResult = $SiteSetting->getIsSettingOn('open_registration');
-        
+
         $bShowProjectRegistration = $aSiteSettingResult['on'];
         if ($bShowProjectRegistration) {
             $yearNow = date('Y');

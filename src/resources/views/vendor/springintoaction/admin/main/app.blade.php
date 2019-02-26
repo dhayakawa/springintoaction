@@ -25,6 +25,7 @@
 <script src="{{ mix('/js/springintoaction.packages.js') }}"></script>
 <script src="{{ mix('/js/springintoaction.templates.js') }}"></script>
 <script src="{{ mix('/js/springintoaction.init.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.logging.js') }}"></script>
 <script src="{{ mix('/js/springintoaction.models.js') }}"></script>
 <script src="/js/app-initial-models-vars-data.js?id={{ $appInitialData['random'] }}"></script>
 <script src="{{ mix('/js/springintoaction.collections.js') }}"></script>
