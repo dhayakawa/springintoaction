@@ -224,13 +224,15 @@
                     case 'ProjectDescription':
                         if (sStatusEntryField !== null && project[sStatusEntryField].toString() === sIncompleteStatusEntryValue.toString()) {
                             project[sStateKey] = 'fa fa-info-circle text-danger';
+                            project[sToolTipKey] = self.cleanForToolTip(sStatusEntryField.split(/(?=[A-Z])/).join(" ") + ' is empty.');
                         } else {
                             project[sStateKey] = 'fa fa-info-circle text-success';
                             if (typeof oMappedFieldCnts[sFieldName] !== 'undefined' && oMappedFieldCnts[sFieldName] !== null) {
                                 oFieldCnts = self.incrementFieldCnt(oMappedFieldCnts[sFieldName].fieldCntsKey, oFieldCnts);
                             }
+                            project[sToolTipKey] = self.cleanForToolTip(project[sStatusEntryField].toString());
                         }
-                        project[sToolTipKey] = self.cleanForToolTip(sStatusEntryField.split(/(?=[A-Z])/).join(" ") + ' is empty.');
+
                         break;
                     case 'BudgetAllocationDone':
                         let budgetTotal = 0.00;

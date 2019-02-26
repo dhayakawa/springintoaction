@@ -32,82 +32,97 @@
         }
     }
 
-    .status-legend-wrapper {
-        top: 20px;
-        position: relative;
-        padding: 5px;
-        background: whitesmoke;
-        font-size: smaller;
-        border: 1px solid #e4e4e4;
+    .status-management-view {
+        .status-management-wrapper {
+            .status-management-record {
+                // use this margin instead of the h3 top-margin
+                margin-bottom: 20px;
 
-        .status-legend {
-            margin-right: 20px;
-        }
-    }
-
-    .status-management-wrapper {
-        .table {
-            table-layout: fixed;
-
-            th, td {
-                text-align: center;
-            }
-
-            td {
-                i:hover {
-                    cursor: pointer;
+                h3.site-name {
+                    margin-top: 0;
+                    margin-bottom: 0;
                 }
-                .fa-info-circle {
+
+                .status-legend-wrapper {
                     position: relative;
-                    top: 3px;
-                    &:hover{
-                        cursor: default;
+                    padding: 5px;
+                    background: whitesmoke;
+                    font-size: smaller;
+                    border: 1px solid #e4e4e4;
+
+                    .status-legend {
+                        margin-right: 8px;
                     }
                 }
-            }
 
-            &.project-status {
-                td:nth-of-type(1) {
-                    width: 75px;
+                .table {
+                    table-layout: fixed;
+
+                    th, td {
+                        text-align: center;
+                    }
+
+                    td {
+                        i:hover {
+                            cursor: pointer;
+                        }
+
+                        .fa-info-circle {
+                            position: relative;
+                            top: 3px;
+
+                            &:hover {
+                                cursor: default;
+                            }
+                        }
+                    }
+
+                    &.project-status {
+                        td:nth-of-type(1) {
+                            width: 75px;
+                        }
+
+                        td:nth-of-type(2) {
+                            min-width: 130px;
+                        }
+                    }
+
+                    .popover-status-management-form {
+                        label {
+                            //display:block;
+                        }
+                    }
                 }
 
-                td:nth-of-type(2) {
-                    min-width: 130px;
+                .tooltip-inner {
+                    max-width: 400px;
+                    padding: 3px 8px;
+                    color: #fff;
+                    text-align: center;
+                    background-color: #000;
+                    border-radius: 4px
                 }
-            }
-            .popover-status-management-form{
-                label{
-                    //display:block;
+
+                .tooltip-table {
+                    table-layout: fixed;
+                    background: transparent;
+
+                    th, td {
+                        text-align: left;
+                    }
+
+                    tr:last-child {
+                        td {
+                            border: 0
+                        }
+                    }
+
+                    td.hide-overflow {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis
+                    }
                 }
-            }
-        }
-
-        .tooltip-inner {
-            max-width: 400px;
-            padding: 3px 8px;
-            color: #fff;
-            text-align: center;
-            background-color: #000;
-            border-radius: 4px
-        }
-
-        .tooltip-table {
-            table-layout: fixed;
-            background:transparent;
-            th,td {
-                text-align: left;
-            }
-
-            tr:last-child {
-                td {
-                    border: 0
-                }
-            }
-
-            td.hide-overflow {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis
             }
         }
     }
@@ -368,7 +383,7 @@
     }
 }
 
-.annual-budget-view-contols {
+.annual-budget-view-controls {
     margin-left: 40px;
     display: inline-block;
 }

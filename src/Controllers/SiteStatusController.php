@@ -115,7 +115,7 @@
         }
 
         public function getStatusManagementRecords(){
-            \Illuminate\Support\Facades\Log::debug('getting latest records', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__]);
+            //\Illuminate\Support\Facades\Log::debug('getting latest records', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__]);
             $projectModel = new Project();
             return $projectModel->getStatusManagementRecords();
         }
