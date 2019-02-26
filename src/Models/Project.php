@@ -345,15 +345,15 @@ FROM (
                 $order['direction']
             );
         }
-        \Illuminate\Support\Facades\Log::debug(
-            '',
-            [
-                'File:' . __FILE__,
-                'Method:' . __METHOD__,
-                'Line:' . __LINE__,
-                $projects->toSql(),
-            ]
-        );
+        // \Illuminate\Support\Facades\Log::debug(
+        //     '',
+        //     [
+        //         'File:' . __FILE__,
+        //         'Method:' . __METHOD__,
+        //         'Line:' . __LINE__,
+        //         $projects->toSql(),
+        //     ]
+        // );
         $all_projects = $projects->get()->toArray();
         if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
             $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
