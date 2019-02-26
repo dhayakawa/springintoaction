@@ -62,6 +62,8 @@ class ProjectRegistrationController extends BaseController
         $aRegistrationFailed = [];
         $aAlreadyRegistered = [];
         $iSuccessCnt = 0;
+        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+            $aContactInfo]);
         if (is_array($aContactInfo)) {
             foreach ($aContactInfo as $contactInfo) {
                 $volunteer = Volunteer::where(
@@ -101,14 +103,15 @@ class ProjectRegistrationController extends BaseController
                     if (isset($contactInfo['ResponseID']) && $contactInfo['ResponseID'] === '') {
                         $contactInfo['ResponseID'] = 0;
                     }
-                    if (isset($contactInfo['IndividualID']) && $contactInfo['IndividualID'] === '') {
-                        $contactInfo['IndividualID'] = 0;
-                    }
+                    $contactInfo['IndividualID'] = empty($contactInfo['groveId']) ? 0 : $contactInfo['groveId'];
                     array_walk(
                         $contactInfo,
                         function (&$value, $key) {
                             if (is_string($value)) {
                                 $value = \urldecode($value);
+                            }
+                            if($key === 'groveId'){
+                                $value = (int) $value;
                             }
                         }
                     );
@@ -165,7 +168,6 @@ class ProjectRegistrationController extends BaseController
                 }
             }
             if ($iSuccessCnt) {
-                $success = true;
                 if ($iSuccessCnt + count($aAlreadyRegistered) === count($aContactInfo)) {
                     ProjectReservation::where('session_id', $request->session()->getId())->delete();
                     $request->session()->forget('groveId');
@@ -175,6 +177,10 @@ class ProjectRegistrationController extends BaseController
                         ['reserve' => $iSuccessCnt]
                     );
                 }
+            }
+
+            if(count($aRegistered) === count($aContactInfo) && count($aAlreadyRegistered) === 0 && count($aRegistrationFailed) === 0){
+                $success = true;
             } else {
                 $success = false;
             }
@@ -195,7 +201,7 @@ class ProjectRegistrationController extends BaseController
         } else {
             $response = [
                 'success' => false,
-                'msg' => 'Project Registration Failed.',
+                'msg' => count($aRegistered) ? 'Project Registration Problems.' : 'Project Registration Failed.',
                 'aRegistered' => $aRegistered,
                 'aAlreadyRegistered' => $aAlreadyRegistered,
                 'aRegistrationFailed' => $aRegistrationFailed,
@@ -270,48 +276,32 @@ class ProjectRegistrationController extends BaseController
     {
         $groveLoggedInId = null;
         $RegisterProcessType = $request->RegisterProcessType;
-        $groveId = isset($request->groveId) ? $request->groveId : null;
-        $bForceLoginEveryTime = true;
-        if ($bForceLoginEveryTime || !$groveId) {
-            $login = $request->GroveEmail;
-            $password = $request->GrovePassword;
-            $groveApi = new GroveApi();
-            $response = $groveApi->individual_profile_from_login_password($login, $password);
-            \Illuminate\Support\Facades\Log::debug(
-                '',
-                [
-                    'File:' . __FILE__,
-                    'Method:' . __METHOD__,
-                    'Line:' . __LINE__,
-                    $login,
-                    $password,
-                    $RegisterProcessType,
-                    $response,
-                ]
-            );
-            $bGroveLoginSuccessful = $response["individuals"]['@attributes']['count'] === '1';
-            $individual = $response["individuals"]["individual"];
-            $phone = $groveApi->findPhoneTypeFromProfile($individual);
-            $email = $individual['email'];
-            $firstName = $individual['first_name'];
-            $lastName = $individual['last_name'];
-            $familyId = $individual['family']['@attributes']['id'];
-            $groveId = $individual["@attributes"]['id'];
-            $request->session()->put('groveId', $groveId);
-        } else {
-            if ($groveId && (string) $request->session()->get('groveId') === (string) $groveId) {
-                $bGroveLoginSuccessful = true;
-                $individual = GroveIndividual::get($groveId)->toArray();
-                $familyId = null;
-                $phone = null;
-                $email = $individual['email'];
-                $firstName = $individual['first_name'];
-                $lastName = $individual['last_name'];
-                $familyId = $individual['family_id'];
-            } else {
-                $bGroveLoginSuccessful = false;
-            }
-        }
+
+        $login = $request->GroveEmail;
+        $password = $request->GrovePassword;
+        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+            $login,$password,
+            $RegisterProcessType]);
+        $groveApi = new GroveApi();
+        $response = $groveApi->individual_profile_from_login_password($login, $password);
+        \Illuminate\Support\Facades\Log::debug(
+            '',
+            [
+                'File:' . __FILE__,
+                'Method:' . __METHOD__,
+                'Line:' . __LINE__,
+                $response,
+            ]
+        );
+        $bGroveLoginSuccessful = $response["individuals"]['@attributes']['count'] === '1';
+        $individual = $response["individuals"]["individual"];
+        $phone = $groveApi->findPhoneTypeFromProfile($individual);
+        $email = $individual['email'];
+        $firstName = $individual['first_name'];
+        $lastName = $individual['last_name'];
+        $familyId = $individual['family']['@attributes']['id'];
+        $groveId = $individual["@attributes"]['id'];
+        $request->session()->put('groveId', $groveId);
 
         if ($bGroveLoginSuccessful) {
             $groveLoggedInId = $groveId;
@@ -338,7 +328,7 @@ class ProjectRegistrationController extends BaseController
                     ];
                 }
             } elseif ($RegisterProcessType === 'lifegroup') {
-                $aMembers = $this->getLifeGroupFromDb($groveId);
+                $aMembers = $this->getLifeGroupFromDb($groveId, $familyId);
                 foreach ($aMembers as $aMember) {
                     $phone = $aMember['phone'];
                     $email = $aMember['email'];
@@ -350,7 +340,8 @@ class ProjectRegistrationController extends BaseController
                         'FirstName' => $firstName,
                         'LastName' => $lastName,
                         'Email' => $email,
-                        'groveId' => $aMember['individual_id']
+                        'groveId' => isset($aMember['individual_id']) ? $aMember['individual_id'] :
+                            $aMember['id']
                     ];
                 }
             }
@@ -375,7 +366,8 @@ class ProjectRegistrationController extends BaseController
         } else {
             $success = false;
         }
-
+\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+    $contact_info]);
         // $contact_info = [];
         // for($i=0;$i<10;$i++){
         //     $contact_info[]= [
@@ -407,7 +399,7 @@ class ProjectRegistrationController extends BaseController
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
 
-    public function getLifeGroupFromDb($groveId)
+    public function getLifeGroupFromDb($groveId, $familyId)
     {
         $loggedInLifeGroup = LifeGroups::where('individual_id', '=', $groveId)->get()->first();
         $aLifeGroupMembers = LifeGroups::where('group_id', '=', $loggedInLifeGroup->group_id)->join(
@@ -425,7 +417,9 @@ class ProjectRegistrationController extends BaseController
             }
         }
 
-        return $aLifeGroupMembers;
+        $aFamilyMembers = $this->getFamilyFromDb($familyId);
+
+        return array_merge($aLifeGroupMembers, $aFamilyMembers->toArray());
     }
 
     public function getFamilyFromDb($family_id)

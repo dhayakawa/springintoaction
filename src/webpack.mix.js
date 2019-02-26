@@ -18,6 +18,7 @@ mix.setPublicPath("public");
  * It is not the /laravel/packages/dhayakawa/springintoaction/src/node_modules path.
  */
 mix.scripts([
+    'packages/dhayakawa/springintoaction/src/resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.js',
     'node_modules/lodash/lodash.js',
     'node_modules/underscore/underscore.js',
     'node_modules/underscore.string/dist/underscore.string.js',
@@ -44,6 +45,7 @@ mix.scripts([
     'resources/assets/js/frontend/registration/siaModal.jquery.js'
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
+    'packages/dhayakawa/springintoaction/src/resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.min.js',
     'node_modules/lodash/lodash.min.js',
     'node_modules/underscore/underscore-min.js',
     'node_modules/underscore.string/dist/underscore.string.min.js',
@@ -131,9 +133,11 @@ mix.scripts([
 ], 'public/js/springintoaction.views.js');
 mix.scripts([
     'resources/assets/js/init.js',
-    'resources/assets/js/browser.console.logging.js',
     'resources/assets/js/views/select.js'
 ], 'public/js/springintoaction.init.js');
+mix.scripts([
+    'resources/assets/js/browser.console.logging.js'
+], 'public/js/springintoaction.logging.js');
 mix.scripts([
     'resources/assets/js/routes/route.js',
     'resources/assets/js/sia.js'
@@ -166,7 +170,6 @@ mix.scripts([
 ], 'public/js/frontend/registration/springintoaction.views.js');
 mix.scripts([
     'resources/assets/js/frontend/registration/init.js',
-    'resources/assets/js/browser.console.logging.js',
     'resources/assets/js/views/select.js'
 ], 'public/js/frontend/registration/springintoaction.init.js');
 mix.scripts([
