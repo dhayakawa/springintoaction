@@ -37,6 +37,7 @@
 <script src="{{ mix('/js/springintoaction.packages.js') }}"></script>
 <script src="{{ mix('/js/frontend/registration/springintoaction.templates.js') }}"></script>
 <script src="{{ mix('/js/frontend/registration/springintoaction.init.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.logging.js') }}"></script>
 <script src="{{ mix('/js/frontend/registration/springintoaction.models.js') }}"></script>
 <script src="/js/frontend/registration/app-initial-models-vars-data.js?id={{ $appInitialData['random'] }}"></script>
 <script src="{{ mix('/js/frontend/registration/springintoaction.collections.js') }}"></script>

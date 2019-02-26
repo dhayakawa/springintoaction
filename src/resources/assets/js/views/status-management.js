@@ -13,14 +13,73 @@
             self.pendingIcon = self.defaultStateIcon + ' text-warning';
             self.validateIcon = 'fas fa-dot-circle text-warning';
             self.notDoneIcon = self.defaultStateIcon + ' text-danger';
-            _.bindAll(this, 'render','setPopOverContent','closeStatusManagementOptionPopover','saveStatusManagementOption');
+            /**
+             * Init oFieldCnts values.
+             * Needs to be in sync with self.oStatusManagementRecordModels.oFieldCnts
+             * @type {number}
+             */
+            let iProjectDescriptionCompleteCnt = 0;
+            let iBudgetEstimationCompleteCnt = 0;
+            let iBudgetActualCompleteCnt = 0;
+            let iVolunteerEstimationCompleteCnt = 0;
+            let iVolunteerAssignmentCompleteCnt = 0;
+            self.oStatusManagementRecordModels = {
+                oFieldCnts: {
+                    iBudgetEstimationCompleteCnt: iBudgetEstimationCompleteCnt,
+                    iBudgetActualCompleteCnt: iBudgetActualCompleteCnt,
+                    iVolunteerEstimationCompleteCnt: iVolunteerEstimationCompleteCnt,
+                    iVolunteerAssignmentCompleteCnt: iVolunteerAssignmentCompleteCnt,
+                    iProjectDescriptionCompleteCnt: iProjectDescriptionCompleteCnt
+                },
+                sitestatus: {
+                    aFields: ['ProjectDescriptionComplete', 'BudgetEstimationComplete', 'BudgetActualComplete', 'VolunteerEstimationComplete', 'VolunteerAssignmentComplete'],
+                    oFieldCntsMap: {
+                        ProjectDescriptionComplete: {fieldCntsKey: 'iProjectDescriptionCompleteCnt'},
+                        BudgetEstimationComplete: {fieldCntsKey: 'iBudgetEstimationCompleteCnt'},
+                        BudgetActualComplete: {fieldCntsKey: 'iBudgetActualCompleteCnt'},
+                        VolunteerEstimationComplete: {fieldCntsKey: 'iVolunteerEstimationCompleteCnt'},
+                        VolunteerAssignmentComplete: {fieldCntsKey: 'iVolunteerAssignmentCompleteCnt'}
+                    },
+                    oStatusEntryFieldsMap: {
+                        ProjectDescriptionComplete: {fieldName: 'ProjectDescription', incompleteValue: ''},
+                        BudgetEstimationComplete: {fieldName: 'CostEstimateDone', incompleteValue: '0'},
+                        BudgetActualComplete: {fieldName: 'BudgetAllocationDone', incompleteValue: '0'},
+                        VolunteerEstimationComplete: {fieldName: 'VolunteerAllocationDone', incompleteValue: '0'},
+                        VolunteerAssignmentComplete: {fieldName: '', incompleteValue: false, condition: "project.VolunteersNeededEst.toString() !== oStatusEntryFields['VolunteerEstimationComplete'].incompleteValue.toString() && project.VolunteersNeededEst.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEst.toString()"}
+                    }
+                },
+                project: {
+                    aFields: ['ProjectDescription', 'Status', 'CostEstimateDone', 'BudgetAllocationDone', 'MaterialListDone', 'VolunteerAllocationDone', 'ProjectSend', 'FinalCompletionStatus'],
+                    oValidation: {
+                        default:['1'],
+                        Status:[],
+                        ProjectSend:[] // doesn't need validation
+                    },
+                    oFieldCntsMap: {
+                        ProjectDescription: {fieldCntsKey: 'iProjectDescriptionCompleteCnt'},
+                        CostEstimateDone: {fieldCntsKey: 'iBudgetEstimationCompleteCnt'},
+                        BudgetAllocationDone: {fieldCntsKey: 'iBudgetActualCompleteCnt'},
+                        VolunteerAllocationDone: {fieldCntsKey: 'iVolunteerEstimationCompleteCnt'}
+                    },
+                    oStatusEntryFieldsMap: {
+                        ReadyForRegistration: {fieldName:'', incompleteValue: false, condition: "project.CostEstimateDone.toString() === 1 && project.BudgetAllocationDone.toString() === 1 && project.MaterialListDone.toString() === 1 && project.VolunteerAllocationDone.toString() === 1"},
+                        ProjectDescription: {fieldName: 'ProjectDescription', incompleteValue: ''},
+                        CostEstimateDone: {fieldName: 'EstimatedCost', incompleteValue: '0.0000'},
+                        BudgetAllocationDone: {fieldName: 'BudgetSources', incompleteValue: ''},
+                        MaterialListDone: {fieldName: 'MaterialsNeeded', incompleteValue: ''},
+                        VolunteerAllocationDone: {fieldName: 'VolunteersNeededEst', incompleteValue: '0'},
+                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.VolunteersNeededEst.toString() !== oStatusEntryFields['VolunteerAllocationDone'].incompleteValue.toString() && project.VolunteersNeededEst.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEst.toString()"}
+                    }
+                }
+            };
+            _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
         },
         events: {
             'click button': 'update',
             'change .form-control': 'enableSave',
             'change [name="value"]': 'enableSave',
-            'inserted.bs.popover [data-popover="true"]' : 'setPopOverContent',
-            'click .popover-status-management-form .cancel': 'closeStatusManagementOptionPopover',
+            'inserted.bs.popover [data-popover="true"]': 'setPopOverContent',
+            'click .popover-status-management-form .cancel': 'cancelSaveStatusManagementOption',
             'click .popover-status-management-form .save': 'saveStatusManagementOption',
         },
         render: function () {
@@ -34,175 +93,191 @@
         setTemplateVars: function (modelAttributes) {
             let self = this;
             let projectCnt = modelAttributes.projects.length;
-            let iProjectDescriptionCompleteCnt = 0;
-            let iBudgetEstimationCompleteCnt = 0;
-            let iBudgetActualCompleteCnt = 0;
-            let iVolunteerEstimationCompleteCnt = 0;
-            let iVolunteerAssignmentCompleteCnt = 0;
+            let oFieldCnts = self.oStatusManagementRecordModels.oFieldCnts;
 
             for (let i = 0; i < projectCnt; i++) {
-                [modelAttributes.projects[i], iBudgetEstimationCompleteCnt, iBudgetActualCompleteCnt, iVolunteerEstimationCompleteCnt, iVolunteerAssignmentCompleteCnt, iProjectDescriptionCompleteCnt] = self.setProjectStatus(modelAttributes.projects[i], iBudgetEstimationCompleteCnt, iBudgetActualCompleteCnt, iVolunteerEstimationCompleteCnt, iVolunteerAssignmentCompleteCnt, iProjectDescriptionCompleteCnt);
+                [modelAttributes.projects[i], oFieldCnts] = self.setProjectStatusStates(modelAttributes.projects[i], oFieldCnts);
             }
-
             /**
              * Setup for Site Statuses
              */
-            if (iProjectDescriptionCompleteCnt === projectCnt && modelAttributes.ProjectDescriptionComplete === 0) {
-                modelAttributes.projectDescriptionCompleteState = self.validateIcon;
-            } else {
-                modelAttributes.projectDescriptionCompleteState = (modelAttributes.ProjectDescriptionComplete === 1 ? self.doneIcon : self.notDoneIcon);
-            }
 
-            if (iBudgetEstimationCompleteCnt === projectCnt && modelAttributes.BudgetEstimationComplete === 0) {
-                modelAttributes.budgetEstimationCompleteState = self.validateIcon;
-            } else {
-                modelAttributes.budgetEstimationCompleteState = (modelAttributes.BudgetEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
-            }
-
-            if (iBudgetEstimationCompleteCnt === projectCnt && modelAttributes.BudgetActualComplete === 0) {
-                modelAttributes.budgetActualCompleteState = self.validateIcon;
-            } else {
-                modelAttributes.budgetActualCompleteState = (modelAttributes.BudgetActualComplete === 1 ? self.doneIcon : self.notDoneIcon);
-            }
-
-            if (iVolunteerEstimationCompleteCnt === projectCnt && modelAttributes.VolunteerEstimationComplete === 0) {
-                modelAttributes.volunteerEstimationCompleteState = self.validateIcon;
-            } else {
-                modelAttributes.volunteerEstimationCompleteState = (modelAttributes.VolunteerEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
-            }
-
-            if (iVolunteerAssignmentCompleteCnt === projectCnt && modelAttributes.VolunteerAssignmentComplete === 0) {
-                modelAttributes.volunteerAssignmentCompleteState = self.validateIcon;
-            } else {
-                modelAttributes.volunteerAssignmentCompleteState = (modelAttributes.VolunteerEstimationComplete === 1 ? self.doneIcon : self.notDoneIcon);
-            }
+            modelAttributes = self.setSiteStatusStates(modelAttributes, oFieldCnts);
 
             return modelAttributes;
         },
-        setProjectStatus: function(project, iBudgetEstimationCompleteCnt, iBudgetActualCompleteCnt, iVolunteerEstimationCompleteCnt, iVolunteerAssignmentCompleteCnt, iProjectDescriptionCompleteCnt){
+        calculateSiteStatusCompletedFieldCnt: function(sFieldName, modelAttributes, oStatusEntryFields){
             let self = this;
-            switch (project.Status) {
-                case '1':
-                    project.statusState = self.notDoneIcon + ' blank';
-                    break;
-                case 2:
-                case '2':
-                    project.statusState = self.doneIcon + ' dn-district';
-                    break;
-                case 3:
-                case '3':
-                    project.statusState = self.doneIcon + ' dn-woodlands';
-                    break;
-                case 4:
-                case '4':
-                    project.statusState = self.doneIcon + ' na-district';
-                    break;
-                case 5:
-                case '5':
-                    project.statusState = self.doneIcon + ' na-woodlands';
-                    break;
-                case 6:
-                case '6':
-                    project.statusState = self.pendingIcon + ' pending';
-                    break;
-                case 7:
-                case '7':
-                    project.statusState = self.doneIcon + ' approved';
-                    break;
-                case 8:
-                case '8':
-                    project.statusState = self.doneIcon + ' cancelled';
-                    break;
-                default:
-                    project.statusState = self.notDoneIcon;
-            }
-
-            if (project.EstimatedCost !== '0.0000' && parseInt(project.CostEstimateDone) === 0) {
-                project.costEstimateDoneState = self.validateIcon;
-            } else {
-                project.costEstimateDoneState = (parseInt(project.CostEstimateDone) === 1 ? self.doneIcon : self.notDoneIcon);
-                if (parseInt(project.CostEstimateDone) === 1) {
-                    if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
-                        iBudgetEstimationCompleteCnt++;
+            let projectCnt = modelAttributes.projects.length;
+            let iFieldCnt = 0;
+            //console.log('calculateSiteStatusFieldCnt', sFieldName, oStatusEntryFields[sFieldName], oStatusEntryFields, modelAttributes)
+            for (let i = 0; i < projectCnt; i++) {
+                let project = modelAttributes.projects[i];
+                if (oStatusEntryFields[sFieldName].fieldName !== '') {
+                    if (project[oStatusEntryFields[sFieldName].fieldName].toString() !== oStatusEntryFields[sFieldName].incompleteValue.toString()){
+                        iFieldCnt++;
+                    }
+                } else if (typeof oStatusEntryFields[sFieldName].condition !== 'undefined'){
+                    if (eval(oStatusEntryFields[sFieldName].condition) !== oStatusEntryFields[sFieldName].incompleteValue){
+                        iFieldCnt++;
                     }
                 }
             }
 
-            if (project.BudgetSources !== '' && project.BudgetAllocationDone === 0) {
-                project.budgetAllocationDoneState = self.validateIcon;
-            } else {
-                project.budgetAllocationDoneState = (project.BudgetAllocationDone === 1 ? self.doneIcon : self.notDoneIcon);
-                if (project.BudgetAllocationDone === 1) {
-                    if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
-                        iBudgetActualCompleteCnt++;
-                    }
+            return iFieldCnt;
+        },
+        setSiteStatusStates: function (modelAttributes, oFieldCnts) {
+            let self = this;
+            let oMappedFieldCnts = self.oStatusManagementRecordModels.sitestatus.oFieldCntsMap;
+            let projectCnt = modelAttributes.projects.length;
+            _.each(self.oStatusManagementRecordModels.sitestatus.aFields, function (sFieldName, key) {
+                let sStateKey = self.buildStateKey(sFieldName);
+                let sToolTipKey = self.buildToolTipContentKey(sFieldName);
+                let fieldCnt = typeof oFieldCnts !== 'undefined' ? self.getFieldCnt(oMappedFieldCnts[sFieldName].fieldCntsKey, oFieldCnts) : self.calculateSiteStatusCompletedFieldCnt(sFieldName, modelAttributes, self.oStatusManagementRecordModels.sitestatus.oStatusEntryFieldsMap);
+                if (fieldCnt.toString() === projectCnt.toString() && modelAttributes[sFieldName].toString() === '0') {
+                    modelAttributes[sStateKey] = self.validateIcon;
+                } else {
+                    modelAttributes[sStateKey] = (modelAttributes[sFieldName].toString() === '1' ? self.doneIcon : self.notDoneIcon);
                 }
-            }
-
-            if (project.MaterialsNeeded !== '' && project.MaterialListDone === 0) {
-                project.materialListDoneState = self.validateIcon;
-            } else {
-                project.materialListDoneState = (project.MaterialListDone === 1 ? self.doneIcon : self.notDoneIcon);
-            }
-
-            if (project.VolunteersNeededEst !== 0 && project.VolunteerAllocationDone === 0) {
-                project.volunteerAllocationDoneState = self.validateIcon;
-            } else {
-                project.volunteerAllocationDoneState = (project.VolunteerAllocationDone === 1 ? self.doneIcon : self.notDoneIcon);
-                if (project.VolunteerAllocationDone === 1) {
-                    if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
-                        iVolunteerEstimationCompleteCnt++;
-                    }
-                }
-            }
-            project.finalCompletionStatusStatus = (project.FinalCompletionStatus === 1 ? self.doneIcon : self.notDoneIcon);
-
-            if (project.VolunteersNeededEst !== 0 && project.VolunteersAssigned === project.VolunteersNeededEst) {
-                if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
-                    iVolunteerAssignmentCompleteCnt++;
-                }
-            }
-
-            project.projectSendState = self.notDoneIcon + ' not-ready-state';
-            if (project.ProjectSend === '4' || project.ProjectSend === 4) {
-                project.projectSendState = self.doneIcon + ' sent-state';
-            } else if (project.ProjectSend === '3' || project.ProjectSend === 3) {
-                project.projectSendState = self.validateIcon + ' ready-state';
-            }
-
-            if (project.ProjectDescription === '') {
-                project.projectDescriptionState = 'fa fa-info-circle text-danger';
-                project.ProjectDescription = 'Project Description is not set yet.';
-            } else {
-                project.projectDescriptionState = 'fa fa-info-circle text-success';
-                if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
-                    iProjectDescriptionCompleteCnt++;
-                }
-            }
-            /**
-             * Setup for tooltips
-             */
-            project.ProjectDescriptionToolTipContent = self.cleanForToolTip(project.ProjectDescription);
-            project.StatusToolTipContent = self.cleanForToolTip(self.getProjectStatusOptionLabel(project.Status));
-            project.CostEstimateToolTipContent = self.cleanForToolTip(project.EstimatedCost);
-            let budgetTotal = 0.00;
-            let budgetToolTip = "<table class='tooltip-table table table-condensed'>";
-            budgetToolTip += '<thead><tr><th>Amt</th><th>Source</th><th>Comment</th></tr></thead><tbody>';
-            let aBudgets = App.Collections.annualBudgetsManagementCollection.where({ProjectID: project.ProjectID});
-            _.each(aBudgets, function (budget, idx) {
-                budgetTotal += parseFloat(budget.get('BudgetAmount'));
-                budgetToolTip += '<tr><td>' + budget.get('BudgetAmount') + '</td><td>' + self.getBudgetSourceOptionLabel(budget.get('BudgetSource')) + '</td><td class=\'hide-overflow\'>' + budget.get('Comments') + '</td></tr>';
+                /**
+                 * Setup for tooltips
+                 */
+                modelAttributes[sToolTipKey] = self.cleanForToolTip(self.getYesNoOptionLabel(modelAttributes[sFieldName]));
             });
-            budgetToolTip += '<tr><td>' + budgetTotal.toString() + '</td><td colspan=\'2\'><strong>Total</strong></td></tr>';
-            budgetToolTip += '</tbody></table>';
 
-            project.BudgetAllocationToolTipContent = self.cleanForToolTip(budgetToolTip);
-            project.MaterialListToolTipContent = self.cleanForToolTip(project.MaterialsNeeded);
-            project.VolunteerAllocationToolTipContent = self.cleanForToolTip(project.VolunteersNeededEst);
-            project.ProjectSendToolTipContent = self.cleanForToolTip(self.getSendStatusOptionLabel(project.ProjectSend));
-            project.FinalCompletionStatusToolTipContent = self.cleanForToolTip(self.getYesNoOptionLabel(project.FinalCompletionStatus));
-            if (typeof iBudgetEstimationCompleteCnt !== 'undefined') {
-                return [project, iBudgetEstimationCompleteCnt, iBudgetActualCompleteCnt, iVolunteerEstimationCompleteCnt, iVolunteerAssignmentCompleteCnt, iProjectDescriptionCompleteCnt];
+            return modelAttributes;
+        },
+        buildStateKey: function (val) {
+            return s.decapitalize(val) + 'State';
+            //return val.charAt(0).toLowerCase() + val.slice(1) + 'State';
+        },
+        buildToolTipContentKey: function (val) {
+            return val + 'ToolTipContent';
+        },
+        getFieldCnt: function (FieldCntName, oFieldCnts) {
+            let self = this;
+            return oFieldCnts[FieldCntName];
+        },
+        incrementFieldCnt: function (FieldCntName, oFieldCnts) {
+            let self = this;
+            if (typeof oFieldCnts[FieldCntName] !== 'undefined') {
+                oFieldCnts[FieldCntName]++;
+            }
+            return oFieldCnts;
+        },
+        setProjectStatusStates: function (project, oFieldCnts) {
+            let self = this;
+            let oMappedFieldCnts = self.oStatusManagementRecordModels.project.oFieldCntsMap;
+            let oStatusEntryFields = self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap;
+
+            _.each(self.oStatusManagementRecordModels.project.aFields, function (sFieldName, key) {
+                let bFlaggedAsComplete = null;
+                let sStateKey = self.buildStateKey(sFieldName);
+                let sStatusEntryField = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].fieldName : null;
+                let sIncompleteStatusEntryValue = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].incompleteValue : '';
+                let sToolTipKey = self.buildToolTipContentKey(sFieldName);
+                switch (sFieldName) {
+                    case 'Status':
+                        switch (project[sFieldName].toString()) {
+                            case '1':
+                                project[sStateKey] = self.notDoneIcon + ' blank';
+                                break;
+                            case '2':
+                                project[sStateKey] = self.doneIcon + ' dn-district';
+                                break;
+                            case '3':
+                                project[sStateKey] = self.doneIcon + ' dn-woodlands';
+                                break;
+                            case '4':
+                                project[sStateKey] = self.doneIcon + ' na-district';
+                                break;
+                            case '5':
+                                project[sStateKey] = self.doneIcon + ' na-woodlands';
+                                break;
+                            case '6':
+                                project[sStateKey] = self.pendingIcon + ' pending';
+                                break;
+                            case '7':
+                                project[sStateKey] = self.doneIcon + ' approved';
+                                break;
+                            case '8':
+                                project[sStateKey] = self.doneIcon + ' cancelled';
+                                break;
+                            default:
+                                project[sStateKey] = self.notDoneIcon;
+                        }
+                        project[sToolTipKey] = self.cleanForToolTip(self.getProjectStatusOptionLabel(project[sFieldName]));
+                        break;
+                    case 'ProjectSend':
+                        switch (project[sFieldName].toString()) {
+                            case '3':
+                                project[sStateKey] = self.validateIcon + ' ready-state';
+                                break;
+                            case '4':
+                                project[sStateKey] = self.doneIcon + ' sent-state';
+                                break;
+                            default:
+                                project[sStateKey] = self.notDoneIcon + ' not-ready-state';
+                        }
+                        project[sToolTipKey] = self.cleanForToolTip(self.getSendStatusOptionLabel(project[sFieldName]));
+                        break;
+                    case 'ProjectDescription':
+                        if (sStatusEntryField !== null && project[sStatusEntryField].toString() === sIncompleteStatusEntryValue.toString()) {
+                            project[sStateKey] = 'fa fa-info-circle text-danger';
+                        } else {
+                            project[sStateKey] = 'fa fa-info-circle text-success';
+                            if (typeof oMappedFieldCnts[sFieldName] !== 'undefined' && oMappedFieldCnts[sFieldName] !== null) {
+                                oFieldCnts = self.incrementFieldCnt(oMappedFieldCnts[sFieldName].fieldCntsKey, oFieldCnts);
+                            }
+                        }
+                        project[sToolTipKey] = self.cleanForToolTip(sStatusEntryField.split(/(?=[A-Z])/).join(" ") + ' is empty.');
+                        break;
+                    case 'BudgetAllocationDone':
+                        let budgetTotal = 0.00;
+                        let budgetToolTip = "<table class='tooltip-table table table-condensed'>";
+                        budgetToolTip += '<thead><tr><th>Amt</th><th>Source</th><th>Comment</th></tr></thead><tbody>';
+                        let aBudgets = App.Collections.annualBudgetsManagementCollection.where({ProjectID: project.ProjectID});
+                        _.each(aBudgets, function (budget, idx) {
+                            budgetTotal += parseFloat(budget.get('BudgetAmount'));
+                            budgetToolTip += '<tr><td>' + budget.get('BudgetAmount') + '</td><td>' + self.getBudgetSourceOptionLabel(budget.get('BudgetSource')) + '</td><td class=\'hide-overflow\'>' + budget.get('Comments') + '</td></tr>';
+                        });
+                        budgetToolTip += '<tr><td>' + budgetTotal.toString() + '</td><td colspan=\'2\'><strong>Total</strong></td></tr>';
+                        budgetToolTip += '</tbody></table>';
+
+                        project[sToolTipKey] = self.cleanForToolTip(budgetToolTip);
+                    default:
+                        bFlaggedAsComplete = project[sFieldName].toString() === '1';
+                        // Has ability to be validated
+                        if (sStatusEntryField !== null && (project[sStatusEntryField].toString() !== sIncompleteStatusEntryValue.toString() && !bFlaggedAsComplete)) {
+                            project[sStateKey] = self.validateIcon;
+                        } else {
+                            project[sStateKey] = (bFlaggedAsComplete ? self.doneIcon : self.notDoneIcon);
+                            if (bFlaggedAsComplete) {
+                                if (typeof oMappedFieldCnts[sFieldName] !== 'undefined' && oMappedFieldCnts[sFieldName] !== null) {
+                                    oFieldCnts = self.incrementFieldCnt(oMappedFieldCnts[sFieldName].fieldCntsKey, oFieldCnts);
+                                }
+                            } else {
+                                if (sStatusEntryField !== null && sIncompleteStatusEntryValue.toString() === '' && (project[sStatusEntryField].toString() === sIncompleteStatusEntryValue.toString())) {
+                                    project[sToolTipKey] = self.cleanForToolTip(sStatusEntryField.split(/(?=[A-Z])/).join(" ") + ' is empty.');
+                                }
+                            }
+                        }
+                        if (typeof project[sToolTipKey] === 'undefined') {
+                            if (sStatusEntryField !== null) {
+                                project[sToolTipKey] = self.cleanForToolTip(project[sStatusEntryField]);
+                            } else {
+                                project[sToolTipKey] = self.cleanForToolTip(self.getYesNoOptionLabel(project[sFieldName]));
+                            }
+                        }
+                }
+            });
+
+            if (typeof oFieldCnts !== 'undefined' &&  eval(oStatusEntryFields['VolunteerAssignmentComplete'].condition) === oStatusEntryFields['VolunteerAssignmentComplete'].completeValue) {
+                oFieldCnts = self.incrementFieldCnt('iVolunteerAssignmentCompleteCnt', oFieldCnts);
+            }
+
+            if (typeof oFieldCnts !== 'undefined') {
+                return [project, oFieldCnts];
             } else {
                 return project;
             }
@@ -234,20 +309,22 @@
             });
             return label;
         },
-        getYesNoOptionLabel: function(optionId) {
+        getYesNoOptionLabel: function (optionId) {
             return optionId.toString() === '1' ? 'Yes' : 'No';
         },
         cleanForToolTip: function (str) {
-            return (str === '' || str === null) ? '' : str.toString().replace(/[\u00A0-\u9999<>\&]/gim, function (i) {
+            // converts unicode to html entities
+            // replaces double quotes with html entity
+            return (str === '' || str === null || typeof str === 'undefined') ? '' : str.toString().replace(/[\u00A0-\u9999<>\&]/gim, function (i) {
                 return '&#' + i.charCodeAt(0) + ';';
             }).replace('"', '&quot;');
         },
-        setPopOverContent: function(e){
+        setPopOverContent: function (e) {
             let self = this;
             let aOptions = [];
-            let aYesNoOptions = [{option_label: 'Yes',option_value: 1}, {option_label: 'No', option_value: 0}];
             let $icon = $(e.currentTarget);
-            if ($icon.data('model') === 'project'){
+            let $oModel = null;
+            if ($icon.data('model-type') === 'project') {
                 switch ($icon.data('field')) {
                     case 'CostEstimateDone':
                     case 'BudgetAllocationDone':
@@ -257,67 +334,178 @@
                     case 'VolunteerAssignmentComplete':
                     case 'ProjectDescriptionComplete':
                     case 'BudgetEstimationComplete':
-                        aOptions = aYesNoOptions;
+                        aOptions = App.Models.projectModel.getYesNoOptions();
                         break;
                     case 'Status':
+                        aOptions = App.Models.projectModel.getStatusOptions();
                         break;
                     case 'ProjectSend':
+                        aOptions = App.Models.projectModel.getSendOptions();
                         break;
                 }
+                $oModel = App.Collections.allProjectsCollection.get(parseInt($icon.data('id')));
+            } else if ($icon.data('model-type') === 'sitestatus') {
+                aOptions = App.Models.projectModel.getYesNoOptions();
+                $oModel = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt($icon.data('id'))});
+            }
+            // Remove the empty option if it exists
+            if (typeof aOptions[0][''] !== 'undefined') {
+                aOptions.shift();
             }
             let $popover = $icon.siblings('.popover');
-            $popover.find('.popover-title').html('<strong>Update '+ $icon.data('field') +'</strong>');
-            let sOptions = '';
-            _.each(aOptions,  function (option,key) {
-                let currentValue = App.Collections.allProjectsCollection.get($icon.data('id'));
-                let checked = currentValue.get($icon.data('field')).toString() === option.option_value.toString() ? 'checked' : '';
-                sOptions += '<div class="radio"><label><input type="radio" '+ checked +' name="'+ $icon.data('field')+'" value="' + option.option_value + '"/>'+ option.option_label+'</label></div>';
-            });
-            let sHiddenInputs = '<input type="hidden" name="model" value="'+ $icon.data('model')+'"/><input type="hidden" name="id" value="'+ $icon.data('id')+'"/><input type="hidden" name="field" value="'+ $icon.data('field')+'"/>';
-            let sForm = '<form class="popover-status-management-form" name="status-management-option-update-'+ $icon.data('field')+'-'+ $icon.data('id')+'">'+ sHiddenInputs + sOptions +'<div class="text-right"><button class="cancel btn btn-default">Cancel</button> <button class="save btn btn-primary">Save</button></div></form>';
+            $popover.find('.popover-title').html('<strong>' + $icon.data('field').split(/(?=[A-Z])/).join(" ") + '</strong>');
+            let sOptions = _.map(aOptions, function (option, key) {
+                let checked = $oModel !== null && $oModel.get($icon.data('field')).toString() === option[1].toString() ? 'checked' : '';
+                return '<div class="radio"><label><input type="radio" ' + checked + ' name="' + $icon.data('field') + '" value="' + option[1] + '"/>' + option[0] + '</label></div>';
+            }).join('');
+            let sHiddenInputs = '<input type="hidden" name="model-type" value="' + $icon.data('model-type') + '"/><input type="hidden" name="id" value="' + $icon.data('id') + '"/><input type="hidden" name="field" value="' + $icon.data('field') + '"/>';
+            let sForm = '<form class="popover-status-management-form" name="status-management-option-update-' + $icon.data('field') + '-' + $icon.data('id') + '">' + sHiddenInputs + sOptions + '<div class="text-right"><button class="cancel btn btn-default">Cancel</button> <button class="save btn btn-primary">Save</button></div></form>';
             $popover.find('.popover-content').html(sForm);
 
         },
-        saveStatusManagementOption: function(e){
+        validateOptionToSave: function (modelType, modelField, modelId, modelFieldValue) {
+            let self = this;
+            let validationMsg = '';
+            let errMsg = 'This "' + modelField.split(/(?=[A-Z])/).join(" ") + '" status does not look ready. Are you sure you want to save?';
+            if (modelType === 'sitestatus'){
+                if (modelFieldValue.toString() === '1') {
+                    let $statusManagementRecord = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt(modelId)});
+                    let completedCnt = self.calculateSiteStatusCompletedFieldCnt(modelField, $statusManagementRecord.attributes, self.oStatusManagementRecordModels.sitestatus.oStatusEntryFieldsMap);
+                    if (completedCnt !== $statusManagementRecord.attributes.projects.length) {
+                        validationMsg = errMsg;
+                    }
+                }
+            } else {
+                let aValidationIds = typeof self.oStatusManagementRecordModels.project.oValidation[modelField] !== 'undefined' ? self.oStatusManagementRecordModels.project.oValidation[modelField]: self.oStatusManagementRecordModels.project.oValidation.default;
+                let bRequiresValidation = _.contains(aValidationIds, modelId.toString());
+                if (bRequiresValidation){
+                    let project = App.Collections.allProjectsCollection.get(parseInt(modelId));
+                    if (typeof self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField] !== 'undefined' && self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].fieldName !== ''){
+                        if (project[self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].fieldName].toString() === self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].toString()) {
+                            validationMsg = errMsg;
+                        } else {
+                            if (typeof self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].condition !== 'undefined') {
+                                if (eval(self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].condition) !== self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].incompleteValue) {
+                                    validationMsg = errMsg;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return validationMsg;
+        },
+        closeStatusFormPopover: function ($icon) {
+            $icon.trigger('click');
+        },
+        saveStatusManagementOption: function (e) {
             let self = this;
             e.preventDefault();
             let $form = $(e.currentTarget).parents('form');
-            let modelType = $form.find('[name="model"]').val();
+            let modelType = $form.find('[name="model-type"]').val();
             let modelField = $form.find('[name="field"]').val();
             let modelId = $form.find('[name="id"]').val();
-            let modelFieldValue = $form.find('[name="'+ modelField +'"]:checked').val();
+            let modelFieldValue = $form.find('[name="' + modelField + '"]:checked').val();
             let $icon = $form.parents('.popover').siblings('i');
-            
-            if (modelType==='project') {
-                let projectModel = App.Collections.allProjectsCollection.get(modelId);
-                projectModel.url = '/admin/project/' + modelId;
-                projectModel.save({[modelField]: modelFieldValue},
-                    {
-                        success: function (savedModel, response, options) {
-                            growl(response.msg, response.success ? 'success' : 'error');
-                            $icon.trigger('click');
-                            $icon.removeClass();
-                            $icon.addClass(self.getStatusCSS(savedModel, modelType, modelField, modelFieldValue));
-                        },
-                        error: function (model, response, options) {
-                            growl(response.msg, 'error');
-                        }
+            let bSaveOptionValue = true;
+            let validationMsg = self.validateOptionToSave(modelType, modelField, modelId, modelFieldValue);
+            if (validationMsg !== '') {
+                if (!confirm(validationMsg)) {
+                    self.closeStatusFormPopover($icon);
+                    bSaveOptionValue = false;
+                    return;
+                }
+            }
+            if (bSaveOptionValue) {
+                window.ajaxWaiting('show', $form);
+                if (modelType === 'project') {
+                    let projectModel = App.Collections.allProjectsCollection.get(modelId);
+                    projectModel.url = '/admin/project/' + modelId;
+                    projectModel.save({[modelField]: modelFieldValue},
+                        {
+                            success: function (savedModel, response, options) {
+                                $.when(
+                                    App.Collections.statusManagementCollection.fetch({reset: true})
+                                ).then(function (data, textStatus, jqXHR) {
+                                    growl(response.msg, response.success ? 'success' : 'error');
+                                    self.closeStatusFormPopover($icon);
+                                    $icon.removeClass();
+                                    $icon.addClass(self.getStatusCSS(savedModel, modelType, modelField));
+                                    // These fields do not have the status state in their tooltip
+                                    let aSkipTooltipStatusUpdate = ['CostEstimateDone', 'BudgetAllocationDone', 'MaterialListDone', 'VolunteerAllocationDone'];
+                                    if (!_.contains(aSkipTooltipStatusUpdate, modelField)) {
+                                        let optionLabel = '';
+                                        switch (modelField) {
+                                            case 'Status':
+                                                optionLabel = self.getProjectStatusOptionLabel(modelFieldValue);
+                                                break;
+                                            case 'ProjectSend':
+                                                optionLabel = self.getSendStatusOptionLabel(modelFieldValue);
+                                                break;
+                                            default:
+                                                optionLabel = self.getYesNoOptionLabel(modelFieldValue);
+                                                break;
+                                        }
+                                        // update tooltip with new status
+                                        $icon.attr('title', optionLabel);
+                                        $icon.removeAttr('data-original-title');
+                                        $icon.tooltip('fixTitle');
+                                    }
+                                });
+                            },
+                            error: function (model, response, options) {
+                                growl(response.msg, 'error');
+                            }
+                        });
+                } else if (modelType === 'sitestatus') {
+                    let siteStatusModel = new App.Models.SiteStatus();
+                    siteStatusModel.url = '/admin/sitestatus/' + modelId;
+                    $.when(
+                        siteStatusModel.fetch({reset: true})
+                    ).then(function () {
+                        siteStatusModel.save({[modelField]: modelFieldValue}, {
+                            success: function (savedModel, response, options) {
+                                $.when(
+                                    App.Collections.statusManagementCollection.fetch({reset: true})
+                                ).then(function (data, textStatus, jqXHR) {
+                                    growl(response.msg, response.success ? 'success' : 'error');
+                                    self.closeStatusFormPopover($icon);
+                                    $icon.removeClass();
+                                    $icon.addClass(self.getStatusCSS(savedModel, modelType, modelField));
+                                    let optionLabel = self.getYesNoOptionLabel(modelFieldValue);
+                                    // update tooltip with new status
+                                    $icon.attr('title', optionLabel);
+                                    $icon.removeAttr('data-original-title');
+                                    $icon.tooltip('fixTitle');
+                                });
+                            },
+                            error: function (model, response, options) {
+                                growl(response.msg, 'error');
+                            }
+                        });
                     });
+                }
             }
         },
-        closeStatusManagementOptionPopover: function (e) {
+        cancelSaveStatusManagementOption: function (e) {
             let self = this;
             e.preventDefault();
             let $icon = $(e.currentTarget).parents('.popover').siblings('i');
-            $icon.trigger('click');
+            self.closeStatusFormPopover($icon);
         },
-        getStatusCSS: function (savedModel, modelType, modelField, modelFieldValue) {
+        getStatusCSS: function (savedModel, modelType, modelField) {
             let self = this;
+            let savedModelAttributes = null;
             if (modelType === 'project') {
-                let savedModelAttributes = self.setProjectStatus(savedModel.attributes);
-                let fieldStateVar = modelField.charAt(0).toLowerCase() + modelField.slice(1) + 'State';
-                return savedModelAttributes[fieldStateVar];
+                savedModelAttributes = self.setProjectStatusStates(savedModel.attributes, self.oStatusManagementRecordModels.oFieldCnts)[0];
+            } else if (modelType === 'sitestatus') {
+                let $statusManagementRecord = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt(savedModel.get('SiteStatusID'))});
+                savedModelAttributes = self.setSiteStatusStates($statusManagementRecord.attributes);
             }
+            let fieldStateVar = self.buildStateKey(modelField);
+            //console.log('getStatusCSS', fieldStateVar, savedModelAttributes, savedModel)
+            return typeof savedModelAttributes[fieldStateVar] !== 'undefined' ? savedModelAttributes[fieldStateVar] : '';
         },
     });
 
@@ -328,31 +516,34 @@
         template: template('statusManagementTemplate'),
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            self.options = options;
 
-            _.bindAll(this, 'render', 'addOne', 'addAll');
-            this.collection.bind('reset', this.addAll, this);
+            _.bindAll(self, 'render', 'addOne', 'addAll');
+            self.collection.bind('reset', self.addAll, self);
         },
         events: {},
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(this.template());
-            this.addAll();
-            self.$el.find('[data-toggle="tooltip"]').tooltip({html: true});
-            self.$el.find('[data-popover="true"]').popover({html: true, title: ''});
-            return this;
+            self.$el.html(self.template());
+            self.addAll();
+
+            return self;
         },
         addOne: function (StatusManagement) {
+            let self = this;
             if (StatusManagement.attributes.projects.length) {
                 let $settingItem = new App.Views.StatusManagementRecord({model: StatusManagement});
-                this.$el.find('.status-management-wrapper').append($settingItem.render().el);
+                self.$el.find('.status-management-wrapper').append($settingItem.render().el);
             }
         },
         addAll: function () {
-            this.$el.find('.status-management-wrapper').empty();
-            //this.$el.find('.status-management-wrapper').append($('<ul class="nav nav-stacked"></ul>'));
-            this.collection.each(this.addOne);
+            let self = this;
+            self.$el.find('.status-management-wrapper').empty();
+
+            self.collection.each(this.addOne);
+            self.$el.find('[data-toggle="tooltip"]').tooltip({html: true});
+            self.$el.find('[data-popover="true"]').popover({html: true, title: ''});
         }
     });
 })(window.App);

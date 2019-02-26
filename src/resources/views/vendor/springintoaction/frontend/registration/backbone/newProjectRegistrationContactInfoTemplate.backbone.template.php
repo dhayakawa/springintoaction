@@ -1,4 +1,5 @@
 <div class="row">
+    <input type="hidden" name="contact_info[<%= idx %>][groveId]" value="<%= groveId %>" />
     <div class="col-xs-6">
         <div class="form-group">
             <label for="inputChurch<%= idx %>">Church</label>
@@ -30,7 +31,7 @@
     <div class="col-xs-6">
         <div class="form-group">
             <label for="inputEmail<%= idx %>">Email</label>
-            <input type="text"
+            <input type="email"
                    name="contact_info[<%= idx %>][Email]"
                    class="form-control"
                    id="inputEmail<%= idx %>"
@@ -42,7 +43,7 @@
     <div class="col-xs-6">
         <div class="form-group">
             <label for="inputMobilePhoneNumber<%= idx %>">Mobile Phone Number</label>
-            <input type="text"
+            <input type="tel"
                    name="contact_info[<%= idx %>][MobilePhoneNumber]"
                    class="form-control"
                    id="inputMobilePhoneNumber<%= idx %>"
@@ -56,7 +57,7 @@
     <div class="col-xs-6">
         <div class="form-group">
             <label for="inputFirstName<%= idx %>">First Name</label>
-            <input type="text"
+            <input type="name"
                    name="contact_info[<%= idx %>][FirstName]"
                    class="form-control"
                    id="inputFirstName<%= idx %>"
@@ -68,7 +69,7 @@
     <div class="col-xs-6">
         <div class="form-group">
             <label for="inputLastName<%= idx %>">Last Name</label>
-            <input type="text"
+            <input type="name"
                    name="contact_info[<%= idx %>][LastName]"
                    class="form-control"
                    id="inputLastName<%= idx %>"

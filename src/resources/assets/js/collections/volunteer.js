@@ -10,6 +10,13 @@
         },
         mode: "client" // page entirely on the client side
     });
+    App.PageableCollections.ProjectLead = Backbone.PageableCollection.extend({
+        model: App.Models.Volunteer,
+        state: {
+            pageSize: 10
+        },
+        mode: "client" // page entirely on the client side
+    });
 
     let SkillsCell = Backgrid.Extension.Select2Cell.extend({
         editor: App.CellEditors.Select2CellEditor,

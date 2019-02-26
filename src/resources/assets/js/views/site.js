@@ -91,9 +91,10 @@
             return this;
         },
         changeSelected: function () {
-            let $option = $(this.el).find(':selected');
+            let self = this;
+            let $option = $(self.el).find(':selected');
 
-            this.setSelectedId($option.data('siteid'), $option.data('sitestatusid'), $option.val());
+            self.setSelectedId($option.data('siteid'), $option.data('sitestatusid'), $option.val());
         },
         setSelectedId: function (SiteID, SiteStatusID, Year) {
             let self = this;
@@ -109,7 +110,6 @@
 
 
                 if (!self.parentView.$el.hasClass('site-management-view')) {
-                    console.log('triggered site-status-id-change')
                     self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
                 }
             }

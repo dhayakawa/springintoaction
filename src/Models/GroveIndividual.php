@@ -36,6 +36,7 @@ class GroveIndividual extends Model
         'home_phone',
         'contact_phone',
         'birthday',
+        'family_member_type',
         'modified',
     ];
     private $defaultRecordData = [
@@ -59,7 +60,7 @@ class GroveIndividual extends Model
 
         return $this->defaultRecordData;
     }
-    
+
     public function getFamilyMembers($family_id)
     {
         $groveIndividuals = $this->where('family_id','=', $family_id);

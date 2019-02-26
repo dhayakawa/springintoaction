@@ -148,27 +148,33 @@
         template: template('newProjectRegistrationContactInfoTemplate'),
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            self.options = options;
             _.bindAll(
-                this,
+                self,
                 'render',
+                'handleChurchSelection',
+                'updateContactInfoData'
             );
-            this.contactInfoIdx = this.options.contactInfoIdx;
-            this.fieldValidationErrors = [];
-            this.bIsWoodlands = false;
-            this.parentView = this.options.parentView;
-            this.contactInfoData = this.options.contactInfoData;
+            self.contactInfoIdx = self.options.contactInfoIdx;
+            self.fieldValidationErrors = [];
+            self.bIsWoodlands = false;
+            self.parentView = self.options.parentView;
+            self.contactInfoData = self.options.contactInfoData;
+            self.groveId = !_.isUndefined(self.contactInfoData.groveId) ? self.contactInfoData.groveId : null;
             self.bIsWoodlands = self.contactInfoData.Church === 'woodlands';
-            this.$el.addClass('contact-info-idx-' + self.contactInfoIdx);
+            self.$el.data('contact-info-idx', self.contactInfoIdx);
+            self.$el.addClass('contact-info-idx-' + self.contactInfoIdx);
             _log('App.Views.ContactInfo.initialize', options);
         },
         events: {
             'change select[id^="Church"]': 'handleChurchSelection',
+            'blur input':'updateContactInfoData'
         },
         render: function () {
             let self = this;
             let tplVars = {
                 idx: self.contactInfoIdx,
+                groveId: self.contactInfoData.groveId,
                 Church: self.contactInfoData.Church,
                 ChurchOther: self.contactInfoData.ChurchOther,
                 MobilePhoneNumber: self.contactInfoData.MobilePhoneNumber,
@@ -178,14 +184,40 @@
 
             };
 
-            let html = this.template(tplVars);
-            $(this.el).html(html);
+            let html = self.template(tplVars);
+            $(self.el).html(html);
 
-            return this;
+            return self;
+        },
+        formatPhoneNumber: function(el){
+            let phoneNumber = $(el).val().toString();
+            phoneNumber = phoneNumber.replace(/[^\d]/g,'');
+            if (phoneNumber.charAt(0) === '1' && phoneNumber.length === 11){
+                phoneNumber = phoneNumber.replace(/^./, '');
+            }
+            if (phoneNumber.length === 10) {
+                $(el).val(phoneNumber.replace(/^(\d{3})(\d{3})(\d+)$/, "($1) $2-$3"));
+            } else if (phoneNumber.length === 7) {
+                $(el).val(phoneNumber.replace(/^(\d{3})(\d+)$/, "$1-$2"));
+            }
+        },
+        updateContactInfoData: function(e) {
+            let self = this;
+            if ($(e.currentTarget).attr('type')==='tel'){
+                self.formatPhoneNumber(e.currentTarget);
+            }
+            let aMatches = $(e.currentTarget).attr('name').match(/contact_info\[(\d+)\]\[([^\]]*)\]/);
+            let contactIdx = aMatches[1];
+            let key = aMatches[2];
+            self.contactInfoData[key] = $(e.currentTarget).val();
+
+            App.Vars.validator.element('#' + e.currentTarget.id);
+
         },
         handleChurchSelection: function (e) {
             let self = this;
             self.bIsWoodlands = $(e.currentTarget).val() === 'woodlands';
+            self.contactInfoData.Church = $(e.currentTarget).val();
             let $otherChurchWrapper = self.$el.find('.other-church-wrapper');
             if (self.bIsWoodlands) {
                 $otherChurchWrapper.hide();
@@ -196,45 +228,59 @@
             }
         },
         getIsWoodlands: function () {
-            return this.bIsWoodlands;
-        },
-        validateContactInfo: function () {
             let self = this;
+            return self.bIsWoodlands;
+        },
+        validateContactInfo: function (bSkipNotifications) {
+            let self = this;
+            let bShowNotifications = _.isUndefined(bSkipNotifications) ? true : !bSkipNotifications;
             let fields = self.$el.find('input[required]');
             let iInvalidFields = 0;
             let fieldValidationErrors = [];
             _.each(fields, function (val) {
+                let $label = $(val).parent().find('label:first-child');
                 if ($(val).val() === '') {
-                    $(val).siblings('label').addClass('text-danger');
-                    fieldValidationErrors.push($(val).siblings('label').text());
+                    if (bShowNotifications) {
+                        $label.addClass('text-danger');
+                        fieldValidationErrors.push($label.text());
+                    }
                     iInvalidFields++;
                 } else {
-                    $(val).siblings('label').removeClass('text-danger');
+                    if (bShowNotifications) {
+                        $label.removeClass('text-danger');
+                    }
                 }
             });
             let $churchSelect = self.$el.find('select[id^="Church"]');
+            let $churchSelectLabel = $churchSelect.parent().find('label:first-child');
             if ($churchSelect.val().length === 0 || $churchSelect.val() === 'Choose Church') {
-                $churchSelect.siblings('label').addClass('text-danger');
-                fieldValidationErrors.push($churchSelect.siblings('label').text());
+                if (bShowNotifications) {
+                    $churchSelectLabel.addClass('text-danger');
+                    fieldValidationErrors.push($churchSelectLabel.text());
+                }
                 iInvalidFields++;
             } else {
-                $churchSelect.siblings('label').removeClass('text-danger');
+                if (bShowNotifications) {
+                    $churchSelectLabel.removeClass('text-danger');
+                }
             }
 
-            let alertMessage = '';
-            if (fieldValidationErrors.length) {
-                alertMessage = 'Please enter all required information';
-                alertMessage += '<br>';
-                $.each(fieldValidationErrors, function (idx, msg) {
-                    alertMessage += msg + ' is missing<br>';
-                });
-                fieldValidationErrors = [];
-            }
+            if (bShowNotifications) {
+                let alertMessage = '';
+                if (fieldValidationErrors.length) {
+                    alertMessage = 'Please enter all required information';
+                    alertMessage += '<br>';
+                    $.each(fieldValidationErrors, function (idx, msg) {
+                        alertMessage += msg + ' is missing<br>';
+                    });
+                    fieldValidationErrors = [];
+                }
 
-            self.$el.find('.contact-info-error').remove();
-            if (alertMessage !== '') {
-                let $alertHtml = $('<div class="alert alert-danger contact-info-error" role="alert">' + alertMessage + '</div>');
-                self.$el.append($alertHtml);
+                self.$el.find('.contact-info-error').remove();
+                if (alertMessage !== '') {
+                    let $alertHtml = $('<div class="alert alert-danger contact-info-error" role="alert">' + alertMessage + '</div>');
+                    self.$el.append($alertHtml);
+                }
             }
 
             return iInvalidFields === 0;
@@ -242,17 +288,34 @@
         getContactInfoData: function () {
             let self = this;
             let fields = self.$el.find('input');
-
             let data = {};
-            _.each(fields, function (val) {
+
+            let orderedFields = [];
+            orderedFields.push(_.find(fields, function (field) {
+                return $(field).attr('name').match(/groveId/);
+            }));
+            orderedFields.push(_.find(fields, function (field) {
+                return $(field).attr('name').match(/FirstName/);
+            }));
+            orderedFields.push(_.find(fields, function (field) {
+                return $(field).attr('name').match(/LastName/);
+            }));
+            orderedFields.push(_.find(fields, function (field) {
+                return $(field).attr('name').match(/Email/);
+            }));
+            orderedFields.push(_.find(fields, function (field) {
+                return $(field).attr('name').match(/MobilePhoneNumber/);
+            }));
+            orderedFields.push(_.find(fields, function (field) {
+                return $(field).attr('name').match(/ChurchOther/);
+            }));
+
+            _.each(orderedFields, function (val) {
                 data[$(val).attr('name')] = $(val).val();
             });
             let $churchSelect = self.$el.find('select[id^="Church"]');
             data[$churchSelect.attr('name')] = $churchSelect.val();
-            // _.sortBy(data, function (val,key) {
-            //     console.log(val, key)
-            //     return 1;
-            // });
+
             return data;
         }
     });
@@ -261,9 +324,9 @@
         template: template('newProjectRegistrationTemplate'),
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            self.options = options;
             _.bindAll(
-                this,
+                self,
                 'render',
                 'registerOthers',
                 'registerAndConfirm',
@@ -274,18 +337,22 @@
                 'handleGroveLogin',
                 'submitRegistration',
                 'makeReservations',
-                'deleteRegistrationContactListItem'
+                'deleteRegistrationContactListItem',
+                'checkForReturnKey',
+                'handleOverageQuestion'
             );
-            this.fieldValidationErrors = [];
-            this.bIsWoodlands = false;
-            this.contactInfoIdx = 1;
-            this.contactInfoViews = [];
-            this.parentView = this.options.parentView;
-            this.iReserved = 0;
-            this.bIsGroveImport = false;
-            this.groveContacts = [];
-            this.groveContactsFinal = [];
-            App.Vars.reservationTimeoutExpire = 1000 * 60;
+            self.bGroveIsLoggedIn = false;
+            self.groveId = null;
+            self.fieldValidationErrors = [];
+            self.bIsWoodlands = false;
+            self.contactInfoIdx = 1;
+            self.contactInfoViews = [];
+            self.parentView = self.options.parentView;
+            self.iReserved = 0;
+            self.bIsGroveImport = false;
+            self.groveContacts = [];
+            self.groveContactsFinal = [];
+            //App.Vars.reservationTimeoutExpire = 1000 * 60;
             App.Vars.reservedProjectID = null;
             clearTimeout(App.Vars.reservationTimeout);
             clearInterval(App.Vars.reservationInterval);
@@ -302,11 +369,7 @@
                 this.$el.find('[href="#contact-info"]').trigger('click');
                 this.updateActiveStep('.step-one.steps')
             },
-            'click .back-to-register-others-btn': function (e) {
-                e.preventDefault();
-                this.$el.find('[href="#auto-register"]').trigger('click');
-                this.updateActiveStep('.step-two.steps')
-            },
+            'click .back-to-register-others-btn': 'backToRegisterOthers',
             'click .collapse-project-description': function (e) {
                 e.preventDefault();
             },
@@ -315,7 +378,11 @@
             'click form[name="newProjectReservation"] button': 'makeReservations',
             'click [name="register-process-type"]': 'handleRegisterProcessType',
             'click .submit-grove-login-btn': 'handleGroveLogin',
-            'click .manual-delete-registration-contact': 'deleteRegistrationContactListItem'
+            'click .manual-delete-registration-contact': 'deleteRegistrationContactListItem',
+            'keypress [name="GrovePassword"]': 'checkForReturnKey',
+            'click .overage-question-yes': 'handleOverageQuestion',
+            'click .overage-question-no': 'handleOverageQuestion',
+            'click .grove-contacts-confirm-list [type="checkbox"].grove-contact': 'handleGroveContactCheckbox',
         },
         render: function () {
             let self = this;
@@ -327,12 +394,14 @@
                 ProjectDescription: self.model.get('ProjectDescription'),
                 testString: '',
                 testDBID: 0,
-                testGroveEmail: 'david.hayakawa@gmail.com',
-                testGrovePassword: 'jack1455'
-
+                testGrovePassword: ''
             };
-            $(this.el).html(this.template(tplVars));
+            if (App.Vars.devMode) {
+                tplVars.testGrovePassword = 'jack1455';
+            }
+            $(self.el).html(self.template(tplVars));
             let contactInfoDataValues = {
+                groveId: null,
                 Church: '',
                 ChurchOther: '',
                 MobilePhoneNumber: '',
@@ -340,16 +409,18 @@
                 LastName: '',
                 Email: ''
             };
-            if (App.Vars.devMode){
-                contactInfoDataValues = {
-                    Church: 'woodlands',
-                    ChurchOther: '',
-                    MobilePhoneNumber: '7153054840',
-                    FirstName: 'David',
-                    LastName: 'Hayakawa',
-                    Email: 'david.hayakawa@gmail.com'
-                };
-            }
+
+            // if (App.Vars.devMode) {
+            //     contactInfoDataValues = {
+            //         groveId: null,
+            //         Church: 'woodlands',
+            //         ChurchOther: '',
+            //         MobilePhoneNumber: '7153054840',
+            //         FirstName: 'David',
+            //         LastName: 'Hayakawa',
+            //         Email: 'david.hayakawa@gmail.com'
+            //     };
+            // }
             self.contactInfoViews[0] = new App.Views.ContactInfo({
                 el: self.$el.find('.personal-contact-info-wrapper'),
                 parentView: self,
@@ -358,12 +429,36 @@
             });
 
             self.$el.find('.personal-contact-info-wrapper').replaceWith(self.contactInfoViews[0].render().el);
+            App.Vars.validator = self.$el.find('[name="newProjectRegistration"]').validate({
+                debug: false,
+                onkeyup: false,
+                onclick: false,
+                onsubmit: false,
+                focusInvalid: false,
+                errorClass: 'error',
+                rules: {
+                    // simple rule, converted to {required:true}
+                    name: "required",
+                    // compound rule
+                    email: {
+                        required: true,
+                        email: true
+                    }
+                }
+            });
 
-            return this;
+            return self;
+        },
+        checkForReturnKey: function (e) {
+            if (e.which == 13 || e.keyCode == 13) {
+                //code to execute here
+                $('#submit-grove-login-btn').trigger('click');
+            }
         },
         makeReservations: function (e) {
             e.preventDefault();
             let self = this;
+
             let $projectReservationForm = $('form[name="newProjectReservation"]');
             let formData = $projectReservationForm.serialize();
             App.Vars.reservedProjectID = self.model.get('ProjectID');
@@ -396,12 +491,14 @@
                     self.startReservationTimeout();
                     $projectReservationForm.find('.spinner').remove();
                     $projectReservationForm.append('<span class="reservation-successful text-success">Reservation Successful</span>');
+                    self.updateReservedAmtMsg();
                     setTimeout(function () {
                         $('.reservation-successful').remove();
                         $('.reservation-wrapper').hide();
-                        self.updateStepsView();
+                        self.updateStepsViewAndNavBtns();
                         $('.registration-form-body-wrapper').show();
                         $('#collapseProjectDescription').collapse('show');
+                        $('[name="contact_info[0][Church]"]')[0].focus({preventScroll: false});
                     }, 1000);
 
                 },
@@ -430,7 +527,8 @@
                     if (iCountDown <= 0) {
                         self.parentView.removeReservations();
                         clearInterval(App.Vars.reservationInterval);
-                        $confirm.find('.confirm-body').find('.confirm-question').html('<div>Your reservation has expired.</div>');
+                        let expirationMsg = 'Your reservation has expired.';
+                        $confirm.find('.confirm-body').find('.confirm-question').html('<div>' + expirationMsg + '</div>');
                         $confirm.find('.confirm-body').find('button.btn-yes').remove();
                         $confirm.find('.confirm-body').find('button.btn-no').text('OK');
                     }
@@ -456,61 +554,124 @@
                 $confirmReservationTimeoutModal.confirm('show');
             }
         },
-        updateStepsView: function () {
+        updateStepsViewAndNavBtns: function () {
             let self = this;
             if (self.iReserved < 2) {
                 $('.register-others.btn').hide();
+                $('#contact-info .confirm-and-register').show();
                 $('.back-to-register-others-btn').hide();
                 $('.go-to-step-two-btn').hide();
                 $('.back-to-step-two-btn').hide();
                 $('.step-two').hide();
             } else {
+                $('#contact-info .confirm-and-register').hide();
                 $('.go-to-step-two-btn').show();
                 $('.back-to-step-two-btn').show();
                 $('.step-two').show();
             }
         },
+        backToRegisterOthers: function (e) {
+            let self = this;
+            e.preventDefault();
+            self.setUpRegisterOthers();
+            self.$el.find('[href="#auto-register"]').trigger('click');
+            self.updateActiveStep('.step-two.steps');
+            if (self.bIsGroveImport) {
+                $('[name="register-process-type"]').prop('checked', false);
+                self.showGroveContactList();
+            } else {
+                self.buildManualContactInfo();
+            }
+        },
+        setPersonRegistering: function(){
+            let self = this;
+            self.contactInfoViews[0].contactInfoData= {
+                            groveId: $('[name="contact_info[0][groveId]"]').val(),
+                            Church: $('[name="contact_info[0][Church]"]').val(),
+                            ChurchOther: $('[name="contact_info[0][ChurchOther]"]').val(),
+                            MobilePhoneNumber: $('[name="contact_info[0][MobilePhoneNumber]"]').val(),
+                            FirstName: $('[name="contact_info[0][FirstName]"]').val(),
+                            LastName: $('[name="contact_info[0][LastName]"]').val(),
+                            Email: $('[name="contact_info[0][Email]"]').val()
+                        }
+        },
         registerOthers: function (e) {
             let self = this;
             e.preventDefault();
+            self.setPersonRegistering();
+
             let valid = self.contactInfoViews[0].validateContactInfo();
+            //console.log('valid',valid)
             if (valid) {
                 self.setStepAsValidated('.step-one.steps', $(e.currentTarget));
-                self.setUpRegisterOthers();
-                self.$el.find('[href="#auto-register"]').trigger('click');
-                self.updateActiveStep('.step-two.steps');
-                if ($('#collapseProjectDescription').is(':visible')) {
-                    $('#collapseProjectDescription').collapse('toggle');
+                if (self.getContactInfoViewsLength() === 1) {
+                    self.setUpRegisterOthers();
+                    self.$el.find('[href="#auto-register"]').trigger('click');
+                    self.updateActiveStep('.step-two.steps');
+                    if ($('#collapseProjectDescription').is(':visible')) {
+                        $('#collapseProjectDescription').collapse('toggle');
+                    }
+                } else {
+                    self.backToRegisterOthers(e);
                 }
-
             } else {
                 self.setStepAsInValid('.step-one.steps', $(e.currentTarget));
+                self.$el.find('[href="#contact-info"]').trigger('click');
             }
         },
-        buildManualContactInfo: function (contacts) {
+        buildManualContactInfo: function (contacts, bOnlyCreateForGroveOverage, bAllowEmptyContact) {
             let self = this;
-            let iExtraRegistrations = self.iReserved - 1;
+
+            let iStartIdx = 0;
+            bOnlyCreateForGroveOverage = _.isUndefined(bOnlyCreateForGroveOverage) ? false : bOnlyCreateForGroveOverage;
+            bAllowEmptyContact = _.isUndefined(bAllowEmptyContact) ? true : bAllowEmptyContact;
+            // reserved minus person registering
+            let iLimit = self.iReserved - 1;
+            //console.log('buildManualContactInfo before empty', bOnlyCreateForGroveOverage, self.$el.find('.manual-multiple-register .multiple-register-list').html())
             self.$el.find('.manual-multiple-register .multiple-register-list').empty();
             self.contactInfoIdx = 1;
 
-            for (let i = 0; i < iExtraRegistrations; i++) {
-                let contact = typeof contacts !== 'undefined' && typeof contacts[i] !== 'undefined' ? contacts[i] : {};
+            if (bOnlyCreateForGroveOverage) {
+                bAllowEmptyContact = true;
+                contacts = null;
+                iStartIdx = self.iReserved - self.groveContacts.length - 1;
+                iLimit = iStartIdx + self.iReserved - self.groveContacts.length - 1;
+                let iListStartIdx = self.iReserved - iStartIdx;
+                // Needs to be the next idx of the entire list including the person registering
+                self.contactInfoIdx = iListStartIdx;
+                $('.multiple-register-list').attr('start', iListStartIdx);
+            } else {
+                $('.multiple-register-list').attr('start', 1);
+            }
 
-                self.contactInfoViews[self.contactInfoIdx] = new App.Views.ContactInfo({
-                    parentView: self,
-                    contactInfoIdx: self.contactInfoIdx,
-                    contactInfoData: {
-                        Church: !_.isUndefined(contact['Church']) ? contact['Church'] : '',
-                        ChurchOther: !_.isUndefined(contact['ChurchOther']) ? contact['ChurchOther'] : '',
-                        MobilePhoneNumber: !_.isUndefined(contact['MobilePhoneNumber']) ? contact['MobilePhoneNumber'] : '',
-                        FirstName: !_.isUndefined(contact['FirstName']) ? contact['FirstName'] : '',
-                        LastName: !_.isUndefined(contact['LastName']) ? contact['LastName'] : '',
-                        Email: !_.isUndefined(contact['Email']) ? contact['Email'] : ''
+            for (let i = iStartIdx; i < iLimit; i++) {
+                let contact = !_.isNull(contacts) && !_.isUndefined(contacts) && !_.isUndefined(contacts[i]) ? contacts[i] : {};
+                let bSkip = false;
+                if (self.bIsGroveImport) {
+                    //console.log({bAllowEmptyContact: bAllowEmptyContact,contact:contact})
+                    if (!bAllowEmptyContact && _.isEmpty(contact)) {
+                        bSkip = true;
                     }
-                });
-                let $deleteBtn = $('<a href="#" class="manual-delete-registration-contact text-danger"><i class="fas fa-trash"></i> delete</a>');
-                self.$el.find('.manual-multiple-register .multiple-register-list').append($('<li>').append($deleteBtn).append(self.contactInfoViews[self.contactInfoIdx].render().el));
-                self.contactInfoIdx++;
+                }
+                if (!bSkip) {
+                    //console.log('buildManualContactInfo add to self.contactInfoViews',{contactInfoIdx: self.contactInfoIdx,bOnlyCreateForGroveOverage: bOnlyCreateForGroveOverage, contact: contact});
+                    self.contactInfoViews[self.contactInfoIdx] = new App.Views.ContactInfo({
+                        parentView: self,
+                        contactInfoIdx: self.contactInfoIdx,
+                        contactInfoData: {
+                            groveId: !_.isUndefined(contact['groveId']) ? contact['groveId'] : null,
+                            Church: !_.isUndefined(contact['Church']) ? contact['Church'] : '',
+                            ChurchOther: !_.isUndefined(contact['ChurchOther']) ? contact['ChurchOther'] : '',
+                            MobilePhoneNumber: !_.isUndefined(contact['MobilePhoneNumber']) ? contact['MobilePhoneNumber'] : '',
+                            FirstName: !_.isUndefined(contact['FirstName']) ? contact['FirstName'] : '',
+                            LastName: !_.isUndefined(contact['LastName']) ? contact['LastName'] : '',
+                            Email: !_.isUndefined(contact['Email']) ? contact['Email'] : ''
+                        }
+                    });
+                    let $deleteBtn = $('<a href="#" class="manual-delete-registration-contact text-danger"><i class="fas fa-trash"></i> delete</a>');
+                    self.$el.find('.manual-multiple-register .multiple-register-list').append($('<li>').append($deleteBtn).append(self.contactInfoViews[self.contactInfoIdx].render().el));
+                    self.contactInfoIdx++;
+                }
 
             }
 
@@ -529,15 +690,24 @@
         },
         handleRegisterProcessType: function (e) {
             let self = this;
+
             if (e.currentTarget.id === 'auto-register-manual') {
-                $('.grove-login').hide();
+                self.hideGroveLogin();
+                $('.auto-register-question').addClass('hidden');
+                $('.register-list-msgs').removeClass('hidden');
+                $('.register-list-msgs .grove-contacts-confirm-list-msg ').addClass('hidden');
+                $('.register-list-msgs .multiple-register-list-msg').removeClass('hidden');
                 $('.manual-multiple-register').show();
                 self.buildManualContactInfo();
-
             } else {
                 $('.manual-multiple-register').hide();
-                $('.grove-login').show();
                 App.Vars.registrationProcessType = e.currentTarget.id;
+                let $groveEmail = $('[name="GroveEmail"]');
+                if (_.isEmpty($groveEmail.val())) {
+                    $groveEmail.val(self.contactInfoViews[0].contactInfoData.Email);
+                }
+                $('.grove-login').show();
+                $('[name="GrovePassword"]')[0].focus({preventScroll: false});
             }
         },
         setBottomNavBtnsState: function (panel, state) {
@@ -548,13 +718,31 @@
                 $buttons.removeAttr('disabled');
             }
         },
+        getUniqueGroveContacts: function (groveContacts) {
+            let uniqGroveContacts = [];
+
+            _.each(groveContacts, function (groveContact) {
+                if (uniqGroveContacts.length) {
+                    if (!_.find(uniqGroveContacts, function (uniqGroveContact) {
+                        return _.isEqual([uniqGroveContact.FirstName.toLowerCase().trim(), uniqGroveContact.LastName.toLowerCase().trim(), uniqGroveContact.Email.toLowerCase().trim()], [groveContact.FirstName.toLowerCase().trim(), groveContact.LastName.toLowerCase().trim(), groveContact.Email.toLowerCase().trim()]);
+                    })) {
+                        uniqGroveContacts.push(groveContact);
+                    }
+                } else {
+                    // automatically add the first item
+                    uniqGroveContacts.push(groveContact);
+                }
+            });
+            return uniqGroveContacts;
+        },
         handleGroveLogin: function (e) {
             let self = this;
             e.preventDefault();
             let $submitBtn = $(e.currentTarget);
             $submitBtn.siblings('.spinner').remove();
-            $submitBtn.siblings('.reservation-successful').remove();
+            $submitBtn.siblings('.grove-login-result-msg').remove();
             $submitBtn.after(App.Vars.spinnerHtml);
+
             $.ajax({
                 type: "post",
                 dataType: "json",
@@ -567,36 +755,133 @@
                 },
                 success: function (response) {
                     $submitBtn.siblings('.spinner').remove();
-                    $submitBtn.after('<span class="reservation-successful text-success">Login Successful</span>');
-                    self.bIsGroveImport = true;
 
-                    self.groveContacts = response.contact_info;
-                    self.showGroveContactList();
+                    self.bIsGroveImport = true;
+                    if (response.success) {
+                        self.bGroveIsLoggedIn = true;
+                        self.groveId = response.groveLoggedInId;
+                        // set the groveId of the person registering if applicable
+                        if (_.isEmpty(self.contactInfoViews[0].contactInfoData.groveId) && !_.isEmpty($('[name="GroveEmail"]').val()) && self.contactInfoViews[0].contactInfoData.Email === $('[name="GroveEmail"]').val()){
+                            self.contactInfoViews[0].contactInfoData.groveId = self.groveId;
+                            // set the input too in case it's checked
+                            $('[name="contact_info[0][groveId]"]').val(self.groveId);
+                        }
+                        $submitBtn.after('<span class="grove-login-result-msg text-success">Login Successful</span>');
+                        self.hideGroveLogin(false);
+
+                        $('.auto-register-question').addClass('hidden');
+                        $('.register-list-msgs').removeClass('hidden');
+                        $('.register-list-msgs .grove-contacts-confirm-list-msg ').removeClass('hidden');
+                        $('.register-list-msgs .multiple-register-list-msg').addClass('hidden');
+                        let personRegistering = self.contactInfoViews[0].contactInfoData;
+
+                        let contactInfo = _.reject(response.contact_info, function (val) {
+                            return _.isEqual([personRegistering.FirstName.toLowerCase().trim(), personRegistering.LastName.toLowerCase().trim(), personRegistering.Email.toLowerCase().trim()], [val.FirstName.toLowerCase().trim(), val.LastName.toLowerCase().trim(), val.Email.toLowerCase().trim()]);
+                        });
+                        self.groveContacts = self.getUniqueGroveContacts(self.groveContacts.concat(contactInfo));
+                        self.showGroveContactList();
+                    } else {
+                        $submitBtn.after('<span class="grove-login-result-msg text-danger">Login Failed</span>');
+                    }
                 },
                 fail: function (response) {
                     console.error(response)
+                    $submitBtn.after('<span class="grove-login-result-msg text-danger">Login Error</span>');
                 }
             })
+        },
+        hideGroveLogin: function (bDelayAndFade) {
+            if (_.isUndefined(bDelayAndFade) || (!_.isUndefined(bDelayAndFade) && !bDelayAndFade)) {
+                $('.grove-login').hide();
+            } else if (!_.isUndefined(bDelayAndFade) && bDelayAndFade) {
+                // wait a couple seconds and then hide the grove login form
+                setTimeout(function () {
+                    $('.grove-login').fadeOut("slow", function () {
+                        $('[name="GroveEmail"]').val();
+                        $('[name="GrovePassword"]').val();
+                    });
+                }, 2000);
+            }
+            $('.grove-login-result-msg').remove()
+        },
+        getGroveOverageAmt: function () {
+            let self = this;
+            let overageAmt = self.iReserved - ($('.grove-register').find('.grove-contacts-confirm-list tbody tr').length + 1);
+            return overageAmt > 0 ? overageAmt : 0;
+        },
+        getIsGroveOverage: function () {
+            let self = this;
+            return self.getGroveOverageAmt() > 0;
+        },
+        handleGroveContactCheckbox: function(e) {
+            let bChecked = e.currentTarget.checked;
+            let contactIdx = $(e.currentTarget).data('contact-idx');
+            let contactViewIdx = contactIdx + 1;
+
+            if (!bChecked) {
+                $('.contact-info-idx-' + contactViewIdx).siblings('.manual-delete-registration-contact').trigger('click');
+            }
         },
         showGroveContactList: function () {
             let self = this;
             let data = {};
             let html = '';
-            if (self.groveContacts.length) {
-                for (let i = 0; i < self.groveContacts.length; i++) {
+
+            $('.overage-question').addClass('hidden');
+            $('.manual-multiple-register').hide();
+            if (_.isArray(self.groveContacts) && self.groveContacts.length) {
+                let startIdx = 0;
+                let limit = self.groveContacts.length;
+                let iCnt = 1;
+                for (let i = startIdx; i < limit; i++) {
                     data = self.groveContacts[i];
-                    let iCnt = i + 1;
-                    html = '<tr><td><label>' + iCnt + '. <input type="checkbox" checked class="grove-contact" id="grove_contact_' + i + '" data-contact-idx="' + i + '" name="grove_contact[' + i + '][confirm]" value="1"/></label></td>';
-                    _.each(_.values(data), function (val, key) {
-                        if (val !== 'woodlands') {
-                            html += '<td><label for="grove_contact_' + i + '">' + val + '</label></td>';
-                        }
-                    });
-                    html += '</tr>';
-                    $('.grove-register').find('.grove-contacts-confirm-list tbody').append(html);
+
+                    let bAddGroveContact = $('.grove-register').find('.grove-contacts-confirm-list tbody').find('[data-grove-id="' + data.groveId + '"]').length === 0;
+                    if (bAddGroveContact) {
+                        html = '<tr data-grove-id="' + data.groveId + '"><td><label>' + iCnt + '. <input type="checkbox" checked class="grove-contact" id="grove_contact_' + i + '" data-grove-id="' + data.groveId + '"  data-contact-idx="' + i + '" name="grove_contact[' + i + '][confirm]" value="1"/></label></td>';
+                        _.each(data, function (val, key) {
+                            if (val !== 'woodlands' && key !== 'groveId') {
+                                html += '<td><label data-key="' + key + '" for="grove_contact_' + i + '">' + val + '</label></td>';
+                            }
+                        });
+                        html += '</tr>';
+                        $('.grove-register').find('.grove-contacts-confirm-list tbody').append(html);
+                    }
+                    iCnt++;
                 }
                 $('.grove-register').show();
             }
+            // Show the manual registrant forms if there are more reservations available
+            if (self.getIsGroveOverage()) {
+                self.showOverageQuestion();
+            }
+        },
+        handleOverageQuestion: function (e) {
+            let self = this;
+            e.preventDefault();
+            $('.overage-question').addClass('hidden');
+            if ($(e.currentTarget).hasClass('overage-question-yes')) {
+                self.buildOverageList();
+            } else {
+                // reduce reservations
+                self.iReserved = self.iReserved - self.getGroveOverageAmt();
+            }
+            self.updateReservedAmtMsg();
+        },
+        showOverageQuestion: function () {
+            let self = this;
+            let $overageQuestion = $('.overage-question');
+            $overageQuestion.removeClass('hidden');
+            $overageQuestion.find('.overage-amt').text(self.getGroveOverageAmt());
+        },
+        buildOverageList: function () {
+            let self = this;
+
+            $('.register-list-msgs').removeClass('hidden');
+            $('.register-list-msgs .grove-contacts-confirm-list-msg ').removeClass('hidden');
+            $('.register-list-msgs .multiple-register-list-msg').removeClass('hidden');
+            self.buildManualContactInfo(self.groveContacts, true);
+            $('.manual-multiple-register').show();
         },
         toggleProjectDescriptionCollapseIcon: function (e) {
             let icon = $('.collapse-project-description').find('span');
@@ -610,28 +895,41 @@
             let self = this;
             let data = {};
             let html = '';
-
+            $('.project-registration-confirm-list tbody').empty();
             _.each(self.contactInfoViews, function (val, key) {
-                try {
-                    data = val.getContactInfoData();
-
-                    html = '<tr>';
-                    _.each(_.values(data), function (val, key) {
-                        html += '<td>' + val + '</td>';
-                    });
-                    html += '</tr>';
-                    $('.project-registration-confirm-list tbody').append(html);
-                } catch (e) {
-                } finally {
+                if (!_.isUndefined(val)) {
+                    try {
+                        data = val.getContactInfoData();
+                        //console.log('buildConfirmationList loops through contactInfoViews', data)
+                        let bSkip = false;
+                        if (self.bIsGroveImport) {
+                            //console.log(data)
+                            if (data['FirstName'] === '') {
+                                //bSkip = true;
+                            }
+                        }
+                        if (!bSkip) {
+                            html = '<tr data-key-grove-id="'+data['contact_info['+key+'][groveId]']+'">';
+                            _.each(data, function (val, key) {
+                                let bIsGroveIdKey = key.match(/groveId/);
+                                if (!bIsGroveIdKey) {
+                                    html += '<td data-key="' + key + '">' + val + '</td>';
+                                }
+                            });
+                            html += '</tr>';
+                            $('.project-registration-confirm-list tbody').append(html);
+                        }
+                    } catch (e) {
+                    }
                 }
             });
 
         },
         getCheckedGroveContacts: function () {
             let self = this;
-            let $notChecked = $('.grove-contact').not(':checked').toArray().reverse();
+            let aNotChecked = $('.grove-contact').not(':checked').toArray().reverse();
 
-            $.each($notChecked, function (idx, el) {
+            $.each(aNotChecked, function (idx, el) {
                 let contactIdx = $(el).data('contact-idx');
                 self.groveContacts = _.reject(self.groveContacts, function (val, key) {
                     return key === contactIdx;
@@ -643,65 +941,217 @@
         deleteRegistrationContactListItem: function (e) {
             let self = this;
             e.preventDefault();
+            let iDeletedContactInfoIdx = $(e.currentTarget).parent('li').find('.contact-info-wrapper').data('contact-info-idx');
+            self.contactInfoViews = _.reject(self.contactInfoViews, function (val) {
+                return !_.isUndefined(val) && $(val.el).hasClass('contact-info-idx-' + iDeletedContactInfoIdx);
+            });
             $(e.currentTarget).parent('li').remove();
+            self.iReserved--;
             if (App.Vars.bTooManyRegistrants) {
                 let numberOfRegistrants = self.$el.find('.manual-multiple-register .multiple-register-list li').length;
                 // remove error notice if it's fixed
                 if (self.iReserved > numberOfRegistrants) {
                     $('#auto-register').find('.auto-register-too-many-registrants-error').remove();
+                    App.Vars.bTooManyRegistrants = false;
                 }
             }
+            self.updateReservedAmtMsg();
+        },
+        updateReservedAmtMsg: function() {
+            let self = this;
+            $('.reserved-amt-msg').text(self.iReserved);
+            if (self.iReserved === 0){
+                $('.reserved-amt-msg').parent().addClass('text-danger')
+            }
+            self.updateStepsViewAndNavBtns();
+        },
+        getManualContactsTotal: function (bIncludeEmptyManualSpots) {
+            let self = this;
+            let iNumberOfManualContactRegistrants = 0;
+            let $listItems = self.$el.find('.manual-multiple-register .multiple-register-list li');
+            if ($listItems.length && self.getContactInfoViewsLength()) {
+                bIncludeEmptyManualSpots = !_.isUndefined(bIncludeEmptyManualSpots) ? bIncludeEmptyManualSpots : true;
+
+                if (bIncludeEmptyManualSpots) {
+                    iNumberOfManualContactRegistrants = $listItems.length;
+                } else {
+                    _.each($listItems, function (liItem) {
+                        let iContactInfoIdx = $(liItem).find('.contact-info-wrapper').data('contact-info-idx');
+                        let contactInfoView = _.find(self.contactInfoViews, function (val) {
+                            return !_.isUndefined(val) ? $(val.el).hasClass('contact-info-idx-' + iContactInfoIdx) : false;
+                        });
+                        if (contactInfoView) {
+                            iNumberOfManualContactRegistrants += contactInfoView.validateContactInfo(false) ? 1 : 0;
+                        }
+                    });
+                }
+            }
+
+            return iNumberOfManualContactRegistrants;
+        },
+        getRegistrantsTotal: function (bIncludeEmptyManualSpots) {
+            let self = this;
+            bIncludeEmptyManualSpots = !_.isUndefined(bIncludeEmptyManualSpots) ? bIncludeEmptyManualSpots : false;
+            let iPersonRegistering = 1;
+            let iNumberOfManualContactRegistrants = self.getManualContactsTotal(bIncludeEmptyManualSpots);
+            let iNumberOfCheckedGroveRegistrants = self.getCheckedGroveContacts().length;
+            return iPersonRegistering + iNumberOfManualContactRegistrants + iNumberOfCheckedGroveRegistrants;
+        },
+        /**
+         * We can't use self.getContactInfoViewsLength() b/c of
+         * skipped index numbers
+         * @returns {number}
+         */
+        getContactInfoViewsLength: function(bIncludeGroveContacts){
+            let self = this;
+            let cnt = 0;
+            bIncludeGroveContacts = !_.isUndefined(bIncludeGroveContacts) ? bIncludeGroveContacts : true;
+            _.each(self.contactInfoViews, function (contactView, key) {
+                if (!_.isUndefined(contactView)){
+                    if (!bIncludeGroveContacts) {
+                        let bIsInGroveContactList = _.find(self.groveContacts, function (groveContact) {
+                            return _.isEqual([contactView.contactInfoData.FirstName.toLowerCase().trim(), contactView.contactInfoData.LastName.toLowerCase().trim(), contactView.contactInfoData.Email.toLowerCase().trim()], [groveContact.FirstName.toLowerCase().trim(), groveContact.LastName.toLowerCase().trim(), groveContact.Email.toLowerCase().trim()]);
+                        });
+                        if (!bIsInGroveContactList) {
+                            cnt++;
+                        }
+                    } else {
+                        cnt++;
+                    }
+                }
+            });
+            return cnt;
         },
         registerAndConfirm: function (e) {
             let self = this;
             e.preventDefault();
-
-            if (self.bIsGroveImport) {
-                self.groveContacts = self.getCheckedGroveContacts();
-
-                if (self.groveContacts.length) {
-                    self.buildManualContactInfo(self.groveContacts);
-                    $('.manual-multiple-register').show();
+            self.setPersonRegistering();
+            let bPersonRegisteringValid = self.contactInfoViews[0].validateContactInfo();
+            //console.log({bPersonRegisteringValid: bPersonRegisteringValid})
+            if (bPersonRegisteringValid) {
+                self.setStepAsValidated('.step-one.steps', $(e.currentTarget));
+                if (self.getContactInfoViewsLength() === 1) {
+                    if ($('#collapseProjectDescription').is(':visible')) {
+                        $('#collapseProjectDescription').collapse('toggle');
+                    }
                 }
+            } else {
+                self.setStepAsInValid('.step-one.steps', $(e.currentTarget));
+                self.$el.find('[href="#contact-info"]').trigger('click');
+                return;
             }
+
             // the personal contact info is already valid
             let valid = 1;
 
+            /**
+             * Need to validate any manually entered registrants now
+             */
             for (let i = 1; i < self.iReserved; i++) {
-                if (typeof self.contactInfoViews[i] !== 'undefined') {
+                if (!_.isUndefined(self.contactInfoViews[i])) {
                     valid += self.contactInfoViews[i].validateContactInfo() ? 1 : 0;
                 }
             }
             App.Vars.bTooManyRegistrants = false;
-            if (self.iReserved < self.contactInfoViews.length) {
+            let possibleCnt = self.getCheckedGroveContacts().length + self.getContactInfoViewsLength(false);
+            /*console.log({
+                checkGroveContacts: self.getCheckedGroveContacts().length,
+                ContactInfoViewsLength: self.getContactInfoViewsLength(false),
+                possibleCnt: possibleCnt,
+                iReserved: self.iReserved
+            })*/
+            if (self.iReserved < possibleCnt) {
                 App.Vars.bTooManyRegistrants = true;
                 valid = 0;
-                let over = self.contactInfoViews.length - self.iReserved;
+                let overAmt = self.getContactInfoViewsLength(false) - self.iReserved;
 
-                let alertMessage = 'Sorry, there are only ' + self.iReserved + ' spots reserved.  Please remove ' + over + ' of your registrations ' +
-                                   'or choose a different project.';
+                let alertMessage = 'Sorry, there are only ' + self.iReserved + ' spots reserved.  Please remove ' + overAmt + ' of your registrations or choose a different project.';
                 let $alertHtml = $('<div class="alert alert-danger auto-register-too-many-registrants-error" role="alert">' + alertMessage + '</div>');
                 $('#auto-register').find('.auto-register-too-many-registrants-error').remove();
                 $('#auto-register').find('.bottom-nav-btns').before($alertHtml);
             }
-            if (valid) {
+            //console.log('valid', valid === self.getContactInfoViewsLength(),{valid:valid, getContactInfoViewsLength: self.getContactInfoViewsLength(), getContactInfoViewsLengthFalse: self.getContactInfoViewsLength(false), contactInfoViews: self.contactInfoViews})
+            if (valid === self.getContactInfoViewsLength()) {
                 self.setStepAsValidated('.step-two.steps', $(e.currentTarget));
+                if (self.bIsGroveImport) {
+                    self.groveContacts = self.getCheckedGroveContacts();
+                    if (self.groveContacts.length) {
+                        if (self.getManualContactsTotal(true)) {
+                            //console.log('registerAndConfirm for bIsGroveImport',{contactInfoViews: self.contactInfoViews, groveContacts: self.groveContacts})
+                            _.each(self.contactInfoViews, function (contactView, idx) {
+                                if (idx > 0 && !_.isUndefined(contactView)) {
+                                    let bIsInGroveContactList = _.find(self.groveContacts, function (groveContact) {
+                                        return _.isEqual([contactView.contactInfoData.FirstName.toLowerCase().trim(), contactView.contactInfoData.LastName.toLowerCase().trim(), contactView.contactInfoData.Email.toLowerCase().trim()], [groveContact.FirstName.toLowerCase().trim(), groveContact.LastName.toLowerCase().trim(), groveContact.Email.toLowerCase().trim()]);
+                                    });
+                                    // add any contactViews to the groveContact List that aren't there.
+                                    if (!bIsInGroveContactList && !_.isEmpty(contactView.contactInfoData.FirstName)) {
+                                        //console.log('registerAndConfirm for bIsGroveImport. adding contactView to self.groveContacts', contactView.contactInfoData)
+                                        //console.log('contactView data to push into grove contacts',self.convertContactViewDataToGroveContact(contactView.getContactInfoData(), idx));
+                                        self.groveContacts.push(self.convertContactViewDataToGroveContact(contactView.getContactInfoData(), idx));
+                                    }
+                                }
+                            });
+                        }
+                        //console.log('building ManualContactInfo with self.groveContacts for submission should have d@d.com',{groveContacts: self.groveContacts});
+                        self.buildManualContactInfo(self.groveContacts, false, false);
+                        // needs to show so the post uses the form data but it won't be visible to user?
+                        $('.manual-multiple-register').show();
+                    }
+                }
                 self.buildConfirmationList();
+                /**
+                 * Move on to next tab
+                 */
                 self.$el.find('[href="#confirm-submit"]').trigger('click');
                 self.updateActiveStep('.step-three.steps')
             } else {
                 if (self.bIsGroveImport) {
                     if (self.groveContacts.length && App.Vars.bTooManyRegistrants) {
+                        // TODO: make sure this is correct
                         self.$el.find('.manual-multiple-register .multiple-register-list').empty();
                         // keep the person registering
                         self.contactInfoViews = [self.contactInfoViews[0]];
                         $('.manual-multiple-register').hide();
+                    } else {
+                        // remove valid contacts
+                        _.each(self.contactInfoViews, function (contactView, key) {
+                            if (!_.isUndefined(contactView)) {
+                                //self.groveContacts.concat();
+
+                                let bIsInGroveContactList = _.find(self.groveContacts, function (groveContact) {
+                                    return _.isEqual([contactView.contactInfoData.FirstName.toLowerCase().trim(), contactView.contactInfoData.LastName.toLowerCase().trim(), contactView.contactInfoData.Email.toLowerCase().trim()], [groveContact.FirstName.toLowerCase().trim(), groveContact.LastName.toLowerCase().trim(), groveContact.Email.toLowerCase().trim()]);
+                                });
+
+                                // add any contactViews to the groveContact List that aren't there.
+                                if (bIsInGroveContactList && contactView.validateContactInfo(false) === 1) {
+                                    self.contactInfoViews = _.reject(self.contactInfoViews, function (val) {
+                                        return !_.isUndefined(val) && val.cid === contactView.cid;
+                                    });
+                                }
+                            }
+                        });
                     }
                 } else {
-
+                    $('.manual-multiple-register').show();
                 }
                 self.setStepAsInValid('.step-two.steps', $(e.currentTarget));
             }
+        },
+        convertContactViewDataToGroveContact: function(contactViewData , idx) {
+            let groveData ={
+                groveId: 0,
+                Email: "",
+                MobilePhoneNumber: "",
+                FirstName: "",
+                LastName: "",
+                Church: "",
+                ChurchOther: ""
+            };
+            _.each(groveData, function (val, key) {
+                //console.log(val, key)
+                groveData[key] = contactViewData['contact_info['+idx+']['+ key+']'];
+            });
+            return groveData;
         },
         updateActiveStep: function (stepClassSelector) {
             let self = this;
@@ -726,10 +1176,20 @@
         submitRegistration: function (e) {
             let self = this;
             e.preventDefault();
+            let $submitBtn = $('.submit-registration-btn');
+            if ($submitBtn.hasClass('disabled')) {
+                return;
+            }
+            $submitBtn.addClass('disabled');
+            $submitBtn.siblings('.spinner').remove();
+            let $spinnerWrapper = $('<div style="position:relative;display:inline-block;margin-right:5px;top:3px;"></div>');
+            $spinnerWrapper.append(App.Vars.spinnerHtml);
+            $submitBtn.before($spinnerWrapper);
             let formData = new FormData($('form[name="newProjectRegistration"]')[0]);
             // for (var pair of formData.entries()) {
-            //     console.log(pair[0] + ', ' + pair[1]);
+            //     //console.log(pair[0] + ', ' + pair[1]);
             // }
+
             $.ajax({
                 type: "post",
                 dataType: "json",
@@ -738,7 +1198,10 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
+                    $spinnerWrapper.remove();
                     if (response.success) {
+                        $submitBtn.removeClass('disabled');
+                        $submitBtn.siblings('.spinner').remove();
                         App.Vars.reservedProjectID = null;
                         App.Vars.registrationProcessType = null;
                         clearTimeout(App.Vars.reservationTimeout);
@@ -746,35 +1209,98 @@
                         let iCountDown = 5;
                         let $alertHtml = $('<div class="alert alert-success registration-success-alert" role="alert">Project Registration Succeeded</div><div class="registration-success-msg">' + response.msg + '</div>');
 
-                        App.Vars.Modal.find('.modal-header').remove();
-                        App.Vars.Modal.find('.modal-footer').find('button').remove();
-                        App.Vars.Modal.find('.modal-body').html($alertHtml);
-                        App.Vars.Modal.find('.modal-footer').append('<div class="reload-msg">This will automatically close in <span>' + iCountDown + '</span> seconds.</div>');
-                        App.Vars.Modal.find('.modal-footer').append('<button class="text-center btn btn-success close-registration-modal">Close</button>');
+                        App.Vars.SIAModalRegistrationForm.find('.modal-header').remove();
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').find('button').remove();
+                        App.Vars.SIAModalRegistrationForm.find('.modal-body').html($alertHtml);
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').append('<div class="reload-msg">This will automatically close in <span>' + iCountDown + '</span> seconds.</div>');
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').append('<button class="text-center btn btn-success close-registration-modal">Close</button>');
                         let bSkipCloseAndReload = false;
-                        App.Vars.Modal.find('.modal-footer').find('.close-registration-modal').on('click', function (e) {
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').find('.close-registration-modal').on('click', function (e) {
                             e.preventDefault();
                             bSkipCloseAndReload = true;
-                            App.Vars.Modal.modal('hide');
+                            App.Vars.SIAModalRegistrationForm.modal('hide');
                             location.reload(true);
                         });
 
-                        let reloadInterval = setInterval(function () {
-                            App.Vars.Modal.find('.reload-msg > span').text(iCountDown--);
-                            if (iCountDown <= 0) {
-                                if (!bSkipCloseAndReload) {
-                                    App.Vars.Modal.modal('hide');
-                                    location.reload(true);
-                                }
-                                clearInterval(reloadInterval);
-                            }
-                        }, 1000);
+                        // let reloadInterval = setInterval(function () {
+                        //     App.Vars.SIAModalRegistrationForm.find('.reload-msg > span').text(iCountDown--);
+                        //     if (iCountDown <= 0) {
+                        //         if (!bSkipCloseAndReload) {
+                        //             App.Vars.SIAModalRegistrationForm.modal('hide');
+                        //             location.reload(true);
+                        //         }
+                        //         clearInterval(reloadInterval);
+                        //     }
+                        // }, 1000);
+                    } else {
+                        $submitBtn.removeClass('disabled');
+                        $submitBtn.siblings('.spinner').remove();
+                        self.$el.find('.submission-error').remove();
+                        let alertMessage = response.msg;
+                        alertMessage += self.buildRegistrationErrorMsg(response);
+                        if (alertMessage !== '') {
+                            let $alertHtml = $('<div class="alert alert-danger submission-error" role="alert">' + alertMessage + '</div>');
+                            $submitBtn.parents('.tab-pane').append($alertHtml);
+                        }
                     }
                 },
                 fail: function (response) {
-                    console.error(response)
+                    $spinnerWrapper.remove();
+                    $submitBtn.siblings('.spinner').remove();
+                    $submitBtn.removeClass('disabled');
+                    console.error('fail',response)
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $spinnerWrapper.remove();
+                    $submitBtn.siblings('.spinner').remove();
+                    $submitBtn.removeClass('disabled');
+                    console.error('error', jqXHR, textStatus, errorThrown)
                 }
             });
+        },
+        buildRegistrationErrorMsg: function (response) {
+            let self = this;
+            let sErrorMsg = '';
+            let sRegisteredMsg = '';
+            let sAlreadyRegisteredMsg = '';
+            let sRegistrationFailedMsg = '';
+            if (response.aRegistered.length){
+                self.iReserved -= response.aRegistered.length;
+                self.updateReservedAmtMsg();
+                sRegisteredMsg = '<div>The following people were successfully registered.<ol>';
+                sRegisteredMsg += _.map(response.aRegistered, function (registrant, idx) {
+                    return '<li>' + registrant.FirstName + ' ' + registrant.LastName + '</li>';
+                }).join("\n");
+                sRegisteredMsg += '</ol></div>';
+            }
+            if (response.aAlreadyRegistered.length) {
+                sAlreadyRegisteredMsg = '<div>The following people were already registered for a project and cannot register again.<ol>';
+                sAlreadyRegisteredMsg += _.map(response.aAlreadyRegistered, function (registrant, idx) {
+                    return '<li>' + registrant.FirstName + ' ' + registrant.LastName + '</li>';
+                }).join("\n");
+                sAlreadyRegisteredMsg += '</ol></div>';
+            }
+            if (response.aRegistrationFailed.length) {
+                sRegistrationFailedMsg = '<div>An error occurred while attempting to register the following people.<ol>';
+                sRegistrationFailedMsg += _.map(response.aRegistrationFailed, function (registrant, idx) {
+                    return '<li>' + registrant.FirstName + ' ' + registrant.LastName + '</li>';
+                }).join("\n");
+                sRegistrationFailedMsg += '</ol>Please click the [Register] button to try again. If the problem persists, please contact Pastor Doug Schneider and let him know.</div>';
+            }
+            if (self.getContactInfoViewsLength() === 1) {
+                sErrorMsg += "<div>Sorry, we were not able to complete your registration.</div>";
+            } else {
+                if (response.aRegistered.length) {
+                    sErrorMsg += "<div>Sorry, we were not able to complete some of your registrations.</div>";
+                } else {
+                    sErrorMsg += "<div>Sorry, we were not able to complete any of your registrations.</div>";
+                }
+            }
+            sErrorMsg += sAlreadyRegisteredMsg;
+            sErrorMsg += sRegistrationFailedMsg;
+            sErrorMsg += sRegisteredMsg;
+
+            return sErrorMsg;
         }
 
     });
@@ -786,15 +1312,15 @@
         registrationFormViewClass: App.Views.RegistrationForm,
         initialize: function (options) {
             let self = this;
-            this.options = options;
-            _.bindAll(this, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations');
+            self.options = options;
+            _.bindAll(self, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations');
 
-            this.parentView = this.options.parentView;
-            this.projectModelToRegister = null;
+            self.parentView = self.options.parentView;
+            self.projectModelToRegister = null;
             clearTimeout(App.Vars.reservationTimeout);
             clearInterval(App.Vars.checkRegistrationsInterval);
             clearInterval(App.Vars.reservationInterval);
-            App.Vars.checkRegistrationsInterval = setInterval(this.checkProjectRegistrations, App.Vars.checkRegistrationsIntervalSeconds);
+            App.Vars.checkRegistrationsInterval = setInterval(self.checkProjectRegistrations, App.Vars.checkRegistrationsIntervalSeconds);
             _log('App.Views.Registration.initialize', options);
         },
         events: {
@@ -804,46 +1330,46 @@
         render: function (e) {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(this.template());
+            self.$el.html(self.template());
 
-            App.Views.siteFilterGroup = this.siteFilterGroup = new this.projectFilterGroupViewClass({
-                parentView: this,
+            App.Views.siteFilterGroup = self.siteFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
                 collection: App.Collections.siteFiltersCollection,
                 filterGroupName: 'Site'
             });
-            this.$('.project-list-filters-wrapper').append(this.siteFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.siteFilterGroup.render().el);
 
-            App.Views.skillFilterGroup = this.skillFilterGroup = new this.projectFilterGroupViewClass({
-                parentView: this,
+            App.Views.skillFilterGroup = self.skillFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
                 collection: App.Collections.skillFiltersCollection,
                 filterGroupName: 'Skills Needed'
             });
-            this.$('.project-list-filters-wrapper').append(this.skillFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.skillFilterGroup.render().el);
 
-            App.Views.childFriendlyFilterGroup = this.childFriendlyFilterGroup = new this.projectFilterGroupViewClass({
-                parentView: this,
+            App.Views.childFriendlyFilterGroup = self.childFriendlyFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
                 collection: App.Collections.childFriendlyFiltersCollection,
                 filterGroupName: '<i class="fas fa-child"></i> Child Friendly'
             });
-            this.$('.project-list-filters-wrapper').append(this.childFriendlyFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.childFriendlyFilterGroup.render().el);
 
-            App.Views.peopleNeededFilterGroup = this.peopleNeededFilterGroup = new this.projectFilterGroupViewClass({
-                parentView: this,
+            App.Views.peopleNeededFilterGroup = self.peopleNeededFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
                 collection: App.Collections.peopleNeededFiltersCollection,
                 filterGroupName: '<i class="fas fa-users"></i> People Needed'
             });
-            this.$('.project-list-filters-wrapper').append(this.peopleNeededFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.peopleNeededFilterGroup.render().el);
 
-            App.Views.projectListView = this.projectListView = new this.projectListViewClass({
-                el: this.$('.project-list'),
-                parentView: this,
+            App.Views.projectListView = self.projectListView = new self.projectListViewClass({
+                el: self.$('.project-list'),
+                parentView: self,
                 collection: App.Collections.allProjectsCollection,
                 model: App.Models.projectModel
             });
 
-            this.projectListView.render();
-            this.listenTo(App.Views.projectListView, 'register-for-project', this.showRegistrationForm);
-            return this;
+            self.projectListView.render();
+            self.listenTo(App.Views.projectListView, 'register-for-project', self.showRegistrationForm);
+            return self;
         },
         checkProjectRegistrations: function () {
             let formData = $('form[name="filter-project-list-form"]').serialize();
@@ -901,7 +1427,7 @@
             let self = this;
 
             App.Views.registrationFormViewClass = new self.registrationFormViewClass({
-                parentView: this,
+                parentView: self,
                 model: self.projectModelToRegister
             });
 
@@ -922,7 +1448,8 @@
                     self.create($.unserialize(modal.find('form').serialize()));
                     App.Vars.SIAModalRegistrationForm.SIAModal('hide');
                 });
-
+                modal.find('.modal-footer').find('.reserved-msg').remove();
+                modal.find('.modal-footer').append('<div class="reserved-msg pull-left">Currently Reserving <span class="reserved-amt-msg">0</span> Spots</div>');
             });
             App.Vars.SIAModalRegistrationForm.SIAModal('show');
 
@@ -931,6 +1458,11 @@
                 if (typeof App.Vars.reservedProjectID !== 'undefined' && App.Vars.reservedProjectID !== null) {
                     let $confirmCloseRegistrationFormModal = getSIAConfirmModal('confirmCloseRegistrationForm');
 
+                    App.Vars.SIAModalRegistrationForm.on('shown.bs.modal', function (event) {
+                        if ($('[name="reserve"]').length) {
+                            $('[name="reserve"]')[0].focus({preventScroll: false});
+                        }
+                    });
                     $confirmCloseRegistrationFormModal.on('show.bs.confirm', function (event) {
                         let $confirmModal = $(this);
 
@@ -938,7 +1470,8 @@
                         $confirmModal.find('.confirm-body').find('.confirm-question').html("If you close the registration form now you will lose your reserved spots for this project.<br><br>Do you still wish to close?");
                         $confirmModal.find('.confirm-body').find('button').on('click', function (e) {
                             e.preventDefault();
-                            if ($(this).hasClass('btn-yes')) {
+                            let $confirmModalBtn = $(this);
+                            if ($confirmModalBtn.hasClass('btn-yes')) {
                                 $confirmModal.confirm('hide');
                                 App.Vars.SIAModalRegistrationForm.SIAModal('hide');
                                 $('.modal-backdrop').remove();
@@ -964,11 +1497,14 @@
                 success: function (response) {
                     App.Vars.reservedProjectID = null;
                     self.checkProjectRegistrations();
+                    $('.reserved-amt-msg').text('0');
                 },
                 fail: function (response) {
                     if (App.Vars.devMode) {
                         console.error(response);
-                        alert('removingReservations error' + response);
+                        if (App.Vars.devMode) {
+                            alert('removingReservations error' + response);
+                        }
                     }
                 }
             })

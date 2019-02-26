@@ -7,7 +7,7 @@
     App.PageableCollections.siteVolunteersCollection = new App.PageableCollections.SiteVolunteer();
 
     // project tabs
-    App.PageableCollections.projectLeadsCollection = new App.PageableCollections.Volunteer();
+    App.PageableCollections.projectLeadsCollection = new App.PageableCollections.ProjectLead();
     App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget();
     App.PageableCollections.projectContactsCollection = new App.PageableCollections.Contact();
     App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.Volunteer();
