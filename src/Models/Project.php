@@ -288,7 +288,7 @@ FROM (
             $projects->where(
                 function ($query) use ($filter, $sSqlPeopleNeeded){
                     $iFilterCnt = 0;
-                    $bForceFilterRequiredToShowInList = false;
+                    $bForceFilterRequiredToShowInList = true;
                     foreach ($filter as $filterType => $aFilterValue) {
                         if ($filterType === 'site') {
                             if (is_array($aFilterValue)) {
@@ -331,10 +331,10 @@ FROM (
                             if (is_array($aFilterValue)) {
                                 foreach ($aFilterValue as $filterValue) {
                                     if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
-                                        $query->whereRaw("({$sSqlPeopleNeeded}) = ?", [$filterValue]);
+                                        $query->whereRaw("({$sSqlPeopleNeeded}) >= ?", [$filterValue]);
                                         $iFilterCnt++;
                                     } else {
-                                        $query->orWhereRaw("({$sSqlPeopleNeeded}) = ?", [$filterValue]);
+                                        $query->orWhereRaw("({$sSqlPeopleNeeded}) >= ?", [$filterValue]);
                                         $iFilterCnt++;
                                     }
                                 }

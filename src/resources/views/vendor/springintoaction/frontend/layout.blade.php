@@ -17,7 +17,7 @@
 <div class="container">
     @if (Route::has('login'))
     <div class="row">
-        <div class="col-xs-12 clearfix">
+        <div class="col-xs-12 clearfix header">
             @if (!empty(trim(Route::currentRouteName())))
             <a class="home-logo" href="{{ url('/') }}"><img src="/images/sia-spring-logo-transparent-big.png" /></a>
             @endif
