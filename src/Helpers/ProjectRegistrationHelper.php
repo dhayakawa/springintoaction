@@ -217,8 +217,22 @@ trait ProjectRegistrationHelper
         }
 
         $aPeopleNeeded = array_values(array_unique($this->getArrayFieldValues('PeopleNeeded', $all_projects)));
-        sort($aChildFriendly);
-        foreach ($aPeopleNeeded as $idx => $peopleNeeded) {
+        sort($aPeopleNeeded);
+        $range = 5;
+        $aRanges = [];
+        foreach ($aPeopleNeeded as $iAmt) {
+            if ($iAmt > $range) {
+                //echo 'iAmt:' . $iAmt . PHP_EOL;
+                $remainder = $iAmt % $range;
+                //echo $remainder . PHP_EOL;
+                $iRange = $iAmt - $remainder;
+                if (!in_array($iRange, $aRanges)) {
+                    //echo $iRange . PHP_EOL;
+                    $aRanges[] = $iRange;
+                }
+            }
+        }
+        foreach ($aRanges as $idx => $peopleNeeded) {
             $projectFilters['peopleNeeded'][] = [
                 'filterIcon' => '',
                 'filterName' => 'filter[peopleNeeded][]',

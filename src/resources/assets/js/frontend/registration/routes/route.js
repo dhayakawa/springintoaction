@@ -40,7 +40,7 @@
             let self = this;
             self.preRouteViewRender();
             self.routeRequested = 'registration';
-            growl('SIA registration route has been called');
+            //growl('SIA registration route has been called');
             if (self.registrationView === null) {
                     App.Views.registrationView = self.registrationView = new self.registrationViewClass({
                         parentView: self.mainApp.el
@@ -55,7 +55,7 @@
             type     = typeof type !== 'undefined' ? type : '';
             self.preRouteViewRender();
             if (App.Vars.devMode) {
-                growl('SIA loadView route has been called:' + route + '_' + action);
+                //growl('SIA loadView route has been called:' + route + '_' + action);
             }
             self.routeRequested = route + '_' + action;
 
@@ -87,7 +87,7 @@
                         self.bRouteViewRendered = false;
                 }
             } catch (e) {
-                console.log('routeView instantiation exception:', e);
+                console.error('routeView instantiation exception:', e);
                 self.bRouteViewRendered = false;
             }
 
@@ -96,7 +96,7 @@
                     self.mainApp.setRouteView(routeView).render();
                     self.bRouteViewRendered = true;
                 } catch (e) {
-                    console.log('self.mainApp.setRouteView render exception:', e);
+                    console.error('self.mainApp.setRouteView render exception:', e);
                     self.bRouteViewRendered = false;
                 }
 

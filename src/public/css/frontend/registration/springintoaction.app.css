@@ -1032,6 +1032,17 @@ fieldset[disabled] .filters-navbar-inverse .btn-link:focus {
     padding-top: 0;
   }
 }
+.nav-links {
+  padding-left: 0;
+}
+.reset-notice {
+  margin: 0;
+  top: 5px;
+  position: relative;
+}
+.reset-notice a {
+  text-decoration: none;
+}
 #confirm-modal .idsModal__bodyInner::-webkit-scrollbar,
 #sia-modal .idsModal__bodyInner::-webkit-scrollbar {
   -webkit-appearance: none;
@@ -1274,11 +1285,41 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
 .sia-registration-app ul.project-list-filters li.project-list-filter-item label i.fas {
   margin-right: 3px;
 }
-.sia-registration-app ul.project-list-filters li.project-list-filter-item label input[type="checkbox"] {
+.sia-registration-app ul.project-list-filters li.project-list-filter-item label input[type="checkbox"],
+.sia-registration-app ul.project-list-filters li.project-list-filter-item label input[type="radio"] {
   position: absolute;
   margin-top: 3px;
   left: 15px;
   margin-left: 0;
+}
+.sia-registration-app .jumbotron.welcome-helper {
+  margin-bottom: 0;
+  text-align: center;
+}
+.sia-registration-app .jumbotron.welcome-helper .close-welcome-helper {
+  position: absolute;
+  top: 5px;
+  right: 25px;
+  font-family: Arial, sans-serif;
+}
+.sia-registration-app .jumbotron.welcome-helper h1 {
+  font-family: 'Raleway', sans-serif;
+  font-size: 48px;
+  margin-top: 0;
+}
+.sia-registration-app .jumbotron.welcome-helper p {
+  font-size: 22px;
+}
+.sia-registration-app .jumbotron.welcome-helper .carousel .carousel-inner .item {
+  min-height: 250px;
+  text-align: center;
+}
+.sia-registration-app .jumbotron.welcome-helper .carousel .carousel-inner .item p {
+  font-size: 28px;
+}
+.sia-registration-app .jumbotron.welcome-helper .carousel .carousel-inner .item p.show-project-list-intro {
+  font-size: 20px;
+  font-weight: 400;
 }
 .sia-registration-app .project-list .site-col {
   color: #29660f;
