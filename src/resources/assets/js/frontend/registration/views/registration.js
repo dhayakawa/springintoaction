@@ -25,7 +25,7 @@
         },
         events: {
             'change select[id^="Church"]': 'handleChurchSelection',
-            'blur input':'updateContactInfoData'
+            'blur input': 'updateContactInfoData'
         },
         render: function () {
             let self = this;
@@ -46,10 +46,10 @@
 
             return self;
         },
-        formatPhoneNumber: function(el){
+        formatPhoneNumber: function (el) {
             let phoneNumber = $(el).val().toString();
-            phoneNumber = phoneNumber.replace(/[^\d]/g,'');
-            if (phoneNumber.charAt(0) === '1' && phoneNumber.length === 11){
+            phoneNumber = phoneNumber.replace(/[^\d]/g, '');
+            if (phoneNumber.charAt(0) === '1' && phoneNumber.length === 11) {
                 phoneNumber = phoneNumber.replace(/^./, '');
             }
             if (phoneNumber.length === 10) {
@@ -58,9 +58,9 @@
                 $(el).val(phoneNumber.replace(/^(\d{3})(\d+)$/, "$1-$2"));
             }
         },
-        updateContactInfoData: function(e) {
+        updateContactInfoData: function (e) {
             let self = this;
-            if ($(e.currentTarget).attr('type')==='tel'){
+            if ($(e.currentTarget).attr('type') === 'tel') {
                 self.formatPhoneNumber(e.currentTarget);
             }
             let aMatches = $(e.currentTarget).attr('name').match(/contact_info\[(\d+)\]\[([^\]]*)\]/);
@@ -440,17 +440,17 @@
                 self.buildManualContactInfo();
             }
         },
-        setPersonRegistering: function(){
+        setPersonRegistering: function () {
             let self = this;
-            self.contactInfoViews[0].contactInfoData= {
-                            groveId: $('[name="contact_info[0][groveId]"]').val(),
-                            Church: $('[name="contact_info[0][Church]"]').val(),
-                            ChurchOther: $('[name="contact_info[0][ChurchOther]"]').val(),
-                            MobilePhoneNumber: $('[name="contact_info[0][MobilePhoneNumber]"]').val(),
-                            FirstName: $('[name="contact_info[0][FirstName]"]').val(),
-                            LastName: $('[name="contact_info[0][LastName]"]').val(),
-                            Email: $('[name="contact_info[0][Email]"]').val()
-                        }
+            self.contactInfoViews[0].contactInfoData = {
+                groveId: $('[name="contact_info[0][groveId]"]').val(),
+                Church: $('[name="contact_info[0][Church]"]').val(),
+                ChurchOther: $('[name="contact_info[0][ChurchOther]"]').val(),
+                MobilePhoneNumber: $('[name="contact_info[0][MobilePhoneNumber]"]').val(),
+                FirstName: $('[name="contact_info[0][FirstName]"]').val(),
+                LastName: $('[name="contact_info[0][LastName]"]').val(),
+                Email: $('[name="contact_info[0][Email]"]').val()
+            }
         },
         registerOthers: function (e) {
             let self = this;
@@ -618,7 +618,7 @@
                         self.bGroveIsLoggedIn = true;
                         self.groveId = response.groveLoggedInId;
                         // set the groveId of the person registering if applicable
-                        if (_.isEmpty(self.contactInfoViews[0].contactInfoData.groveId) && !_.isEmpty($('[name="GroveEmail"]').val()) && self.contactInfoViews[0].contactInfoData.Email === $('[name="GroveEmail"]').val()){
+                        if (_.isEmpty(self.contactInfoViews[0].contactInfoData.groveId) && !_.isEmpty($('[name="GroveEmail"]').val()) && self.contactInfoViews[0].contactInfoData.Email === $('[name="GroveEmail"]').val()) {
                             self.contactInfoViews[0].contactInfoData.groveId = self.groveId;
                             // set the input too in case it's checked
                             $('[name="contact_info[0][groveId]"]').val(self.groveId);
@@ -670,7 +670,7 @@
             let self = this;
             return self.getGroveOverageAmt() > 0;
         },
-        handleGroveContactCheckbox: function(e) {
+        handleGroveContactCheckbox: function (e) {
             let bChecked = e.currentTarget.checked;
             let contactIdx = $(e.currentTarget).data('contact-idx');
             let contactViewIdx = contactIdx + 1;
@@ -766,7 +766,7 @@
                             }
                         }
                         if (!bSkip) {
-                            html = '<tr data-key-grove-id="'+data['contact_info['+key+'][groveId]']+'">';
+                            html = '<tr data-key-grove-id="' + data['contact_info[' + key + '][groveId]'] + '">';
                             _.each(data, function (val, key) {
                                 let bIsGroveIdKey = key.match(/groveId/);
                                 if (!bIsGroveIdKey) {
@@ -814,10 +814,10 @@
             }
             self.updateReservedAmtMsg();
         },
-        updateReservedAmtMsg: function() {
+        updateReservedAmtMsg: function () {
             let self = this;
             $('.reserved-amt-msg').text(self.iReserved);
-            if (self.iReserved === 0){
+            if (self.iReserved === 0) {
                 $('.reserved-amt-msg').parent().addClass('text-danger')
             }
             self.updateStepsViewAndNavBtns();
@@ -859,12 +859,12 @@
          * skipped index numbers
          * @returns {number}
          */
-        getContactInfoViewsLength: function(bIncludeGroveContacts){
+        getContactInfoViewsLength: function (bIncludeGroveContacts) {
             let self = this;
             let cnt = 0;
             bIncludeGroveContacts = !_.isUndefined(bIncludeGroveContacts) ? bIncludeGroveContacts : true;
             _.each(self.contactInfoViews, function (contactView, key) {
-                if (!_.isUndefined(contactView)){
+                if (!_.isUndefined(contactView)) {
                     if (!bIncludeGroveContacts) {
                         let bIsInGroveContactList = _.find(self.groveContacts, function (groveContact) {
                             return _.isEqual([contactView.contactInfoData.FirstName.toLowerCase().trim(), contactView.contactInfoData.LastName.toLowerCase().trim(), contactView.contactInfoData.Email.toLowerCase().trim()], [groveContact.FirstName.toLowerCase().trim(), groveContact.LastName.toLowerCase().trim(), groveContact.Email.toLowerCase().trim()]);
@@ -912,11 +912,11 @@
             App.Vars.bTooManyRegistrants = false;
             let possibleCnt = self.getCheckedGroveContacts().length + self.getContactInfoViewsLength(false);
             /*console.log({
-                checkGroveContacts: self.getCheckedGroveContacts().length,
-                ContactInfoViewsLength: self.getContactInfoViewsLength(false),
-                possibleCnt: possibleCnt,
-                iReserved: self.iReserved
-            })*/
+             checkGroveContacts: self.getCheckedGroveContacts().length,
+             ContactInfoViewsLength: self.getContactInfoViewsLength(false),
+             possibleCnt: possibleCnt,
+             iReserved: self.iReserved
+             })*/
             if (self.iReserved < possibleCnt) {
                 App.Vars.bTooManyRegistrants = true;
                 valid = 0;
@@ -994,8 +994,8 @@
                 self.setStepAsInValid('.step-two.steps', $(e.currentTarget));
             }
         },
-        convertContactViewDataToGroveContact: function(contactViewData , idx) {
-            let groveData ={
+        convertContactViewDataToGroveContact: function (contactViewData, idx) {
+            let groveData = {
                 groveId: 0,
                 Email: "",
                 MobilePhoneNumber: "",
@@ -1006,7 +1006,7 @@
             };
             _.each(groveData, function (val, key) {
                 //console.log(val, key)
-                groveData[key] = contactViewData['contact_info['+idx+']['+ key+']'];
+                groveData[key] = contactViewData['contact_info[' + idx + '][' + key + ']'];
             });
             return groveData;
         },
@@ -1079,16 +1079,16 @@
                             location.reload(true);
                         });
 
-                        // let reloadInterval = setInterval(function () {
-                        //     App.Vars.SIAModalRegistrationForm.find('.reload-msg > span').text(iCountDown--);
-                        //     if (iCountDown <= 0) {
-                        //         if (!bSkipCloseAndReload) {
-                        //             App.Vars.SIAModalRegistrationForm.modal('hide');
-                        //             location.reload(true);
-                        //         }
-                        //         clearInterval(reloadInterval);
-                        //     }
-                        // }, 1000);
+                        let reloadInterval = setInterval(function () {
+                            App.Vars.SIAModalRegistrationForm.find('.reload-msg > span').text(iCountDown--);
+                            if (iCountDown <= 0) {
+                                if (!bSkipCloseAndReload) {
+                                    App.Vars.SIAModalRegistrationForm.modal('hide');
+                                    location.reload(true);
+                                }
+                                clearInterval(reloadInterval);
+                            }
+                        }, 1000);
                     } else {
                         $submitBtn.removeClass('disabled');
                         $submitBtn.siblings('.spinner').remove();
@@ -1105,7 +1105,7 @@
                     $spinnerWrapper.remove();
                     $submitBtn.siblings('.spinner').remove();
                     $submitBtn.removeClass('disabled');
-                    console.error('fail',response)
+                    console.error('fail', response)
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     $spinnerWrapper.remove();
@@ -1121,7 +1121,7 @@
             let sRegisteredMsg = '';
             let sAlreadyRegisteredMsg = '';
             let sRegistrationFailedMsg = '';
-            if (response.aRegistered.length){
+            if (response.aRegistered.length) {
                 self.iReserved -= response.aRegistered.length;
                 self.updateReservedAmtMsg();
                 sRegisteredMsg = '<div>The following people were successfully registered.<ol>';
@@ -1170,7 +1170,7 @@
         initialize: function (options) {
             let self = this;
             self.options = options;
-            _.bindAll(self, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations');
+            _.bindAll(self, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations', 'welcomeHelperAction');
 
             self.parentView = self.options.parentView;
             self.projectModelToRegister = null;
@@ -1182,13 +1182,20 @@
         },
         events: {
             'change [name="sort_by"]': 'updateProjectsList',
-            'click input[type="checkbox"][name^="filter"]': 'updateProjectsList',
+            'click input[type="checkbox"][name^="filter["]': 'updateProjectsList',
+            'click input[type="radio"][name^="filter["]': 'updateProjectsList',
+            'change select[name^="filter["]': 'updateProjectsList',
+            'click span[data-helper-question]': 'welcomeHelperAction',
+            'click button[data-helper-question]': 'welcomeHelperAction',
+            'change [name="register-school-preference"]': 'welcomeHelperAction'
         },
         render: function (e) {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(self.template());
-
+            self.$el.html(self.template({
+                year: new Date().getFullYear()
+            }));
+            self.showWelcomeHelper();
             App.Views.siteFilterGroup = self.siteFilterGroup = new self.projectFilterGroupViewClass({
                 parentView: self,
                 collection: App.Collections.siteFiltersCollection,
@@ -1228,6 +1235,127 @@
             self.listenTo(App.Views.projectListView, 'register-for-project', self.showRegistrationForm);
             return self;
         },
+        initCarousel: function () {
+            let self = this;
+            self.$carouselHelper = self.$el.find('#carousel-welcome-helper');
+            self.$carouselHelper.carousel({
+                interval: 999999
+            });
+            self.$carouselHelper.carousel('pause');
+            self.$carouselHelper.carousel(0);
+        },
+        showWelcomeHelper: function () {
+            let self = this;
+            self.$el.find('.project-list, .filters-navbar').addClass('hidden');
+            self.$el.find('.project-list-wrapper').removeClass('col-sm-9 col-lg-10').addClass('col-sm-12 col-lg-12');
+            self.$el.find('.welcome-helper').show();
+            App.Collections.siteFiltersCollection.each(function (model) {
+                self.$el.find('[name="register-school-preference"]').append('<option value="' + model.get('filterId') + '">' + model.get('filterLabel') + '</option>')
+            });
+            self.initCarousel();
+
+        },
+        hideWelcomeHelper: function () {
+            let self = this;
+            self.$el.find('.project-list-wrapper').removeClass('col-sm-12 col-lg-12').addClass('col-sm-9 col-lg-10');
+            self.$el.find('.project-list, .filters-navbar').removeClass('hidden');
+            self.$el.find('.welcome-helper').hide();
+            let $resetNotice = $('.header').find('.reset-notice');
+            if ($resetNotice.length === 0) {
+                $resetNotice = $('<div class="alert alert-info pull-right reset-notice" role="alert">If you are at a kiosk at church, please <a class="btn btn-success btn-xs" href="/">Click to Reset</a> the page for the next person if you decide not to register. Thank You.</div>');
+                $('.header').append($resetNotice);
+            } else {
+                $resetNotice.show();
+            }
+        },
+        welcomeHelperAction: function (e) {
+            let self = this;
+            e.preventDefault();
+            let $btn = $(e.currentTarget);
+            let helperQuestion = $btn.data('helper-question');
+            let btnAction = $btn.data('val');
+            let bApplyFilter = btnAction === 'yes';
+            let bSkipGoToSlide = false;
+            let gotoCarouselNumber = $btn.data('goto-number');
+            //console.log({btn: $btn,btnAction:btnAction,helperQuestion:helperQuestion,gotoCarouselNumber:gotoCarouselNumber})
+            switch (helperQuestion) {
+                case 'register-multiple':
+                    if (bApplyFilter) {
+                        let $peopleNeededCheckboxes = self.$el.find('[name="filter[peopleNeeded][]"]');
+                        // first, uncheck all the peopleNeeded inputs
+                        $peopleNeededCheckboxes.prop('checked', false);
+                        let bAmtFound=false;
+                        // find a checkbox that is at least 10, click it and exit loop
+                        _.each($peopleNeededCheckboxes, function (checkbox, key) {
+                            let iAmt = parseInt($(checkbox).val());
+                            if (!bAmtFound && iAmt >= 10) {
+                                bAmtFound = true;
+                                $(checkbox).trigger('click');
+                            }
+                        });
+                        // Show a warning that there aren't any projects with 10 open spots
+                        if (!bAmtFound) {
+                            bSkipGoToSlide = true;
+                            self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
+                            self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
+                            self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val="ok"]').removeClass('hidden');
+                        }
+                    }
+                    break;
+                case 'register-child-friendly':
+                    if (bApplyFilter) {
+                        let bHasChildFriendlyFilterOption = self.$el.find('#filter_childFriendly_Yes').length;
+                        let bListHasChildFriendlyProjectsAvailable = self.$el.find('.project-list').find('.child-friendly-col').find('i.text-success').length;
+                        // Click the input if it exists and if the current list has child friendly projects
+                        if (bHasChildFriendlyFilterOption && bListHasChildFriendlyProjectsAvailable) {
+                            self.$el.find('#filter_childFriendly_Yes').trigger('click')
+                        } else {
+                            bSkipGoToSlide = true;
+                            // Change the warning if the peopleNeeded filter removed all the child friendly projects
+                            if (bHasChildFriendlyFilterOption && !bListHasChildFriendlyProjectsAvailable) {
+                                self.$el.find('.' + helperQuestion + '-warning').html('Sorry, there are no projects that need 10 people at this time that are child friendly.')
+                            }
+                            self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
+                            self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
+                            self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val="ok"]').removeClass('hidden');
+                        }
+                    }
+                    break;
+                case 'register-school-preference':
+                    if (bApplyFilter) {
+                        // Use the value of the select option to find the correct input to click
+                        self.$el.find('#' + $btn.val()).trigger('click');
+                    }
+                    break;
+                case 'skip-questions':
+                case 'show-project-list':
+                    // hide jumbotron and show project list and filters
+                    self.hideWelcomeHelper();
+                    break;
+            }
+
+            if (!bSkipGoToSlide) {
+                if (gotoCarouselNumber === 4){
+                    let iProjectCnt = self.$el.find('.project-list').find('tbody tr').length;
+                    let $searchCriteriaResultMsg = self.$el.find('.search-criteria-result-msg');
+                    let iCheckedCnt = 0;
+                    let projectStr = iProjectCnt === 1 ? 'project' : 'projects';
+                    self.$el.find('[name^="filter["]').each(function (idx, el) {
+                        if ($(el).prop('checked')) {
+                            iCheckedCnt++;
+                        }
+                    });
+                    if (iCheckedCnt === 0){
+                        let verb = iProjectCnt === 1 ? 'is' : 'are';
+                        $searchCriteriaResultMsg.html('We like your flexibility, there ' + verb + ' ' + iProjectCnt + ' ' + projectStr + ' for you to choose from.');
+                    } else {
+                        $searchCriteriaResultMsg.find('.welcome-helper-projects-found-amt').text(iProjectCnt + ' ' + projectStr);
+                    }
+                }
+                self.$carouselHelper.carousel(gotoCarouselNumber);
+            }
+
+        },
         checkProjectRegistrations: function () {
             let formData = $('form[name="filter-project-list-form"]').serialize();
 
@@ -1259,7 +1387,11 @@
                 }
             })
         },
-        updateProjectsList: function () {
+        updateProjectsList: function (e) {
+            if ($(e.currentTarget).attr('type') === 'radio' && $(e.currentTarget).prop('checked')) {
+                //$(e.currentTarget).prop('checked',false)
+                console.log($(e.currentTarget).prop('checked'))
+            }
             window.ajaxWaiting('show', '.project-list-wrapper');
             let formData = $('form[name="filter-project-list-form"]').serialize();
             $.ajax({

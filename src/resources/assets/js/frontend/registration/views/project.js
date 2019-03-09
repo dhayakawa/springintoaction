@@ -60,11 +60,11 @@
             _log('App.Views.ProjectList.addAll', 'projects table');
             this.$el.empty();
             let headerCols = '<thead><tr><th><div class="row"><div class="col-xs-2 col-lg-1">&nbsp;</div>\n' +
-                '        <div class="col-xs-6 col-lg-8 site-xs-col"><span class="hidden-sm hidden-md hidden-lg">&nbsp;<br>&nbsp;<br></span>Site</div>\n' +
-                '        <div class="hidden-xs col-lg-1">Skills Needed</div>\n' +
-                '        <div class="hidden-xs col-lg-1">Child Friendly</div>\n' +
-                '        <div class="hidden-xs col-lg-1">People Needed</div>' +
-                '        <div class="hidden-sm hidden-md hidden-lg col-xs-4">Skills Needed<br>Child Friendly<br>People Needed</div>' +
+                '        <div class="col-xs-6 col-lg-8 site-xs-col"><span class="hidden-lg">&nbsp;<br>&nbsp;<br></span>Site</div>\n' +
+                '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Skills Needed</div>\n' +
+                '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Child Friendly</div>\n' +
+                '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">People Needed</div>' +
+                '        <div class="hidden-lg col-xs-4">Skills Needed<br>Child Friendly<br>People Needed</div>' +
                 '</div></th></tr></thead>';
 
             this.$el.html(headerCols + '<tbody></tbody>');
@@ -90,18 +90,24 @@
         },
         render: function (e) {
             let self = this;
+            let filterLabel = self.model.get('filterLabel');
             let filterValue = self.model.get('filterLabel');
+            let inputType = 'checkbox';
             if (self.model.get('Field').match(/projects\.PrimarySkillNeeded/)){
-                filterValue = self.model.get('FieldID')
+                filterValue = self.model.get('FieldID');
+                inputType = 'checkbox';
+            } else if (self.model.get('Field').match(/projects\.PeopleNeeded/)) {
+                filterLabel = filterLabel + ' or more';
             }
             let tplVars = {
+                inputType: inputType,
                 filterIcon: self.model.get('filterIcon'),
                 filterActiveClass: self.model.get('FilterIsChecked') !== '' ? 'active' : '',
                 bFilterIsChecked: self.model.get('FilterIsChecked'),
                 Field: self.model.get('Field'),
                 filterName: self.model.get('filterName'),
                 filterId: self.model.get('filterId'),
-                filterLabel: self.model.get('filterLabel'),
+                filterLabel: filterLabel,
                 filterValue: filterValue
             };
 
