@@ -40,8 +40,8 @@
     </nav>
     <div class="col-sm-9 col-lg-10 project-list-wrapper table-responsive">
         <div class="jumbotron welcome-helper">
-            <h1>Welcome To Spring Into Action <%= year %></h1>
-            <p class="text-center">We'll help you get started with finding a project to volunteer for by narrowing down the list.</p>
+            <h1>Spring Into Action <%= year %> Registration</h1>
+            <p class="text-center">To help you get started, we'll ask you some questions to narrow down the list of projects.</p>
             <div id="carousel-welcome-helper" class="carousel slide">
                 <!-- Wrapper for slides -->
                 <div class="carousel-inner" role="listbox">
@@ -54,7 +54,7 @@
                     </div>
                     <div class="item">
                         <p>Are you looking for child friendly projects?</p>
-                        <div class="alert alert-danger hidden register-child-friendly-warning" role="alert">Sorry, at this time there are no projects left that are child friendly.</div>
+                        <div class="alert alert-danger hidden register-child-friendly-warning" role="alert">Sorry, at this time there are no child friendly projects.</div>
                         <div class="carousel-caption">
                             <span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="yes" data-goto-number="2" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="no" data-goto-number="2" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-child-friendly" data-val="ok" data-goto-number="2" role="button">OK</span>
                         </div>
@@ -84,6 +84,7 @@
             </div>
             <button class="close close-welcome-helper" data-helper-question="skip-questions" data-val="yes" data-goto-number="0" role="button">&times;</button>
         </div>
+        <div class="active-filters-container"><span class="active-filters-list-label hidden">Applied Filters:</span> </div>
         <table class="project-list table table-condensed table-striped hidden"></table>
     </div>
 </div>

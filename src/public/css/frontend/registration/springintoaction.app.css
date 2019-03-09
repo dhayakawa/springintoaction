@@ -1222,6 +1222,23 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
     white-space: normal !important;
   }
 }
+.sia-registration-app .active-filters-container {
+  padding-bottom: 10px;
+  margin: 10px 0;
+  border-bottom: 1px solid #ccc;
+}
+.sia-registration-app .active-filters-container .active-filters-list-label {
+  font-size: 14px;
+  font-weight: bold;
+  padding-right: 5px;
+}
+.sia-registration-app .active-filters-container .active-filter-btn {
+  font-size: 14px;
+  border-radius: 12px;
+  background-color: #789db3;
+  border-color: #73848e;
+  margin: 0 5px;
+}
 .sia-registration-app .skills-icon {
   display: inline-block;
   text-indent: -9999px;

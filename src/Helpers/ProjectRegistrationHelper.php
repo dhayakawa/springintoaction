@@ -61,9 +61,11 @@ trait ProjectRegistrationHelper
      *
      * @return mixed
      */
-    public function getProjectStatusOptionIDByLabel($option_label){
+    public function getProjectStatusOptionIDByLabel($option_label)
+    {
         $projectStatusOptions = new ProjectStatusOptions();
         $ProjectStatusOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
+
         return $ProjectStatusOptionID;
     }
 
@@ -218,8 +220,11 @@ trait ProjectRegistrationHelper
 
         $aPeopleNeeded = array_values(array_unique($this->getArrayFieldValues('PeopleNeeded', $all_projects)));
         sort($aPeopleNeeded);
+        $iMaxRange = 20;
         $range = 5;
         $aRanges = [];
+        $iPeopleNeededCnt = count($aPeopleNeeded);
+        $iCnt = 0;
         foreach ($aPeopleNeeded as $iAmt) {
             if ($iAmt > $range) {
                 //echo 'iAmt:' . $iAmt . PHP_EOL;
@@ -228,11 +233,19 @@ trait ProjectRegistrationHelper
                 $iRange = $iAmt - $remainder;
                 if (!in_array($iRange, $aRanges)) {
                     //echo $iRange . PHP_EOL;
+                    $iCurrentMax = empty($aRanges) ? 0 : max($aRanges);
+                    if($iCnt === $iPeopleNeededCnt - 1 && $iCurrentMax < $iMaxRange && $iRange > $iMaxRange){
+                        $iRange = $iCurrentMax === 0 ? 10 : $iCurrentMax + $range;
+                    }
                     $aRanges[] = $iRange;
                 }
             }
+            $iCnt++;
         }
         foreach ($aRanges as $idx => $peopleNeeded) {
+            if ($peopleNeeded > $iMaxRange) {
+                continue;
+            }
             $projectFilters['peopleNeeded'][] = [
                 'filterIcon' => '',
                 'filterName' => 'filter[peopleNeeded][]',
