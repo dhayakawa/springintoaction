@@ -1319,7 +1319,7 @@
         initialize: function (options) {
             let self = this;
             self.options = options;
-            _.bindAll(self, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations', 'welcomeHelperAction');
+            _.bindAll(self, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations', 'welcomeHelperAction', 'removeFromActiveFiltersContainer');
 
             self.parentView = self.options.parentView;
             self.projectModelToRegister = null;
@@ -1336,7 +1336,8 @@
             'change select[name^="filter["]': 'updateProjectsList',
             'click span[data-helper-question]': 'welcomeHelperAction',
             'click button[data-helper-question]': 'welcomeHelperAction',
-            'change [name="register-school-preference"]': 'welcomeHelperAction'
+            'change [name="register-school-preference"]': 'welcomeHelperAction',
+            'click .active-filter-btn': 'removeFromActiveFiltersContainer'
         },
         render: function (e) {
             let self = this;
@@ -1462,7 +1463,7 @@
                             bSkipGoToSlide = true;
                             // Change the warning if the peopleNeeded filter removed all the child friendly projects
                             if (bHasChildFriendlyFilterOption && !bListHasChildFriendlyProjectsAvailable) {
-                                self.$el.find('.' + helperQuestion + '-warning').html('Sorry, there are no projects that need 10 people at this time that are child friendly.')
+                                self.$el.find('.' + helperQuestion + '-warning').html('Sorry, at this time there are no child friendly projects that need 10 people.')
                             }
                             self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
                             self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
@@ -1484,26 +1485,41 @@
             }
 
             if (!bSkipGoToSlide) {
-                if (gotoCarouselNumber === 4){
-                    let iProjectCnt = self.$el.find('.project-list').find('tbody tr').length;
-                    let $searchCriteriaResultMsg = self.$el.find('.search-criteria-result-msg');
-                    let iCheckedCnt = 0;
-                    let projectStr = iProjectCnt === 1 ? 'project' : 'projects';
-                    self.$el.find('[name^="filter["]').each(function (idx, el) {
-                        if ($(el).prop('checked')) {
-                            iCheckedCnt++;
+                if (!$('.ajax-spinner-overlay').length) {
+                    self.showNextSlide(gotoCarouselNumber);
+                } else {
+                    let waitInterval = setInterval(function () {
+                        if (!$('.ajax-spinner-overlay').length) {
+                            clearInterval(waitInterval);
+                            self.showNextSlide(gotoCarouselNumber);
                         }
-                    });
-                    if (iCheckedCnt === 0){
-                        let verb = iProjectCnt === 1 ? 'is' : 'are';
-                        $searchCriteriaResultMsg.html('We like your flexibility, there ' + verb + ' ' + iProjectCnt + ' ' + projectStr + ' for you to choose from.');
-                    } else {
-                        $searchCriteriaResultMsg.find('.welcome-helper-projects-found-amt').text(iProjectCnt + ' ' + projectStr);
-                    }
+                    }, 500);
                 }
-                self.$carouselHelper.carousel(gotoCarouselNumber);
+
+
             }
 
+        },
+        showNextSlide: function(gotoCarouselNumber){
+            let self = this;
+            if (gotoCarouselNumber === 4) {
+                let iProjectCnt = self.$el.find('.project-list').find('tbody tr').length;
+                let $searchCriteriaResultMsg = self.$el.find('.search-criteria-result-msg');
+                let iCheckedCnt = 0;
+                let projectStr = iProjectCnt === 1 ? 'project' : 'projects';
+                self.$el.find('[name^="filter["]').each(function (idx, el) {
+                    if ($(el).prop('checked')) {
+                        iCheckedCnt++;
+                    }
+                });
+                if (iCheckedCnt === 0) {
+                    let verb = iProjectCnt === 1 ? 'is' : 'are';
+                    $searchCriteriaResultMsg.html('We like your flexibility, there ' + verb + ' ' + iProjectCnt + ' ' + projectStr + ' for you to choose from.');
+                } else {
+                    $searchCriteriaResultMsg.find('.welcome-helper-projects-found-amt').text(iProjectCnt + ' ' + projectStr);
+                }
+            }
+            self.$carouselHelper.carousel(gotoCarouselNumber);
         },
         checkProjectRegistrations: function () {
             let formData = $('form[name="filter-project-list-form"]').serialize();
@@ -1536,10 +1552,54 @@
                 }
             })
         },
+        addToActiveFiltersContainer: function(checkbox){
+            let self = this;
+            let checkboxId = checkbox.id;
+            let $checkbox = $(checkbox);
+            let $filterGroup = $checkbox.parents('.project-list-filter-group');
+            let filterType = $filterGroup.find('.project-list-filter-title').text();
+            let filterLabel = $checkbox.parent().text();
+            let $btn = $('<button data-checkbox-id="'+ checkboxId +'" class="btn btn-primary btn-xs active-filter-btn">'+ filterType + ': ' + filterLabel +' <i class="fas fa-times-circle"></i></button>');
+            if ($checkbox.data('field') !== 'projects.PrimarySkillNeeded') {
+                $filterGroup.hide();
+            }
+            $('.active-filters-list-label').removeClass('hidden');
+            $('.active-filters-container').append($btn);
+        },
+        removeFromActiveFiltersContainer: function (e) {
+            let self = this;
+            let checkbox = null;
+
+            try {
+                e.preventDefault();
+            } catch (e) {
+            }
+            if (!_.isUndefined(e.currentTarget)) {
+                checkbox = $('#' + $(e.currentTarget).data('checkboxId'))[0];
+            } else {
+                checkbox = e;
+            }
+            let checkboxId = checkbox.id;
+            let $checkbox = $(checkbox);
+            if ($checkbox.prop('checked')) {
+                $checkbox.trigger('click');
+            }
+            let $filterGroup = $checkbox.parents('.project-list-filter-group');
+
+            $('.active-filters-container').find('[data-checkbox-id="' + checkboxId + '"]').remove();
+            if ($('.active-filters-container').find('.active-filter-btn').length === 0) {
+                $('.active-filters-list-label').addClass('hidden');
+            }
+            $filterGroup.show();
+        },
         updateProjectsList: function (e) {
-            if ($(e.currentTarget).attr('type') === 'radio' && $(e.currentTarget).prop('checked')) {
-                //$(e.currentTarget).prop('checked',false)
-                console.log($(e.currentTarget).prop('checked'))
+            let self = this;
+            if ($(e.currentTarget).prop('checked')){
+                self.addToActiveFiltersContainer(e.currentTarget);
+            } else {
+                if ($(e.currentTarget).data('field') === 'projects.PrimarySkillNeeded') {
+                    self.removeFromActiveFiltersContainer(e.currentTarget);
+                }
             }
             window.ajaxWaiting('show', '.project-list-wrapper');
             let formData = $('form[name="filter-project-list-form"]').serialize();
@@ -1551,6 +1611,15 @@
                 processData: false,
                 success: function (response) {
                     App.Collections.allProjectsCollection.reset(response);
+                    if (_.isEmpty(response)) {
+                        let resultsMsg = 'No projects found';
+                        if ($('.active-filters-container').find('.active-filter-btn').length){
+                            resultsMsg = 'No projects found, try removing one of the applied filters.';
+                        }
+                        self.$el.find('.project-list-wrapper').append('<div class="no-projects-found">'+ resultsMsg +'</div>')
+                    } else {
+                        self.$el.find('.project-list-wrapper').find('.no-projects-found').remove();
+                    }
                     //window.growl(response.msg, response.success ? 'success' : 'error');
                     window.ajaxWaiting('remove', '.project-list-wrapper');
                 },
