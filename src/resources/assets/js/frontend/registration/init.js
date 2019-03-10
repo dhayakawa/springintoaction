@@ -28,6 +28,8 @@ window.App = {
     Templates: {},
     Router: {},
     Vars: {
+        churchIPAddress: null,
+        remoteIPAddress: null,
         bBackgridColumnManagerSaveState: true,
         // Turn on the console logging
         bAllowConsoleOutput: 1,
@@ -39,10 +41,15 @@ window.App = {
         selectOptions:{},
         devMode: false,
         auth:[],
+        reservationInterval:null,
         reservationTimeout:null,
-        reservationTimeoutExpire: 4 * (1000 * 60),
+        reservationTimeoutExpire: 4 * (1000 * 60), // every 4 minutes
         checkRegistrationsInterval: null,
-        checkRegistrationsIntervalSeconds: 5000 * 6,
+        checkRegistrationsIntervalSeconds: 1000 * 6, // every 6 seconds
+        confirmSomeoneIsThereInterval:null,
+        checkIfSomeoneIsThereInterval:null,
+        checkIfSomeoneIsThereIntervalSeconds: 5 * (1000 * 60), // every 5 minutes of non-activity
+        checkIfSomeoneIsThereKioskIntervalSeconds: (1000 * 60), // reduce to every 1 minute of non-activity if at church
         spinnerHtml: '<div class="small-spinner spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>'
     }
 };

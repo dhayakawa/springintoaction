@@ -42,42 +42,57 @@
         <div class="jumbotron welcome-helper">
             <h1>Spring Into Action <%= year %> Registration</h1>
             <p class="text-center">To help you get started, we'll ask you some questions to narrow down the list of projects.</p>
-            <div id="carousel-welcome-helper" class="carousel slide">
+            <div id="carasel-welcome-helper" class="carasel slide">
                 <!-- Wrapper for slides -->
-                <div class="carousel-inner" role="listbox">
-                    <div class="item active">
+                <div class="carasel-inner" role="listbox">
+                    <!-- 0 -->
+                    <% var goTo = 1; %>
+                    <div class="item active" data-number="<%= goTo - 1 %>" data-helper-question="register-skills-needed">
+                        <p>There are many project that need your skills.<br>Choose from the list below to see which projects need your skill set.</p>
+                        <select class="form-control" name="register-skills-needed" data-helper-question="register-skills-needed" data-val="yes" data-goto-number="<%= goTo %>">
+                            <option value="">Choose</option>
+                        </select>
+                        <div class="carasel-caption">
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-skills-needed" data-val="skip" data-goto-number="<%= goTo %>" role="button">Skip</span>
+                        </div>
+                    </div>
+                    <!-- 1 -->
+                    <% goTo = 2; %>
+                    <div class="item" data-number="<%= goTo - 1 %>" data-helper-question="register-school-preference">
+                        <p>If there is a specific school you would like to volunteer at,<br>choose it from the list.</p>
+                        <select class="form-control" name="register-school-preference" data-helper-question="register-school-preference" data-val="yes" data-goto-number="<%= goTo %>">
+                            <option value="">Choose</option>
+                        </select>
+                        <div class="carasel-caption">
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-school-preference" data-val="skip" data-goto-number="<%= goTo %>" role="button">Skip</span>
+                        </div>
+                    </div>
+                    <!-- 2 -->
+                    <% goTo = 3; %>
+                    <div class="item" data-number="<%= goTo - 1 %>" data-helper-question="register-register-multiple">
                         <p>Do you need to register more than 10 people?</p>
                         <div class="alert alert-danger hidden register-multiple-warning" role="alert">Sorry, at this time there are no projects that can take 10 or more people.</div>
-                        <div class="carousel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-multiple" data-val="yes" data-goto-number="1" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-multiple" data-val="no" data-goto-number="1" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-multiple" data-val="ok" data-goto-number="1" role="button">OK</span>
+                        <div class="carasel-caption">
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-multiple" data-val="yes" data-goto-number="<%= goTo %>" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-multiple" data-val="no" data-goto-number="<%= goTo %>" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-multiple" data-val="ok" data-goto-number="<%= goTo %>" role="button">OK</span>
                         </div>
                     </div>
-                    <div class="item">
+                    <!-- 3 -->
+                    <% goTo = 4; %>
+                    <div class="item" data-number="<%= goTo - 1 %>" data-helper-question="register-child-friendly">
                         <p>Are you looking for child friendly projects?</p>
                         <div class="alert alert-danger hidden register-child-friendly-warning" role="alert">Sorry, at this time there are no child friendly projects.</div>
-                        <div class="carousel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="yes" data-goto-number="2" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="no" data-goto-number="2" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-child-friendly" data-val="ok" data-goto-number="2" role="button">OK</span>
+                        <div class="carasel-caption">
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="yes" data-goto-number="<%= goTo %>" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="no" data-goto-number="<%= goTo %>" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-child-friendly" data-val="ok" data-goto-number="<%= goTo %>" role="button">OK</span>
                         </div>
                     </div>
-                    <div class="item">
-                        <p>If there is a specific school you would like to volunteer at?</p>
-                        <div class="carousel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-school" data-val="yes" data-goto-number="3" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-school" data-val="no" data-goto-number="4" role="button">No</span>
-                        </div>
-                    </div>
-                    <div class="item">
-                        <p>Choose a school from the list.</p>
-                        <select name="register-school-preference" data-helper-question="register-school-preference" data-val="yes" data-goto-number="4"><option value="">Choose</option></select>
-                        <div class="carousel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-school-preference" data-val="skip" data-goto-number="4" role="button">Skip</span>
-                        </div>
-                    </div>
-                    <div class="item">
+                    <!-- 4 -->
+                    <% goTo = 0; %>
+                    <div class="item" data-number="4" data-helper-question="show-project-list">
                         <p class="show-project-list-intro"><span class="search-criteria-result-msg">We found <span class="welcome-helper-projects-found-amt"></span> that met your criteria.</span><br><br>When you find a project that interests you,<br>click the
                             <span class="btn btn-primary btn-sm" role="button">Register</span> button to begin the registration process.</p>
 
-                        <div class="carousel-caption">
-                            <span class="btn btn-success btn-lg" data-helper-question="show-project-list" data-val="yes" data-goto-number="0" role="button">Show me the list!</span>
+                        <div class="carasel-caption">
+                            <span class="btn btn-success btn-lg" data-helper-question="show-project-list" data-val="yes" data-goto-number="<%= goTo %>" role="button">Show me the list!</span>
                         </div>
                     </div>
                 </div>

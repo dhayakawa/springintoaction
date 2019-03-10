@@ -7,12 +7,17 @@
                 <label><%= settingLabel %></label>
             </div>
             <div class="form-group">
+                <% if(input_type === 'radio_yes_no') { %>
                 <label class="radio-inline">
                     <input type="radio" name="value" id="inlineValue1" value="1"> Yes
                 </label>
                 <label class="radio-inline">
                     <input type="radio" name="value" id="inlineValue2" value="0"> No
                 </label>
+                <% } %>
+                <% if(input_type === 'text') { %>
+                <input class="form-control" type="text" name="value" id="textValue" value="<%= value %>">
+                <% } %>
             </div>
             <button class="btn btn-primary btn-sm disabled" type="submit">Save</button>
         </div>
@@ -44,6 +49,8 @@
         </div>
     </div>
 </form>
+<% if(input_type === 'radio_yes_no') { %>
 <script type="text/javascript">
     $('form[name="SiteSetting<%= SiteSettingID %>"] [name="value"][value="<%= value %>"]').prop('checked', true);
 </script>
+<% } %>
