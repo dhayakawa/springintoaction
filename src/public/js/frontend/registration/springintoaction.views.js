@@ -1517,22 +1517,32 @@
                         let $peopleNeededCheckboxes = self.$el.find('[name="filter[peopleNeeded][]"]');
                         // first, uncheck all the peopleNeeded inputs
                         $peopleNeededCheckboxes.prop('checked', false);
-                        let bAmtFound = false;
-                        // find a checkbox that is at least 10, click it and exit loop
-                        _.each($peopleNeededCheckboxes, function (checkbox, key) {
-                            let iAmt = parseInt($(checkbox).val());
-                            if (!bAmtFound && iAmt >= 10) {
-                                bAmtFound = true;
-                                $(checkbox).trigger('click');
+                        let bListAmtFound = false;
+                        self.$el.find('.project-list').find('.volunteers-col').find('.label').each(function (idx, el) {
+                            let iAmt = parseInt($(el).text());
+                            if (!bListAmtFound && iAmt >= 10) {
+                                bListAmtFound = true;
                             }
                         });
+
+                        let bAmtFound = false;
+                        // find a checkbox that is at least 10, click it and exit loop
+                        if (bListAmtFound) {
+                            _.each($peopleNeededCheckboxes, function (checkbox, key) {
+                                let iAmt = parseInt($(checkbox).val());
+                                if (!bAmtFound && iAmt >= 10) {
+                                    bAmtFound = true;
+                                    $(checkbox).trigger('click');
+                                }
+                            });
+                        }
                         // Show a warning that there aren't any projects with 10 open spots
-                        // if (!bAmtFound) {
-                        //     bSkipGoToSlide = true;
-                        //     self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
-                        //     self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
-                        //     self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val="ok"]').removeClass('hidden');
-                        // }
+                        if (!bAmtFound || !bListAmtFound) {
+                            bSkipGoToSlide = true;
+                            self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
+                            self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
+                            self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val="ok"]').removeClass('hidden');
+                        }
                     }
                     break;
                 case 'register-child-friendly':
@@ -1588,6 +1598,20 @@
             switch (helperQuestion) {
                 case 'register-school-preference':
                     let bListHasSchoolAvailableChoices = self.$el.find('[name="filter[site][]"]').length > 1;
+                    let aAvailableSites = [];
+                    // Update select and remove unavailable sites
+                    if (bListHasSchoolAvailableChoices) {
+                        self.$el.find('.project-list').find('.site-col').each(function (idx, el) {
+                            aAvailableSites.push($(el).text());
+                        });
+                        self.$el.find('[name="register-school-preference"]').find('option').each(function (idx, el) {
+                            if (!_.isEmpty($(el).val())) {
+                                if (!_.contains(aAvailableSites, $(el).val())) {
+                                    $(el).remove();
+                                }
+                            }
+                        });
+                    }
                     if (!bListHasSchoolAvailableChoices) {
                         // Skip this question
                         gotoCaraselNumber++;
@@ -1595,6 +1619,14 @@
 
                 case 'register-multiple':
                     let $peopleNeededCheckboxes = self.$el.find('[name="filter[peopleNeeded][]"]');
+                    let bListAmtFound = false;
+                    self.$el.find('.project-list').find('.volunteers-col').find('.label').each(function (idx, el) {
+                        let iAmt = parseInt($(el).text());
+                        if (!bListAmtFound && iAmt >= 10) {
+                            bListAmtFound = true;
+                        }
+                    });
+
                     let bAmtFound = false;
                     // find a checkbox that is at least 10, click it and exit loop
                     _.each($peopleNeededCheckboxes, function (checkbox, key) {
@@ -1603,7 +1635,7 @@
                             bAmtFound = true;
                         }
                     });
-                    if (!bAmtFound) {
+                    if (!bAmtFound || !bListAmtFound) {
                         // Skip this question
                         gotoCaraselNumber++;
                     }
@@ -1618,7 +1650,7 @@
                     }
 
             }
-            console.log('passed in gotoCaraselNumber:', gotoCaraselNumberOrig,'started with helperQuestion:', helperQuestion,'return gotoCaraselNumber"', gotoCaraselNumber)
+            //console.log('passed in gotoCaraselNumber:', gotoCaraselNumberOrig,'started with helperQuestion:', helperQuestion,'return gotoCaraselNumber"', gotoCaraselNumber)
             return gotoCaraselNumber;
         },
         showNextSlide: function (gotoCaraselNumber) {
