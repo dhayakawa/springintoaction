@@ -60,6 +60,7 @@
         },
         updateContactInfoData: function (e) {
             let self = this;
+            self.parentView.resetCheckIfSomeoneIsThereInterval();
             if ($(e.currentTarget).attr('type') === 'tel') {
                 self.formatPhoneNumber(e.currentTarget);
             }
@@ -73,6 +74,7 @@
         },
         handleChurchSelection: function (e) {
             let self = this;
+            self.parentView.resetCheckIfSomeoneIsThereInterval();
             self.bIsWoodlands = $(e.currentTarget).val() === 'woodlands';
             self.contactInfoData.Church = $(e.currentTarget).val();
             let $otherChurchWrapper = self.$el.find('.other-church-wrapper');
@@ -188,7 +190,6 @@
                 'registerOthers',
                 'registerAndConfirm',
                 'toggleProjectDescriptionCollapseIcon',
-                'makeReservations',
                 'confirmReservationTimeout',
                 'handleRegisterProcessType',
                 'handleGroveLogin',
@@ -218,10 +219,12 @@
             _log('App.Views.Registration.initialize', options);
         },
         events: {
+            'click form[name="newProjectReservation"] button': 'makeReservations',
             'click .register-others': 'registerOthers',
             'click .confirm-and-register': 'registerAndConfirm',
             'click .submit-registration-btn': 'submitRegistration',
             'click .back-to-contact-info-btn': function (e) {
+                this.resetCheckIfSomeoneIsThereInterval();
                 e.preventDefault();
                 this.$el.find('[href="#contact-info"]').trigger('click');
                 this.updateActiveStep('.step-one.steps')
@@ -232,7 +235,6 @@
             },
             'hidden.bs.collapse #collapseProjectDescription': 'toggleProjectDescriptionCollapseIcon',
             'shown.bs.collapse #collapseProjectDescription': 'toggleProjectDescriptionCollapseIcon',
-            'click form[name="newProjectReservation"] button': 'makeReservations',
             'click [name="register-process-type"]': 'handleRegisterProcessType',
             'click .submit-grove-login-btn': 'handleGroveLogin',
             'click .manual-delete-registration-contact': 'deleteRegistrationContactListItem',
@@ -306,6 +308,10 @@
 
             return self;
         },
+        resetCheckIfSomeoneIsThereInterval: function(){
+            let self = this;
+            self.parentView.resetCheckIfSomeoneIsThereInterval();
+        },
         checkForReturnKey: function (e) {
             if (e.which == 13 || e.keyCode == 13) {
                 //code to execute here
@@ -313,8 +319,9 @@
             }
         },
         makeReservations: function (e) {
-            e.preventDefault();
             let self = this;
+            e.preventDefault();
+            self.resetCheckIfSomeoneIsThereInterval();
 
             let $projectReservationForm = $('form[name="newProjectReservation"]');
             let formData = $projectReservationForm.serialize();
@@ -429,6 +436,7 @@
         },
         backToRegisterOthers: function (e) {
             let self = this;
+            self.resetCheckIfSomeoneIsThereInterval();
             e.preventDefault();
             self.setUpRegisterOthers();
             self.$el.find('[href="#auto-register"]').trigger('click');
@@ -454,6 +462,7 @@
         },
         registerOthers: function (e) {
             let self = this;
+            self.resetCheckIfSomeoneIsThereInterval();
             e.preventDefault();
             self.setPersonRegistering();
 
@@ -547,7 +556,7 @@
         },
         handleRegisterProcessType: function (e) {
             let self = this;
-
+            self.resetCheckIfSomeoneIsThereInterval();
             if (e.currentTarget.id === 'auto-register-manual') {
                 self.hideGroveLogin();
                 $('.auto-register-question').addClass('hidden');
@@ -594,6 +603,7 @@
         },
         handleGroveLogin: function (e) {
             let self = this;
+            self.resetCheckIfSomeoneIsThereInterval();
             e.preventDefault();
             let $submitBtn = $(e.currentTarget);
             $submitBtn.siblings('.spinner').remove();
@@ -671,6 +681,8 @@
             return self.getGroveOverageAmt() > 0;
         },
         handleGroveContactCheckbox: function (e) {
+            let self = this;
+            self.resetCheckIfSomeoneIsThereInterval();
             let bChecked = e.currentTarget.checked;
             let contactIdx = $(e.currentTarget).data('contact-idx');
             let contactViewIdx = contactIdx + 1;
@@ -715,6 +727,7 @@
         },
         handleOverageQuestion: function (e) {
             let self = this;
+            self.resetCheckIfSomeoneIsThereInterval();
             e.preventDefault();
             $('.overage-question').addClass('hidden');
             if ($(e.currentTarget).hasClass('overage-question-yes')) {
@@ -797,6 +810,7 @@
         },
         deleteRegistrationContactListItem: function (e) {
             let self = this;
+            self.resetCheckIfSomeoneIsThereInterval();
             e.preventDefault();
             let iDeletedContactInfoIdx = $(e.currentTarget).parent('li').find('.contact-info-wrapper').data('contact-info-idx');
             self.contactInfoViews = _.reject(self.contactInfoViews, function (val) {
@@ -881,6 +895,7 @@
         },
         registerAndConfirm: function (e) {
             let self = this;
+            self.resetCheckIfSomeoneIsThereInterval();
             e.preventDefault();
             self.setPersonRegistering();
             let bPersonRegisteringValid = self.contactInfoViews[0].validateContactInfo();
@@ -1032,6 +1047,7 @@
         },
         submitRegistration: function (e) {
             let self = this;
+            self.resetCheckIfSomeoneIsThereInterval();
             e.preventDefault();
             let $submitBtn = $('.submit-registration-btn');
             if ($submitBtn.hasClass('disabled')) {
@@ -1174,10 +1190,18 @@
 
             self.parentView = self.options.parentView;
             self.projectModelToRegister = null;
+            clearInterval(App.Vars.confirmSomeoneIsThereInterval);
+            App.Vars.confirmSomeoneIsThereInterval = null;
+            clearInterval(App.Vars.checkIfSomeoneIsThereInterval);
             clearTimeout(App.Vars.reservationTimeout);
             clearInterval(App.Vars.checkRegistrationsInterval);
             clearInterval(App.Vars.reservationInterval);
-            App.Vars.checkRegistrationsInterval = setInterval(self.checkProjectRegistrations, App.Vars.checkRegistrationsIntervalSeconds);
+            App.Vars.checkRegistrationsInterval = setInterval($.proxy(self.checkProjectRegistrations, self), App.Vars.checkRegistrationsIntervalSeconds);
+            // reduce interval time of non-activity if at church
+            if (App.Vars.churchIPAddress && App.Vars.remoteIPAddress && _.isEqual(App.Vars.churchIPAddress , App.Vars.remoteIPAddress)) {
+                App.Vars.checkIfSomeoneIsThereIntervalSeconds = App.Vars.checkIfSomeoneIsThereKioskIntervalSeconds;
+            }
+
             _log('App.Views.Registration.initialize', options);
         },
         events: {
@@ -1187,6 +1211,7 @@
             'change select[name^="filter["]': 'updateProjectsList',
             'click span[data-helper-question]': 'welcomeHelperAction',
             'click button[data-helper-question]': 'welcomeHelperAction',
+            'change [name="register-skills-needed"]': 'welcomeHelperAction',
             'change [name="register-school-preference"]': 'welcomeHelperAction',
             'click .active-filter-btn': 'removeFromActiveFiltersContainer'
         },
@@ -1236,24 +1261,25 @@
             self.listenTo(App.Views.projectListView, 'register-for-project', self.showRegistrationForm);
             return self;
         },
-        initCarousel: function () {
+        initCarasel: function () {
             let self = this;
-            self.$carouselHelper = self.$el.find('#carousel-welcome-helper');
-            self.$carouselHelper.carousel({
-                interval: 999999
-            });
-            self.$carouselHelper.carousel('pause');
-            self.$carouselHelper.carousel(0);
+            self.$caraselHelper = self.$el.find('#carasel-welcome-helper');
+            self.$caraselHelper.carasel();
         },
         showWelcomeHelper: function () {
             let self = this;
+            // Stop the interval if it exists
+            App.Vars.checkIfSomeoneIsThereInterval && clearInterval(App.Vars.checkIfSomeoneIsThereInterval);
             self.$el.find('.project-list, .filters-navbar').addClass('hidden');
             self.$el.find('.project-list-wrapper').removeClass('col-sm-9 col-lg-10').addClass('col-sm-12 col-lg-12');
             self.$el.find('.welcome-helper').show();
+            App.Collections.skillFiltersCollection.each(function (model) {
+                self.$el.find('[name="register-skills-needed"]').append('<option value="' + model.get('filterId') + '">' + model.get('filterLabel') + '</option>')
+            });
             App.Collections.siteFiltersCollection.each(function (model) {
                 self.$el.find('[name="register-school-preference"]').append('<option value="' + model.get('filterId') + '">' + model.get('filterLabel') + '</option>')
             });
-            self.initCarousel();
+            self.initCarasel();
 
         },
         hideWelcomeHelper: function () {
@@ -1269,23 +1295,79 @@
                 $resetNotice.show();
             }
         },
+        /**
+         * Every user interaction should really call this and reset it
+         */
+        resetCheckIfSomeoneIsThereInterval: function () {
+            let self = this;
+            App.Vars.checkIfSomeoneIsThereInterval && clearInterval(App.Vars.checkIfSomeoneIsThereInterval);
+            App.Vars.checkIfSomeoneIsThereInterval = setInterval($.proxy(self.checkIfSomeoneIsThere, self), App.Vars.checkIfSomeoneIsThereIntervalSeconds);
+        },
+        checkIfSomeoneIsThere: function () {
+            let self = this;
+
+            // don't show the confirm modal if it is already waiting for a response
+            if (!App.Vars.confirmSomeoneIsThereInterval) {
+                let $checkIfSomeIsThereIntervalModal = getSIAConfirmModal('confirmSomeoneIsThereInterval');
+                $checkIfSomeIsThereIntervalModal.on('show.bs.confirm', function (event) {
+                    let $confirm = $(this);
+                    let iCountDown = 60;
+                    $confirm.find('.confirm-body').find('button.btn-no').remove();
+                    $confirm.find('.confirm-body').find('.confirm-question').html('<div>Hi, Are you still there?<br>The page will automatically reset in <span class="reset-countdown">' + iCountDown + '</span> seconds if you do not respond.</div>');
+                    App.Vars.confirmSomeoneIsThereInterval && clearInterval(App.Vars.confirmSomeoneIsThereInterval);
+                    App.Vars.confirmSomeoneIsThereInterval = setInterval(function () {
+                        $confirm.find('.confirm-body').find('.reset-countdown').text(iCountDown--);
+                        if (iCountDown <= 0) {
+                            App.Vars.confirmSomeoneIsThereInterval && clearInterval(App.Vars.confirmSomeoneIsThereInterval);
+                            App.Vars.confirmSomeoneIsThereInterval = null;
+                            // just in case there are any lingering reservations
+                            self.removeReservations();
+                            location.reload(true);
+                        }
+                    }, 1000);
+                    $confirm.find('.confirm-body').find('button').on('click', function (e) {
+                        e.preventDefault();
+                        App.Vars.confirmSomeoneIsThereInterval && clearInterval(App.Vars.confirmSomeoneIsThereInterval);
+                        App.Vars.confirmSomeoneIsThereInterval = null;
+                        self.resetCheckIfSomeoneIsThereInterval();
+                        $confirm.confirm('hide');
+                    });
+
+                });
+
+                $checkIfSomeIsThereIntervalModal.confirm('show');
+            }
+        },
         welcomeHelperAction: function (e) {
             let self = this;
             e.preventDefault();
+            self.resetCheckIfSomeoneIsThereInterval();
             let $btn = $(e.currentTarget);
             let helperQuestion = $btn.data('helper-question');
             let btnAction = $btn.data('val');
             let bApplyFilter = btnAction === 'yes';
             let bSkipGoToSlide = false;
-            let gotoCarouselNumber = $btn.data('goto-number');
-            //console.log({btn: $btn,btnAction:btnAction,helperQuestion:helperQuestion,gotoCarouselNumber:gotoCarouselNumber})
+            let gotoCaraselNumber = $btn.data('goto-number');
+            //console.log({btn: $btn,btnAction:btnAction,helperQuestion:helperQuestion,gotoCaraselNumber:gotoCaraselNumber})
             switch (helperQuestion) {
+                case 'register-skills-needed':
+                    if (bApplyFilter) {
+                        // Use the value of the select option to find the correct input to click
+                        self.$el.find('#' + $btn.val()).trigger('click');
+                    }
+                    break;
+                case 'register-school-preference':
+                    if (bApplyFilter) {
+                        // Use the value of the select option to find the correct input to click
+                        self.$el.find('#' + $btn.val()).trigger('click');
+                    }
+                    break;
                 case 'register-multiple':
                     if (bApplyFilter) {
                         let $peopleNeededCheckboxes = self.$el.find('[name="filter[peopleNeeded][]"]');
                         // first, uncheck all the peopleNeeded inputs
                         $peopleNeededCheckboxes.prop('checked', false);
-                        let bAmtFound=false;
+                        let bAmtFound = false;
                         // find a checkbox that is at least 10, click it and exit loop
                         _.each($peopleNeededCheckboxes, function (checkbox, key) {
                             let iAmt = parseInt($(checkbox).val());
@@ -1295,12 +1377,12 @@
                             }
                         });
                         // Show a warning that there aren't any projects with 10 open spots
-                        if (!bAmtFound) {
-                            bSkipGoToSlide = true;
-                            self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
-                            self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
-                            self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val="ok"]').removeClass('hidden');
-                        }
+                        // if (!bAmtFound) {
+                        //     bSkipGoToSlide = true;
+                        //     self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
+                        //     self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
+                        //     self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val="ok"]').removeClass('hidden');
+                        // }
                     }
                     break;
                 case 'register-child-friendly':
@@ -1317,15 +1399,9 @@
                                 self.$el.find('.' + helperQuestion + '-warning').html('Sorry, at this time there are no child friendly projects that need 10 people.')
                             }
                             self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
-                            self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
-                            self.$el.find('[data-helper-question="' + helperQuestion + '"][data-val="ok"]').removeClass('hidden');
+                            self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
+                            self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val="ok"]').removeClass('hidden');
                         }
-                    }
-                    break;
-                case 'register-school-preference':
-                    if (bApplyFilter) {
-                        // Use the value of the select option to find the correct input to click
-                        self.$el.find('#' + $btn.val()).trigger('click');
                     }
                     break;
                 case 'skip-questions':
@@ -1337,23 +1413,66 @@
 
             if (!bSkipGoToSlide) {
                 if (!$('.ajax-spinner-overlay').length) {
-                    self.showNextSlide(gotoCarouselNumber);
+                    self.showNextSlide(gotoCaraselNumber);
                 } else {
                     let waitInterval = setInterval(function () {
                         if (!$('.ajax-spinner-overlay').length) {
                             clearInterval(waitInterval);
-                            self.showNextSlide(gotoCarouselNumber);
+                            gotoCaraselNumber = self.checkIfNextSlideIsValid(gotoCaraselNumber);
+                            self.showNextSlide(gotoCaraselNumber);
                         }
                     }, 500);
                 }
+            }
+        },
+        checkIfNextSlideIsValid: function(gotoCaraselNumber){
+            let self = this;
+            let gotoCaraselNumberOrig = gotoCaraselNumber;
+            let $slide = self.$el.find('.item[data-number="'+ gotoCaraselNumber+'"]');
+            let helperQuestion = $slide.data('helper-question');
 
+            /**
+             * These are required to be in the order of the slides or the fall throughs won't work correctly
+             */
+            switch (helperQuestion) {
+                case 'register-school-preference':
+                    let bListHasSchoolAvailableChoices = self.$el.find('[name="filter[site][]"]').length > 1;
+                    if (!bListHasSchoolAvailableChoices) {
+                        // Skip this question
+                        gotoCaraselNumber++;
+                    }
+
+                case 'register-multiple':
+                    let $peopleNeededCheckboxes = self.$el.find('[name="filter[peopleNeeded][]"]');
+                    let bAmtFound = false;
+                    // find a checkbox that is at least 10, click it and exit loop
+                    _.each($peopleNeededCheckboxes, function (checkbox, key) {
+                        let iAmt = parseInt($(checkbox).val());
+                        if (!bAmtFound && iAmt >= 10) {
+                            bAmtFound = true;
+                        }
+                    });
+                    if (!bAmtFound) {
+                        // Skip this question
+                        gotoCaraselNumber++;
+                    }
+
+                case 'register-child-friendly':
+                    let bHasChildFriendlyFilterOption = self.$el.find('#filter_childFriendly_Yes').length;
+                    let bListHasChildFriendlyProjectsAvailable = self.$el.find('.project-list').find('.child-friendly-col').find('i.text-success').length;
+                    // Click the input if it exists and if the current list has child friendly projects
+                    if (!bHasChildFriendlyFilterOption || !bListHasChildFriendlyProjectsAvailable) {
+                        // Skip this question
+                        gotoCaraselNumber++;
+                    }
 
             }
-
+            console.log('passed in gotoCaraselNumber:', gotoCaraselNumberOrig,'started with helperQuestion:', helperQuestion,'return gotoCaraselNumber"', gotoCaraselNumber)
+            return gotoCaraselNumber;
         },
-        showNextSlide: function(gotoCarouselNumber){
+        showNextSlide: function (gotoCaraselNumber) {
             let self = this;
-            if (gotoCarouselNumber === 4) {
+            if (gotoCaraselNumber === 4) {
                 let iProjectCnt = self.$el.find('.project-list').find('tbody tr').length;
                 let $searchCriteriaResultMsg = self.$el.find('.search-criteria-result-msg');
                 let iCheckedCnt = 0;
@@ -1370,7 +1489,7 @@
                     $searchCriteriaResultMsg.find('.welcome-helper-projects-found-amt').text(iProjectCnt + ' ' + projectStr);
                 }
             }
-            self.$carouselHelper.carousel(gotoCarouselNumber);
+            self.$caraselHelper.carasel(gotoCaraselNumber);
         },
         checkProjectRegistrations: function () {
             let formData = $('form[name="filter-project-list-form"]').serialize();
@@ -1403,17 +1522,15 @@
                 }
             })
         },
-        addToActiveFiltersContainer: function(checkbox){
+        addToActiveFiltersContainer: function (checkbox) {
             let self = this;
             let checkboxId = checkbox.id;
             let $checkbox = $(checkbox);
             let $filterGroup = $checkbox.parents('.project-list-filter-group');
             let filterType = $filterGroup.find('.project-list-filter-title').text();
             let filterLabel = $checkbox.parent().text();
-            let $btn = $('<button data-checkbox-id="'+ checkboxId +'" class="btn btn-primary btn-xs active-filter-btn">'+ filterType + ': ' + filterLabel +' <i class="fas fa-times-circle"></i></button>');
-            if ($checkbox.data('field') !== 'projects.PrimarySkillNeeded') {
-                $filterGroup.hide();
-            }
+            let $btn = $('<button data-checkbox-id="' + checkboxId + '" class="btn btn-primary btn-xs active-filter-btn">' + filterType + ': ' + filterLabel + ' <i class="fas fa-times-circle"></i></button>');
+            $filterGroup.hide();
             $('.active-filters-list-label').removeClass('hidden');
             $('.active-filters-container').append($btn);
         },
@@ -1445,12 +1562,9 @@
         },
         updateProjectsList: function (e) {
             let self = this;
-            if ($(e.currentTarget).prop('checked')){
+            self.resetCheckIfSomeoneIsThereInterval();
+            if ($(e.currentTarget).prop('checked')) {
                 self.addToActiveFiltersContainer(e.currentTarget);
-            } else {
-                if ($(e.currentTarget).data('field') === 'projects.PrimarySkillNeeded') {
-                    self.removeFromActiveFiltersContainer(e.currentTarget);
-                }
             }
             window.ajaxWaiting('show', '.project-list-wrapper');
             let formData = $('form[name="filter-project-list-form"]').serialize();
@@ -1464,10 +1578,10 @@
                     App.Collections.allProjectsCollection.reset(response);
                     if (_.isEmpty(response)) {
                         let resultsMsg = 'No projects found';
-                        if ($('.active-filters-container').find('.active-filter-btn').length){
+                        if ($('.active-filters-container').find('.active-filter-btn').length) {
                             resultsMsg = 'No projects found, try removing one of the applied filters.';
                         }
-                        self.$el.find('.project-list-wrapper').append('<div class="no-projects-found">'+ resultsMsg +'</div>')
+                        self.$el.find('.project-list-wrapper').append('<div class="no-projects-found">' + resultsMsg + '</div>')
                     } else {
                         self.$el.find('.project-list-wrapper').find('.no-projects-found').remove();
                     }

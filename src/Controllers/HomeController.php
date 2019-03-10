@@ -75,7 +75,8 @@ class HomeController extends BaseController
             // or this spring if the month is less than may
             $Year = $month > 5 ? $yearNow + 1 : $yearNow;
             $bIsLocalEnv = App::environment('local');
-
+            $remoteIPAddress = $_SERVER['REMOTE_ADDR'];
+            $churchIPAddress = $SiteSetting->getSettingValue('church_ip_address');
             $all_projects = $this->getProjectList();
             $projectFilters = $this->getProjectFilters($all_projects);
             $project = $select_options = $auth = $project_volunteers = $volunteers = [];
@@ -87,6 +88,8 @@ class HomeController extends BaseController
             $appInitialData = compact(
                 [
                     'random',
+                    'churchIPAddress',
+                    'remoteIPAddress',
                     'all_projects',
                     'project',
                     'select_options',

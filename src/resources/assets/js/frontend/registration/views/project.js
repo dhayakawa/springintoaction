@@ -59,12 +59,12 @@
         addAll: function () {
             _log('App.Views.ProjectList.addAll', 'projects table');
             this.$el.empty();
-            let headerCols = '<thead><tr><th><div class="row"><div class="col-xs-2 col-lg-1">&nbsp;</div>\n' +
-                '        <div class="col-xs-6 col-lg-8 site-xs-col"><span class="hidden-lg">&nbsp;<br>&nbsp;<br></span>Site</div>\n' +
+            let headerCols = '<thead><tr><th><div class="row">\n' +
+                '        <div class="col-xs-7 col-lg-8 site-xs-col"><span class="hidden-lg hidden-xl">&nbsp;<br>&nbsp;<br></span>Site</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Skills Needed</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Child Friendly</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">People Needed</div>' +
-                '        <div class="hidden-lg col-xs-4">Skills Needed<br>Child Friendly<br>People Needed</div>' +
+                '        <div class="hidden-lg col-xs-5">Skills Needed<br>Child Friendly<br>People Needed</div>' +
                 '</div></th></tr></thead>';
 
             this.$el.html(headerCols + '<tbody></tbody>');

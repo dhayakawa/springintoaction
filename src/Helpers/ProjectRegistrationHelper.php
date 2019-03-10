@@ -120,7 +120,7 @@ trait ProjectRegistrationHelper
      */
     public function getProjectFilterGroups()
     {
-        return ['site' => [], 'skill' => [], 'childFriendly' => [], 'peopleNeeded' => []];
+        return ['skill' => [], 'site' => [], 'peopleNeeded' => [], 'childFriendly' => []];
     }
 
     /**

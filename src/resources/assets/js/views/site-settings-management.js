@@ -15,13 +15,14 @@
         },
         render: function () {
             let self = this;
-            let settingLabel = _.map(self.model.get('setting').replace('_', ' ').split(' '), function (word) {
+            let settingLabel = _.map(self.model.get('setting').replace(/_/g, ' ').split(' '), function (word) {
                 return word.charAt(0).toUpperCase() + word.slice(1);
             }).join(' ');
             let $setting = self.template({
                 'SiteSettingID': self.model.get('SiteSettingID'),
                 'settingLabel': settingLabel,
                 'setting': self.model.get('setting'),
+                'input_type': self.model.get('input_type'),
                 'value': self.model.get('value'),
                 'description': self.model.get('description'),
                 'message': self.model.get('message'),
