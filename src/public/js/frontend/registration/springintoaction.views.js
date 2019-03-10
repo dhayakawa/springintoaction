@@ -1519,7 +1519,7 @@
                         $peopleNeededCheckboxes.prop('checked', false);
                         let bListAmtFound = false;
                         self.$el.find('.project-list').find('.volunteers-col').find('.label').each(function (idx, el) {
-                            let iAmt = parseInt($(el).text());
+                            let iAmt = parseInt($(el).text().trim());
                             if (!bListAmtFound && iAmt >= 10) {
                                 bListAmtFound = true;
                             }
@@ -1556,7 +1556,7 @@
                             bSkipGoToSlide = true;
                             // Change the warning if the peopleNeeded filter removed all the child friendly projects
                             if (bHasChildFriendlyFilterOption && !bListHasChildFriendlyProjectsAvailable) {
-                                self.$el.find('.' + helperQuestion + '-warning').html('Sorry, at this time there are no child friendly projects that need 10 people.')
+                                self.$el.find('.' + helperQuestion + '-warning').html('Sorry, at this time there are no child friendly projects with the applied filters.')
                             }
                             self.$el.find('.' + helperQuestion + '-warning').removeClass('hidden');
                             self.$el.find('.btn[data-helper-question="' + helperQuestion + '"][data-val!="ok"]').addClass('hidden');
@@ -1602,11 +1602,11 @@
                     // Update select and remove unavailable sites
                     if (bListHasSchoolAvailableChoices) {
                         self.$el.find('.project-list').find('.site-col').each(function (idx, el) {
-                            aAvailableSites.push($(el).text());
+                            aAvailableSites.push($(el).text().trim());
                         });
                         self.$el.find('[name="register-school-preference"]').find('option').each(function (idx, el) {
                             if (!_.isEmpty($(el).val())) {
-                                if (!_.contains(aAvailableSites, $(el).val())) {
+                                if (!_.contains(aAvailableSites, $(el).text().trim())) {
                                     $(el).remove();
                                 }
                             }
@@ -1615,6 +1615,8 @@
                     if (!bListHasSchoolAvailableChoices) {
                         // Skip this question
                         gotoCaraselNumber++;
+                    } else {
+                        return gotoCaraselNumber;
                     }
 
                 case 'register-multiple':
@@ -1638,6 +1640,8 @@
                     if (!bAmtFound || !bListAmtFound) {
                         // Skip this question
                         gotoCaraselNumber++;
+                    } else {
+                        return gotoCaraselNumber;
                     }
 
                 case 'register-child-friendly':
