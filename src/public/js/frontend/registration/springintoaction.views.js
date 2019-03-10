@@ -1371,12 +1371,6 @@
                 year: new Date().getFullYear()
             }));
             self.showWelcomeHelper();
-            App.Views.siteFilterGroup = self.siteFilterGroup = new self.projectFilterGroupViewClass({
-                parentView: self,
-                collection: App.Collections.siteFiltersCollection,
-                filterGroupName: 'Site'
-            });
-            self.$('.project-list-filters-wrapper').append(self.siteFilterGroup.render().el);
 
             App.Views.skillFilterGroup = self.skillFilterGroup = new self.projectFilterGroupViewClass({
                 parentView: self,
@@ -1385,12 +1379,12 @@
             });
             self.$('.project-list-filters-wrapper').append(self.skillFilterGroup.render().el);
 
-            App.Views.childFriendlyFilterGroup = self.childFriendlyFilterGroup = new self.projectFilterGroupViewClass({
+            App.Views.siteFilterGroup = self.siteFilterGroup = new self.projectFilterGroupViewClass({
                 parentView: self,
-                collection: App.Collections.childFriendlyFiltersCollection,
-                filterGroupName: '<i class="fas fa-child"></i> Child Friendly'
+                collection: App.Collections.siteFiltersCollection,
+                filterGroupName: 'Site'
             });
-            self.$('.project-list-filters-wrapper').append(self.childFriendlyFilterGroup.render().el);
+            self.$('.project-list-filters-wrapper').append(self.siteFilterGroup.render().el);
 
             App.Views.peopleNeededFilterGroup = self.peopleNeededFilterGroup = new self.projectFilterGroupViewClass({
                 parentView: self,
@@ -1398,6 +1392,13 @@
                 filterGroupName: '<i class="fas fa-users"></i> People Needed'
             });
             self.$('.project-list-filters-wrapper').append(self.peopleNeededFilterGroup.render().el);
+
+            App.Views.childFriendlyFilterGroup = self.childFriendlyFilterGroup = new self.projectFilterGroupViewClass({
+                parentView: self,
+                collection: App.Collections.childFriendlyFiltersCollection,
+                filterGroupName: '<i class="fas fa-child"></i> Child Friendly'
+            });
+            self.$('.project-list-filters-wrapper').append(self.childFriendlyFilterGroup.render().el);
 
             App.Views.projectListView = self.projectListView = new self.projectListViewClass({
                 el: self.$('.project-list'),
@@ -1562,6 +1563,7 @@
 
             if (!bSkipGoToSlide) {
                 if (!$('.ajax-spinner-overlay').length) {
+                    gotoCaraselNumber = self.checkIfNextSlideIsValid(gotoCaraselNumber);
                     self.showNextSlide(gotoCaraselNumber);
                 } else {
                     let waitInterval = setInterval(function () {
