@@ -69,7 +69,7 @@
                     </div>
                     <!-- 2 -->
                     <% goTo = 3; %>
-                    <div class="item" data-number="<%= goTo - 1 %>" data-helper-question="register-register-multiple">
+                    <div class="item" data-number="<%= goTo - 1 %>" data-helper-question="register-multiple">
                         <p>Do you need to register more than 10 people?</p>
                         <div class="alert alert-danger hidden register-multiple-warning" role="alert">Sorry, at this time there are no projects that can take 10 or more people.</div>
                         <div class="carasel-caption">
