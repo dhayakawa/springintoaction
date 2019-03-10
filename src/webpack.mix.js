@@ -42,7 +42,8 @@ mix.scripts([
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
     'resources/assets/js/frontend/registration/confirm.jquery.js',
-    'resources/assets/js/frontend/registration/siaModal.jquery.js'
+    'resources/assets/js/frontend/registration/siaModal.jquery.js',
+    'resources/assets/js/frontend/registration/carasel.bootstrap.js'
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
     'packages/dhayakawa/springintoaction/src/resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.min.js',
@@ -69,7 +70,8 @@ mix.scripts([
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
     'resources/assets/js/frontend/registration/confirm.jquery.js',
-    'resources/assets/js/frontend/registration/siaModal.jquery.js'
+    'resources/assets/js/frontend/registration/siaModal.jquery.js',
+    'resources/assets/js/frontend/registration/carasel.bootstrap.js'
 ], 'public/js/springintoaction.packages.min.js');
 mix.scripts([
     'resources/assets/js/models/dashboard.js',

@@ -1043,6 +1043,9 @@ fieldset[disabled] .filters-navbar-inverse .btn-link:focus {
 .reset-notice a {
   text-decoration: none;
 }
+.confirm-question {
+  margin-bottom: 20px;
+}
 #confirm-modal .idsModal__bodyInner::-webkit-scrollbar,
 #sia-modal .idsModal__bodyInner::-webkit-scrollbar {
   -webkit-appearance: none;
@@ -1327,16 +1330,248 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
 .sia-registration-app .jumbotron.welcome-helper p {
   font-size: 22px;
 }
-.sia-registration-app .jumbotron.welcome-helper .carousel .carousel-inner .item {
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item > img,
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item > a > img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel {
+  position: relative;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item {
+  position: relative;
+  display: none;
+  -webkit-transition: 0.6s ease-in-out left;
+  transition: 0.6s ease-in-out left;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item > img,
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item > a > img {
+  line-height: 1;
+}
+@media all and (transform-3d), (-webkit-transform-3d) {
+  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item {
+    -webkit-transition: -webkit-transform 0.6s ease-in-out;
+    transition: -webkit-transform 0.6s ease-in-out;
+    transition: transform 0.6s ease-in-out;
+    transition: transform 0.6s ease-in-out, -webkit-transform 0.6s ease-in-out;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000px;
+    perspective: 1000px;
+  }
+  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.next,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.active.right {
+    -webkit-transform: translate3d(100%, 0, 0);
+    transform: translate3d(100%, 0, 0);
+    left: 0;
+  }
+  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.prev,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.active.left {
+    -webkit-transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
+    left: 0;
+  }
+  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.next.left,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.prev.right,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.active {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    left: 0;
+  }
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .active,
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .next,
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .prev {
+  display: block;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .active {
+  left: 0;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .next,
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .prev {
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .next {
+  left: 100%;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .prev {
+  left: -100%;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .next.left,
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .prev.right {
+  left: 0;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .active.left {
+  left: -100%;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .active.right {
+  left: 100%;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 15%;
+  font-size: 20px;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0);
+  filter: alpha(opacity=50);
+  opacity: 0.5;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control.left {
+  background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, 0.5)), to(rgba(0, 0, 0, 0.0001)));
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.0001) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1);
+  background-repeat: repeat-x;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control.right {
+  right: 0;
+  left: auto;
+  background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, 0.0001)), to(rgba(0, 0, 0, 0.5)));
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.0001) 0%, rgba(0, 0, 0, 0.5) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#80000000', GradientType=1);
+  background-repeat: repeat-x;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control:hover,
+.sia-registration-app .jumbotron.welcome-helper .carasel-control:focus {
+  color: #ffffff;
+  text-decoration: none;
+  outline: 0;
+  filter: alpha(opacity=90);
+  opacity: 0.9;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev,
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next,
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: inline-block;
+  margin-top: -10px;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev,
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left {
+  left: 50%;
+  margin-left: -10px;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next,
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right {
+  right: 50%;
+  margin-right: -10px;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev,
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next {
+  width: 20px;
+  height: 20px;
+  font-family: serif;
+  line-height: 1;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev:before {
+  content: "\2039";
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next:before {
+  content: "\203A";
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-indicators {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  z-index: 15;
+  width: 60%;
+  padding-left: 0;
+  margin-left: -30%;
+  text-align: center;
+  list-style: none;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-indicators li {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 1px;
+  text-indent: -999px;
+  cursor: pointer;
+  background-color: #000 \9;
+  background-color: rgba(0, 0, 0, 0);
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-indicators .active {
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  background-color: #ffffff;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-caption {
+  position: absolute;
+  right: 15%;
+  bottom: 20px;
+  left: 15%;
+  z-index: 10;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel-caption .btn {
+  text-shadow: none;
+}
+@media screen and (min-width: 768px) {
+  .sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next {
+    width: 30px;
+    height: 30px;
+    margin-top: -10px;
+    font-size: 30px;
+  }
+  .sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev {
+    margin-left: -10px;
+  }
+  .sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right,
+  .sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next {
+    margin-right: -10px;
+  }
+  .sia-registration-app .jumbotron.welcome-helper .carasel-caption {
+    right: 20%;
+    left: 20%;
+    padding-bottom: 30px;
+  }
+  .sia-registration-app .jumbotron.welcome-helper .carasel-indicators {
+    bottom: 20px;
+  }
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item {
   min-height: 250px;
   text-align: center;
 }
-.sia-registration-app .jumbotron.welcome-helper .carousel .carousel-inner .item p {
+.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item p {
   font-size: 28px;
 }
-.sia-registration-app .jumbotron.welcome-helper .carousel .carousel-inner .item p.show-project-list-intro {
+.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item p.show-project-list-intro {
   font-size: 20px;
   font-weight: 400;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item select {
+  width: 300px;
+  margin: 0 auto;
+}
+.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item .carasel-caption {
+  padding-bottom: 0;
 }
 .sia-registration-app .project-list .site-col {
   color: #29660f;

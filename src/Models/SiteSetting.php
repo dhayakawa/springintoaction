@@ -34,7 +34,7 @@ class SiteSetting extends Model
         'sunset',
     ];
     private $defaultRecordData = [];
-    
+
     /**
      * @param null|array $defaults
      *
@@ -49,30 +49,49 @@ class SiteSetting extends Model
                 }
             }
         }
-        
+
         return $this->defaultRecordData;
     }
-    
+
     public function getIsSettingOn($setting)
     {
         $aResult = ['on' => false, 'message' => ''];
         try {
-            $site_setting = $this->where('setting', '=', $setting)->get()->first()->toArray();
-            
-            $aResult['on'] = $site_setting['value'];
-            if ($aResult['on'] && !empty($site_setting['sunrise'])) {
-                $now = time();
-                if ($now < strtotime($site_setting['sunrise']) || $now > strtotime($site_setting['sunrise'])) {
-                    $aResult['on'] = false;
+            $siteSetting = $this->where('setting', '=', $setting)->get();
+            if ($siteSetting->count()) {
+                $site_setting = $siteSetting->first()->toArray();
+                $aResult['on'] = $site_setting['value'];
+                if ($aResult['on'] && !empty($site_setting['sunrise'])) {
+                    $now = time();
+                    if ($now < strtotime($site_setting['sunrise']) || $now > strtotime($site_setting['sunrise'])) {
+                        $aResult['on'] = false;
+                    }
                 }
-            }
-            if (!$aResult['on']) {
-                $aResult['message'] = $site_setting['message'];
+                if (!$aResult['on']) {
+                    $aResult['message'] = $site_setting['message'];
+                }
             }
         } catch (\Exception $e) {
             echo $e->getMessage();
         }
-        
+
         return $aResult;
+    }
+
+    public function getSettingValue($setting)
+    {
+        $value = null;
+        try {
+            $siteSetting = $this->where('setting', '=', $setting)->get();
+            if ($siteSetting->count()) {
+                $site_setting = $siteSetting->first()->toArray();
+                $value = $site_setting['value'];
+            }
+
+        } catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+
+        return $value;
     }
 }
