@@ -1,1 +1,1 @@
-<label><%= filterIcon %><input data-field="<%= Field %>" type="<%= inputType %>" <%= bFilterIsChecked %> name="<%= filterName %>" id="<%= filterId %>" value="<%= filterValue %>"/> <%= filterLabel %></label>
+<label><%= filterIcon %><input data-field="<%= Field %>" type="<%= inputType %>" <%= bFilterIsChecked ? 'checked' : '' %> name="<%= filterName %>" id="<%= filterId %>" value="<%= filterValue %>"/> <%= filterLabel %></label>
