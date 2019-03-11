@@ -77,6 +77,9 @@ class HomeController extends BaseController
             $bIsLocalEnv = App::environment('local');
             $remoteIPAddress = $_SERVER['REMOTE_ADDR'];
             $churchIPAddress = $SiteSetting->getSettingValue('church_ip_address');
+            if($SiteSetting->getIsSettingOn('force_kiosk_environment')['on']){
+                $churchIPAddress = $remoteIPAddress;
+            }
             $all_projects = $this->getProjectList();
             $projectFilters = $this->getProjectFilters($all_projects);
             $project = $select_options = $auth = $project_volunteers = $volunteers = [];

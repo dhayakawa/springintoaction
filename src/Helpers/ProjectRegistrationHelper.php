@@ -125,10 +125,11 @@ trait ProjectRegistrationHelper
 
     /**
      * @param array $all_projects
+     * @param array $aFilter
      *
      * @return array
      */
-    public function getProjectFilters($all_projects = [])
+    public function getProjectFilters($all_projects = [], $aFilter = [])
     {
         $projectFilters = $this->getProjectFilterGroups();
         $sites = Site::join('site_status', 'sites.SiteID', '=', 'site_status.SiteID')->where(
@@ -140,12 +141,16 @@ trait ProjectRegistrationHelper
         sort($aSiteNames);
         foreach ($aSiteNames as $siteName) {
             $fieldID = $this->findArrayKeyByFieldValue('SiteID', 'SiteName', $siteName, $sites);
+            $bFilterIsChecked = false;
+            if(isset($aFilter['site']) && $aFilter['site'] === $siteName){
+                $bFilterIsChecked = true;
+            }
             $projectFilters['site'][] = [
                 'filterIcon' => '',
                 'filterName' => 'filter[site][]',
                 'filterId' => 'filter_site_' . $fieldID,
                 'filterLabel' => $siteName,
-                'FilterIsChecked' => '',
+                'FilterIsChecked' => $bFilterIsChecked,
                 'Field' => 'sites.SiteName',
                 'FieldID' => $fieldID,
             ];
@@ -186,12 +191,16 @@ trait ProjectRegistrationHelper
         foreach ($aProjectSkillNeededOptions as $skill => $skillID) {
             $bExistsInProjectList = preg_grep("/{$skillID}/", $aPrimarySkillNeeded);
             if ($bExistsInProjectList && !in_array($skillID, $aSkillAdded)) {
+                $bFilterIsChecked = false;
+                if (isset($aFilter['skill']) && $aFilter['skill'] === $skillID) {
+                    $bFilterIsChecked = true;
+                }
                 $projectFilters['skill'][] = [
                     'filterIcon' => $aFilterIcons[$skill],
                     'filterName' => 'filter[skill][]',
                     'filterLabel' => $skill,
                     'filterId' => 'filter_skill_' . $skillID,
-                    'FilterIsChecked' => '',
+                    'FilterIsChecked' => $bFilterIsChecked,
                     'Field' => 'projects.PrimarySkillNeeded',
                     'FieldID' => $skillID,
                 ];
@@ -207,12 +216,14 @@ trait ProjectRegistrationHelper
         sort($aChildFriendly);
         foreach ($aChildFriendly as $childFriendly) {
             $childFriendly = $childFriendly === 0 ? 'No' : 'Yes';
+            $bFilterIsChecked = false;
+            // TODO: finish is checked
             $projectFilters['childFriendly'][] = [
                 'filterIcon' => $aChildFriendlyIcons[$childFriendly],
                 'filterName' => 'filter[childFriendly][]',
                 'filterId' => 'filter_childFriendly_' . $childFriendly,
                 'filterLabel' => $childFriendly,
-                'FilterIsChecked' => '',
+                'FilterIsChecked' => $bFilterIsChecked,
                 'Field' => 'projects.ChildFriendly',
                 'FieldID' => '',
             ];
@@ -220,6 +231,7 @@ trait ProjectRegistrationHelper
 
         $aPeopleNeeded = array_values(array_unique($this->getArrayFieldValues('PeopleNeeded', $all_projects)));
         sort($aPeopleNeeded);
+        // largest filter value we want to show
         $iMaxRange = 20;
         $range = 5;
         $aRanges = [];
@@ -242,16 +254,22 @@ trait ProjectRegistrationHelper
             }
             $iCnt++;
         }
+        // If all the values are greater than the largest filter value add the max range to the array
+        if(min($aRanges) > $iMaxRange){
+            array_unshift($aRanges, 20);
+        }
         foreach ($aRanges as $idx => $peopleNeeded) {
             if ($peopleNeeded > $iMaxRange) {
                 continue;
             }
+            $bFilterIsChecked = false;
+            // TODO: finish is checked
             $projectFilters['peopleNeeded'][] = [
                 'filterIcon' => '',
                 'filterName' => 'filter[peopleNeeded][]',
                 'filterId' => 'filter_peopleNeeded' . $idx,
                 'filterLabel' => $peopleNeeded,
-                'FilterIsChecked' => '',
+                'FilterIsChecked' => $bFilterIsChecked,
                 'Field' => 'projects.PeopleNeeded',
                 'FieldID' => '',
             ];

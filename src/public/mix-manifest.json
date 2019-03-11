@@ -1,7 +1,7 @@
 {
     "/css/springintoaction.onedrive.css": "/css/springintoaction.onedrive.css?id=fa4677f32f34928e540d",
     "/css/springintoaction.app.css": "/css/springintoaction.app.css?id=f9f895d90edd71db87aa",
-    "/css/frontend/registration/springintoaction.app.css": "/css/frontend/registration/springintoaction.app.css?id=00d9a25f65ffe11cb322",
+    "/css/frontend/registration/springintoaction.app.css": "/css/frontend/registration/springintoaction.app.css?id=e16dffc2935793af1197",
     "/css/springintoaction.fonts.css": "/css/springintoaction.fonts.css?id=b34dc9e7e6f8166387b8",
     "/css/springintoaction.frontend.css": "/css/springintoaction.frontend.css?id=4f00e3d02637ae88831c",
     "/js/springintoaction.packages.js": "/js/springintoaction.packages.js?id=fb55463c505f1ef35961",
@@ -16,14 +16,14 @@
     "/js/frontend/springintoaction.project-registration.js": "/js/frontend/springintoaction.project-registration.js?id=d41d8cd98f00b204e980",
     "/js/frontend/registration/springintoaction.models.js": "/js/frontend/registration/springintoaction.models.js?id=d0b03d576033443928d1",
     "/js/frontend/registration/springintoaction.collections.js": "/js/frontend/registration/springintoaction.collections.js?id=f37b303a67bb8f2b9067",
-    "/js/frontend/registration/springintoaction.views.js": "/js/frontend/registration/springintoaction.views.js?id=ff024575606ccee74bac",
+    "/js/frontend/registration/springintoaction.views.js": "/js/frontend/registration/springintoaction.views.js?id=e0f4699963e1f4ba6cec",
     "/js/frontend/registration/springintoaction.init.js": "/js/frontend/registration/springintoaction.init.js?id=87b6412dc627f2fdc22d",
     "/js/frontend/registration/springintoaction.main.js": "/js/frontend/registration/springintoaction.main.js?id=2795628ff3260c5a832e",
     "/css/springintoaction.packages.css": "/css/springintoaction.packages.css?id=1ed09459c57b9f477d36",
     "/js/springintoaction.templates.js": "/js/springintoaction.templates.js?id=a9d9bff736c28454a30b",
-    "/js/app-initial-models-vars-data.js": "/js/app-initial-models-vars-data.js?id=9d360d93f28fb086c4d3",
+    "/js/app-initial-models-vars-data.js": "/js/app-initial-models-vars-data.js?id=41352c5068d23b877f10",
     "/js/app-initial-collections-view-data.js": "/js/app-initial-collections-view-data.js?id=91b9161c477a7188d3dc",
-    "/js/frontend/registration/springintoaction.templates.js": "/js/frontend/registration/springintoaction.templates.js?id=99e53dfe9293a5b523f5",
-    "/js/frontend/registration/app-initial-models-vars-data.js": "/js/frontend/registration/app-initial-models-vars-data.js?id=47fbd72377de679e160f",
-    "/js/frontend/registration/app-initial-collections-view-data.js": "/js/frontend/registration/app-initial-collections-view-data.js?id=66c620642c61c029c873"
+    "/js/frontend/registration/springintoaction.templates.js": "/js/frontend/registration/springintoaction.templates.js?id=8fd3d7dff719b239995e",
+    "/js/frontend/registration/app-initial-models-vars-data.js": "/js/frontend/registration/app-initial-models-vars-data.js?id=1fb760b0c5f534ea6281",
+    "/js/frontend/registration/app-initial-collections-view-data.js": "/js/frontend/registration/app-initial-collections-view-data.js?id=3a7744dbf6da878bd006"
 }

@@ -1,4 +1,4 @@
-(function (App) {
+(function (App, $, _, Backbone) {
 
 
     App.Views.Project = Backbone.View.extend({
@@ -60,7 +60,7 @@
             _log('App.Views.ProjectList.addAll', 'projects table');
             this.$el.empty();
             let headerCols = '<thead><tr><th><div class="row">\n' +
-                '        <div class="col-xs-7 col-lg-8 site-xs-col"><span class="hidden-lg hidden-xl">&nbsp;<br>&nbsp;<br></span>Site</div>\n' +
+                '        <div class="col-xs-7 col-lg-8 site-xs-col">&nbsp;<br><span class="hidden-lg hidden-xl">&nbsp;<br></span>Site</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Skills Needed</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Child Friendly</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">People Needed</div>' +
@@ -110,8 +110,11 @@
                 filterLabel: filterLabel,
                 filterValue: filterValue
             };
+            // Don't add the checkbox if the hidden input already exists
+            if (!$('input[type="hidden"][data-checkbox-id="' + self.model.get('filterId') + '"]').length){
+                $(this.el).html(this.template(tplVars));
+            }
 
-            $(this.el).html(this.template(tplVars));
 
             return this;
         }
@@ -136,7 +139,18 @@
         addAll: function () {
             _log('App.Views.ProjectFilterGroup.addAll', 'project filters list');
             this.$el.find('.project-list-filters').empty();
-            this.collection.each(this.addOne);
+
+            // Don't add/show filters that have just one item, it's pointless and doesn't change anything if clicked or not clicked
+            if (this.collection.length === 1) {
+                this.$el.hide();
+            } else{
+                this.collection.each(this.addOne);
+                // If it's not an applied filter, show the filter group again
+                if (!$('.active-filters-container').find('.active-filters-list').find('[data-field="' + this.collection.at(0).get('Field') + '"]').length){
+                    this.$el.show();
+                }
+
+            }
         },
         render: function () {
             this.$el.append(this.template({filterGroupName:this.options.filterGroupName}));
@@ -145,4 +159,4 @@
         },
     });
 
-})(window.App);
+})(window.App,jQuery, _, Backbone);

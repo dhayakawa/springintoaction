@@ -1,4 +1,4 @@
-(function (App) {
+(function (App, $, _, Backbone) {
 
 
     App.Views.Project = Backbone.View.extend({
@@ -60,7 +60,7 @@
             _log('App.Views.ProjectList.addAll', 'projects table');
             this.$el.empty();
             let headerCols = '<thead><tr><th><div class="row">\n' +
-                '        <div class="col-xs-7 col-lg-8 site-xs-col"><span class="hidden-lg hidden-xl">&nbsp;<br>&nbsp;<br></span>Site</div>\n' +
+                '        <div class="col-xs-7 col-lg-8 site-xs-col">&nbsp;<br><span class="hidden-lg hidden-xl">&nbsp;<br></span>Site</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Skills Needed</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Child Friendly</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">People Needed</div>' +
@@ -110,8 +110,11 @@
                 filterLabel: filterLabel,
                 filterValue: filterValue
             };
+            // Don't add the checkbox if the hidden input already exists
+            if (!$('input[type="hidden"][data-checkbox-id="' + self.model.get('filterId') + '"]').length){
+                $(this.el).html(this.template(tplVars));
+            }
 
-            $(this.el).html(this.template(tplVars));
 
             return this;
         }
@@ -136,7 +139,17 @@
         addAll: function () {
             _log('App.Views.ProjectFilterGroup.addAll', 'project filters list');
             this.$el.find('.project-list-filters').empty();
-            this.collection.each(this.addOne);
+
+            // Don't add/show filters that have just one item, it's pointless and doesn't change anything if clicked or not clicked
+            if (this.collection.length === 1) {
+                this.$el.hide();
+            } else{
+                this.collection.each(this.addOne);
+                if (!$('.active-filters-container').find('.active-filters-list').find('[data-field="' + this.collection.at(0).get('Field') + '"]').length){
+                    this.$el.show();
+                }
+
+            }
         },
         render: function () {
             this.$el.append(this.template({filterGroupName:this.options.filterGroupName}));
@@ -145,9 +158,9 @@
         },
     });
 
-})(window.App);
+})(window.App,jQuery, _, Backbone);
 
-(function (App) {
+(function (App, $) {
     App.Views.ContactInfo = Backbone.View.extend({
         tagName: 'div',
         className: 'contact-info-wrapper',
@@ -363,7 +376,7 @@
             App.Vars.reservedProjectID = null;
             clearTimeout(App.Vars.reservationTimeout);
             clearInterval(App.Vars.reservationInterval);
-            $('body').addClass('project-registration-page');
+            //$('body').addClass('project-registration-page');
 
             _log('App.Views.Registration.initialize', options);
         },
@@ -1336,7 +1349,7 @@
             let self = this;
             self.options = options;
             _.bindAll(self, 'render', 'updateProjectsList', 'showRegistrationForm', 'removeReservations', 'checkProjectRegistrations', 'welcomeHelperAction', 'removeFromActiveFiltersContainer');
-
+            $('body').addClass('project-registration-page');
             self.parentView = self.options.parentView;
             self.projectModelToRegister = null;
             clearInterval(App.Vars.confirmSomeoneIsThereInterval);
@@ -1347,7 +1360,7 @@
             clearInterval(App.Vars.reservationInterval);
             App.Vars.checkRegistrationsInterval = setInterval($.proxy(self.checkProjectRegistrations, self), App.Vars.checkRegistrationsIntervalSeconds);
             // reduce interval time of non-activity if at church
-            if (App.Vars.churchIPAddress && App.Vars.remoteIPAddress && _.isEqual(App.Vars.churchIPAddress , App.Vars.remoteIPAddress)) {
+            if (self.getIsPublicChurchKiosk()) {
                 App.Vars.checkIfSomeoneIsThereIntervalSeconds = App.Vars.checkIfSomeoneIsThereKioskIntervalSeconds;
             }
 
@@ -1364,7 +1377,7 @@
             'change [name="register-school-preference"]': 'welcomeHelperAction',
             'click .active-filter-btn': 'removeFromActiveFiltersContainer'
         },
-        render: function (e) {
+        render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
             self.$el.html(self.template({
@@ -1411,6 +1424,10 @@
             self.listenTo(App.Views.projectListView, 'register-for-project', self.showRegistrationForm);
             return self;
         },
+        getIsPublicChurchKiosk: function() {
+            let self = this;
+            return App.Vars.churchIPAddress && App.Vars.remoteIPAddress && _.isEqual(App.Vars.churchIPAddress, App.Vars.remoteIPAddress);
+        },
         initCarasel: function () {
             let self = this;
             self.$caraselHelper = self.$el.find('#carasel-welcome-helper');
@@ -1437,12 +1454,14 @@
             self.$el.find('.project-list-wrapper').removeClass('col-sm-12 col-lg-12').addClass('col-sm-9 col-lg-10');
             self.$el.find('.project-list, .filters-navbar').removeClass('hidden');
             self.$el.find('.welcome-helper').hide();
-            let $resetNotice = $('.header').find('.reset-notice');
-            if ($resetNotice.length === 0) {
-                $resetNotice = $('<div class="alert alert-info pull-right reset-notice" role="alert">If you are at a kiosk at church, please <a class="btn btn-success btn-xs" href="/">Click to Reset</a> the page for the next person if you decide not to register. Thank You.</div>');
-                $('.header').append($resetNotice);
-            } else {
-                $resetNotice.show();
+            if (self.getIsPublicChurchKiosk()) {
+                let $resetNotice = $('.header').find('.reset-notice');
+                if ($resetNotice.length === 0) {
+                    $resetNotice = $('<div class="alert alert-info pull-right reset-notice" role="alert">If you are at a kiosk at church, please <a class="btn btn-success btn-xs" href="/">Click to Reset</a> the page for the next person if you decide not to register. Thank You.</div>');
+                    $('.header').append($resetNotice);
+                } else {
+                    $resetNotice.show();
+                }
             }
         },
         /**
@@ -1450,8 +1469,10 @@
          */
         resetCheckIfSomeoneIsThereInterval: function () {
             let self = this;
-            App.Vars.checkIfSomeoneIsThereInterval && clearInterval(App.Vars.checkIfSomeoneIsThereInterval);
-            App.Vars.checkIfSomeoneIsThereInterval = setInterval($.proxy(self.checkIfSomeoneIsThere, self), App.Vars.checkIfSomeoneIsThereIntervalSeconds);
+            if (self.getIsPublicChurchKiosk()) {
+                App.Vars.checkIfSomeoneIsThereInterval && clearInterval(App.Vars.checkIfSomeoneIsThereInterval);
+                App.Vars.checkIfSomeoneIsThereInterval = setInterval($.proxy(self.checkIfSomeoneIsThere, self), App.Vars.checkIfSomeoneIsThereIntervalSeconds);
+            }
         },
         checkIfSomeoneIsThere: function () {
             let self = this;
@@ -1662,13 +1683,9 @@
             if (gotoCaraselNumber === 4) {
                 let iProjectCnt = self.$el.find('.project-list').find('tbody tr').length;
                 let $searchCriteriaResultMsg = self.$el.find('.search-criteria-result-msg');
-                let iCheckedCnt = 0;
+                let iCheckedCnt = $('.active-filters-container').find('.active-filter-btn').length;
                 let projectStr = iProjectCnt === 1 ? 'project' : 'projects';
-                self.$el.find('[name^="filter["]').each(function (idx, el) {
-                    if ($(el).prop('checked')) {
-                        iCheckedCnt++;
-                    }
-                });
+
                 if (iCheckedCnt === 0) {
                     let verb = iProjectCnt === 1 ? 'is' : 'are';
                     $searchCriteriaResultMsg.html('We like your flexibility, there ' + verb + ' ' + iProjectCnt + ' ' + projectStr + ' for you to choose from.');
@@ -1691,7 +1708,7 @@
                     App.Collections.allProjectsCollection.each(function (model, key) {
                         let PeopleNeeded = model.get('PeopleNeeded');
                         let ProjectID = model.get('ProjectID');
-                        let matchingModel = _.where(response, {ProjectID: ProjectID});
+                        let matchingModel = _.where(response.all_projects, {ProjectID: ProjectID});
                         if (matchingModel.length) {
                             if (PeopleNeeded !== matchingModel[0].PeopleNeeded) {
                                 bReset = true;
@@ -1700,7 +1717,11 @@
                     });
                     //App.Vars.reservedProjectID === null
                     if (bReset) {
-                        App.Collections.allProjectsCollection.reset(response);
+                        App.Collections.allProjectsCollection.reset(response.all_projects);
+                        App.Collections.siteFiltersCollection.reset(response.projectFilters.site);
+                        App.Collections.peopleNeededFiltersCollection.reset(response.projectFilters.peopleNeeded);
+                        App.Collections.childFriendlyFiltersCollection.reset(response.projectFilters.childFriendly);
+                        App.Collections.skillFiltersCollection.reset(response.projectFilters.skill);
                     }
                 },
                 fail: function (response) {
@@ -1716,41 +1737,56 @@
             let $filterGroup = $checkbox.parents('.project-list-filter-group');
             let filterType = $filterGroup.find('.project-list-filter-title').text();
             let filterLabel = $checkbox.parent().text();
-            let $btn = $('<button data-checkbox-id="' + checkboxId + '" class="btn btn-primary btn-xs active-filter-btn">' + filterType + ': ' + filterLabel + ' <i class="fas fa-times-circle"></i></button>');
+            let $btn = $('<button data-field="' + $checkbox.data('field') + '" data-checkbox-id="' + checkboxId + '" class="btn btn-primary btn-xs active-filter-btn">' + filterType + ': ' + filterLabel + ' <i class="fas fa-times-circle"></i></button>');
             $filterGroup.hide();
-            $('.active-filters-list-label').removeClass('hidden');
-            $('.active-filters-container').append($btn);
+            $('.active-filters-container').find('.active-filters-list').append($btn);
+            // We replace the clicked checkbox with a hidden input in case the ajax call removes it.
+            $checkbox.remove();
+            $filterGroup.prepend('<input type="hidden" data-checkbox-id="' + checkboxId + '" name="'+ $checkbox.attr('name')+'" value="'+ $checkbox.val()+'" />');
         },
         removeFromActiveFiltersContainer: function (e) {
             let self = this;
-            let checkbox = null;
-
-            try {
-                e.preventDefault();
-            } catch (e) {
+            let $input = null;
+            // If the user starts playing with the applied filters before the
+            // the welcome helper is done, close it. The results would be
+            // wonky anyhow.
+            if ($('.welcome-helper').is(':visible')) {
+                // TODO: handle the removed applied filter in the welcome helper code so we don't have to hide it here
+                self.hideWelcomeHelper();
             }
-            if (!_.isUndefined(e.currentTarget)) {
-                checkbox = $('#' + $(e.currentTarget).data('checkboxId'))[0];
+            /**
+             * The goal is to remove the filter from the ajax call.
+             * First we see if there is a checkbox to click, if it
+             * doesn't exist then we remove the hidden input
+             */
+            if ($('input[type="checkbox"]#' + $(e.currentTarget).data('checkboxId')).length) {
+                $input = $('input[type="checkbox"]#' + $(e.currentTarget).data('checkboxId'));
+                if ($input.prop('checked')) {
+                    // uncheck to trigger ajax call to update results
+                    $input.trigger('click');
+                }
+                // show the group again
+                $input.parents('.project-list-filter-group').show();
+            } else if ($('input[type="hidden"][data-checkbox-id="' + $(e.currentTarget).data('checkboxId')+'"]').length) {
+                $input = $('input[type="hidden"][data-checkbox-id="' + $(e.currentTarget).data('checkboxId') + '"]');
+                // show the group again
+                $input.parents('.project-list-filter-group').show();
+                // delete input and update results
+                $input.remove();
+                self.updateProjectsList();
             } else {
-                checkbox = e;
+                // last ditch effort
+                self.updateProjectsList();
+                // TODO: show the parent group again?
             }
-            let checkboxId = checkbox.id;
-            let $checkbox = $(checkbox);
-            if ($checkbox.prop('checked')) {
-                $checkbox.trigger('click');
-            }
-            let $filterGroup = $checkbox.parents('.project-list-filter-group');
-
-            $('.active-filters-container').find('[data-checkbox-id="' + checkboxId + '"]').remove();
-            if ($('.active-filters-container').find('.active-filter-btn').length === 0) {
-                $('.active-filters-list-label').addClass('hidden');
-            }
-            $filterGroup.show();
+            // remove from top of page
+            $('.active-filters-container').find('.active-filters-list').find('[data-checkbox-id="' + $(e.currentTarget).data('checkboxId') + '"]').remove();
         },
         updateProjectsList: function (e) {
             let self = this;
+
             self.resetCheckIfSomeoneIsThereInterval();
-            if ($(e.currentTarget).prop('checked')) {
+            if (!_.isUndefined(e) && $(e.currentTarget).prop('checked')) {
                 self.addToActiveFiltersContainer(e.currentTarget);
             }
             window.ajaxWaiting('show', '.project-list-wrapper');
@@ -1762,7 +1798,11 @@
                 data: formData,
                 processData: false,
                 success: function (response) {
-                    App.Collections.allProjectsCollection.reset(response);
+                    App.Collections.allProjectsCollection.reset(response.all_projects);
+                    App.Collections.siteFiltersCollection.reset(response.projectFilters.site);
+                    App.Collections.peopleNeededFiltersCollection.reset(response.projectFilters.peopleNeeded);
+                    App.Collections.childFriendlyFiltersCollection.reset(response.projectFilters.childFriendly);
+                    App.Collections.skillFiltersCollection.reset(response.projectFilters.skill);
                     if (_.isEmpty(response)) {
                         let resultsMsg = 'No projects found';
                         if ($('.active-filters-container').find('.active-filter-btn').length) {
@@ -1869,7 +1909,7 @@
             })
         }
     });
-})(window.App);
+})(window.App, jQuery);
 
 (function (App) {
     App.Views.mainApp = Backbone.View.extend({
