@@ -20,7 +20,7 @@
                 <form name="filter-project-list-form" method="POST" action="">
                     <h3 class="project-list-filters-title">Sort By</h3>
                     <div>
-                        <select name="sort_by">
+                        <select class="form-control" name="sort_by">
                             <option selected value="">Choose</option>
                             <option value="sites.SiteName_asc">Site: A-Z</option>
                             <option value="sites.SiteName_desc">Site: Z-A</option>
@@ -99,7 +99,7 @@
             </div>
             <button class="close close-welcome-helper" data-helper-question="skip-questions" data-val="yes" data-goto-number="0" role="button">&times;</button>
         </div>
-        <div class="active-filters-container"><span class="active-filters-list-label hidden">Applied Filters:</span> </div>
+        <div class="active-filters-container row"><div class="col-xs-12 active-filters-list"></div></div>
         <table class="project-list table table-condensed table-striped hidden"></table>
     </div>
 </div>

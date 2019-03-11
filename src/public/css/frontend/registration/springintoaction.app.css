@@ -352,6 +352,136 @@
     opacity: 0;
   }
 }
+#floatingCirclesG {
+  position: relative;
+  width: 125px;
+  height: 125px;
+  margin: auto;
+  transform: scale(0.6);
+  -o-transform: scale(0.6);
+  -ms-transform: scale(0.6);
+  -webkit-transform: scale(0.6);
+  -moz-transform: scale(0.6);
+}
+.f_circleG {
+  position: absolute;
+  background-color: #ffffff;
+  height: 22px;
+  width: 22px;
+  border-radius: 12px;
+  -o-border-radius: 12px;
+  -ms-border-radius: 12px;
+  -webkit-border-radius: 12px;
+  -moz-border-radius: 12px;
+  animation-name: f_fadeG;
+  -o-animation-name: f_fadeG;
+  -ms-animation-name: f_fadeG;
+  -webkit-animation-name: f_fadeG;
+  -moz-animation-name: f_fadeG;
+  animation-duration: 1.2s;
+  -o-animation-duration: 1.2s;
+  -ms-animation-duration: 1.2s;
+  -webkit-animation-duration: 1.2s;
+  -moz-animation-duration: 1.2s;
+  animation-iteration-count: infinite;
+  -o-animation-iteration-count: infinite;
+  -ms-animation-iteration-count: infinite;
+  -webkit-animation-iteration-count: infinite;
+  -moz-animation-iteration-count: infinite;
+  animation-direction: normal;
+  -o-animation-direction: normal;
+  -ms-animation-direction: normal;
+  -webkit-animation-direction: normal;
+  -moz-animation-direction: normal;
+}
+#frotateG_01 {
+  left: 0;
+  top: 51px;
+  animation-delay: 0.45s;
+  -o-animation-delay: 0.45s;
+  -ms-animation-delay: 0.45s;
+  -webkit-animation-delay: 0.45s;
+  -moz-animation-delay: 0.45s;
+}
+#frotateG_02 {
+  left: 15px;
+  top: 15px;
+  animation-delay: 0.6s;
+  -o-animation-delay: 0.6s;
+  -ms-animation-delay: 0.6s;
+  -webkit-animation-delay: 0.6s;
+  -moz-animation-delay: 0.6s;
+}
+#frotateG_03 {
+  left: 51px;
+  top: 0;
+  animation-delay: 0.75s;
+  -o-animation-delay: 0.75s;
+  -ms-animation-delay: 0.75s;
+  -webkit-animation-delay: 0.75s;
+  -moz-animation-delay: 0.75s;
+}
+#frotateG_04 {
+  right: 15px;
+  top: 15px;
+  animation-delay: 0.9s;
+  -o-animation-delay: 0.9s;
+  -ms-animation-delay: 0.9s;
+  -webkit-animation-delay: 0.9s;
+  -moz-animation-delay: 0.9s;
+}
+#frotateG_05 {
+  right: 0;
+  top: 51px;
+  animation-delay: 1.05s;
+  -o-animation-delay: 1.05s;
+  -ms-animation-delay: 1.05s;
+  -webkit-animation-delay: 1.05s;
+  -moz-animation-delay: 1.05s;
+}
+#frotateG_06 {
+  right: 15px;
+  bottom: 15px;
+  animation-delay: 1.2s;
+  -o-animation-delay: 1.2s;
+  -ms-animation-delay: 1.2s;
+  -webkit-animation-delay: 1.2s;
+  -moz-animation-delay: 1.2s;
+}
+#frotateG_07 {
+  left: 51px;
+  bottom: 0;
+  animation-delay: 1.35s;
+  -o-animation-delay: 1.35s;
+  -ms-animation-delay: 1.35s;
+  -webkit-animation-delay: 1.35s;
+  -moz-animation-delay: 1.35s;
+}
+#frotateG_08 {
+  left: 15px;
+  bottom: 15px;
+  animation-delay: 1.5s;
+  -o-animation-delay: 1.5s;
+  -ms-animation-delay: 1.5s;
+  -webkit-animation-delay: 1.5s;
+  -moz-animation-delay: 1.5s;
+}
+@keyframes f_fadeG {
+  0% {
+    background-color: #000000;
+  }
+  100% {
+    background-color: #ffffff;
+  }
+}
+@-webkit-keyframes f_fadeG {
+  0% {
+    background-color: #000000;
+  }
+  100% {
+    background-color: #ffffff;
+  }
+}
 .filters-navbar {
   position: relative;
   min-height: 50px;
@@ -941,6 +1071,9 @@ fieldset[disabled] .filters-navbar-inverse .btn-link:focus {
   background-clip: padding-box;
   outline: 0;
 }
+.confirm-content .confirm-question {
+  margin-bottom: 20px;
+}
 .confirm-backdrop {
   position: fixed;
   top: 0;
@@ -1032,19 +1165,8 @@ fieldset[disabled] .filters-navbar-inverse .btn-link:focus {
     padding-top: 0;
   }
 }
-.nav-links {
-  padding-left: 0;
-}
-.reset-notice {
-  margin: 0;
-  top: 5px;
-  position: relative;
-}
-.reset-notice a {
-  text-decoration: none;
-}
-.confirm-question {
-  margin-bottom: 20px;
+.form-control {
+  border-radius: 4px;
 }
 #confirm-modal .idsModal__bodyInner::-webkit-scrollbar,
 #sia-modal .idsModal__bodyInner::-webkit-scrollbar {
@@ -1072,12 +1194,48 @@ fieldset[disabled] .filters-navbar-inverse .btn-link:focus {
 .badge {
   padding: 1px 7px 3px 7px;
 }
+.ajax-spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  width: 50px;
+  height: 50px;
+  background: rgba(23, 23, 23, 0.51) none repeat scroll 0% 0%;
+}
+body.modal-open .wrapper {
+  -webkit-filter: blur(0px);
+  -moz-filter: blur(0px);
+  -o-filter: blur(0px);
+  -ms-filter: blur(0px);
+  filter: blur(0px);
+}
+.project-registration-page .nav-links {
+  padding-left: 0;
+}
+.project-registration-page .reset-notice {
+  margin: 0;
+  top: 5px;
+  position: relative;
+}
+.project-registration-page .reset-notice a {
+  text-decoration: none;
+}
 .project-registration-page .modal-body {
   min-height: 75vh;
 }
 .project-registration-page .reload-msg {
   display: inline-block;
   margin-right: 15px;
+}
+.project-registration-page .flatiron-icon-attribution {
+  position: relative;
+  bottom: 0;
+  left: 0;
+  color: lightgrey;
+}
+.project-registration-page .flatiron-icon-attribution a {
+  color: lightgrey;
 }
 form[name="newProjectReservation"] :required,
 form[name="newProjectReservation"] label.required {
@@ -1197,51 +1355,6 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   border: 1px solid #ccc;
   padding: 5px;
 }
-.flatiron-icon-attribution {
-  position: relative;
-  bottom: 0;
-  left: 0;
-  color: lightgrey;
-}
-.flatiron-icon-attribution a {
-  color: lightgrey;
-}
-.filters-navbar:before,
-.filters-navbar:after,
-.filters-navbar-header:before,
-.filters-navbar-header:after,
-.filters-navbar-collapse:before,
-.filters-navbar-collapse:after {
-  content: " ";
-  display: table;
-}
-.filters-navbar:after,
-.filters-navbar-header:after,
-.filters-navbar-collapse:after {
-  clear: both;
-}
-@media screen and (max-width: 767px) {
-  .sia-registration-app .project-list-wrapper.table-responsive > .table > tbody > tr > td {
-    white-space: normal !important;
-  }
-}
-.sia-registration-app .active-filters-container {
-  padding-bottom: 10px;
-  margin: 10px 0;
-  border-bottom: 1px solid #ccc;
-}
-.sia-registration-app .active-filters-container .active-filters-list-label {
-  font-size: 14px;
-  font-weight: bold;
-  padding-right: 5px;
-}
-.sia-registration-app .active-filters-container .active-filter-btn {
-  font-size: 14px;
-  border-radius: 12px;
-  background-color: #789db3;
-  border-color: #73848e;
-  margin: 0 5px;
-}
 .sia-registration-app .skills-icon {
   display: inline-block;
   text-indent: -9999px;
@@ -1281,20 +1394,40 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
 .sia-registration-app .skills-icon.cleaning-icon {
   background: url(/images/bucket-with-bubbles.svg?88be9dccc335f9fa3aac26ffe1f6ddf3);
 }
-.sia-registration-app .project-list-filters-title {
+.sia-registration-app i.fas {
+  margin-right: 3px;
+}
+.sia-registration-app .filters-navbar:before,
+.sia-registration-app .filters-navbar:after,
+.sia-registration-app .filters-navbar-header:before,
+.sia-registration-app .filters-navbar-header:after,
+.sia-registration-app .filters-navbar-collapse:before,
+.sia-registration-app .filters-navbar-collapse:after {
+  content: " ";
+  display: table;
+}
+.sia-registration-app .filters-navbar:after,
+.sia-registration-app .filters-navbar-header:after,
+.sia-registration-app .filters-navbar-collapse:after {
+  clear: both;
+}
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-title {
   font-family: 'Raleway', sans-serif;
 }
-.sia-registration-app .project-list-filter-title {
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] select[name="sort_by"] {
+  padding: 6px 12px 6px 3px;
+}
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-wrapper .project-list-filter-group .project-list-filter-title {
   font-size: 14px;
   font-weight: bold;
   margin-bottom: 0;
 }
-.sia-registration-app ul.project-list-filters {
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-wrapper .project-list-filter-group ul.project-list-filters {
   padding-left: 0;
   list-style: none;
   margin-left: 0;
 }
-.sia-registration-app ul.project-list-filters li.project-list-filter-item label {
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-wrapper .project-list-filter-group ul.project-list-filters li.project-list-filter-item label {
   font-size: 12px;
   min-height: 20px;
   padding-left: 17px;
@@ -1302,60 +1435,56 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   font-weight: 400;
   cursor: pointer;
 }
-.sia-registration-app ul.project-list-filters li.project-list-filter-item label i.fas {
-  margin-right: 3px;
-}
-.sia-registration-app ul.project-list-filters li.project-list-filter-item label input[type="checkbox"],
-.sia-registration-app ul.project-list-filters li.project-list-filter-item label input[type="radio"] {
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-wrapper .project-list-filter-group ul.project-list-filters li.project-list-filter-item label input[type="checkbox"] {
   position: absolute;
   margin-top: 3px;
   left: 15px;
   margin-left: 0;
 }
-.sia-registration-app .jumbotron.welcome-helper {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper {
   margin-bottom: 0;
   text-align: center;
 }
-.sia-registration-app .jumbotron.welcome-helper .close-welcome-helper {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .close-welcome-helper {
   position: absolute;
   top: 5px;
   right: 25px;
   font-family: Arial, sans-serif;
 }
-.sia-registration-app .jumbotron.welcome-helper h1 {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper h1 {
   font-family: 'Raleway', sans-serif;
   font-size: 48px;
   margin-top: 0;
 }
-.sia-registration-app .jumbotron.welcome-helper p {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper p {
   font-size: 22px;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item > img,
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item > a > img {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item > img,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item > a > img {
   display: block;
   max-width: 100%;
   height: auto;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel {
   position: relative;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner {
   position: relative;
   width: 100%;
   overflow: hidden;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item {
   position: relative;
   display: none;
   -webkit-transition: 0.6s ease-in-out left;
   transition: 0.6s ease-in-out left;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item > img,
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item > a > img {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item > img,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item > a > img {
   line-height: 1;
 }
 @media all and (transform-3d), (-webkit-transform-3d) {
-  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item {
     -webkit-transition: -webkit-transform 0.6s ease-in-out;
     transition: -webkit-transform 0.6s ease-in-out;
     transition: transform 0.6s ease-in-out;
@@ -1365,57 +1494,57 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
     -webkit-perspective: 1000px;
     perspective: 1000px;
   }
-  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.next,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.active.right {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item.next,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item.active.right {
     -webkit-transform: translate3d(100%, 0, 0);
     transform: translate3d(100%, 0, 0);
     left: 0;
   }
-  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.prev,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.active.left {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item.prev,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item.active.left {
     -webkit-transform: translate3d(-100%, 0, 0);
     transform: translate3d(-100%, 0, 0);
     left: 0;
   }
-  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.next.left,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.prev.right,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-inner > .item.active {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item.next.left,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item.prev.right,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .item.active {
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
     left: 0;
   }
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .active,
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .next,
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .prev {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .active,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .next,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .prev {
   display: block;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .active {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .active {
   left: 0;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .next,
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .prev {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .next,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .prev {
   position: absolute;
   top: 0;
   width: 100%;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .next {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .next {
   left: 100%;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .prev {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .prev {
   left: -100%;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .next.left,
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .prev.right {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .next.left,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .prev.right {
   left: 0;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .active.left {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .active.left {
   left: -100%;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-inner > .active.right {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-inner > .active.right {
   left: 100%;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -1429,13 +1558,13 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   filter: alpha(opacity=50);
   opacity: 0.5;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control.left {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control.left {
   background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, 0.5)), to(rgba(0, 0, 0, 0.0001)));
   background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.0001) 100%);
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80000000', endColorstr='#00000000', GradientType=1);
   background-repeat: repeat-x;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control.right {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control.right {
   right: 0;
   left: auto;
   background-image: -webkit-gradient(linear, left top, right top, from(rgba(0, 0, 0, 0.0001)), to(rgba(0, 0, 0, 0.5)));
@@ -1443,48 +1572,48 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#80000000', GradientType=1);
   background-repeat: repeat-x;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control:hover,
-.sia-registration-app .jumbotron.welcome-helper .carasel-control:focus {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control:hover,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control:focus {
   color: #ffffff;
   text-decoration: none;
   outline: 0;
   filter: alpha(opacity=90);
   opacity: 0.9;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev,
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next,
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-prev,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-next,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right {
   position: absolute;
   top: 50%;
   z-index: 5;
   display: inline-block;
   margin-top: -10px;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev,
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-prev,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left {
   left: 50%;
   margin-left: -10px;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next,
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-next,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right {
   right: 50%;
   margin-right: -10px;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev,
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-prev,
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-next {
   width: 20px;
   height: 20px;
   font-family: serif;
   line-height: 1;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev:before {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-prev:before {
   content: "\2039";
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next:before {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-next:before {
   content: "\203A";
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-indicators {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-indicators {
   position: absolute;
   bottom: 10px;
   left: 50%;
@@ -1495,7 +1624,7 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   text-align: center;
   list-style: none;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-indicators li {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-indicators li {
   display: inline-block;
   width: 10px;
   height: 10px;
@@ -1507,13 +1636,13 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   border: 1px solid #ffffff;
   border-radius: 10px;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-indicators .active {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-indicators .active {
   width: 12px;
   height: 12px;
   margin: 0;
   background-color: #ffffff;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-caption {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-caption {
   position: absolute;
   right: 15%;
   bottom: 20px;
@@ -1525,219 +1654,90 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   text-align: center;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel-caption .btn {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-caption .btn {
   text-shadow: none;
 }
 @media screen and (min-width: 768px) {
-  .sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-prev,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-next {
     width: 30px;
     height: 30px;
     margin-top: -10px;
     font-size: 30px;
   }
-  .sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-prev {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-left,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-prev {
     margin-left: -10px;
   }
-  .sia-registration-app .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right,
-  .sia-registration-app .jumbotron.welcome-helper .carasel-control .icon-next {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .glyphicon-chevron-right,
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-control .icon-next {
     margin-right: -10px;
   }
-  .sia-registration-app .jumbotron.welcome-helper .carasel-caption {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-caption {
     right: 20%;
     left: 20%;
     padding-bottom: 30px;
   }
-  .sia-registration-app .jumbotron.welcome-helper .carasel-indicators {
+  .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel-indicators {
     bottom: 20px;
   }
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel .carasel-inner .item {
   min-height: 250px;
   text-align: center;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item p {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel .carasel-inner .item p {
   font-size: 28px;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item p.show-project-list-intro {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel .carasel-inner .item p.show-project-list-intro {
   font-size: 20px;
   font-weight: 400;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item select {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel .carasel-inner .item select {
   width: 300px;
   margin: 0 auto;
 }
-.sia-registration-app .jumbotron.welcome-helper .carasel .carasel-inner .item .carasel-caption {
+.sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel .carasel-inner .item .carasel-caption {
   padding-bottom: 0;
 }
-.sia-registration-app .project-list .site-col {
+.sia-registration-app .project-list-wrapper .active-filters-container {
+  padding-bottom: 10px;
+  margin: 10px 0;
+  border-bottom: 1px solid #ccc;
+}
+.sia-registration-app .project-list-wrapper .active-filters-container .active-filters-list-label {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 5px 0;
+}
+.sia-registration-app .project-list-wrapper .active-filters-container .active-filters-list {
+  padding-left: 5px;
+}
+.sia-registration-app .project-list-wrapper .active-filters-container .active-filters-list .active-filter-btn {
+  font-size: 14px;
+  border-radius: 12px;
+  background-color: #789db3;
+  border-color: #73848e;
+  margin: 1px 5px;
+}
+.sia-registration-app .project-list-wrapper .project-list .site-col {
   color: #29660f;
   font-weight: bold;
 }
-.sia-registration-app .project-list .project-description-label {
+.sia-registration-app .project-list-wrapper .project-list .project-description-label {
   font-weight: bold;
   padding-right: 5px;
 }
 @media (max-width: 767px) {
-  .sia-registration-app .project-list .site-xs-col {
+  .sia-registration-app .project-list-wrapper .project-list .site-xs-col {
     padding-left: 10px;
     padding-right: 5px;
   }
 }
-.ajax-spinner-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 999;
-  width: 50px;
-  height: 50px;
-  background: rgba(23, 23, 23, 0.51) none repeat scroll 0% 0%;
-}
-body.modal-open .wrapper {
-  -webkit-filter: blur(0px);
-  -moz-filter: blur(0px);
-  -o-filter: blur(0px);
-  -ms-filter: blur(0px);
-  filter: blur(0px);
-}
-#floatingCirclesG {
-  position: relative;
-  width: 125px;
-  height: 125px;
-  margin: auto;
-  transform: scale(0.6);
-  -o-transform: scale(0.6);
-  -ms-transform: scale(0.6);
-  -webkit-transform: scale(0.6);
-  -moz-transform: scale(0.6);
-}
-.f_circleG {
-  position: absolute;
-  background-color: #ffffff;
-  height: 22px;
-  width: 22px;
-  border-radius: 12px;
-  -o-border-radius: 12px;
-  -ms-border-radius: 12px;
-  -webkit-border-radius: 12px;
-  -moz-border-radius: 12px;
-  animation-name: f_fadeG;
-  -o-animation-name: f_fadeG;
-  -ms-animation-name: f_fadeG;
-  -webkit-animation-name: f_fadeG;
-  -moz-animation-name: f_fadeG;
-  animation-duration: 1.2s;
-  -o-animation-duration: 1.2s;
-  -ms-animation-duration: 1.2s;
-  -webkit-animation-duration: 1.2s;
-  -moz-animation-duration: 1.2s;
-  animation-iteration-count: infinite;
-  -o-animation-iteration-count: infinite;
-  -ms-animation-iteration-count: infinite;
-  -webkit-animation-iteration-count: infinite;
-  -moz-animation-iteration-count: infinite;
-  animation-direction: normal;
-  -o-animation-direction: normal;
-  -ms-animation-direction: normal;
-  -webkit-animation-direction: normal;
-  -moz-animation-direction: normal;
-}
-#frotateG_01 {
-  left: 0;
-  top: 51px;
-  animation-delay: 0.45s;
-  -o-animation-delay: 0.45s;
-  -ms-animation-delay: 0.45s;
-  -webkit-animation-delay: 0.45s;
-  -moz-animation-delay: 0.45s;
-}
-#frotateG_02 {
-  left: 15px;
-  top: 15px;
-  animation-delay: 0.6s;
-  -o-animation-delay: 0.6s;
-  -ms-animation-delay: 0.6s;
-  -webkit-animation-delay: 0.6s;
-  -moz-animation-delay: 0.6s;
-}
-#frotateG_03 {
-  left: 51px;
-  top: 0;
-  animation-delay: 0.75s;
-  -o-animation-delay: 0.75s;
-  -ms-animation-delay: 0.75s;
-  -webkit-animation-delay: 0.75s;
-  -moz-animation-delay: 0.75s;
-}
-#frotateG_04 {
-  right: 15px;
-  top: 15px;
-  animation-delay: 0.9s;
-  -o-animation-delay: 0.9s;
-  -ms-animation-delay: 0.9s;
-  -webkit-animation-delay: 0.9s;
-  -moz-animation-delay: 0.9s;
-}
-#frotateG_05 {
-  right: 0;
-  top: 51px;
-  animation-delay: 1.05s;
-  -o-animation-delay: 1.05s;
-  -ms-animation-delay: 1.05s;
-  -webkit-animation-delay: 1.05s;
-  -moz-animation-delay: 1.05s;
-}
-#frotateG_06 {
-  right: 15px;
-  bottom: 15px;
-  animation-delay: 1.2s;
-  -o-animation-delay: 1.2s;
-  -ms-animation-delay: 1.2s;
-  -webkit-animation-delay: 1.2s;
-  -moz-animation-delay: 1.2s;
-}
-#frotateG_07 {
-  left: 51px;
-  bottom: 0;
-  animation-delay: 1.35s;
-  -o-animation-delay: 1.35s;
-  -ms-animation-delay: 1.35s;
-  -webkit-animation-delay: 1.35s;
-  -moz-animation-delay: 1.35s;
-}
-#frotateG_08 {
-  left: 15px;
-  bottom: 15px;
-  animation-delay: 1.5s;
-  -o-animation-delay: 1.5s;
-  -ms-animation-delay: 1.5s;
-  -webkit-animation-delay: 1.5s;
-  -moz-animation-delay: 1.5s;
-}
-@keyframes f_fadeG {
-  0% {
-    background-color: #000000;
+@media screen and (max-width: 767px) {
+  .sia-registration-app .project-list-wrapper.table-responsive > .table > tbody > tr > td {
+    white-space: normal !important;
   }
-  100% {
-    background-color: #ffffff;
-  }
-}
-@-webkit-keyframes f_fadeG {
-  0% {
-    background-color: #000000;
-  }
-  100% {
-    background-color: #ffffff;
-  }
-}
-.navbar-static-top {
-  /* The image used */
-  background-image: url("/images/sia-grass.png");
-  /* Center and scale the image nicely */
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
 }

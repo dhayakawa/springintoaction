@@ -219,8 +219,12 @@ class ProjectRegistrationController extends BaseController
         $sortBy = isset($requestData['sort_by']) && !empty($requestData['sort_by']) ? $requestData['sort_by'] : null;
 
         $all_projects = $this->getProjectList($aFilter, $sortBy);
-
-        return $all_projects;
+        $projectFilters = $this->getProjectFilters($all_projects, $aFilter);
+        $response = [
+            'all_projects' => $all_projects,
+            'projectFilters' => $projectFilters
+        ];
+        return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
 
     public function reserve(Request $request)
