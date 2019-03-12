@@ -33,6 +33,7 @@
                         </select>
                     </div>
                     <h3 class="project-list-filters-title">Refine By</h3>
+                    <button class="btn btn-success btn-xs show-all-projects hidden">Show All Projects</button>
                     <div class="project-list-filters-wrapper"></div>
                 </form>
             </div><!-- /.filters-navbar-collapse -->
