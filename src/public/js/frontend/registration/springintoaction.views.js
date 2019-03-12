@@ -475,7 +475,7 @@
 
             return self;
         },
-        resetCheckIfSomeoneIsThereInterval: function(){
+        resetCheckIfSomeoneIsThereInterval: function () {
             let self = this;
             self.parentView.resetCheckIfSomeoneIsThereInterval();
         },
@@ -1380,7 +1380,8 @@
             'click button[data-helper-question]': 'welcomeHelperAction',
             'change [name="register-skills-needed"]': 'welcomeHelperAction',
             'change [name="register-school-preference"]': 'welcomeHelperAction',
-            'click .active-filter-btn': 'removeFromActiveFiltersContainer'
+            'click .active-filter-btn': 'removeFromActiveFiltersContainer',
+            'click .show-all-projects': 'showAllProjects',
         },
         render: function () {
             let self = this;
@@ -1429,7 +1430,7 @@
             self.listenTo(App.Views.projectListView, 'register-for-project', self.showRegistrationForm);
             return self;
         },
-        getIsPublicChurchKiosk: function() {
+        getIsPublicChurchKiosk: function () {
             let self = this;
             return App.Vars.churchIPAddress && App.Vars.remoteIPAddress && _.isEqual(App.Vars.churchIPAddress, App.Vars.remoteIPAddress);
         },
@@ -1612,10 +1613,10 @@
                 }
             }
         },
-        checkIfNextSlideIsValid: function(gotoCaraselNumber){
+        checkIfNextSlideIsValid: function (gotoCaraselNumber) {
             let self = this;
             let gotoCaraselNumberOrig = gotoCaraselNumber;
-            let $slide = self.$el.find('.item[data-number="'+ gotoCaraselNumber+'"]');
+            let $slide = self.$el.find('.item[data-number="' + gotoCaraselNumber + '"]');
             let helperQuestion = $slide.data('helper-question');
 
             /**
@@ -1735,6 +1736,15 @@
                 }
             })
         },
+        showAllProjects: function (e) {
+            let self = this;
+            e.preventDefault();
+            $('.active-filter-btn').remove();
+            $('input[type="hidden"][data-checkbox-id]').remove();
+            $('.show-all-projects').addClass('hidden');
+            $('.project-list-filter-group').find('.project-list-filters').show();
+            self.updateProjectsList();
+        },
         addToActiveFiltersContainer: function (checkbox) {
             let self = this;
             let checkboxId = checkbox.id;
@@ -1749,7 +1759,8 @@
             $filterGroup.find('.project-list-filter-title').after($btn);
             // We replace the clicked checkbox with a hidden input in case the ajax call removes it.
             $checkbox.remove();
-            $filterGroup.prepend('<input type="hidden" data-checkbox-id="' + checkboxId + '" name="'+ $checkbox.attr('name')+'" value="'+ $checkbox.val()+'" />');
+            $filterGroup.prepend('<input type="hidden" data-checkbox-id="' + checkboxId + '" name="' + $checkbox.attr('name') + '" value="' + $checkbox.val() + '" />');
+            $('.show-all-projects').removeClass('hidden');
         },
         removeFromActiveFiltersContainer: function (e) {
             let self = this;
@@ -1775,7 +1786,7 @@
                 }
                 // show the group again
                 $input.parents('.project-list-filter-group').find('.project-list-filters').show();
-            } else if ($('input[type="hidden"][data-checkbox-id="' + $(e.currentTarget).data('checkboxId')+'"]').length) {
+            } else if ($('input[type="hidden"][data-checkbox-id="' + $(e.currentTarget).data('checkboxId') + '"]').length) {
                 $input = $('input[type="hidden"][data-checkbox-id="' + $(e.currentTarget).data('checkboxId') + '"]');
                 // show the group again
                 $input.parents('.project-list-filter-group').find('.project-list-filters').show();
@@ -1789,7 +1800,9 @@
             }
             // remove active filter btn
             $(e.currentTarget).remove();
-
+            if (!$('.active-filter-btn').length) {
+                $('.show-all-projects').addClass('hidden');
+            }
         },
         updateProjectsList: function (e) {
             let self = this;
