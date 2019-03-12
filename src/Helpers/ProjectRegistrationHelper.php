@@ -255,7 +255,7 @@ trait ProjectRegistrationHelper
             $iCnt++;
         }
         // If all the values are greater than the largest filter value add the max range to the array
-        if(min($aRanges) > $iMaxRange){
+        if(empty($aRanges) || !empty($aRanges) && min($aRanges) > $iMaxRange){
             array_unshift($aRanges, 20);
         }
         foreach ($aRanges as $idx => $peopleNeeded) {

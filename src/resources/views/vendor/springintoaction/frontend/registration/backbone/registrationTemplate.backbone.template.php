@@ -48,12 +48,12 @@
                     <!-- 0 -->
                     <% var goTo = 1; %>
                     <div class="item active" data-number="<%= goTo - 1 %>" data-helper-question="register-skills-needed">
-                        <p>There are many project that need your skills.<br>Choose from the list below to see which projects need your skill set.</p>
+                        <p>Do you have a favorite thing to do?<br>If so, choose your favorite thing from the list below.</p>
                         <select class="form-control" name="register-skills-needed" data-helper-question="register-skills-needed" data-val="yes" data-goto-number="<%= goTo %>">
                             <option value="">Choose</option>
                         </select>
                         <div class="carasel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-skills-needed" data-val="skip" data-goto-number="<%= goTo %>" role="button">Skip</span>
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-skills-needed" data-val="skip" data-goto-number="<%= goTo %>" role="button">I couldn't find my favorite thing but, I'm willing to serve God anywhere, let's move on to the next question</span>
                         </div>
                     </div>
                     <!-- 1 -->
@@ -64,7 +64,7 @@
                             <option value="">Choose</option>
                         </select>
                         <div class="carasel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-school-preference" data-val="skip" data-goto-number="<%= goTo %>" role="button">Skip</span>
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-school-preference" data-val="skip" data-goto-number="<%= goTo %>" role="button">I don't have a preference, let's move to the next question</span>
                         </div>
                     </div>
                     <!-- 2 -->
@@ -73,7 +73,7 @@
                         <p>Do you need to register more than 10 people?</p>
                         <div class="alert alert-danger hidden register-multiple-warning" role="alert">Sorry, at this time there are no projects that can take 10 or more people.</div>
                         <div class="carasel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-multiple" data-val="yes" data-goto-number="<%= goTo %>" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-multiple" data-val="no" data-goto-number="<%= goTo %>" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-multiple" data-val="ok" data-goto-number="<%= goTo %>" role="button">OK</span>
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-multiple" data-val="yes" data-goto-number="<%= goTo %>" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-multiple" data-val="no" data-goto-number="<%= goTo %>" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-multiple" data-val="ok" data-goto-number="<%= goTo %>" role="button">OK, let's move to the next question</span>
                         </div>
                     </div>
                     <!-- 3 -->
@@ -82,7 +82,7 @@
                         <p>Are you looking for child friendly projects?</p>
                         <div class="alert alert-danger hidden register-child-friendly-warning" role="alert">Sorry, at this time there are no child friendly projects.</div>
                         <div class="carasel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="yes" data-goto-number="<%= goTo %>" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="no" data-goto-number="<%= goTo %>" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-child-friendly" data-val="ok" data-goto-number="<%= goTo %>" role="button">OK</span>
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="yes" data-goto-number="<%= goTo %>" role="button">Yes</span>&nbsp;<span class="btn btn-primary btn-lg" data-helper-question="register-child-friendly" data-val="no" data-goto-number="<%= goTo %>" role="button">No</span><span class="btn btn-primary btn-lg hidden" data-helper-question="register-child-friendly" data-val="ok" data-goto-number="<%= goTo %>" role="button">I'm totally bummed out but, I know I'll survive with God's love, let's move on.</span>
                         </div>
                     </div>
                     <!-- 4 -->
@@ -99,7 +99,6 @@
             </div>
             <button class="close close-welcome-helper" data-helper-question="skip-questions" data-val="yes" data-goto-number="0" role="button">&times;</button>
         </div>
-        <div class="active-filters-container row"><div class="col-xs-12 active-filters-list"></div></div>
         <table class="project-list table table-condensed table-striped hidden"></table>
     </div>
 </div>

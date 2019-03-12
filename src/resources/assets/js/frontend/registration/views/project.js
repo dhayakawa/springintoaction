@@ -61,10 +61,10 @@
             this.$el.empty();
             let headerCols = '<thead><tr><th><div class="row">\n' +
                 '        <div class="col-xs-7 col-lg-8 site-xs-col">&nbsp;<br><span class="hidden-lg hidden-xl">&nbsp;<br></span>Site</div>\n' +
-                '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Skills Needed</div>\n' +
+                '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Experience Needed</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Child Friendly</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">People Needed</div>' +
-                '        <div class="hidden-lg col-xs-5">Skills Needed<br>Child Friendly<br>People Needed</div>' +
+                '        <div class="hidden-lg col-xs-5">Experience Needed<br>Child Friendly<br>People Needed</div>' +
                 '</div></th></tr></thead>';
 
             this.$el.html(headerCols + '<tbody></tbody>');
@@ -99,6 +99,8 @@
             } else if (self.model.get('Field').match(/projects\.PeopleNeeded/)) {
                 filterLabel = filterLabel + ' or more';
             }
+            filterLabel = filterLabel.replace(/(School)/, '');
+            filterLabel = filterLabel.replace(/Stevens Point Area Senior High/, 'S.P.A.S.H.');
             let tplVars = {
                 inputType: inputType,
                 filterIcon: self.model.get('filterIcon'),
@@ -142,11 +144,13 @@
 
             // Don't add/show filters that have just one item, it's pointless and doesn't change anything if clicked or not clicked
             if (this.collection.length === 1) {
-                this.$el.hide();
+                if (!$('.active-filter-btn[data-field="' + this.collection.at(0).get('Field') + '"]').length) {
+                    this.$el.hide();
+                }
             } else{
                 this.collection.each(this.addOne);
                 // If it's not an applied filter, show the filter group again
-                if (!$('.active-filters-container').find('.active-filters-list').find('[data-field="' + this.collection.at(0).get('Field') + '"]').length){
+                if (!$('.active-filter-btn[data-field="' + this.collection.at(0).get('Field') + '"]').length){
                     this.$el.show();
                 }
 
