@@ -61,10 +61,10 @@
             this.$el.empty();
             let headerCols = '<thead><tr><th><div class="row">\n' +
                 '        <div class="col-xs-7 col-lg-8 site-xs-col">&nbsp;<br><span class="hidden-lg hidden-xl">&nbsp;<br></span>Site</div>\n' +
-                '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Skills Needed</div>\n' +
+                '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Experience Needed</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">Child Friendly</div>\n' +
                 '        <div class="hidden-xs hidden-sm hidden-md col-lg-1">People Needed</div>' +
-                '        <div class="hidden-lg col-xs-5">Skills Needed<br>Child Friendly<br>People Needed</div>' +
+                '        <div class="hidden-lg col-xs-5">Experience Needed<br>Child Friendly<br>People Needed</div>' +
                 '</div></th></tr></thead>';
 
             this.$el.html(headerCols + '<tbody></tbody>');
@@ -99,6 +99,8 @@
             } else if (self.model.get('Field').match(/projects\.PeopleNeeded/)) {
                 filterLabel = filterLabel + ' or more';
             }
+            filterLabel = filterLabel.replace(/(School)/, '');
+            filterLabel = filterLabel.replace(/Stevens Point Area Senior High/, 'S.P.A.S.H.');
             let tplVars = {
                 inputType: inputType,
                 filterIcon: self.model.get('filterIcon'),
@@ -142,10 +144,13 @@
 
             // Don't add/show filters that have just one item, it's pointless and doesn't change anything if clicked or not clicked
             if (this.collection.length === 1) {
-                this.$el.hide();
+                if (!$('.active-filter-btn[data-field="' + this.collection.at(0).get('Field') + '"]').length) {
+                    this.$el.hide();
+                }
             } else{
                 this.collection.each(this.addOne);
-                if (!$('.active-filters-container').find('.active-filters-list').find('[data-field="' + this.collection.at(0).get('Field') + '"]').length){
+                // If it's not an applied filter, show the filter group again
+                if (!$('.active-filter-btn[data-field="' + this.collection.at(0).get('Field') + '"]').length){
                     this.$el.show();
                 }
 
@@ -1388,7 +1393,7 @@
             App.Views.skillFilterGroup = self.skillFilterGroup = new self.projectFilterGroupViewClass({
                 parentView: self,
                 collection: App.Collections.skillFiltersCollection,
-                filterGroupName: 'Skills Needed'
+                filterGroupName: 'Experience Needed'
             });
             self.$('.project-list-filters-wrapper').append(self.skillFilterGroup.render().el);
 
@@ -1457,8 +1462,8 @@
             if (self.getIsPublicChurchKiosk()) {
                 let $resetNotice = $('.header').find('.reset-notice');
                 if ($resetNotice.length === 0) {
-                    $resetNotice = $('<div class="alert alert-info pull-right reset-notice" role="alert">If you are at a kiosk at church, please <a class="btn btn-success btn-xs" href="/">Click to Reset</a> the page for the next person if you decide not to register. Thank You.</div>');
-                    $('.header').append($resetNotice);
+                    $resetNotice = $('<div class="alert alert-info reset-notice" role="alert">If you are at a kiosk at church, please <a class="btn btn-success btn-xs" href="/">Click to Reset</a> the page for the next person if you decide not to register. Thank You.</div>');
+                    $('#filters-navbar-collapse').prepend($resetNotice);
                 } else {
                     $resetNotice.show();
                 }
@@ -1735,17 +1740,20 @@
             let checkboxId = checkbox.id;
             let $checkbox = $(checkbox);
             let $filterGroup = $checkbox.parents('.project-list-filter-group');
+            let $filtersList = $filterGroup.find('.project-list-filters');
             let filterType = $filterGroup.find('.project-list-filter-title').text();
             let filterLabel = $checkbox.parent().text();
-            let $btn = $('<button data-field="' + $checkbox.data('field') + '" data-checkbox-id="' + checkboxId + '" class="btn btn-primary btn-xs active-filter-btn">' + filterType + ': ' + filterLabel + ' <i class="fas fa-times-circle"></i></button>');
-            $filterGroup.hide();
-            $('.active-filters-container').find('.active-filters-list').append($btn);
+
+            let $btn = $('<button data-field="' + $checkbox.data('field') + '" data-checkbox-id="' + checkboxId + '" class="btn btn-primary btn-xs active-filter-btn"><i class="fas fa-times-circle"></i>' + filterLabel + '</button>');
+            $filtersList.hide();
+            $filterGroup.find('.project-list-filter-title').after($btn);
             // We replace the clicked checkbox with a hidden input in case the ajax call removes it.
             $checkbox.remove();
             $filterGroup.prepend('<input type="hidden" data-checkbox-id="' + checkboxId + '" name="'+ $checkbox.attr('name')+'" value="'+ $checkbox.val()+'" />');
         },
         removeFromActiveFiltersContainer: function (e) {
             let self = this;
+            e.preventDefault();
             let $input = null;
             // If the user starts playing with the applied filters before the
             // the welcome helper is done, close it. The results would be
@@ -1766,11 +1774,11 @@
                     $input.trigger('click');
                 }
                 // show the group again
-                $input.parents('.project-list-filter-group').show();
+                $input.parents('.project-list-filter-group').find('.project-list-filters').show();
             } else if ($('input[type="hidden"][data-checkbox-id="' + $(e.currentTarget).data('checkboxId')+'"]').length) {
                 $input = $('input[type="hidden"][data-checkbox-id="' + $(e.currentTarget).data('checkboxId') + '"]');
                 // show the group again
-                $input.parents('.project-list-filter-group').show();
+                $input.parents('.project-list-filter-group').find('.project-list-filters').show();
                 // delete input and update results
                 $input.remove();
                 self.updateProjectsList();
@@ -1779,8 +1787,9 @@
                 self.updateProjectsList();
                 // TODO: show the parent group again?
             }
-            // remove from top of page
-            $('.active-filters-container').find('.active-filters-list').find('[data-checkbox-id="' + $(e.currentTarget).data('checkboxId') + '"]').remove();
+            // remove active filter btn
+            $(e.currentTarget).remove();
+
         },
         updateProjectsList: function (e) {
             let self = this;

@@ -1422,6 +1422,20 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   font-weight: bold;
   margin-bottom: 0;
 }
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-wrapper .project-list-filter-group .active-filter-btn {
+  font-size: 12px;
+  border-radius: 2px;
+  background-color: #789db3;
+  border-color: #73848e;
+  margin: 5px 0;
+  white-space: normal;
+  width: 100%;
+  padding-left: 1px;
+  text-align: left;
+}
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-wrapper .project-list-filter-group .active-filter-btn i {
+  font-size: 10px;
+}
 .sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-wrapper .project-list-filter-group ul.project-list-filters {
   padding-left: 0;
   list-style: none;
@@ -1701,26 +1715,8 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
 }
 .sia-registration-app .project-list-wrapper .jumbotron.welcome-helper .carasel .carasel-inner .item .carasel-caption {
   padding-bottom: 0;
-}
-.sia-registration-app .project-list-wrapper .active-filters-container {
-  padding-bottom: 10px;
-  margin: 10px 0;
-  border-bottom: 1px solid #ccc;
-}
-.sia-registration-app .project-list-wrapper .active-filters-container .active-filters-list-label {
-  font-size: 12px;
-  font-weight: bold;
-  padding: 5px 0;
-}
-.sia-registration-app .project-list-wrapper .active-filters-container .active-filters-list {
-  padding-left: 5px;
-}
-.sia-registration-app .project-list-wrapper .active-filters-container .active-filters-list .active-filter-btn {
-  font-size: 14px;
-  border-radius: 12px;
-  background-color: #789db3;
-  border-color: #73848e;
-  margin: 1px 5px;
+  right: 0;
+  left: 0;
 }
 .sia-registration-app .project-list-wrapper .project-list .site-col {
   color: #29660f;
