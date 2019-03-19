@@ -1,5 +1,5 @@
 <div class="row">
-    <nav class="col-xs-12 col-sm-3 col-md-3 col-lg-2 filters-navbar filters-navbar-default hidden">
+    <nav class="col-xs-12 col-sm-3 col-md-3 col-lg-2 filters-navbar filters-navbar-default">
         <div class="container-fluid">
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="filters-navbar-header">
@@ -32,8 +32,8 @@
                             <option value="PeopleNeeded_desc">People Needed: High to Low</option>
                         </select>
                     </div>
+                    <button class="btn btn-success btn-lg show-all-projects hidden">Show All Projects</button>
                     <h3 class="project-list-filters-title">Refine By</h3>
-                    <button class="btn btn-success btn-xs show-all-projects hidden">Show All Projects</button>
                     <div class="project-list-filters-wrapper"></div>
                 </form>
             </div><!-- /.filters-navbar-collapse -->

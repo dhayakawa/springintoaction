@@ -1417,6 +1417,9 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
 .sia-registration-app .filters-navbar form[name="filter-project-list-form"] select[name="sort_by"] {
   padding: 6px 12px 6px 3px;
 }
+.sia-registration-app .filters-navbar form[name="filter-project-list-form"] .show-all-projects {
+  margin-top: 20px;
+}
 .sia-registration-app .filters-navbar form[name="filter-project-list-form"] .project-list-filters-wrapper .project-list-filter-group .project-list-filter-title {
   font-size: 14px;
   font-weight: bold;

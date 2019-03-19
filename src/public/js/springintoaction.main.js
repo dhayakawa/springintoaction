@@ -175,6 +175,11 @@
                                             'route': 'view/reports/management/sites'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Project List w/ All Data',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/projects_full'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
                                             'linkText': 'Project List',
                                             'badgeCount': '',
                                             'route': 'view/reports/management/projects'
