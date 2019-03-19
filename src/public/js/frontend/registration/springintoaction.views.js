@@ -355,7 +355,7 @@
                 self,
                 'render',
                 'registerOthers',
-                'registerAndConfirm',
+                'confirmRegistrations',
                 'toggleProjectDescriptionCollapseIcon',
                 'confirmReservationTimeout',
                 'handleRegisterProcessType',
@@ -388,7 +388,7 @@
         events: {
             'click form[name="newProjectReservation"] button': 'makeReservations',
             'click .register-others': 'registerOthers',
-            'click .confirm-and-register': 'registerAndConfirm',
+            'click .confirm-and-register': 'confirmRegistrations',
             'click .submit-registration-btn': 'submitRegistration',
             'click .back-to-contact-info-btn': function (e) {
                 this.resetCheckIfSomeoneIsThereInterval();
@@ -551,24 +551,63 @@
             $confirmReservationTimeoutModal.on('show.bs.confirm', function (event) {
                 let $confirm = $(this);
                 let iCountDown = 60;
-                $confirm.find('.confirm-body').find('.confirm-question').html('<div>You will automatically lose your reserved spots in <span class="reservation-countdown">' + iCountDown + '</span> seconds. Would you like another 5 minutes?</div>');
+                // the 1000 is the iCountDown in milliseconds
+                let iMinute = (1000 * 60);
+                let iMinutesHeld = (App.Vars.reservationTimeoutExpire + iMinute) / iMinute;
+                // save the reserved amt since it could be reset to zero and we need to know what it was
+                let iReserved = self.iReserved;
+                $confirm.find('.confirm-body').find('.confirm-question').html(
+                    '<div>Reservations are held for ' + iMinutesHeld.toString() + ' minutes at a time and can be renewed as many times as you need.<br><br>' +
+                    '<strong>You will automatically lose your reserved spots in <span class="reservation-countdown">' + iCountDown + '</span> seconds if you do not respond.</strong><br><br>' +
+                    'Would you like another ' + iMinutesHeld.toString() + ' minutes?</div>');
                 clearInterval(App.Vars.reservationInterval);
                 App.Vars.reservationInterval = setInterval(function () {
                     $confirm.find('.confirm-body').find('.reservation-countdown').text(iCountDown--);
                     if (iCountDown <= 0) {
-                        self.parentView.removeReservations();
+                        self.removeReservations();
                         clearInterval(App.Vars.reservationInterval);
-                        let expirationMsg = 'Your reservation has expired.';
+                        let volunteersNeeded = self.model.getVolunteersNeeded();
+
+                        let expirationMsg = 'Your reservations have expired.<br>';
+                        expirationMsg += 'Please continue to register if you lose your reservations, we\'re just trying to keep our over booked projects to a minimum.<br>';
+                        if (iReserved <= volunteersNeeded) {
+                            expirationMsg += '<br>If you accidentally let your reservations expire, you can click the [Renew Reservations] button to reserve them again.<br><br>'+
+                            'If this is not your registration and someone else just left it like this, click the [Do Not Renew Reservations] button and then the [Cancel] button ' +
+                                             'at the bottom of the registration form.';
+                            $confirm.find('.confirm-body').find('button.btn-yes').text('Renew Reservations');
+                            $confirm.find('.confirm-body').find('button.btn-no').text('Do Not Renew Reservations');
+                        } else {
+                            $confirm.find('.confirm-body').find('button.btn-yes').remove();
+                            $confirm.find('.confirm-body').find('button.btn-no').text('OK');
+                        }
                         $confirm.find('.confirm-body').find('.confirm-question').html('<div>' + expirationMsg + '</div>');
-                        $confirm.find('.confirm-body').find('button.btn-yes').remove();
-                        $confirm.find('.confirm-body').find('button.btn-no').text('OK');
+
                     }
                 }, 1000);
                 $confirm.find('.confirm-body').find('button').on('click', function (e) {
                     e.preventDefault();
                     clearInterval(App.Vars.reservationInterval);
                     if ($(this).hasClass('btn-yes')) {
-                        App.Vars.reservationTimeout = setTimeout(self.confirmReservationTimeout, App.Vars.reservationTimeoutExpire);
+                        if (self.iReserved > 0) {
+                            App.Vars.reservationTimeout = setTimeout(self.confirmReservationTimeout, App.Vars.reservationTimeoutExpire);
+                        } else {
+                            $.ajax({
+                                type: "post",
+                                dataType: "json",
+                                url: 'project_registration/reserve',
+                                data: {reserve:iReserved, ProjectID: self.model.get('ProjectID'), _token: $('form[name="newProjectReservation"]').find('[name="_token"]').val()},
+                                success: function (response) {
+                                    self.iReserved = iReserved;
+                                    App.Vars.reservedProjectID = self.model.get('ProjectID');
+                                    self.startReservationTimeout();
+                                    self.updateReservedAmtMsg();
+                                    self.updateStepsViewAndNavBtns();
+                                },
+                                fail: function (response) {
+                                    console.error(response)
+                                }
+                            })
+                        }
                     } else {
                         self.parentView.removeReservations();
                     }
@@ -902,6 +941,7 @@
             } else {
                 // reduce reservations
                 self.iReserved = self.iReserved - self.getGroveOverageAmt();
+                self.updateReservations(self.iReserved);
             }
             self.updateReservedAmtMsg();
         },
@@ -975,6 +1015,11 @@
 
             return self.groveContacts;
         },
+        getIsRegistrationTotalOverReserved: function() {
+            let self = this;
+            let numberOfRegistrants = self.getRegistrantsTotal(false);
+            return numberOfRegistrants > self.iReserved;
+        },
         deleteRegistrationContactListItem: function (e) {
             let self = this;
             self.resetCheckIfSomeoneIsThereInterval();
@@ -985,14 +1030,26 @@
             });
             $(e.currentTarget).parent('li').remove();
             self.iReserved--;
+            self.updateReservations(self.iReserved);
             if (App.Vars.bTooManyRegistrants) {
-                let numberOfRegistrants = self.$el.find('.manual-multiple-register .multiple-register-list li').length;
                 // remove error notice if it's fixed
-                if (self.iReserved > numberOfRegistrants) {
+                if (!self.getIsRegistrationTotalOverReserved()) {
                     $('#auto-register').find('.auto-register-too-many-registrants-error').remove();
                     App.Vars.bTooManyRegistrants = false;
                 }
             }
+            self.updateReservedAmtMsg();
+        },
+        removeReservations: function(){
+            let self = this;
+            self.iReserved = 0;
+            self.parentView.removeReservations();
+            self.updateReservedAmtMsg();
+        },
+        updateReservations: function (newAmt) {
+            let self = this;
+            self.iReserved = newAmt;
+            self.parentView.updateReservations(newAmt);
             self.updateReservedAmtMsg();
         },
         updateReservedAmtMsg: function () {
@@ -1000,6 +1057,8 @@
             $('.reserved-amt-msg').text(self.iReserved);
             if (self.iReserved === 0) {
                 $('.reserved-amt-msg').parent().addClass('text-danger')
+            } else {
+                $('.reserved-amt-msg').parent().removeClass('text-danger')
             }
             self.updateStepsViewAndNavBtns();
         },
@@ -1029,6 +1088,7 @@
         },
         getRegistrantsTotal: function (bIncludeEmptyManualSpots) {
             let self = this;
+            //let totalRegistrantCnt = self.getCheckedGroveContacts().length + self.getContactInfoViewsLength(false);
             bIncludeEmptyManualSpots = !_.isUndefined(bIncludeEmptyManualSpots) ? bIncludeEmptyManualSpots : false;
             let iPersonRegistering = 1;
             let iNumberOfManualContactRegistrants = self.getManualContactsTotal(bIncludeEmptyManualSpots);
@@ -1060,7 +1120,7 @@
             });
             return cnt;
         },
-        registerAndConfirm: function (e) {
+        confirmRegistrations: function (e) {
             let self = this;
             self.resetCheckIfSomeoneIsThereInterval();
             e.preventDefault();
@@ -1092,22 +1152,30 @@
                 }
             }
             App.Vars.bTooManyRegistrants = false;
-            let possibleCnt = self.getCheckedGroveContacts().length + self.getContactInfoViewsLength(false);
-            /*console.log({
-             checkGroveContacts: self.getCheckedGroveContacts().length,
-             ContactInfoViewsLength: self.getContactInfoViewsLength(false),
-             possibleCnt: possibleCnt,
-             iReserved: self.iReserved
-             })*/
-            if (self.iReserved < possibleCnt) {
-                App.Vars.bTooManyRegistrants = true;
-                valid = 0;
-                let overAmt = self.getContactInfoViewsLength(false) - self.iReserved;
+            let totalRegistrantCnt = self.getCheckedGroveContacts().length + self.getContactInfoViewsLength(false);
+            // console.log({
+            //  checkGroveContacts: self.getCheckedGroveContacts().length,
+            //  ContactInfoViewsLength_not_inc_grove_contacts: self.getContactInfoViewsLength(false),
+            //     totalRegistrantCnt: totalRegistrantCnt,
+            //     getRegistrantsTotal:self.getRegistrantsTotal(),
+            //  iReserved: self.iReserved
+            //  })
+            if (self.getIsRegistrationTotalOverReserved()) {
+                let volunteersNeeded = self.model.getVolunteersNeeded();
+                let overAmt = totalRegistrantCnt - self.iReserved;
+                //console.log({overAmt:overAmt, totalRegistrantCnt: totalRegistrantCnt, iReserved: self.iReserved, volunteersNeeded: volunteersNeeded})
+                if (totalRegistrantCnt <= volunteersNeeded){
+                    // Increase reservations to accommodate
+                    self.parentView.updateReservations(overAmt + self.iReserved);
+                } else {
+                    App.Vars.bTooManyRegistrants = true;
+                    valid = 0;
+                    let alertMessage = 'Sorry, there are only ' + self.iReserved + ' spots reserved.  Please remove ' + overAmt + ' of your registrations or choose a different project.';
+                    let $alertHtml = $('<div class="alert alert-danger auto-register-too-many-registrants-error" role="alert">' + alertMessage + '</div>');
+                    $('#auto-register').find('.auto-register-too-many-registrants-error').remove();
+                    $('#auto-register').find('.bottom-nav-btns').before($alertHtml);
+                }
 
-                let alertMessage = 'Sorry, there are only ' + self.iReserved + ' spots reserved.  Please remove ' + overAmt + ' of your registrations or choose a different project.';
-                let $alertHtml = $('<div class="alert alert-danger auto-register-too-many-registrants-error" role="alert">' + alertMessage + '</div>');
-                $('#auto-register').find('.auto-register-too-many-registrants-error').remove();
-                $('#auto-register').find('.bottom-nav-btns').before($alertHtml);
             }
             //console.log('valid', valid === self.getContactInfoViewsLength(),{valid:valid, getContactInfoViewsLength: self.getContactInfoViewsLength(), getContactInfoViewsLengthFalse: self.getContactInfoViewsLength(false), contactInfoViews: self.contactInfoViews})
             if (valid === self.getContactInfoViewsLength()) {
@@ -1116,7 +1184,7 @@
                     self.groveContacts = self.getCheckedGroveContacts();
                     if (self.groveContacts.length) {
                         if (self.getManualContactsTotal(true)) {
-                            //console.log('registerAndConfirm for bIsGroveImport',{contactInfoViews: self.contactInfoViews, groveContacts: self.groveContacts})
+                            //console.log('confirmRegistrations for bIsGroveImport',{contactInfoViews: self.contactInfoViews, groveContacts: self.groveContacts})
                             _.each(self.contactInfoViews, function (contactView, idx) {
                                 if (idx > 0 && !_.isUndefined(contactView)) {
                                     let bIsInGroveContactList = _.find(self.groveContacts, function (groveContact) {
@@ -1124,7 +1192,7 @@
                                     });
                                     // add any contactViews to the groveContact List that aren't there.
                                     if (!bIsInGroveContactList && !_.isEmpty(contactView.contactInfoData.FirstName)) {
-                                        //console.log('registerAndConfirm for bIsGroveImport. adding contactView to self.groveContacts', contactView.contactInfoData)
+                                        //console.log('confirmRegistrations for bIsGroveImport. adding contactView to self.groveContacts', contactView.contactInfoData)
                                         //console.log('contactView data to push into grove contacts',self.convertContactViewDataToGroveContact(contactView.getContactInfoData(), idx));
                                         self.groveContacts.push(self.convertContactViewDataToGroveContact(contactView.getContactInfoData(), idx));
                                     }
@@ -1246,11 +1314,12 @@
                         App.Vars.registrationProcessType = null;
                         clearTimeout(App.Vars.reservationTimeout);
                         clearInterval(App.Vars.reservationInterval);
-                        let iCountDown = 5;
+                        let iCountDown = 30;
                         let $alertHtml = $('<div class="alert alert-success registration-success-alert" role="alert">Project Registration Succeeded</div><div class="registration-success-msg">' + response.msg + '</div>');
 
                         App.Vars.SIAModalRegistrationForm.find('.modal-header').remove();
                         App.Vars.SIAModalRegistrationForm.find('.modal-footer').find('button').remove();
+                        App.Vars.SIAModalRegistrationForm.find('.modal-footer').find('.reserved-msg').remove();
                         App.Vars.SIAModalRegistrationForm.find('.modal-body').html($alertHtml);
                         App.Vars.SIAModalRegistrationForm.find('.modal-footer').append('<div class="reload-msg">This will automatically close in <span>' + iCountDown + '</span> seconds.</div>');
                         App.Vars.SIAModalRegistrationForm.find('.modal-footer').append('<button class="text-center btn btn-success close-registration-modal">Close</button>');
@@ -1432,7 +1501,7 @@
         },
         getIsPublicChurchKiosk: function () {
             let self = this;
-            return App.Vars.churchIPAddress && App.Vars.remoteIPAddress && _.isEqual(App.Vars.churchIPAddress, App.Vars.remoteIPAddress);
+            return !_.isEmpty(App.Vars.churchIPAddress) && !_.isEmpty(App.Vars.remoteIPAddress) && _.isEqual(App.Vars.churchIPAddress, App.Vars.remoteIPAddress);
         },
         initCarasel: function () {
             let self = this;
@@ -1443,8 +1512,9 @@
             let self = this;
             // Stop the interval if it exists
             App.Vars.checkIfSomeoneIsThereInterval && clearInterval(App.Vars.checkIfSomeoneIsThereInterval);
-            self.$el.find('.project-list, .filters-navbar').addClass('hidden');
-            self.$el.find('.project-list-wrapper').removeClass('col-sm-9 col-lg-10').addClass('col-sm-12 col-lg-12');
+            // self.$el.find('.project-list, .filters-navbar').addClass('hidden');
+            self.$el.find('.project-list').addClass('hidden');
+            // self.$el.find('.project-list-wrapper').removeClass('col-sm-9 col-lg-10').addClass('col-sm-12 col-lg-12');
             self.$el.find('.welcome-helper').show();
             App.Collections.skillFiltersCollection.each(function (model) {
                 self.$el.find('[name="register-skills-needed"]').append('<option value="' + model.get('filterId') + '">' + model.get('filterLabel') + '</option>')
@@ -1457,8 +1527,9 @@
         },
         hideWelcomeHelper: function () {
             let self = this;
-            self.$el.find('.project-list-wrapper').removeClass('col-sm-12 col-lg-12').addClass('col-sm-9 col-lg-10');
-            self.$el.find('.project-list, .filters-navbar').removeClass('hidden');
+            // self.$el.find('.project-list-wrapper').removeClass('col-sm-12 col-lg-12').addClass('col-sm-9 col-lg-10');
+            // self.$el.find('.project-list, .filters-navbar').removeClass('hidden');
+            self.$el.find('.project-list').removeClass('hidden');
             self.$el.find('.welcome-helper').hide();
             if (self.getIsPublicChurchKiosk()) {
                 let $resetNotice = $('.header').find('.reset-notice');
@@ -1689,7 +1760,7 @@
             if (gotoCaraselNumber === 4) {
                 let iProjectCnt = self.$el.find('.project-list').find('tbody tr').length;
                 let $searchCriteriaResultMsg = self.$el.find('.search-criteria-result-msg');
-                let iCheckedCnt = $('.active-filters-container').find('.active-filter-btn').length;
+                let iCheckedCnt = $('.active-filter-btn').length;
                 let projectStr = iProjectCnt === 1 ? 'project' : 'projects';
 
                 if (iCheckedCnt === 0) {
@@ -1827,7 +1898,7 @@
                     App.Collections.skillFiltersCollection.reset(response.projectFilters.skill);
                     if (_.isEmpty(response)) {
                         let resultsMsg = 'No projects found';
-                        if ($('.active-filters-container').find('.active-filter-btn').length) {
+                        if ($('.active-filter-btn').length) {
                             resultsMsg = 'No projects found, try removing one of the applied filters.';
                         }
                         self.$el.find('.project-list-wrapper').append('<div class="no-projects-found">' + resultsMsg + '</div>')
@@ -1929,7 +2000,25 @@
                     }
                 }
             })
-        }
+        },
+        updateReservations: function (newAmt) {
+            let self = this;
+
+            $.ajax({
+                type: "get",
+                url: 'project_registration/update_reservation/' + App.Vars.reservedProjectID + '/' + newAmt,
+                success: function (response) {
+                    self.checkProjectRegistrations();
+                    $('.reserved-amt-msg').text(newAmt);
+                },
+                fail: function (response) {
+                    if (App.Vars.devMode) {
+                        console.error(response);
+                        alert('Increased Reservations error' + response);
+                    }
+                }
+            })
+        },
     });
 })(window.App, jQuery);
 

@@ -158,7 +158,7 @@ class SpringIntoActionMainAppController extends BaseController
             $all_projects = Project::select(
                 'projects.*',
                 DB::raw(
-                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = 391) as BudgetSources'
+                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID) as BudgetSources'
                 ),
                 DB::raw(
                     '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'

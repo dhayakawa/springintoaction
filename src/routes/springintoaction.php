@@ -98,6 +98,7 @@ Route::group(
         Route::post('project_registration/reserve', ['as' => 'project.registration.reserve', 'uses' => 'ProjectRegistrationController@reserve']);
         Route::post('project_registration/grove_login', ['as' => 'project.registration.grove_login', 'uses' => 'ProjectRegistrationController@groveLogin']);
         Route::get('project_registration/delete_reservation/{ProjectID}', ['as' => 'project.registration.delete_reservation', 'uses' => 'ProjectRegistrationController@deleteReservation']);
+        Route::get('project_registration/update_reservation/{ProjectID}/{newAmt}', ['as' => 'project.registration.update_reservation', 'uses' => 'ProjectRegistrationController@updateReservation']);
 
 
         //onedrive routes.

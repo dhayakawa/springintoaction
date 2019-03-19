@@ -3,7 +3,7 @@ BUGS:
 
 validation errors are not validated if blur is not triggered first. have to click button twice for some reason.
 
-make sure this condition is correct: registerAndConfirm() if (self.groveContacts.length && App.Vars.bTooManyRegistrants) {
+make sure this condition is correct: confirmRegistrations() if (self.groveContacts.length && App.Vars.bTooManyRegistrants) {
 
 
 
