@@ -226,8 +226,19 @@ class ProjectRegistrationController extends BaseController
         $requestData = $request->all();
 
         $aFilter = isset($requestData['filter']) ? $requestData['filter'] : [];
-        $sortBy = isset($requestData['sort_by']) && !empty($requestData['sort_by']) ? $requestData['sort_by'] : null;
-
+        $sortBy = isset($requestData['sort_by']) && !empty($requestData['sort_by']) ? trim($requestData['sort_by']) : null;
+        // Protect against malicious requests
+        if(!in_array($sortBy,[
+            'sites.SiteName_asc',
+            'sites.SiteName_desc',
+            'projects.PrimarySkillNeeded_asc',
+            'projects.PrimarySkillNeeded_desc',
+            'projects.ChildFriendly_desc',
+            'projects.ChildFriendly_asc',
+            'PeopleNeeded_asc',
+            'PeopleNeeded_desc'])){
+            $sortBy = null;
+        }
         $all_projects = $this->getProjectList($aFilter, $sortBy);
         $projectFilters = $this->getProjectFilters($all_projects, $aFilter);
         $response = [
@@ -280,6 +291,25 @@ class ProjectRegistrationController extends BaseController
 
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
+    public function updateReservation(Request $request, $ProjectID, $newAmt)
+    {
+        $model =
+            ProjectReservation::where('session_id', $request->session()->getId())
+                              ->where('ProjectID', $ProjectID)->first();
+        if ($model) {
+            $model->reserve = $newAmt;
+            $success = $model->save();
+        } else {
+            $success = false;
+        }
+        if ($success) {
+            $response = ['success' => true, 'msg' => 'Project Reservation Update Succeeded.'];
+        } else {
+            $response = ['success' => false, 'msg' => 'Project Reservation Update Failed.'];
+        }
+
+        return view('springintoaction::frontend.json_response', $request, compact('response'));
+    }
 
     public function groveLogout(Request $request)
     {
@@ -321,7 +351,7 @@ class ProjectRegistrationController extends BaseController
                 $response,
             ]
         );
-        $bGroveLoginSuccessful = $response["individuals"]['@attributes']['count'] === '1';
+        $bGroveLoginSuccessful = $response && isset($response["individuals"]) && $response["individuals"]['@attributes']['count'] === '1';
         $contact_info = [];
         if ($bGroveLoginSuccessful) {
             $individual = $response["individuals"]["individual"];
@@ -352,6 +382,22 @@ class ProjectRegistrationController extends BaseController
                         'Email' => $email,
                         'groveId' => $aMember['id'],
                     ];
+                    // \Illuminate\Support\Facades\Log::debug(
+                    //     '',
+                    //     [
+                    //         'File:' . __FILE__,
+                    //         'Method:' . __METHOD__,
+                    //         'Line:' . __LINE__,
+                    //         [
+                    //             '$phone' => $phone,
+                    //             '$email' => $email,
+                    //             '$firstName' => $firstName,
+                    //             '$lastName' => $lastName,
+                    //             '$groveId' => $groveId,
+                    //             '$RegisterProcessType' => $RegisterProcessType,
+                    //         ],
+                    //     ]
+                    // );
                 }
             } elseif ($RegisterProcessType === 'lifegroup') {
                 $aMembers = $this->getLifeGroupFromDb($groveId, $familyId);
@@ -368,30 +414,31 @@ class ProjectRegistrationController extends BaseController
                         'Email' => $email,
                         'groveId' => isset($aMember['individual_id']) ? $aMember['individual_id'] : $aMember['id'],
                     ];
+                    // \Illuminate\Support\Facades\Log::debug(
+                    //     '',
+                    //     [
+                    //         'File:' . __FILE__,
+                    //         'Method:' . __METHOD__,
+                    //         'Line:' . __LINE__,
+                    //         [
+                    //             '$phone' => $phone,
+                    //             '$email' => $email,
+                    //             '$firstName' => $firstName,
+                    //             '$lastName' => $lastName,
+                    //             '$groveId' => $groveId,
+                    //             '$RegisterProcessType' => $RegisterProcessType,
+                    //         ],
+                    //     ]
+                    // );
                 }
             }
             //$contact_info = array_unique($contact_info);
             //$response = $groveApi->api_status();
-            \Illuminate\Support\Facades\Log::debug(
-                '',
-                [
-                    'File:' . __FILE__,
-                    'Method:' . __METHOD__,
-                    'Line:' . __LINE__,
-                    [
-                        '$phone' => $phone,
-                        '$email' => $email,
-                        '$firstName' => $firstName,
-                        '$lastName' => $lastName,
-                        '$groveId' => $groveId,
-                        '$RegisterProcessType' => $RegisterProcessType,
-                    ],
-                ]
-            );
+
         } else {
             $success = false;
         }
-        \Illuminate\Support\Facades\Log::debug(
+        /*\Illuminate\Support\Facades\Log::debug(
             'returning $groveLoggedInId and $contact_info from login',
             [
                 'File:' . __FILE__,
@@ -400,17 +447,8 @@ class ProjectRegistrationController extends BaseController
                 $groveLoggedInId,
                 $contact_info,
             ]
-        );
-        // $contact_info = [];
-        // for($i=0;$i<10;$i++){
-        //     $contact_info[]= [
-        //         'Church' => 'woodlands',
-        //         'MobilePhoneNumber' => '7153054840',
-        //         'FirstName' => 'David' . $i,
-        //         'LastName' => 'Hayakawa' . $i,
-        //         'Email' => 'david.hayakawa+siaregister' . $i . '@gmail.com'
-        //     ]  ;
-        // }
+        );*/
+
         if (!isset($success)) {
             $response = [
                 'success' => false,
@@ -425,7 +463,12 @@ class ProjectRegistrationController extends BaseController
                 'contact_info' => $contact_info,
             ];
         } else {
-            $response = ['success' => false, 'groveLoggedInId' => $groveLoggedInId, 'msg' => 'Grove Login Failed.'];
+            if(isset($response['error'])){
+                $groveError = "Sorry, we could not connect to the Grove at this time, please try again.";
+            } else {
+                $groveError = 'Grove Login Failed.';
+            }
+            $response = ['success' => false, 'groveLoggedInId' => $groveLoggedInId, 'msg' => $groveError];
         }
 
         return view('springintoaction::frontend.json_response', $request, compact('response'));

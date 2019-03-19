@@ -72,6 +72,11 @@ class ReportsController extends BaseController
         $this->downloadType = $downloadType;
 
         switch ($ReportType) {
+            case 'projects_full':
+                $reportName = 'Project Report by Year, Site and Project';
+                $reportHtml =
+                    $this->getYearSiteProjectFullReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray);
+                break;
             case 'projects':
                 $reportName = 'Project Report by Year, Site and Project';
                 $reportHtml = $this->getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray);
@@ -424,6 +429,73 @@ class ReportsController extends BaseController
         return $html;
     }
 
+    public function getYearSiteProjectFullReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
+    {
+        $html = $bReturnArray ? [] : '';
+        //'Project Report by Year, Site and Project'
+        // $site = Site::join(
+        //     'site_status',
+        //     'sites.SiteID',
+        //     '=',
+        //     'site_status.SiteID'
+        // )->where(
+        //     'site_status.Year',
+        //     $Year
+        // )->orderBy('SiteName', 'asc');
+        // if ($SiteID) {
+        //     //$site->where('sites.SiteID', $SiteID);
+        // }
+        //$aSites = $site->get()->toArray();
+        $projectModel = new Project();
+        $aProjects = $projectModel->getReportProjects($Year, [], null);
+        if ($bReturnArray) {
+            $aKeys = array_keys($aProjects[0]);
+            $colNames = [];
+            foreach ($aKeys as $sKeyStr):
+                $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
+                $colNames[]=$colName;
+            endforeach;
+
+            $html = array_merge($html, [$colNames], $aProjects);
+        } else {
+            $response = "This report must be downloaded";
+            $html .= $response;
+        }
+        // foreach ($aSites as $site) {
+        // $aProjects = Project::select(
+        //     'projects.SequenceNumber as Proj Num',
+        //     'projects.OriginalRequest',
+        //     'projects.Comments',
+        //     'project_status_options.option_label as Status',
+        //     'projects.StatusReason'
+        // )->join(
+        //     'site_status',
+        //     'projects.SiteStatusID',
+        //     '=',
+        //     'site_status.SiteStatusID'
+        // )->join(
+        //     'project_status_options',
+        //     'projects.Status',
+        //     '=',
+        //     'project_status_options.id'
+        // )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
+        //     'projects.SequenceNumber',
+        //     'asc'
+        // )->get()->toArray();
+
+        //     if ($bReturnArray) {
+        //         $html[] = $site['SiteName'];
+        //         $html = array_merge($html, $aProjects);
+        //     } else {
+        //         $response = $this->getResultsHtmlTable($aProjects);
+        //         $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
+        //         $html .= $response;
+        //     }
+        // }
+
+        return $html;
+    }
+
     public function getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
         $html = $bReturnArray ? [] : '';
@@ -708,37 +780,47 @@ class ReportsController extends BaseController
                     'project_roles.ProjectRoleID',
                     '=',
                     'project_volunteer_role.ProjectRoleID'
-                )->where('project_volunteers.ProjectID','=', $ProjectID)->orderBy('volunteers.LastName', 'desc');
+                )->where('project_volunteers.ProjectID', '=', $ProjectID)->orderBy('volunteers.LastName', 'desc');
                 $aVolunteers = $Volunteers->get()->toArray();
 
                 foreach ($aVolunteers as $key => $aVolunteer) {
-                    $aAgeRanges =
-                        VolunteerAgeRangeOptions::select('option_label')->whereIn(
-                            'id',
-                            preg_split("/,/", $aVolunteer['Age Range'])
-                        )->get()->toArray();
+                    $aAgeRanges = VolunteerAgeRangeOptions::select('option_label')->whereIn(
+                        'id',
+                        preg_split("/,/", $aVolunteer['Age Range'])
+                    )->get()->toArray();
                     $aVolunteers[$key]['Age Range'] = join(',', array_column($aAgeRanges, 'option_label'));
                 }
                 $budgetAmt = 0.00;
-                $aBudgets = Budget::where('ProjectID', $ProjectID)
-                          ->get()
-                          ->toArray();
+                $aBudgets = Budget::where('ProjectID', $ProjectID)->get()->toArray();
                 if (!empty($aBudgets)) {
                     foreach ($aBudgets as $aaBudget) {
                         $budgetAmt += $aaBudget['BudgetAmount'];
                     }
                 }
                 $volunteersTable = $this->getResultsHtmlTable($aVolunteers);
-                $aVolunteerHeaders = [['<h4 class="Assigned-Volunteers">Assigned Volunteers</h4>', '<strong>Assigned Volunteer count w/ Project Coordinator:</strong> ' . count(
-                        $aVolunteers), '<strong>Budget Available:</strong> $' . $budgetAmt ]];
-                $volunteerHeaders = $this->getResultsHtmlTable($aVolunteerHeaders, false, 'no-tbody-border Volunteer-Headers');
-                $aProjectRows[] = "<div class=\"Volunteer-Assignment\">" . $projectTable . $volunteerHeaders . $volunteersTable . "</div>";
+                $aVolunteerHeaders = [
+                    [
+                        '<h4 class="Assigned-Volunteers">Assigned Volunteers</h4>',
+                        '<strong>Assigned Volunteer count w/ Project Coordinator:</strong> ' . count(
+                            $aVolunteers
+                        ),
+                        '<strong>Budget Available:</strong> $' . $budgetAmt,
+                    ],
+                ];
+                $volunteerHeaders =
+                    $this->getResultsHtmlTable($aVolunteerHeaders, false, 'no-tbody-border Volunteer-Headers');
+                $aProjectRows[] =
+                    "<div class=\"Volunteer-Assignment\">" .
+                    $projectTable .
+                    $volunteerHeaders .
+                    $volunteersTable .
+                    "</div>";
             }
             if ($bReturnArray) {
                 $html[] = $site['SiteName'];
                 $html = array_merge($html, $aProjectRows);
             } else {
-                $response =  join('', $aProjectRows);
+                $response = join('', $aProjectRows);
                 $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
                 $html .= $response;
             }
@@ -982,7 +1064,7 @@ CSS;
     /**
      * Creates, logs and returns the result of fputcsv() for debugging purposes
      *
-     * @param array $fields
+     * @param array  $fields
      * @param string $reportName
      *
      * @return bool|string

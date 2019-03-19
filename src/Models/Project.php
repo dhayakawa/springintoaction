@@ -367,6 +367,212 @@ FROM (
         return $all_projects;
     }
 
+    /**
+     * @param       $Year
+     * @param array $filter
+     * @param null  $orderBy
+     *
+     * @return mixed
+     */
+    public function getReportProjects($Year, $filter = [], $orderBy = null)
+    {
+        // handle possible sql injection
+        if (!is_numeric($Year) || strlen($Year) !== 4) {
+            $Year = $this->getCurrentYear();
+        }
+        $projectStatusOptions = new ProjectStatusOptions();
+        $ProjectStatusApprovedOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
+        $passedInOrderBy = $orderBy;
+        if (empty($orderBy)) {
+            $orderBy = [];
+            $orderBy[] = ['field' => 'sites.SiteName', 'direction' => 'asc'];
+            $orderBy[] = ['field' => 'projects.SequenceNumber', 'direction' => 'asc'];
+        } else {
+            $aTmpOrderBy = $orderBy;
+            $orderBy = [];
+            list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
+            $orderBy[] = ['field' => $sortField, 'direction' => $direction];
+        }
+
+        $requiredPercentage = ".8";
+        $reservationLifeTime = config('springintoaction.registration.reservation_lifetime_minutes');
+        $sSqlVolunteersAssigned =
+            "(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID)";
+
+        $sSqlProjectReservations =
+            "(IFNULL((select sum(`pr`.`reserve`) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < {$reservationLifeTime}),0))";
+
+        $sSqlProjectsAtReqPerc = "(select count(*)
+            from projects p
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year}
+            where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null
+              and ((" .
+                                 str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
+                                 " + " .
+                                 str_replace('projects.', 'p.', $sSqlProjectReservations) .
+                                 ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
+
+        $sSqlActiveProjects = "(select count(*) from projects p
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
+
+        $sSqlVolunteersNeeded =
+            "IF({$sSqlProjectsAtReqPerc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$requiredPercentage}))";
+
+        $sSqlPeopleNeeded = "{$sSqlVolunteersNeeded} - {$sSqlVolunteersAssigned} - {$sSqlProjectReservations}";
+
+        $projects = self::select(
+            [
+                'projects.ProjectID',
+                'sites.SiteName',
+                'projects.Active',
+                'projects.SequenceNumber',
+                'projects.OriginalRequest',
+                'projects.ProjectDescription',
+                'projects.Comments',
+                DB::raw(
+                    '(SELECT GROUP_CONCAT(distinct bso.option_label SEPARATOR \',\') FROM budgets join budget_source_options bso on bso.id = budgets.BudgetSource where budgets.ProjectID = projects.ProjectID) as BudgetSources'
+                ),
+                'projects.ChildFriendly',
+                'projects.PrimarySkillNeeded',
+                DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"),
+                DB::raw("{$sSqlVolunteersAssigned} as VolunteersAssigned"),
+                DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"),
+                DB::raw('(select pso.option_label from project_status_options pso where pso.id = projects.Status) as Status'),
+                'projects.StatusReason',
+                'projects.MaterialsNeeded',
+                'projects.EstimatedCost',
+                'projects.ActualCost',
+                'projects.BudgetAvailableForPC',
+                'projects.NeedsToBeStartedEarly',
+                'projects.PCSeeBeforeSIA',
+                'projects.SpecialEquipmentNeeded',
+                'projects.PermitsOrApprovalsNeeded',
+                'projects.PrepWorkRequiredBeforeSIA',
+                'projects.SetupDayInstructions',
+                'projects.SIADayInstructions',
+                'projects.Area',
+                'projects.PaintOrBarkEstimate',
+                'projects.PaintAlreadyOnHand',
+                'projects.PaintOrdered',
+                'projects.CostEstimateDone',
+                'projects.MaterialListDone',
+                'projects.BudgetAllocationDone',
+                'projects.VolunteerAllocationDone',
+                'projects.NeedSIATShirtsForPC',
+                DB::raw("(select sso.option_label from send_status_options sso where sso.id = projects.ProjectSend) as ProjectSend"),
+                'projects.FinalCompletionStatus',
+                'projects.FinalCompletionAssessment'
+
+            ]
+        )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
+            'site_status.Year',
+            $Year
+        )->join('sites', 'site_status.SiteID', '=', 'sites.SiteID')->where('projects.ProjectDescription','NOT REGEXP','Test');
+
+        if (!empty($filter) && is_array($filter)) {
+            $projects->where(
+                function ($query) use ($filter, $sSqlPeopleNeeded) {
+                    $iFilterCnt = 0;
+                    $bForceFilterRequiredToShowInList = true;
+                    foreach ($filter as $filterType => $aFilterValue) {
+                        if ($filterType === 'site') {
+                            if (is_array($aFilterValue)) {
+                                foreach ($aFilterValue as $filterValue) {
+                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
+                                        $query->where('sites.SiteName', $filterValue);
+                                        $iFilterCnt++;
+                                    } else {
+                                        $query->orWhere('sites.SiteName', $filterValue);
+                                        $iFilterCnt++;
+                                    }
+                                }
+                            }
+                        } elseif ($filterType === 'skill') {
+                            if (is_array($aFilterValue)) {
+                                foreach ($aFilterValue as $filterValue) {
+                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
+                                        $query->where('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
+                                        $iFilterCnt++;
+                                    } else {
+                                        $query->orWhere('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
+                                        $iFilterCnt++;
+                                    }
+                                }
+                            }
+                        } elseif ($filterType === 'childFriendly') {
+                            if (is_array($aFilterValue)) {
+                                foreach ($aFilterValue as $filterValue) {
+                                    $filterValue = $filterValue === 'No' ? '0' : '1';
+                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
+                                        $query->where('projects.ChildFriendly', $filterValue);
+                                        $iFilterCnt++;
+                                    } else {
+                                        $query->orWhere('projects.ChildFriendly', $filterValue);
+                                        $iFilterCnt++;
+                                    }
+                                }
+                            }
+                        } elseif ($filterType === 'peopleNeeded') {
+                            if (is_array($aFilterValue)) {
+                                foreach ($aFilterValue as $filterValue) {
+                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
+                                        $query->whereRaw("({$sSqlPeopleNeeded}) >= ?", [$filterValue]);
+                                        $iFilterCnt++;
+                                    } else {
+                                        $query->orWhereRaw("({$sSqlPeopleNeeded}) >= ?", [$filterValue]);
+                                        $iFilterCnt++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+        foreach ($orderBy as $order) {
+            $projects->orderBy(
+                $order['field'],
+                $order['direction']
+            );
+        }
+        // \Illuminate\Support\Facades\Log::debug(
+        //     '',
+        //     [
+        //         'File:' . __FILE__,
+        //         'Method:' . __METHOD__,
+        //         'Line:' . __LINE__,
+        //         $projects->toSql(),
+        //     ]
+        // );
+
+        $all_projects = $projects->get()->toArray();
+        if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
+            $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
+        }
+        $all_projects = $this->setProjectSkillNeededLabels($all_projects);
+        return $all_projects;
+    }
+
+    public function setProjectSkillNeededLabels($all_projects){
+        $ProjectSkillNeededOptions = ProjectSkillNeededOptions::select('id','option_label')->get();
+        $ProjectSkillNeededOptions = $ProjectSkillNeededOptions ? $ProjectSkillNeededOptions->toArray() : [];
+        $aProjectSkillNeededOptions = [];
+        foreach ($ProjectSkillNeededOptions as $option) {
+            $aProjectSkillNeededOptions[$option['id']] = $option['option_label'];
+        }
+        array_walk($all_projects, function(&$data) use($aProjectSkillNeededOptions) {
+            $skills = $data['PrimarySkillNeeded'];
+            $aSkills = explode(',', $skills);
+            $aLabels = [];
+            foreach($aSkills as $skillId){
+                $aLabels[]= $aProjectSkillNeededOptions[$skillId];
+            }
+            $data['PrimarySkillNeeded'] = join(',', $aLabels);
+
+        });
+        return $all_projects;
+    }
+
     public function sortByProjectSkillNeeded($all_projects, $direction)
     {
         $this->aSortedProjectSkillNeededOptionsOrder = $this->getSortedProjectSkillNeededOptionIds($direction);
