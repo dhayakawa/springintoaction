@@ -10,6 +10,9 @@
                 required >
                 <option>Choose Church</option>
                 <option <% if(Church==='woodlands'){ print('selected'); } %> value="woodlands">Woodlands Church</option>
+                <option <% if(Church==='highland'){ print('selected'); } %> value="highland">Highland Church</option>
+                <option <% if(Church==='city_point'){ print('selected'); } %> value="city_point">City Point Church</option>
+                <option <% if(Church==='hmong_alliance'){ print('selected'); } %> value="hmong_alliance">Hmong Alliance Church</option>
                 <option <% if(Church==='other'){ print('selected'); } %> value="other">Other</option>
             </select>
         </div>

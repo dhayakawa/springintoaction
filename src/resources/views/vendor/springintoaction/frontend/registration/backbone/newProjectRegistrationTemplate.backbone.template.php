@@ -178,7 +178,8 @@
                     <div class="col-xs-12">
                         <div class="well well-sm">
                             <div class="general">
-                                Please only register children who are 16 and older.
+                                Please only register children who are 16 and older.<br>
+                                <small class="text-muted">*Children under 16 are welcome to participate even though they are not registered.</small>
                             </div>
                             <div class="grove-contacts-confirm-list-msg hidden">
                                 Uncheck any people you do not need to register.
@@ -248,7 +249,7 @@
                     </div>
                     <div class="col-xs-6 text-right">
                         <button class="submit-registration-btn btn btn-success btn-sm">
-                            <i class="fas fa-check-circle"></i> Register
+                            <i class="fas fa-check-circle"></i> Submit
                         </button>
                     </div>
                 </div>
