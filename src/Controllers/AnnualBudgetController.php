@@ -5,6 +5,8 @@
     use Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Dhayakawa\SpringIntoAction\Models\AnnualBudget;
     use Dhayakawa\SpringIntoAction\Models\Budget;
+    use Dhayakawa\SpringIntoAction\Models\Project;
+    use Dhayakawa\SpringIntoAction\Models\Site;
     use Illuminate\Http\Request;
 
     class AnnualBudgetController extends BaseController {
@@ -132,5 +134,13 @@
             $model          = new AnnualBudget();
             $annual_budgets = $model->getBudgets(date('Y'));
             return $annual_budgets;
+        }
+
+        public function getSiteBudgets()
+        {
+            $model = new AnnualBudget();
+            $annual_site_budgets = $model->getSiteBudgets($this->getCurrentYear());
+
+            return $annual_site_budgets;
         }
     }
