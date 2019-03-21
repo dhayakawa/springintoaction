@@ -31,6 +31,8 @@
         },
         render: function () {
             this.addAll();
+            // Force related views to update
+            this.changeSelected();
             return this;
         },
         changeSelected: function () {
