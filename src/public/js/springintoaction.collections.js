@@ -524,7 +524,7 @@
         },
         {
             name: "PCSeeBeforeSIA",
-            label: "PCSeeBeforeSIA",
+            label: "TLSeeBeforeSIA",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: true,
