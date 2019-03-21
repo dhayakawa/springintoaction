@@ -16,9 +16,14 @@ mix.setPublicPath("public");
  * The node_modules relative path is only valid during package
  * development and is referencing /laravel/node_modules in the web root.
  * It is not the /laravel/packages/dhayakawa/springintoaction/src/node_modules path.
+ *
+ * The resources relative path works because I am publishing
+ * the /laravel/packages/dhayakawa/springintoaction/src/resources before
+ * this script is run
  */
 mix.scripts([
-    'packages/dhayakawa/springintoaction/src/resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.js',
+    'resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.js',
+    'resources/assets/js/jquery-validation-1.19.0/dist/additional-methods.js',
     'node_modules/lodash/lodash.js',
     'node_modules/underscore/underscore.js',
     'node_modules/underscore.string/dist/underscore.string.js',
@@ -46,7 +51,8 @@ mix.scripts([
     'resources/assets/js/frontend/registration/carasel.bootstrap.js'
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
-    'packages/dhayakawa/springintoaction/src/resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.min.js',
+    'resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.min.js',
+    'resources/assets/js/jquery-validation-1.19.0/dist/additional-methods.min.js',
     'node_modules/lodash/lodash.min.js',
     'node_modules/underscore/underscore-min.js',
     'node_modules/underscore.string/dist/underscore.string.min.js',

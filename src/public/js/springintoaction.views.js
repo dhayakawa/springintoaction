@@ -1931,6 +1931,7 @@
             App.Models.siteModel.fetch();
             App.Collections.siteYearsDropDownCollection.url = '/admin/sitestatus/all/site/years/' + SiteID;
             App.Collections.siteYearsDropDownCollection.fetch({reset: true});
+
             if (typeof self.parentView !== 'undefined' ) {
                 self.trigger('site-id-change', {SiteID: SiteID});
                 console.log('trigger site-id-change', self.parentView.$el.hasClass('reports-management-view'))
@@ -1995,6 +1996,8 @@
                 App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
                 App.Models.siteStatusModel.fetch({reset: true});
 
+                App.PageableCollections.siteVolunteersCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
+                App.PageableCollections.siteVolunteersCollection.fetch({reset: true});
 
                 if (!self.parentView.$el.hasClass('site-management-view')) {
                     self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});

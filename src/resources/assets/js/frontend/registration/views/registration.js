@@ -78,12 +78,12 @@
             self.bIsWoodlands = $(e.currentTarget).val() === 'woodlands';
             self.contactInfoData.Church = $(e.currentTarget).val();
             let $otherChurchWrapper = self.$el.find('.other-church-wrapper');
-            if (self.bIsWoodlands) {
-                $otherChurchWrapper.hide();
-                $otherChurchWrapper.find('[id^="ChurchOther"]').removeAttr('required');
-            } else {
+            if (self.contactInfoData.Church === 'other') {
                 $otherChurchWrapper.show();
                 $otherChurchWrapper.find('[id^="ChurchOther"]').attr('required', '');
+            } else {
+                $otherChurchWrapper.hide();
+                $otherChurchWrapper.find('[id^="ChurchOther"]').removeAttr('required');
             }
         },
         getIsWoodlands: function () {
@@ -302,6 +302,10 @@
                     email: {
                         required: true,
                         email: true
+                    },
+                    tel: {
+                        required: true,
+                        min: 7
                     }
                 }
             });
