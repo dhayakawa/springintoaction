@@ -181,7 +181,7 @@ trait ProjectRegistrationHelper
             'General' => '<i title="General" class="skills-icon filter-list-item-icon general-skill-icon"></i>',
             'Painting' => '<i title="Painting" class="skills-icon filter-list-item-icon painting-icon"></i>',
             'General Carpentry' => '<i title="General Carpentry" class="skills-icon filter-list-item-icon general-carpentry-icon"></i>',
-            'Finish Carpentry' => '<i title="Finish Carpentry" class="skills-icon filter-list-item-icon finish-carpentry-icon"></i>',
+            'Furniture Making / Woodworking' => '<i title="Furniture Making / Woodworking" class="skills-icon filter-list-item-icon finish-carpentry-icon"></i>',
             'Landscaping' => '<i title="Landscaping" class="skills-icon filter-list-item-icon landscaping-icon"></i>',
             'Construction' => '<i title="Construction" class="skills-icon filter-list-item-icon construction-icon"></i>',
             'Cabinetry' => '<i title="Cabinetry" class="skills-icon filter-list-item-icon cabinetry-icon"></i>',

@@ -1,5 +1,5 @@
 <div class="row">
-    <nav class="col-xs-12 col-sm-3 col-md-3 col-lg-2 filters-navbar filters-navbar-default">
+    <nav class="col-xs-12 col-sm-3 col-md-3 col-lg-2 filters-navbar filters-navbar-default hidden">
         <div class="container-fluid">
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="filters-navbar-header">
@@ -49,12 +49,12 @@
                     <!-- 0 -->
                     <% var goTo = 1; %>
                     <div class="item active" data-number="<%= goTo - 1 %>" data-helper-question="register-skills-needed">
-                        <p>Do you have a favorite thing to do?<br>If so, choose your favorite thing from the list below.</p>
+                        <p>Do you have experience in a particular area that will help us meet the needs of the schools?<br>If so, select from the list below.</p>
                         <select class="form-control" name="register-skills-needed" data-helper-question="register-skills-needed" data-val="yes" data-goto-number="<%= goTo %>">
                             <option value="">Choose</option>
                         </select>
                         <div class="carasel-caption">
-                            <span class="btn btn-primary btn-lg" data-helper-question="register-skills-needed" data-val="skip" data-goto-number="<%= goTo %>" role="button">I couldn't find my favorite thing but, I'm willing to serve God anywhere, let's move on to the next question</span>
+                            <span class="btn btn-primary btn-lg" data-helper-question="register-skills-needed" data-val="skip" data-goto-number="<%= goTo %>" role="button">I don't have particular experience, but I am willing to serve God anywhere. Let's move on to the next question.</span>
                         </div>
                     </div>
                     <!-- 1 -->

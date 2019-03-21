@@ -1166,7 +1166,8 @@
                 //console.log({overAmt:overAmt, totalRegistrantCnt: totalRegistrantCnt, iReserved: self.iReserved, volunteersNeeded: volunteersNeeded})
                 if (totalRegistrantCnt <= volunteersNeeded){
                     // Increase reservations to accommodate
-                    self.parentView.updateReservations(overAmt + self.iReserved);
+                    self.iReserved += overAmt;
+                    self.updateReservations(self.iReserved);
                 } else {
                     App.Vars.bTooManyRegistrants = true;
                     valid = 0;
@@ -1512,9 +1513,9 @@
             let self = this;
             // Stop the interval if it exists
             App.Vars.checkIfSomeoneIsThereInterval && clearInterval(App.Vars.checkIfSomeoneIsThereInterval);
-            // self.$el.find('.project-list, .filters-navbar').addClass('hidden');
-            self.$el.find('.project-list').addClass('hidden');
-            // self.$el.find('.project-list-wrapper').removeClass('col-sm-9 col-lg-10').addClass('col-sm-12 col-lg-12');
+            self.$el.find('.project-list, .filters-navbar').addClass('hidden');
+            //self.$el.find('.project-list').addClass('hidden');
+            self.$el.find('.project-list-wrapper').removeClass('col-sm-9 col-lg-10').addClass('col-sm-12 col-lg-12');
             self.$el.find('.welcome-helper').show();
             App.Collections.skillFiltersCollection.each(function (model) {
                 self.$el.find('[name="register-skills-needed"]').append('<option value="' + model.get('filterId') + '">' + model.get('filterLabel') + '</option>')
@@ -1527,9 +1528,9 @@
         },
         hideWelcomeHelper: function () {
             let self = this;
-            // self.$el.find('.project-list-wrapper').removeClass('col-sm-12 col-lg-12').addClass('col-sm-9 col-lg-10');
-            // self.$el.find('.project-list, .filters-navbar').removeClass('hidden');
-            self.$el.find('.project-list').removeClass('hidden');
+            self.$el.find('.project-list-wrapper').removeClass('col-sm-12 col-lg-12').addClass('col-sm-9 col-lg-10');
+            self.$el.find('.project-list, .filters-navbar').removeClass('hidden');
+            //self.$el.find('.project-list').removeClass('hidden');
             self.$el.find('.welcome-helper').hide();
             if (self.getIsPublicChurchKiosk()) {
                 let $resetNotice = $('.header').find('.reset-notice');

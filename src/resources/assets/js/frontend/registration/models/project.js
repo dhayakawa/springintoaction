@@ -51,7 +51,7 @@
                 'General':'<i title="General" data-toggle="tooltip" data-placement="top" class="skills-icon general-skill-icon"></i>',
                 'Painting':'<i title="Painting" data-toggle="tooltip" data-placement="top" class="skills-icon painting-icon"></i>',
                 'General Carpentry':'<i title="General Carpentry" data-toggle="tooltip" data-placement="top" class="skills-icon general-carpentry-icon"></i>',
-                'Finish Carpentry':'<i title="Finish Carpentry" data-toggle="tooltip" data-placement="top" class="skills-icon finish-carpentry-icon"></i>',
+                'Furniture Making / Woodworking':'<i title="Furniture Making / Woodworking" data-toggle="tooltip" data-placement="top" class="skills-icon finish-carpentry-icon"></i>',
                 'Landscaping':'<i title="Landscaping" data-toggle="tooltip" data-placement="top" class="skills-icon landscaping-icon"></i>',
                 'Construction':'<i title="Construction" data-toggle="tooltip" data-placement="top" class="skills-icon construction-icon"></i>',
                 'Cabinetry':'<i title="Cabinetry" data-toggle="tooltip" data-placement="top" class="skills-icon cabinetry-icon"></i>',
