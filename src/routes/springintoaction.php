@@ -192,7 +192,7 @@ Route::group(
         Route::get('annualbudget/{AnnualBudgetID}', ['as' => 'annualbudget', 'uses' => 'AnnualBudgetController@show']);
         Route::get(
             'annualbudget/list/all',
-            ['as' => 'annualbudget.list.all', 'uses' => 'AnnualBudgetController@getBudgets']
+            ['as' => 'annualbudget.list.all', 'uses' => 'AnnualBudgetController@getSiteBudgets']
         );
         Route::put(
             'annualbudget/{AnnualBudgetID}',

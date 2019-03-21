@@ -255,6 +255,13 @@
 .annualbudgets-management-view .backgrid thead th:nth-child(2) button::before {
   content: '';
 }
+.site-budgets-table .totals td {
+  font-weight: bold;
+  border-top: 1px solid black;
+}
+.site-budgets-table .totals-margin td {
+  border-top: 0px ;
+}
 .annual-budget-total-wrapper {
   width: 256px;
   text-align: right;

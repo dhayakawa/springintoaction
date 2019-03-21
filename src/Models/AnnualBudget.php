@@ -79,5 +79,70 @@
             return AnnualBudget::where('Year','=',$Year)->get()->toArray();
         }
 
+        public function getSiteBudgets($Year)
+        {
+
+            $aSiteBudgets = [];
+            //'Project Report by Year, Site and Project'
+            $site = Site::join(
+                'site_status',
+                'sites.SiteID',
+                '=',
+                'site_status.SiteID'
+            )->where(
+                'site_status.Year',
+                $Year
+            )->orderBy('SiteName', 'asc');
+
+            $aSites = $site->get()->toArray();
+            foreach ($aSites as $site) {
+                $aProjects = Project::select(
+                    'projects.ProjectID',
+                    'projects.SequenceNumber as Proj Num',
+                    'projects.EstimatedCost as Est Cost',
+                    'projects.BudgetSources as Budget Sources'
+                )->join(
+                    'site_status',
+                    'projects.SiteStatusID',
+                    '=',
+                    'site_status.SiteStatusID'
+                )->join(
+                    'project_status_options',
+                    'projects.Status',
+                    '=',
+                    'project_status_options.id'
+                )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
+                    'projects.SequenceNumber',
+                    'asc'
+                )->get()->toArray();
+
+                foreach ($aProjects as $key => $aaProject) {
+                    //\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$key,$aaProject]);
+                    $aSiteBudgets['Sites'][$site['SiteName']]['Projects'][$aaProject['Proj Num']]['Budget Source'] = [];
+                    $aBudgets =
+                        Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')
+                              ->where('ProjectID', $aaProject['ProjectID'])
+                              ->get()
+                              ->toArray();
+                    if (!empty($aBudgets)) {
+                        // \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+                        //     $aBudgets]);
+
+                        foreach ($aBudgets as $aaBudget) {
+                            $aSiteBudgets['Sites'][$site['SiteName']]['Projects'][$aaProject['Proj Num']]['Budget Source'][] = [
+                                $aaBudget['option_label'],
+                                $aaBudget['BudgetAmount']
+                            ];
+                        }
+                    }
+
+                    $aSiteBudgets['Sites'][$site['SiteName']]['Projects'][$aaProject['Proj Num']]['Est Cost'] = $aaProject['Est Cost'];
+                }
+            }
+            \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+                $aSiteBudgets]);
+
+            return $aSiteBudgets;
+        }
 
     }

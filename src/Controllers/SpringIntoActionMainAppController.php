@@ -246,7 +246,7 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $model = new AnnualBudget();
-            $annual_budgets = $model->getBudgets($Year);
+            $annual_budgets = $model->getSiteBudgets($Year);
         } catch (\Exception $e) {
             $annual_budgets = [];
             report($e);
