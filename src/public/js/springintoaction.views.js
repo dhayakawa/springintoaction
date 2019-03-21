@@ -1993,17 +1993,28 @@
 
                 if (self.parentView.$el.hasClass('site-management-view')) {
                     window.ajaxWaiting('show', '#site-well');
+                    window.ajaxWaiting('show', '#site-status-well');
+                    window.ajaxWaiting('show', '#site-volunteers-well');
                 }
                 // fetch new sitestatus
                 App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
-                App.Models.siteStatusModel.fetch({reset: true});
-
                 App.PageableCollections.siteVolunteersCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
-                App.PageableCollections.siteVolunteersCollection.fetch({reset: true});
+                $.when(
+                    App.Models.siteStatusModel.fetch({reset: true}),
+                    App.PageableCollections.siteVolunteersCollection.fetch({reset: true})
+                ).then(function () {
+                    //initialize your views here
+                    _log('App.Views.Site.create.event', 'site collection fetch promise done');
 
-                if (!self.parentView.$el.hasClass('site-management-view')) {
-                    self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
-                }
+                    if (self.parentView.$el.hasClass('site-management-view')) {
+                        window.ajaxWaiting('remove', '#site-well');
+                        window.ajaxWaiting('remove', '#site-status-well');
+                        window.ajaxWaiting('remove', '#site-volunteers-well');
+                    }
+                    if (!self.parentView.$el.hasClass('site-management-view')) {
+                        self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
+                    }
+                });
             }
         }
     });

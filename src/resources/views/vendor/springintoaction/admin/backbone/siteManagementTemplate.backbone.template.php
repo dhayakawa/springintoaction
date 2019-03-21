@@ -24,7 +24,7 @@
             </div>
         </div>
         <div class="col-xs-6 col-lg-8">
-            <div id="site-well" class="well well-sm collapse in">
+            <div id="site-status-well" class="well well-sm collapse in">
                 <h4 class="well-title">Site Statuses</h4>
                 <div class="row">
                     <div class="site-status-view col-xs-12"></div>
@@ -32,7 +32,7 @@
             </div>
         </div>
     </div>
-    <div id="site-well" class="well well-sm collapse in">
+    <div id="site-volunteers-well" class="well well-sm collapse in">
         <h4 class="well-title">Site Team Leaders</h4>
         <div class="row">
             <div class="site-volunteers-view col-xs-12 col-sm-12 col-md-12 col-lg-12">
