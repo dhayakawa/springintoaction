@@ -34,7 +34,7 @@
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 <script src="{{ asset('/js/boilerplate.min.js') }}"></script>
-<script src="{{ mix('/js/springintoaction.packages.js') }}"></script>
+<script src="{{ mix('/js/springintoaction.packages.min.js') }}"></script>
 <script src="{{ mix('/js/frontend/registration/springintoaction.templates.js') }}"></script>
 <script src="{{ mix('/js/frontend/registration/springintoaction.init.js') }}"></script>
 <script src="{{ mix('/js/springintoaction.logging.js') }}"></script>
