@@ -365,6 +365,7 @@
                 });
                 let annualBudgetAmount = self.model.get('BudgetAmount');
                 let totalWoodlandsAmt = annualBudgetAmount - estTotal;
+                this.$el.find('.box-footer').empty();
                 this.$el.find('.box-footer').append('<div class="annual-budget-woodlands-total-wrapper"><strong>Woodlands Budget Remaining:</strong>' + parseFloat(totalWoodlandsAmt).toFixed(2) + '</div><div class="annual-budget-total-wrapper"><strong>Estimate Total:</strong>(' + parseFloat(estTotal).toFixed(2) + ')</div><div class="annual-budget-total-wrapper"><strong>Budget Sources Total:</strong>' + parseFloat(sourceTotal).toFixed(2) + '</div>');
             }
 
