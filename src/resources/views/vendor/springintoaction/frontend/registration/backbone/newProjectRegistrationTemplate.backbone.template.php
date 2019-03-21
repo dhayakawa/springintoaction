@@ -1,10 +1,10 @@
 <div class="row reservation-wrapper">
     <div class="col-xs-12">
         <p class="steps-help">
-            How many people would you like to register right now? They must be at least 16 years old.<br><br>
+            How many people would you like to register right now? They must be at least 16 years old.<br>
+            <small class="text-muted">*Children under 16 are welcome to participate even though they are not registered.</small><br><br>
             There are currently <strong><%= volunteersNeeded %></strong> open spots. <br>
-            We'll temporarily reserve the spots for you until you finish registering.<br>
-            <small class="text-muted">*Children under 16 are welcome to participate even though they are not registered.</small>
+            We'll temporarily reserve the spots for you until you finish registering.
         </p>
         <form autocomplete="new-project-reservation-<% print(Math.random().toString()) %>" name="newProjectReservation">
             <input type="hidden" name="_token" value="<%= CsrfToken %>">
@@ -60,7 +60,7 @@
                 </div>
                 <div class="col-xs-4 step-three steps">
                     <h4 class="muted-text">Finish</h4>
-                    <small>Confirm and Register</small>
+                    <small>Confirm Registrations</small>
                 </div>
             </div>
         </div>
@@ -98,7 +98,7 @@
                     <div class="col-sm-12 text-right">
                         <button class="register-others btn btn-default btn-sm">Register Others
                             <i class="fas fa-arrow-alt-circle-right"></i></button>&nbsp;
-                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm and Register
+                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm Registrations
                             <i class="fas fa-arrow-alt-circle-right"></i></button>
                     </div>
                 </div>
@@ -217,7 +217,7 @@
                         </button>
                     </div>
                     <div class="col-xs-6 text-right">
-                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm and Register
+                        <button class="confirm-and-register btn btn-primary btn-sm">Confirm Registrations
                             <i class="fas fa-arrow-alt-circle-right"></i></button>
                     </div>
                 </div>

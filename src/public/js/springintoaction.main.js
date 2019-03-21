@@ -405,9 +405,9 @@
      */
     new App.BackboneRouter;
 
-    let rootUrl = $('.sia-main-app').length ? $('.sia-main-app').data('rooturl') : 'http://homestead.test/admin';
+    let rootUrl = $('.sia-main-app').length ? $('.sia-main-app').data('rooturl') : window.location.origin + '/admin';
     if (!rootUrl.endsWith('/')) {
-        //rootUrl += '/';
+        rootUrl += '/';
     }
     let rootPath = rootUrl.replace('://', '');
     let index = rootPath.indexOf('/');
@@ -421,7 +421,7 @@
     if (rootUrl.match(/homestead/i)){
         App.Vars.devMode = true;
     }
-
+    //console.log({devMode: App.Vars.devMode, index: index, rootUrl: rootUrl, rootPath: rootPath, relativeUrl: getRelativeUrl(window.location.href, rootUrl), ll: $('.sia-registration-app').data('rooturl')});
     Backbone.history.start({
         pushState: false,
         root: rootPath
