@@ -36,6 +36,7 @@
             if (_.isEmpty(this.lastSiteProccessed)) {
                 this.lastSiteProccessed = sSiteName;
             }
+
             _.each(data['Budget Source'], function (bs, key) {
                 if (!_.isEmpty(bs[0])) {
                     sBudgetSources += bs[0] + ', ';
@@ -47,19 +48,38 @@
                 self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] = 0;
                 self.aSiteTotals[sSiteName]['EstCostTotal'] = 0;
             }
+            let iEstCost = _.isNull(data['Est Cost']) ? 0 : data['Est Cost'];
+            let sEstCost = _.isNull(data['Est Cost']) ? '' : parseFloat(data['Est Cost']).toFixed(2);
+
             self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] += budgetSourcesTotal;
-            self.aSiteTotals[sSiteName]['EstCostTotal'] += parseFloat(data['Est Cost']);
+            self.aSiteTotals[sSiteName]['EstCostTotal'] += parseFloat(iEstCost);
             sBudgetSources = sBudgetSources.replace(/, $/,'');
+
+            // Add totals to table before the next site
             if (sSiteName !== self.lastSiteProccessed){
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['EstCostTotal'] + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['BudgetSourcesTotal'] + '</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['EstCostTotal'].toFixed(2) + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['BudgetSourcesTotal'].toFixed(2) + '</td></tr>');
+                // add an empty borderless row
                 self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
                 self.lastSiteProccessed = sSiteName;
             }
-            self.$el.find('.site-budgets-table tbody').append('<tr><td>' + sSiteName + '</td><td>' + key + '</td><td>' + data['Est Cost'] + '</td><td>' + sBudgetSources + '</td><td>' + budgetSourcesTotal.toString() + '</td></tr>');
 
+            // Add site budget row
+            self.$el.find('.site-budgets-table tbody').append('<tr><td>' + sSiteName + '</td><td>' + key + '</td><td>' + sEstCost + '</td><td>' + sBudgetSources + '</td><td>' + parseFloat(budgetSourcesTotal).toFixed(2) + '</td></tr>');
+
+            // Add totals to table after the last site
             if (this.bIsLast){
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['EstCostTotal'] + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] + '</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['EstCostTotal'].toFixed(2) + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['BudgetSourcesTotal'].toFixed(2) + '</td></tr>');
+                // add a couple empty borderless rows
                 self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
+                let estTotal = 0;
+                let sourceTotal = 0;
+                _.each(_.keys(self.aSiteTotals), function (site, key) {
+                    estTotal += parseFloat(self.aSiteTotals[site]['EstCostTotal']);
+                    sourceTotal += parseFloat(self.aSiteTotals[site]['BudgetSourcesTotal']);
+                });
+                // add all totals
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td colspan="2" class="text-right estimated-cost-total">Estimated Cost Total:</td><td>' + estTotal.toFixed(2) + '</td><td class="text-right budget-sources-total">Budget Sources Total:</td><td>' + sourceTotal.toFixed(2) + '</td></tr>');
 
             }
         },
@@ -96,8 +116,10 @@
                 });
                 let annualBudgetAmount = self.model.get('BudgetAmount');
                 let totalWoodlandsAmt = annualBudgetAmount - estTotal;
+                // make the color red if over budget
+                let sDanger = totalWoodlandsAmt < 0 ? 'text-danger' : '';
                 this.$el.find('.box-footer').empty();
-                this.$el.find('.box-footer').append('<div class="annual-budget-woodlands-total-wrapper"><strong>Woodlands Budget Remaining:</strong>' + parseFloat(totalWoodlandsAmt).toFixed(2) + '</div><div class="annual-budget-total-wrapper"><strong>Estimate Total:</strong>(' + parseFloat(estTotal).toFixed(2) + ')</div><div class="annual-budget-total-wrapper"><strong>Budget Sources Total:</strong>' + parseFloat(sourceTotal).toFixed(2) + '</div>');
+                this.$el.find('.box-footer').append('<div class="annual-budget-woodlands-total-wrapper '+ sDanger +'"><strong>Woodlands Budget Remaining:</strong>' + parseFloat(totalWoodlandsAmt).toFixed(2) + '</div>');
             }
 
         },

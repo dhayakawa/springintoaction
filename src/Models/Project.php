@@ -86,7 +86,7 @@ class Project extends Model
         'Status' => '',
         'StatusReason' => '',
         'MaterialsNeeded' => '',
-        'EstimatedCost' => 0.00,
+        'EstimatedCost' => null,
         'ActualCost' => 0.00,
         'BudgetAvailableForPC' => 0.00,
         'VolunteersLastYear' => 0,

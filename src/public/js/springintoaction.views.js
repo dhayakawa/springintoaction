@@ -305,6 +305,7 @@
             if (_.isEmpty(this.lastSiteProccessed)) {
                 this.lastSiteProccessed = sSiteName;
             }
+
             _.each(data['Budget Source'], function (bs, key) {
                 if (!_.isEmpty(bs[0])) {
                     sBudgetSources += bs[0] + ', ';
@@ -316,19 +317,38 @@
                 self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] = 0;
                 self.aSiteTotals[sSiteName]['EstCostTotal'] = 0;
             }
+            let iEstCost = _.isNull(data['Est Cost']) ? 0 : data['Est Cost'];
+            let sEstCost = _.isNull(data['Est Cost']) ? '' : parseFloat(data['Est Cost']).toFixed(2);
+
             self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] += budgetSourcesTotal;
-            self.aSiteTotals[sSiteName]['EstCostTotal'] += parseFloat(data['Est Cost']);
+            self.aSiteTotals[sSiteName]['EstCostTotal'] += parseFloat(iEstCost);
             sBudgetSources = sBudgetSources.replace(/, $/,'');
+
+            // Add totals to table before the next site
             if (sSiteName !== self.lastSiteProccessed){
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['EstCostTotal'] + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['BudgetSourcesTotal'] + '</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['EstCostTotal'].toFixed(2) + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['BudgetSourcesTotal'].toFixed(2) + '</td></tr>');
+                // add an empty borderless row
                 self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
                 self.lastSiteProccessed = sSiteName;
             }
-            self.$el.find('.site-budgets-table tbody').append('<tr><td>' + sSiteName + '</td><td>' + key + '</td><td>' + data['Est Cost'] + '</td><td>' + sBudgetSources + '</td><td>' + budgetSourcesTotal.toString() + '</td></tr>');
 
+            // Add site budget row
+            self.$el.find('.site-budgets-table tbody').append('<tr><td>' + sSiteName + '</td><td>' + key + '</td><td>' + sEstCost + '</td><td>' + sBudgetSources + '</td><td>' + parseFloat(budgetSourcesTotal).toFixed(2) + '</td></tr>');
+
+            // Add totals to table after the last site
             if (this.bIsLast){
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['EstCostTotal'] + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] + '</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['EstCostTotal'].toFixed(2) + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['BudgetSourcesTotal'].toFixed(2) + '</td></tr>');
+                // add a couple empty borderless rows
                 self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
+                let estTotal = 0;
+                let sourceTotal = 0;
+                _.each(_.keys(self.aSiteTotals), function (site, key) {
+                    estTotal += parseFloat(self.aSiteTotals[site]['EstCostTotal']);
+                    sourceTotal += parseFloat(self.aSiteTotals[site]['BudgetSourcesTotal']);
+                });
+                // add all totals
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td colspan="2" class="text-right estimated-cost-total">Estimated Cost Total:</td><td>' + estTotal.toFixed(2) + '</td><td class="text-right budget-sources-total">Budget Sources Total:</td><td>' + sourceTotal.toFixed(2) + '</td></tr>');
 
             }
         },
@@ -365,8 +385,10 @@
                 });
                 let annualBudgetAmount = self.model.get('BudgetAmount');
                 let totalWoodlandsAmt = annualBudgetAmount - estTotal;
+                // make the color red if over budget
+                let sDanger = totalWoodlandsAmt < 0 ? 'text-danger' : '';
                 this.$el.find('.box-footer').empty();
-                this.$el.find('.box-footer').append('<div class="annual-budget-woodlands-total-wrapper"><strong>Woodlands Budget Remaining:</strong>' + parseFloat(totalWoodlandsAmt).toFixed(2) + '</div><div class="annual-budget-total-wrapper"><strong>Estimate Total:</strong>(' + parseFloat(estTotal).toFixed(2) + ')</div><div class="annual-budget-total-wrapper"><strong>Budget Sources Total:</strong>' + parseFloat(sourceTotal).toFixed(2) + '</div>');
+                this.$el.find('.box-footer').append('<div class="annual-budget-woodlands-total-wrapper '+ sDanger +'"><strong>Woodlands Budget Remaining:</strong>' + parseFloat(totalWoodlandsAmt).toFixed(2) + '</div>');
             }
 
         },
@@ -4229,9 +4251,9 @@
                 project: {
                     aFields: ['ProjectDescription', 'Status', 'CostEstimateDone', 'BudgetAllocationDone', 'MaterialListDone', 'VolunteerAllocationDone', 'ProjectSend', 'FinalCompletionStatus'],
                     oValidation: {
-                        default:['1'],
-                        Status:[],
-                        ProjectSend:[] // doesn't need validation
+                        default: ['1'],
+                        Status: [],
+                        ProjectSend: [] // doesn't need validation
                     },
                     oFieldCntsMap: {
                         ProjectDescription: {fieldCntsKey: 'iProjectDescriptionCompleteCnt'},
@@ -4240,9 +4262,9 @@
                         VolunteerAllocationDone: {fieldCntsKey: 'iVolunteerEstimationCompleteCnt'}
                     },
                     oStatusEntryFieldsMap: {
-                        ReadyForRegistration: {fieldName:'', incompleteValue: false, condition: "project.CostEstimateDone.toString() === 1 && project.BudgetAllocationDone.toString() === 1 && project.MaterialListDone.toString() === 1 && project.VolunteerAllocationDone.toString() === 1"},
+                        ReadyForRegistration: {fieldName: '', incompleteValue: false, condition: "project.CostEstimateDone.toString() === 1 && project.BudgetAllocationDone.toString() === 1 && project.MaterialListDone.toString() === 1 && project.VolunteerAllocationDone.toString() === 1"},
                         ProjectDescription: {fieldName: 'ProjectDescription', incompleteValue: ''},
-                        CostEstimateDone: {fieldName: 'EstimatedCost', incompleteValue: '0.0000'},
+                        CostEstimateDone: {fieldName: 'EstimatedCost', incompleteValue: ''},
                         BudgetAllocationDone: {fieldName: 'BudgetSources', incompleteValue: ''},
                         MaterialListDone: {fieldName: 'MaterialsNeeded', incompleteValue: ''},
                         VolunteerAllocationDone: {fieldName: 'VolunteersNeededEst', incompleteValue: '0'},
@@ -4284,7 +4306,7 @@
 
             return modelAttributes;
         },
-        calculateSiteStatusCompletedFieldCnt: function(sFieldName, modelAttributes, oStatusEntryFields){
+        calculateSiteStatusCompletedFieldCnt: function (sFieldName, modelAttributes, oStatusEntryFields) {
             let self = this;
             let projectCnt = modelAttributes.projects.length;
             let iFieldCnt = 0;
@@ -4292,11 +4314,11 @@
             for (let i = 0; i < projectCnt; i++) {
                 let project = modelAttributes.projects[i];
                 if (oStatusEntryFields[sFieldName].fieldName !== '') {
-                    if (project[oStatusEntryFields[sFieldName].fieldName].toString() !== oStatusEntryFields[sFieldName].incompleteValue.toString()){
+                    if (project[oStatusEntryFields[sFieldName].fieldName].toString() !== oStatusEntryFields[sFieldName].incompleteValue.toString()) {
                         iFieldCnt++;
                     }
-                } else if (typeof oStatusEntryFields[sFieldName].condition !== 'undefined'){
-                    if (eval(oStatusEntryFields[sFieldName].condition) !== oStatusEntryFields[sFieldName].incompleteValue){
+                } else if (typeof oStatusEntryFields[sFieldName].condition !== 'undefined') {
+                    if (eval(oStatusEntryFields[sFieldName].condition) !== oStatusEntryFields[sFieldName].incompleteValue) {
                         iFieldCnt++;
                     }
                 }
@@ -4354,6 +4376,11 @@
                 let sStatusEntryField = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].fieldName : null;
                 let sIncompleteStatusEntryValue = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].incompleteValue : '';
                 let sToolTipKey = self.buildToolTipContentKey(sFieldName);
+
+                // If the db value is null set it to its expected incomplete value
+                if (!_.isNull(sStatusEntryField) && _.isNull(project[sStatusEntryField])) {
+                    project[sStatusEntryField] = sIncompleteStatusEntryValue;
+                }
                 switch (sFieldName) {
                     case 'Status':
                         switch (project[sFieldName].toString()) {
@@ -4428,6 +4455,8 @@
                     default:
                         bFlaggedAsComplete = project[sFieldName].toString() === '1';
                         // Has ability to be validated
+                        // console.log({sFieldName: sFieldName, sStatusEntryField: sStatusEntryField, sIncompleteStatusEntryValue: sIncompleteStatusEntryValue, project_sStatusEntryField: project[sStatusEntryField],project: project})
+
                         if (sStatusEntryField !== null && (project[sStatusEntryField].toString() !== sIncompleteStatusEntryValue.toString() && !bFlaggedAsComplete)) {
                             project[sStateKey] = self.validateIcon;
                         } else {
@@ -4452,7 +4481,7 @@
                 }
             });
 
-            if (typeof oFieldCnts !== 'undefined' &&  eval(oStatusEntryFields['VolunteerAssignmentComplete'].condition) === oStatusEntryFields['VolunteerAssignmentComplete'].completeValue) {
+            if (typeof oFieldCnts !== 'undefined' && eval(oStatusEntryFields['VolunteerAssignmentComplete'].condition) === oStatusEntryFields['VolunteerAssignmentComplete'].completeValue) {
                 oFieldCnts = self.incrementFieldCnt('iVolunteerAssignmentCompleteCnt', oFieldCnts);
             }
 
@@ -4547,7 +4576,7 @@
             let self = this;
             let validationMsg = '';
             let errMsg = 'This "' + modelField.split(/(?=[A-Z])/).join(" ") + '" status does not look ready. Are you sure you want to save?';
-            if (modelType === 'sitestatus'){
+            if (modelType === 'sitestatus') {
                 if (modelFieldValue.toString() === '1') {
                     let $statusManagementRecord = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt(modelId)});
                     let completedCnt = self.calculateSiteStatusCompletedFieldCnt(modelField, $statusManagementRecord.attributes, self.oStatusManagementRecordModels.sitestatus.oStatusEntryFieldsMap);
@@ -4556,11 +4585,11 @@
                     }
                 }
             } else {
-                let aValidationIds = typeof self.oStatusManagementRecordModels.project.oValidation[modelField] !== 'undefined' ? self.oStatusManagementRecordModels.project.oValidation[modelField]: self.oStatusManagementRecordModels.project.oValidation.default;
+                let aValidationIds = typeof self.oStatusManagementRecordModels.project.oValidation[modelField] !== 'undefined' ? self.oStatusManagementRecordModels.project.oValidation[modelField] : self.oStatusManagementRecordModels.project.oValidation.default;
                 let bRequiresValidation = _.contains(aValidationIds, modelId.toString());
-                if (bRequiresValidation){
+                if (bRequiresValidation) {
                     let project = App.Collections.allProjectsCollection.get(parseInt(modelId));
-                    if (typeof self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField] !== 'undefined' && self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].fieldName !== ''){
+                    if (typeof self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField] !== 'undefined' && self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].fieldName !== '') {
                         if (project[self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].fieldName].toString() === self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].toString()) {
                             validationMsg = errMsg;
                         } else {
