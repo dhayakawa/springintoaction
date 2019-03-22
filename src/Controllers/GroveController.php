@@ -26,7 +26,7 @@ class GroveController extends BaseController
                 $groveApi->importFamilyMemberType();
                 break;
             case 'lifegroup':
-                $groveApi->importLifeGroups(true, true, true);
+                $groveApi->importLifeGroups(true, true);
                 echo "done importing lifegroup";
                 break;
             case 'status':
