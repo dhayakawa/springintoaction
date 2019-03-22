@@ -112,6 +112,15 @@ class ReportsController extends BaseController
                     $bReturnArray
                 );
                 break;
+            case 'registered_volunteer_emails':
+                $reportName = 'Registered Volunteer Emails Report';
+                $reportHtml = $this->getRegisteredVolunteerEmailsReport(
+                    $Year,
+                    $SiteID = null,
+                    $ProjectID = null,
+                    $bReturnArray
+                );
+                break;
             default:
                 $reportName = 'Unknown Report:' . $ReportType;
                 if ($bReturnArray) {
@@ -707,6 +716,40 @@ class ReportsController extends BaseController
             'sites.SiteName as Site Name',
             'projects.SequenceNumber as Proj Num',
             'projects.ProjectDescription as Project Description'
+        )->join(
+            'project_volunteers',
+            'project_volunteers.VolunteerID',
+            '=',
+            'volunteers.VolunteerID'
+        )->join(
+            'projects',
+            'projects.ProjectID',
+            '=',
+            'project_volunteers.ProjectID'
+        )->join(
+            'site_status',
+            'projects.SiteStatusID',
+            '=',
+            'site_status.SiteStatusID'
+        )->join(
+            'sites',
+            'sites.SiteID',
+            '=',
+            'site_status.SiteID'
+        )->where('site_status.Year', $Year)->orderBy('volunteers.LastName', 'asc')->get()->toArray();
+
+        if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
+            return "This report is too big to download as a PDF. Please choose a different download type.";
+        }
+
+        return $bReturnArray ? $aVolunteers : $this->getResultsHtmlTable($aVolunteers);
+    }
+    public function getRegisteredVolunteerEmailsReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
+    {
+        $aVolunteers = Volunteer::select(
+            'volunteers.Email',
+            'volunteers.FirstName as First Name',
+            'volunteers.LastName as Last Name'
         )->join(
             'project_volunteers',
             'project_volunteers.VolunteerID',

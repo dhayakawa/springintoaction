@@ -215,6 +215,11 @@
                                             'route': 'view/reports/management/volunteer_assignment_for_mailmerge'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Registered Volunteer Emails',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/registered_volunteer_emails'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
                                             'linkText': 'Volunteer Assignment',
                                             'badgeCount': '',
                                             'route': 'view/reports/management/volunteer_assignment'
