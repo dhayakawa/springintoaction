@@ -167,7 +167,7 @@ class ReportsController extends BaseController
         )->where(
             'site_status.Year',
             $Year
-        )->orderBy('SiteName', 'asc');
+        )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
         if ($SiteID) {
             //$site->where('sites.SiteID', $SiteID);
         }
@@ -199,7 +199,7 @@ class ReportsController extends BaseController
             )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
                 'projects.SequenceNumber',
                 'asc'
-            )->get()->toArray();
+            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->get()->toArray();
             $aAmounts = [];
             $estimatedCost = 0;
             $totalAllocated = 0;
@@ -210,7 +210,7 @@ class ReportsController extends BaseController
                 $tmpAmt = '';
                 $aBudgets =
                     Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')
-                          ->where('ProjectID', $aaProject['ProjectID'])
+                        ->whereNull('budgets.deleted_at')->where('ProjectID', $aaProject['ProjectID'])
                           ->get()
                           ->toArray();
                 if (!empty($aBudgets)) {
@@ -304,7 +304,7 @@ class ReportsController extends BaseController
         )->where(
             'site_status.Year',
             $Year
-        )->orderBy('SiteName', 'asc');
+        )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
         if ($SiteID) {
             //$site->where('sites.SiteID', $SiteID);
         }
@@ -337,7 +337,7 @@ class ReportsController extends BaseController
             )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
                 'projects.SequenceNumber',
                 'asc'
-            )->get()->toArray();
+            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->get()->toArray();
             $aAmounts = [];
             $estimatedCost = 0;
             $totalAllocated = 0;
@@ -348,7 +348,7 @@ class ReportsController extends BaseController
                 $tmpAmt = '';
                 $aBudgets =
                     Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')
-                          ->where('ProjectID', $aaProject['ProjectID'])
+                        ->whereNull('budgets.deleted_at')->where('ProjectID', $aaProject['ProjectID'])
                           ->get()
                           ->toArray();
                 if (!empty($aBudgets)) {
@@ -384,7 +384,9 @@ class ReportsController extends BaseController
                 )->where(
                     'project_roles.Role',
                     'Estimator'
-                )->get()->toArray();
+                )->whereNull('project_volunteers.deleted_at')->whereNull(
+                        'project_volunteer_role.deleted_at'
+                    )->whereNull('volunteers.deleted_at')->get()->toArray();
                 $estimator = '';
                 if (!empty($aEstimators)) {
                     foreach ($aEstimators as $aEstimator) {
@@ -399,7 +401,7 @@ class ReportsController extends BaseController
                 )->where(
                     'project_contacts.ProjectID',
                     $aaProject['ProjectID']
-                )->get()->toArray();
+                )->whereNull('contacts.deleted_at')->whereNull('project_contacts.deleted_at')->get()->toArray();
                 $contact = '';
                 if (!empty($aProjectContacts)) {
                     foreach ($aProjectContacts as $aProjectContact) {
@@ -517,7 +519,7 @@ class ReportsController extends BaseController
         )->where(
             'site_status.Year',
             $Year
-        )->orderBy('SiteName', 'asc');
+        )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
         if ($SiteID) {
             //$site->where('sites.SiteID', $SiteID);
         }
@@ -542,7 +544,7 @@ class ReportsController extends BaseController
             )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
                 'projects.SequenceNumber',
                 'asc'
-            )->get()->toArray();
+            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->get()->toArray();
 
             if ($bReturnArray) {
                 $html[] = $site['SiteName'];
@@ -593,7 +595,7 @@ class ReportsController extends BaseController
         )->where(
             'site_status.Year',
             $Year
-        )->orderBy('sites.SiteName', 'asc')->get()->toArray();
+        )->whereNull('volunteers.deleted_at')->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->orderBy('sites.SiteName', 'asc')->get()->toArray();
 
         return $bReturnArray ? $aSites : $this->getResultsHtmlTable($aSites);
     }
@@ -610,7 +612,7 @@ class ReportsController extends BaseController
         )->where(
             'site_status.Year',
             $Year
-        )->orderBy('SiteName', 'asc');
+        )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
         if ($SiteID) {
             //$site->where('sites.SiteID', $SiteID);
         }
@@ -640,7 +642,7 @@ class ReportsController extends BaseController
             )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
                 'projects.SequenceNumber',
                 'asc'
-            )->get()->toArray();
+            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->get()->toArray();
 
             foreach ($aProjects as $key => $aaProject) {
                 $aVolunteerRoles = ProjectVolunteerRole::join(
@@ -656,7 +658,7 @@ class ReportsController extends BaseController
                 )->where(
                     'project_volunteer_role.ProjectID',
                     $aaProject['ProjectID']
-                )->get()->toArray();
+                )->whereNull('volunteers.deleted_at')->get()->toArray();
 
                 if (!empty($aVolunteerRoles)) {
                     foreach ($aVolunteerRoles as $aVolunteerRole) {
@@ -679,7 +681,7 @@ class ReportsController extends BaseController
                 )->where(
                     'project_contacts.ProjectID',
                     $aaProject['ProjectID']
-                )->get()->toArray();
+                )->whereNull('contacts.deleted_at')->whereNull('project_contacts.deleted_at')->get()->toArray();
                 $contact = '';
                 if (!empty($aProjectContacts)) {
                     foreach ($aProjectContacts as $aProjectContact) {
@@ -736,7 +738,9 @@ class ReportsController extends BaseController
             'sites.SiteID',
             '=',
             'site_status.SiteID'
-        )->where('site_status.Year', $Year)->orderBy('volunteers.LastName', 'asc')->get()->toArray();
+        )->whereNull('volunteers.deleted_at')->whereNull('project_volunteers.deleted_at')->whereNull(
+            'projects.deleted_at'
+        )->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->where('site_status.Year', $Year)->orderBy('volunteers.LastName', 'asc')->get()->toArray();
 
         if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
             return "This report is too big to download as a PDF. Please choose a different download type.";
@@ -770,7 +774,7 @@ class ReportsController extends BaseController
             'sites.SiteID',
             '=',
             'site_status.SiteID'
-        )->where('site_status.Year', $Year)->orderBy('volunteers.LastName', 'asc')->get()->toArray();
+        )->whereNull('volunteers.deleted_at')->whereNull('project_volunteers.deleted_at')->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->where('site_status.Year', $Year)->orderBy('volunteers.LastName', 'asc')->get()->toArray();
 
         if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
             return "This report is too big to download as a PDF. Please choose a different download type.";
@@ -788,7 +792,7 @@ class ReportsController extends BaseController
             'sites.SiteID',
             '=',
             'site_status.SiteID'
-        )->where(
+        )->whereNull('sites.deleted_at')->where(
             'site_status.Year',
             $Year
         )->orderBy('SiteName', 'asc');
@@ -816,7 +820,7 @@ class ReportsController extends BaseController
             )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
                 'projects.SequenceNumber',
                 'asc'
-            )->get()->toArray();
+            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->get()->toArray();
 
             foreach ($aProjects as $aProject) {
                 $ProjectID = $aProject['ProjectID'];
@@ -849,7 +853,7 @@ class ReportsController extends BaseController
                     'project_roles.ProjectRoleID',
                     '=',
                     'project_volunteer_role.ProjectRoleID'
-                )->where('project_volunteers.ProjectID', '=', $ProjectID)->orderBy('volunteers.LastName', 'desc');
+                )->whereNull('volunteers.deleted_at')->where('project_volunteers.ProjectID', '=', $ProjectID)->orderBy('volunteers.LastName', 'desc');
                 $aVolunteers = $Volunteers->get()->toArray();
 
                 foreach ($aVolunteers as $key => $aVolunteer) {
