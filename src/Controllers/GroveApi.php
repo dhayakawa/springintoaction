@@ -1402,26 +1402,13 @@ class GroveApi
      * family_id    int
      * modified_since    datetime
      */
-    public function family_list($family_id = null, $modified_since = null)
+    public function family_list()
     {
         $srv = 'family_list';
-        $aParams = array_map(
-            function ($parameter) {
-                return $parameter->name;
-            },
-            (new \ReflectionMethod(
-                $this, preg_replace("/(:|\(|\))*/", "", str_replace(__CLASS__, '', __METHOD__))
-            ))->getParameters()
-        );
         $func_args = \func_get_args();
-        if (count($func_args) < count($aParams)) {
-            $func_args =
-                array_merge($func_args, array_fill(count($aParams), count($aParams) - count($func_args), null));
-        }
+        $args = current($func_args);
 
-        $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
-
-        return $this->getResponse('get', $srv, $aData);
+        return $this->getResponse('get', $srv, $args);
     }
 
     /**
