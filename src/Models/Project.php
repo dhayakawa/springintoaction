@@ -282,7 +282,7 @@ FROM (
             DB::raw("{$sSqlPeopleNeeded}"),
             '>',
             0
-        )->where('projects.Active', 1)->where('projects.Status', $ProjectStatusApprovedOptionID);
+        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->where('projects.Status', $ProjectStatusApprovedOptionID);
 
         if (!empty($filter) && is_array($filter)) {
             $projects->where(
@@ -350,15 +350,15 @@ FROM (
                 $order['direction']
             );
         }
-        // \Illuminate\Support\Facades\Log::debug(
-        //     '',
-        //     [
-        //         'File:' . __FILE__,
-        //         'Method:' . __METHOD__,
-        //         'Line:' . __LINE__,
-        //         $projects->toSql(),
-        //     ]
-        // );
+        \Illuminate\Support\Facades\Log::debug(
+            '',
+            [
+                'File:' . __FILE__,
+                'Method:' . __METHOD__,
+                'Line:' . __LINE__,
+                $projects->toSql(),
+            ]
+        );
         $all_projects = $projects->get()->toArray();
         if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
             $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
