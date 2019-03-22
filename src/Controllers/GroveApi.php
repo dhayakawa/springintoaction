@@ -762,7 +762,7 @@ class GroveApi
         ini_set('max_execution_time', 160);
     }
 
-    public function importLifeGroups($bSaveToDb = true, $bUseLogFile = false, $bShowOutput = false)
+    public function importLifeGroups($bSaveToDb = true, $bShowOutput = false)
     {
         if ($bShowOutput) {
             // Allow us to send content to the browser before the script is done
@@ -783,6 +783,17 @@ class GroveApi
             flush();// Flush all output to browser now.
 
         }
+        // forcing logFile
+        $bUseLogFile = true;
+        $modifiedSince = '2015-02-09';
+        // rounded down to nearest hundred
+        $iExpectedRecordCnt = 700;
+        $groveCount = LifeGroups::select(DB::raw('count(*) as count'))->first()->toArray()['count'];
+        if ($groveCount >= $iExpectedRecordCnt) {
+            $groveMaxUpdateAt = LifeGroups::select(DB::raw('max(updated_at) as max_update_at'))->first()->toArray(
+                )['max_update_at'];
+            list($modifiedSince, $timeJunk) = preg_split("/ /", $groveMaxUpdateAt);
+        }
         $iInfiniteLoopLimitMax = 100;
         $lifeGroupDepartmentId = 10;
         $aImportGroupDepartments = [$lifeGroupDepartmentId];
@@ -794,7 +805,7 @@ class GroveApi
         }
         if ($bUseLogFile) {
             $hoursLogIsValid = 12;
-            $iExpectedLogs = 38;
+            $iExpectedLogs = 40;
             $iLastValidPageNum = null;
             clearstatcache();
             $filename = $localPath . 'grove_group_profiles_1.log';
@@ -847,8 +858,10 @@ class GroveApi
                     //echo "\$iPageNum:$iPageNum \$rateLimitRemaining:$rateLimitRemaining \$rateLimitReset:$rateLimitReset \$rateLimitTryAfter:$rateLimitTryAfter<br>";
                     $logName = 'grove_group_profiles_' . $iPageNum . '.log';
                     $response = $this->group_profiles(['page' => $iPageNum]);
+                    if (!preg_match("/Too many Grove requests/", $response)) {
+                        Storage::disk('local')->put($logName, $response);
+                    }
 
-                    Storage::disk('local')->put($logName, $response);
                     try {
                         $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
                     } catch (Exception $e) {
@@ -872,6 +885,7 @@ class GroveApi
                     if ($bContinue) {
                         sleep($this->getRateLimitSleep());
                     }
+
                 } while ($bContinue);
                 $this->bReturnXML = false;
             }
