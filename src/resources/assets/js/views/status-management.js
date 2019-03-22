@@ -51,9 +51,9 @@
                 project: {
                     aFields: ['ProjectDescription', 'Status', 'CostEstimateDone', 'BudgetAllocationDone', 'MaterialListDone', 'VolunteerAllocationDone', 'ProjectSend', 'FinalCompletionStatus'],
                     oValidation: {
-                        default:['1'],
-                        Status:[],
-                        ProjectSend:[] // doesn't need validation
+                        default: ['1'],
+                        Status: [],
+                        ProjectSend: [] // doesn't need validation
                     },
                     oFieldCntsMap: {
                         ProjectDescription: {fieldCntsKey: 'iProjectDescriptionCompleteCnt'},
@@ -62,9 +62,9 @@
                         VolunteerAllocationDone: {fieldCntsKey: 'iVolunteerEstimationCompleteCnt'}
                     },
                     oStatusEntryFieldsMap: {
-                        ReadyForRegistration: {fieldName:'', incompleteValue: false, condition: "project.CostEstimateDone.toString() === 1 && project.BudgetAllocationDone.toString() === 1 && project.MaterialListDone.toString() === 1 && project.VolunteerAllocationDone.toString() === 1"},
+                        ReadyForRegistration: {fieldName: '', incompleteValue: false, condition: "project.CostEstimateDone.toString() === 1 && project.BudgetAllocationDone.toString() === 1 && project.MaterialListDone.toString() === 1 && project.VolunteerAllocationDone.toString() === 1"},
                         ProjectDescription: {fieldName: 'ProjectDescription', incompleteValue: ''},
-                        CostEstimateDone: {fieldName: 'EstimatedCost', incompleteValue: '0.0000'},
+                        CostEstimateDone: {fieldName: 'EstimatedCost', incompleteValue: ''},
                         BudgetAllocationDone: {fieldName: 'BudgetSources', incompleteValue: ''},
                         MaterialListDone: {fieldName: 'MaterialsNeeded', incompleteValue: ''},
                         VolunteerAllocationDone: {fieldName: 'VolunteersNeededEst', incompleteValue: '0'},
@@ -106,7 +106,7 @@
 
             return modelAttributes;
         },
-        calculateSiteStatusCompletedFieldCnt: function(sFieldName, modelAttributes, oStatusEntryFields){
+        calculateSiteStatusCompletedFieldCnt: function (sFieldName, modelAttributes, oStatusEntryFields) {
             let self = this;
             let projectCnt = modelAttributes.projects.length;
             let iFieldCnt = 0;
@@ -114,11 +114,11 @@
             for (let i = 0; i < projectCnt; i++) {
                 let project = modelAttributes.projects[i];
                 if (oStatusEntryFields[sFieldName].fieldName !== '') {
-                    if (project[oStatusEntryFields[sFieldName].fieldName].toString() !== oStatusEntryFields[sFieldName].incompleteValue.toString()){
+                    if (project[oStatusEntryFields[sFieldName].fieldName].toString() !== oStatusEntryFields[sFieldName].incompleteValue.toString()) {
                         iFieldCnt++;
                     }
-                } else if (typeof oStatusEntryFields[sFieldName].condition !== 'undefined'){
-                    if (eval(oStatusEntryFields[sFieldName].condition) !== oStatusEntryFields[sFieldName].incompleteValue){
+                } else if (typeof oStatusEntryFields[sFieldName].condition !== 'undefined') {
+                    if (eval(oStatusEntryFields[sFieldName].condition) !== oStatusEntryFields[sFieldName].incompleteValue) {
                         iFieldCnt++;
                     }
                 }
@@ -176,6 +176,11 @@
                 let sStatusEntryField = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].fieldName : null;
                 let sIncompleteStatusEntryValue = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].incompleteValue : '';
                 let sToolTipKey = self.buildToolTipContentKey(sFieldName);
+
+                // If the db value is null set it to its expected incomplete value
+                if (!_.isNull(sStatusEntryField) && _.isNull(project[sStatusEntryField])) {
+                    project[sStatusEntryField] = sIncompleteStatusEntryValue;
+                }
                 switch (sFieldName) {
                     case 'Status':
                         switch (project[sFieldName].toString()) {
@@ -250,6 +255,8 @@
                     default:
                         bFlaggedAsComplete = project[sFieldName].toString() === '1';
                         // Has ability to be validated
+                        // console.log({sFieldName: sFieldName, sStatusEntryField: sStatusEntryField, sIncompleteStatusEntryValue: sIncompleteStatusEntryValue, project_sStatusEntryField: project[sStatusEntryField],project: project})
+
                         if (sStatusEntryField !== null && (project[sStatusEntryField].toString() !== sIncompleteStatusEntryValue.toString() && !bFlaggedAsComplete)) {
                             project[sStateKey] = self.validateIcon;
                         } else {
@@ -274,7 +281,7 @@
                 }
             });
 
-            if (typeof oFieldCnts !== 'undefined' &&  eval(oStatusEntryFields['VolunteerAssignmentComplete'].condition) === oStatusEntryFields['VolunteerAssignmentComplete'].completeValue) {
+            if (typeof oFieldCnts !== 'undefined' && eval(oStatusEntryFields['VolunteerAssignmentComplete'].condition) === oStatusEntryFields['VolunteerAssignmentComplete'].completeValue) {
                 oFieldCnts = self.incrementFieldCnt('iVolunteerAssignmentCompleteCnt', oFieldCnts);
             }
 
@@ -369,7 +376,7 @@
             let self = this;
             let validationMsg = '';
             let errMsg = 'This "' + modelField.split(/(?=[A-Z])/).join(" ") + '" status does not look ready. Are you sure you want to save?';
-            if (modelType === 'sitestatus'){
+            if (modelType === 'sitestatus') {
                 if (modelFieldValue.toString() === '1') {
                     let $statusManagementRecord = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt(modelId)});
                     let completedCnt = self.calculateSiteStatusCompletedFieldCnt(modelField, $statusManagementRecord.attributes, self.oStatusManagementRecordModels.sitestatus.oStatusEntryFieldsMap);
@@ -378,11 +385,11 @@
                     }
                 }
             } else {
-                let aValidationIds = typeof self.oStatusManagementRecordModels.project.oValidation[modelField] !== 'undefined' ? self.oStatusManagementRecordModels.project.oValidation[modelField]: self.oStatusManagementRecordModels.project.oValidation.default;
+                let aValidationIds = typeof self.oStatusManagementRecordModels.project.oValidation[modelField] !== 'undefined' ? self.oStatusManagementRecordModels.project.oValidation[modelField] : self.oStatusManagementRecordModels.project.oValidation.default;
                 let bRequiresValidation = _.contains(aValidationIds, modelId.toString());
-                if (bRequiresValidation){
+                if (bRequiresValidation) {
                     let project = App.Collections.allProjectsCollection.get(parseInt(modelId));
-                    if (typeof self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField] !== 'undefined' && self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].fieldName !== ''){
+                    if (typeof self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField] !== 'undefined' && self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].fieldName !== '') {
                         if (project[self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].fieldName].toString() === self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap[modelField].toString()) {
                             validationMsg = errMsg;
                         } else {
