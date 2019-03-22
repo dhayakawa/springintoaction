@@ -107,19 +107,6 @@ class HomeController extends BaseController
             $this->makeJsFiles(compact('appInitialData'));
         }
 
-        $groveApi = new GroveApi();
-        //$response = $groveApi->api_status();
-        //$groveApi->importIndividuals(true,false);
-        //$groveApi->importFamilyMemberType();
-
-        // $response = $groveApi->family_list();
-        // echo '<pre>' . print_r($response, true) . '</pre>';
-
-        //$response = $groveApi->group_search(['department_id' => 10]);
-        //$response = $groveApi->individual_groups(797);
-        //$response = $groveApi->family_list(512);
-
-
         return view('welcome', $request, compact('bShowProjectRegistration', 'appInitialData'));
     }
 
