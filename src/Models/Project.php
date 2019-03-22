@@ -248,7 +248,7 @@ FROM (
 
         $sSqlProjectsAtReqPerc = "(select count(*)
             from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year}
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL
             where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null
               and ((" .
                                  str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
@@ -257,7 +257,7 @@ FROM (
                                  ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
 
         $sSqlActiveProjects = "(select count(*) from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
 
         $sSqlVolunteersNeeded =
             "IF({$sSqlProjectsAtReqPerc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$requiredPercentage}))";
@@ -350,15 +350,15 @@ FROM (
                 $order['direction']
             );
         }
-        \Illuminate\Support\Facades\Log::debug(
-            '',
-            [
-                'File:' . __FILE__,
-                'Method:' . __METHOD__,
-                'Line:' . __LINE__,
-                $projects->toSql(),
-            ]
-        );
+        // \Illuminate\Support\Facades\Log::debug(
+        //     '',
+        //     [
+        //         'File:' . __FILE__,
+        //         'Method:' . __METHOD__,
+        //         'Line:' . __LINE__,
+        //         $projects->toSql(),
+        //     ]
+        // );
         $all_projects = $projects->get()->toArray();
         if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
             $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
@@ -404,7 +404,7 @@ FROM (
 
         $sSqlProjectsAtReqPerc = "(select count(*)
             from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year}
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL
             where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null
               and ((" .
                                  str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
@@ -413,7 +413,7 @@ FROM (
                                  ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
 
         $sSqlActiveProjects = "(select count(*) from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
 
         $sSqlVolunteersNeeded =
             "IF({$sSqlProjectsAtReqPerc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$requiredPercentage}))";
@@ -430,7 +430,7 @@ FROM (
                 'projects.ProjectDescription',
                 'projects.Comments',
                 DB::raw(
-                    '(SELECT GROUP_CONCAT(distinct bso.option_label SEPARATOR \',\') FROM budgets join budget_source_options bso on bso.id = budgets.BudgetSource where budgets.ProjectID = projects.ProjectID) as BudgetSources'
+                    '(SELECT GROUP_CONCAT(distinct bso.option_label SEPARATOR \',\') FROM budgets join budget_source_options bso on bso.id = budgets.BudgetSource where budgets.ProjectID = projects.ProjectID where budgets.deleted_at is null) as BudgetSources'
                 ),
                 'projects.ChildFriendly',
                 'projects.PrimarySkillNeeded',
@@ -467,7 +467,7 @@ FROM (
         )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
             'site_status.Year',
             $Year
-        )->join('sites', 'site_status.SiteID', '=', 'sites.SiteID')->where('projects.ProjectDescription','NOT REGEXP','Test');
+        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->join('sites', 'site_status.SiteID', '=', 'sites.SiteID')->where('projects.ProjectDescription','NOT REGEXP','Test');
 
         if (!empty($filter) && is_array($filter)) {
             $projects->where(
@@ -631,10 +631,10 @@ FROM (
         return self::select(
             'projects.*',
             DB::raw(
-                '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = 391) as BudgetSources'
+                '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
             ),
             DB::raw(
-                '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
+                '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID and pv.deleted_at is null) as VolunteersAssigned'
             ),
             DB::raw(
                 '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
@@ -653,7 +653,7 @@ FROM (
             )->where(
                 'site_status.SiteStatusID',
                 $SiteStatusID
-            )->orderBy('projects.SequenceNumber', 'asc')->get();
+            )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc')->get();
 
             return $bReturnArr ? $projects->toArray() : $projects;
         } catch (\Exception $e) {
@@ -672,7 +672,7 @@ FROM (
             )->where(
                 'site_status.Year',
                 $Year
-            )->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get();
+            )->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get();
 
             return $bReturnArr ? $projects->toArray() : $projects;
         } catch (\Exception $e) {
@@ -688,7 +688,7 @@ FROM (
             'sites.SiteID',
             '=',
             'site_status.SiteID'
-        )->where('Year', $Year)->orderBy('sites.SiteName', 'asc')->get()->toArray();
+        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('Year', $Year)->orderBy('sites.SiteName', 'asc')->get()->toArray();
 
         foreach ($sites as $key => $data) {
             $sites[$key]['projects'] = self::getBaseProjectModelForQuery()->join(
@@ -700,14 +700,15 @@ FROM (
                 DB::raw(
                     "(select CONCAT(volunteers.FirstName, ' ', volunteers.LastName)
                             from project_volunteer_role pvr
-                                   join project_roles pr on pr.ProjectRoleID = pvr.ProjectRoleID and pr.Role = 'Project Manager'
-                                   join volunteers on volunteers.VolunteerID = pvr.VolunteerID  where pvr.ProjectID = projects.ProjectID
+                                   join project_roles pr on pr.ProjectRoleID = pvr.ProjectRoleID and pr.Role = 'Project Manager' and pr.deleted_at is null
+                                   join volunteers on volunteers.VolunteerID = pvr.VolunteerID  and volunteers.deleted_at is null 
+                                   where pvr.ProjectID = projects.ProjectID and pvr.deleted_at is null
                            ) as `PM`"
                 )
             )->where(
                 'site_status.SiteStatusID',
                 $data['SiteStatusID']
-            )->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
         }
 
         return $sites;

@@ -2595,8 +2595,10 @@
             $('#sia-modal').modal('show');
         },
         deleteSite: function () {
-            bootbox.confirm("Do you really want to delete this site?", function (result) {
-                App.Views.siteView.destroy();
+            bootbox.confirm("Do you really want to delete the "+ App.Models.siteModel.get('SiteName') +" site and all of its projects?", function (bConfirmed) {
+                if (bConfirmed) {
+                    App.Views.siteView.destroy();
+                }
             });
         }
     });
