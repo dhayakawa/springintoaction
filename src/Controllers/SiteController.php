@@ -128,7 +128,7 @@
          * @return \Illuminate\Http\Response
          */
         public function destroy(Request $request, $id) {
-            $success = Site::findOrFail($id)->delete();
+            $success = Site::findOrFail($id)->forceDelete();
 
             if($success) {
                 $response = ['success' => true, 'msg' => 'Site Delete Succeeded.'];
