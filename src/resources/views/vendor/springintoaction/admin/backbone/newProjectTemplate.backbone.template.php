@@ -73,7 +73,7 @@
         <select name="NeedsToBeStartedEarly" class="form-control" id="inputNeedsToBeStartedEarly"><%= yesNoOptions %></select>
     </div>
     <div class="form-group">
-        <label for="inputPCSeeBeforeSIA">PC See Before SIA</label>
+        <label for="inputPCSeeBeforeSIA">TL See Before SIA</label>
         <select name="PCSeeBeforeSIA" class="form-control" id="inputPCSeeBeforeSIA"><%= yesNoOptions %></select>
     </div>
     <div class="form-group">
@@ -129,7 +129,7 @@
         <select name="VolunteerAllocationDone" class="form-control" id="inputVolunteerAllocationDone"><%= yesNoOptions %></select>
     </div>
     <div class="form-group">
-        <label for="inputNeedSIATShirtsForPC">Need SIA TShirts For PC</label>
+        <label for="inputNeedSIATShirtsForPC">Need SIA TShirts For TL</label>
         <select name="NeedSIATShirtsForPC" class="form-control" id="inputNeedSIATShirtsForPC"><%= yesNoOptions %></select>
     </div>
     <div class="form-group">
