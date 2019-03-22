@@ -453,7 +453,7 @@ class ReportsController extends BaseController
             $colNames = [];
             foreach ($aKeys as $sKeyStr):
                 $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
-                $colNames[]=$colName;
+                $colNames[] = $colName;
             endforeach;
 
             $html = array_merge($html, [$colNames], $aProjects);
@@ -550,15 +550,41 @@ class ReportsController extends BaseController
 
     public function getYearSiteReport($Year, $bReturnArray)
     {
-        $aSites = Site::select('SiteName')->join(
+        // DB::raw('CONCAT(volunteers.FirstName, \' \', volunteers.LastName) as Project Manager')
+        $aSites = Site::select(
+            'sites.SiteName'
+        )->selectRaw("CONCAT(volunteers.FirstName, ' ', volunteers.LastName) as `Project Manager`")->join(
             'site_status',
             'sites.SiteID',
             '=',
             'site_status.SiteID'
+        )->leftJoin(
+            'site_volunteers',
+            'site_volunteers.SiteStatusID',
+            '=',
+            'site_status.SiteStatusID'
+        )->leftJoin(
+            'site_volunteer_role',
+            function ($join) {
+                $join->on(
+                    'site_volunteer_role.SiteVolunteerID',
+                    '=',
+                    'site_volunteers.SiteVolunteerID'
+                )->where(
+                    'site_volunteer_role.SiteRoleID',
+                    '=',
+                    2
+                );
+            }
+        )->leftJoin(
+            'volunteers',
+            'volunteers.VolunteerID',
+            '=',
+            'site_volunteers.VolunteerID'
         )->where(
             'site_status.Year',
             $Year
-        )->orderBy('SiteName', 'asc')->get()->toArray();
+        )->orderBy('sites.SiteName', 'asc')->get()->toArray();
 
         return $bReturnArray ? $aSites : $this->getResultsHtmlTable($aSites);
     }

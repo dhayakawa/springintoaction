@@ -141,7 +141,9 @@
         addAll: function () {
             _log('App.Views.ProjectFilterGroup.addAll', 'project filters list');
             this.$el.find('.project-list-filters').empty();
+            if (_.isUndefined(this.collection.at(0))){
 
+            }
             // Don't add/show filters that have just one item, it's pointless and doesn't change anything if clicked or not clicked
             if (this.collection.length === 1) {
                 if (!$('.active-filter-btn[data-field="' + this.collection.at(0).get('Field') + '"]').length) {
@@ -150,7 +152,7 @@
             } else{
                 this.collection.each(this.addOne);
                 // If it's not an applied filter, show the filter group again
-                if (!$('.active-filter-btn[data-field="' + this.collection.at(0).get('Field') + '"]').length){
+                if (this.collection.length > 0 && !$('.active-filter-btn[data-field="' + this.collection.at(0).get('Field') + '"]').length){
                     this.$el.show();
                 }
 
