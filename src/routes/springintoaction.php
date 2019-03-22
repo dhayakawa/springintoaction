@@ -125,6 +125,10 @@ Route::group(
 
         Route::resource('sia', 'SpringIntoActionMainAppController');
 
+        Route::get(
+            'grove/{importType}',
+            ['as' => 'grove.import', 'uses' => 'GroveController@runImport']
+        );
         //Route::resource('projects', 'ProjectsController');
         Route::put('project/{ProjectID}', ['as' => 'project.update', 'uses' => 'ProjectsController@update']);
         Route::post('project', ['as' => 'project.store', 'uses' => 'ProjectsController@store']);
