@@ -227,7 +227,7 @@
                                         new App.Models.DashboardPanelLinksListItem({
                                             'linkText': 'Volunteers Needed',
                                             'badgeCount': '',
-                                            'route': 'view/reports/management/volunteesr_needed'
+                                            'route': 'view/reports/management/volunteers_needed'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
                                             'linkText': 'Scout-Liaison Estimator',
