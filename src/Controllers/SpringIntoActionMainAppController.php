@@ -148,7 +148,7 @@ class SpringIntoActionMainAppController extends BaseController
             )->where('site_status.SiteStatusID', $siteStatus['SiteStatusID'])->orderBy(
                 'projects.SequenceNumber',
                 'asc'
-            )->get()->toArray();
+            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->get()->toArray();
         } catch (\Exception $e) {
             $projects = [];
             $project = [];
@@ -158,10 +158,10 @@ class SpringIntoActionMainAppController extends BaseController
             $all_projects = Project::select(
                 'projects.*',
                 DB::raw(
-                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID) as BudgetSources'
+                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
                 ),
                 DB::raw(
-                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
+                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID and pv.deleted_at is null) as VolunteersAssigned'
                 ),
                 DB::raw(
                     '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
@@ -169,7 +169,7 @@ class SpringIntoActionMainAppController extends BaseController
             )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
                 'site_status.Year',
                 $Year
-            )->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
         } catch (\Exception $e) {
             $all_projects = [];
 
@@ -185,7 +185,7 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
-            $all_contacts = Contact::orderBy('LastName', 'asc')->get();
+            $all_contacts = Contact::orderBy('LastName', 'asc')->distinct()->get();
             $all_contacts = $all_contacts ? $all_contacts->toArray() : [];
         } catch (\Exception $e) {
             $all_contacts = [];

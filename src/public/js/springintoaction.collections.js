@@ -88,7 +88,8 @@
         select2Options: {
             // default is false because Backgrid will save the cell's value
             // and exit edit mode on enter
-            openOnEnter: false
+            openOnEnter: false,
+            multiple: false
         },
         optionValues: [{
             values: App.Models.projectBudgetModel.getStatusOptions(false)
