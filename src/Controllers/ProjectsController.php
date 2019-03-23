@@ -239,17 +239,9 @@ class ProjectsController extends BaseController
 
     public function getLeadVolunteers($ProjectID)
     {
-        // Gave up on the Eloquent relational model
-        return $project_leads =
-            Volunteer::join(
-                'project_volunteer_role',
-                'volunteers.VolunteerID',
-                '=',
-                'project_volunteer_role.VolunteerID'
-            )->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')->where(
-                    'project_volunteer_role.ProjectID',
-                    $ProjectID
-                )->get()->toArray();
+        $model = new ProjectVolunteerRole();
+        return $model->getProjectLeads($ProjectID);
+
     }
 
     public function getBudgets($ProjectID)
@@ -327,10 +319,10 @@ class ProjectsController extends BaseController
             Project::select(
                 'projects.*',
                 DB::raw(
-                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = 391) as BudgetSources'
+                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
                 ),
                 DB::raw(
-                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID ) as VolunteersAssigned'
+                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID and pv.deleted_at is null) as VolunteersAssigned'
                 ),
                 DB::raw(
                     '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
@@ -338,7 +330,7 @@ class ProjectsController extends BaseController
             )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
                     'site_status.Year',
                     date('Y')
-                )->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+                )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
 
         return $all_projects;
     }
