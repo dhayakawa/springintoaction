@@ -133,6 +133,7 @@ mix.scripts([
     'resources/assets/js/views/site-project-tabs.js',
     'resources/assets/js/views/project-management.js',
     'resources/assets/js/views/backgrid-filters-panel.js',
+    'resources/assets/js/views/backgrid-contacts-filters-panel.js',
     'resources/assets/js/views/volunteer-management.js',
     'resources/assets/js/views/contact-management.js',
     'resources/assets/js/views/report-management.js',
