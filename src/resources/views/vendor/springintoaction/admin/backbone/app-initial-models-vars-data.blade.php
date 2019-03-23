@@ -79,7 +79,7 @@
             // default is false because Backgrid will save the cell's value
             // and exit edit mode on enter
             openOnEnter: false,
-            multiple: true
+            multiple: false
         },
         optionValues: [{
             values: App.Models.projectBudgetModel.getSourceOptions(false)

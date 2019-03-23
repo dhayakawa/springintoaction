@@ -77,7 +77,7 @@
 
         public function getAllProjectContacts() {
             return Contact::join('project_contacts', 'contacts.ContactID', '=', 'project_contacts.ContactID')->whereNull('project_contacts.deleted_at')
-                ->get()->toArray();
+                ->groupBy('contacts.ContactID')->get()->toArray();
         }
 
     }
