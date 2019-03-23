@@ -57,6 +57,14 @@
 
             let $gridContainer = this.$el.find(this.backgridWrapperClassSelector).html(this.backgrid.render().el);
 
+            this.backGridFiltersPanel = new App.Views.BackGridContactsFiltersPanel({
+                collection: this.collection,
+                parentEl: $gridContainer
+            });
+
+            $gridContainer.prepend(this.backGridFiltersPanel.render().$el);
+
+
             this.gridManagerContainerToolbar = new App.Views.GridManagerContainerToolbar({
                 className: this.gridManagerContainerToolbarClassName,
                 parentView: this,
