@@ -103,6 +103,10 @@ class ReportsController extends BaseController
                 $reportName = 'Volunteer Assignment Report - Alpha - All Sites and Projects';
                 $reportHtml = $this->getVolunteerAssignmentForPacketsReport($Year, $bReturnArray);
                 break;
+            case 'volunteers_needed':
+                $reportName = 'Volunteers Needed Report';
+                $reportHtml = $this->getVolunteersNeededReport($Year, $bReturnArray);
+                break;
             case 'volunteer_assignment_for_mailmerge':
                 $reportName = 'Volunteer Assignment Report';
                 $reportHtml = $this->getVolunteerAssignmentForMailMergeReport(
@@ -153,6 +157,54 @@ class ReportsController extends BaseController
         } else {
             return $html;
         }
+    }
+
+    public function getVolunteersNeededReport($Year, $bReturnArray)
+    {
+        $html = $bReturnArray ? [] : '';
+        $site = Site::join(
+            'site_status',
+            'sites.SiteID',
+            '=',
+            'site_status.SiteID'
+        )->where(
+            'site_status.Year',
+            $Year
+        )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
+        $aSites = $site->get()->toArray();
+        $projectModel = new Project();
+        $sSqlPeopleNeeded = $projectModel->getPeopleNeededSql($Year);
+        foreach ($aSites as $site) {
+            $project = Project::select(
+                'projects.SequenceNumber as Proj Num',
+                DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded")
+            )->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->join(
+                'project_status_options',
+                'projects.Status',
+                '=',
+                'project_status_options.id'
+            )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
+                'projects.SequenceNumber',
+                'asc'
+            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at');
+
+            $aProjects = $project->get()->toArray();
+            if ($bReturnArray) {
+                $html[] = $site['SiteName'];
+                $html = array_merge($html, $aProjects);
+            } else {
+                $response = $this->getResultsHtmlTable($aProjects);
+                $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
+                $html .= $response;
+            }
+        }
+
+        return $html;
     }
 
     public function getBudgetAllocationReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
