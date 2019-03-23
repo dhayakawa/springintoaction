@@ -114,6 +114,8 @@ class Project extends Model
      * @var array
      */
     private $aSortedProjectSkillNeededOptionsOrder = [];
+    public $requiredPercentage = ".8";
+    public $ProjectStatusApprovedOptionID = null;
 
     /**
      * @param null|array $defaults
@@ -224,8 +226,7 @@ FROM (
         if (!is_numeric($Year) || strlen($Year) !== 4) {
             $Year = $this->getCurrentYear();
         }
-        $projectStatusOptions = new ProjectStatusOptions();
-        $ProjectStatusApprovedOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
+
         $passedInOrderBy = $orderBy;
         if (empty($orderBy)) {
             $orderBy = [];
@@ -238,32 +239,34 @@ FROM (
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
-        $requiredPercentage = ".8";
-        $reservationLifeTime = config('springintoaction.registration.reservation_lifetime_minutes');
-        $sSqlVolunteersAssigned =
-            "(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID)";
-
-        $sSqlProjectReservations =
-            "(IFNULL((select sum(`pr`.`reserve`) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < {$reservationLifeTime}),0))";
-
-        $sSqlProjectsAtReqPerc = "(select count(*)
-            from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL
-            where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null
-              and ((" .
-                                 str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
-                                 " + " .
-                                 str_replace('projects.', 'p.', $sSqlProjectReservations) .
-                                 ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
-
-        $sSqlActiveProjects = "(select count(*) from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
-
-        $sSqlVolunteersNeeded =
-            "IF({$sSqlProjectsAtReqPerc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$requiredPercentage}))";
-
-        $sSqlPeopleNeeded = "{$sSqlVolunteersNeeded} - {$sSqlVolunteersAssigned} - {$sSqlProjectReservations}";
-
+        // $requiredPercentage = ".8";
+        // $reservationLifeTime = config('springintoaction.registration.reservation_lifetime_minutes');
+        // $sSqlVolunteersAssigned =
+        //     "(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID)";
+        //
+        // $sSqlProjectReservations =
+        //     "(IFNULL((select sum(`pr`.`reserve`) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < {$reservationLifeTime}),0))";
+        //
+        // $sSqlProjectsAtReqPerc = "(select count(*)
+        //     from projects p
+        //            join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL
+        //     where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null
+        //       and ((" .
+        //                          str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
+        //                          " + " .
+        //                          str_replace('projects.', 'p.', $sSqlProjectReservations) .
+        //                          ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
+        //
+        // $sSqlActiveProjects = "(select count(*) from projects p
+        //            join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
+        //
+        // $sSqlVolunteersNeeded =
+        //     "IF({$sSqlProjectsAtReqPerc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$requiredPercentage}))";
+        //
+        // $sSqlPeopleNeeded = "{$sSqlVolunteersNeeded} - {$sSqlVolunteersAssigned} - {$sSqlProjectReservations}";
+        $sSqlVolunteersAssigned = $this->getVolunteersAssignedSql();
+        $sSqlVolunteersNeeded = $this->getVolunteersNeededSql($Year);
+        $sSqlPeopleNeeded = $this->getPeopleNeededSql($Year);
         $projects = self::select(
             [
                 'projects.ProjectID',
@@ -282,7 +285,7 @@ FROM (
             DB::raw("{$sSqlPeopleNeeded}"),
             '>',
             0
-        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->where('projects.Status', $ProjectStatusApprovedOptionID);
+        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->where('projects.Status', $this->getProjectStatusApprovedOptionID());
 
         if (!empty($filter) && is_array($filter)) {
             $projects->where(
@@ -367,6 +370,56 @@ FROM (
         return $all_projects;
     }
 
+    public function getProjectStatusApprovedOptionID()
+    {
+        if($this->ProjectStatusApprovedOptionID === null){
+            $projectStatusOptions = new ProjectStatusOptions();
+            $this->ProjectStatusApprovedOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
+        }
+        return $this->ProjectStatusApprovedOptionID;
+    }
+
+    public function getActiveProjectsSql($Year)
+    {
+
+        return "(select count(*) from projects p
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$this->getProjectStatusApprovedOptionID()} and `p`.`deleted_at` is null)";
+    }
+
+    public function getVolunteersAssignedSql()
+    {
+        return "(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID and pv.deleted_at is null)";
+    }
+
+    public function getProjectsAtReqPercSql($Year)
+    {
+        return "(select count(*)
+            from projects p
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL
+            where p.Active = 1 and p.Status = {$this->getProjectStatusApprovedOptionID()} and `p`.`deleted_at` is null
+              and ((" .
+               str_replace('projects.', 'p.', $this->getVolunteersAssignedSql()) .
+               " + " .
+               str_replace('projects.', 'p.', $this->getVolunteersAssignedSql()) .
+               ") / p.VolunteersNeededEst) >= {$this->requiredPercentage})";
+    }
+
+    public function getVolunteersNeededSql($Year)
+    {
+        return "IF({$this->getProjectsAtReqPercSql($Year)} = {$this->getActiveProjectsSql($Year)}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$this->requiredPercentage}))";
+    }
+
+    public function getProjectReservationsSql()
+    {
+        $reservationLifeTime = config('springintoaction.registration.reservation_lifetime_minutes');
+        return "(IFNULL((select sum(`pr`.`reserve`) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < {$reservationLifeTime}),0))";
+    }
+
+    public function getPeopleNeededSql($Year)
+    {
+        return "{$this->getVolunteersNeededSql($Year)} - {$this->getVolunteersAssignedSql()} - {$this->getProjectReservationsSql()}";
+    }
+
     /**
      * @param       $Year
      * @param array $filter
@@ -380,8 +433,7 @@ FROM (
         if (!is_numeric($Year) || strlen($Year) !== 4) {
             $Year = $this->getCurrentYear();
         }
-        $projectStatusOptions = new ProjectStatusOptions();
-        $ProjectStatusApprovedOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
+
         $passedInOrderBy = $orderBy;
         if (empty($orderBy)) {
             $orderBy = [];
@@ -394,31 +446,9 @@ FROM (
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
-        $requiredPercentage = ".8";
-        $reservationLifeTime = config('springintoaction.registration.reservation_lifetime_minutes');
-        $sSqlVolunteersAssigned =
-            "(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID)";
-
-        $sSqlProjectReservations =
-            "(IFNULL((select sum(`pr`.`reserve`) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < {$reservationLifeTime}),0))";
-
-        $sSqlProjectsAtReqPerc = "(select count(*)
-            from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL
-            where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null
-              and ((" .
-                                 str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
-                                 " + " .
-                                 str_replace('projects.', 'p.', $sSqlProjectReservations) .
-                                 ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
-
-        $sSqlActiveProjects = "(select count(*) from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
-
-        $sSqlVolunteersNeeded =
-            "IF({$sSqlProjectsAtReqPerc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$requiredPercentage}))";
-
-        $sSqlPeopleNeeded = "{$sSqlVolunteersNeeded} - {$sSqlVolunteersAssigned} - {$sSqlProjectReservations}";
+        $sSqlVolunteersAssigned = $this->getVolunteersAssignedSql();
+        $sSqlVolunteersNeeded = $this->getVolunteersNeededSql($Year);
+        $sSqlPeopleNeeded = $this->getPeopleNeededSql($Year);
 
         $projects = self::select(
             [
