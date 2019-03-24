@@ -196,8 +196,7 @@ class ReportsController extends BaseController
                 'projects.SequenceNumber',
                 'asc'
             )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at');
-            \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
-                $project->toSql()]);
+
             $aProjects = $project->get()->toArray();
             if ($bReturnArray) {
                 $html[] = $site['SiteName'];
