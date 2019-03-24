@@ -173,11 +173,15 @@ class ReportsController extends BaseController
         )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
         $aSites = $site->get()->toArray();
         $projectModel = new Project();
+        $sSqlVoluneersAssigned = $projectModel->getVolunteersAssignedSql();
         $sSqlPeopleNeeded = $projectModel->getPeopleNeededSql($Year);
         foreach ($aSites as $site) {
             $project = Project::select(
                 'projects.SequenceNumber as Proj Num',
-                DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded")
+                'projects.VolunteersNeededEst',
+                DB::raw("{$sSqlVoluneersAssigned} as VolunteersAssigned"),
+                DB::raw("(projects.VolunteersNeededEst - {$sSqlVoluneersAssigned}) as VolunteersNeededActual"),
+                DB::raw("{$sSqlPeopleNeeded} as PeopleNeededBasedOnPercentages")
             )->join(
                 'site_status',
                 'projects.SiteStatusID',
@@ -192,7 +196,8 @@ class ReportsController extends BaseController
                 'projects.SequenceNumber',
                 'asc'
             )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at');
-
+            \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+                $project->toSql()]);
             $aProjects = $project->get()->toArray();
             if ($bReturnArray) {
                 $html[] = $site['SiteName'];

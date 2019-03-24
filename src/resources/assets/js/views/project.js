@@ -405,7 +405,9 @@
                 let bFetchCollection = true;
                 window.ajaxWaiting('show', '.projects-backgrid-wrapper');
                 App.Models.projectModel.url = '/admin/project/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
-                App.Models.projectModel.save(_.extend({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)}, data),
+                let projectData = _.extend({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)}, data);
+                console.log('projectView saveEditForm',{data:data, projectData:projectData,projectModel: App.Models.projectModel, url: App.Models.projectModel.url});
+                App.Models.projectModel.save(projectData,
                     {
                         success: function (model, response, options) {
                             if (bFetchCollection) {
