@@ -97,7 +97,7 @@ class ProjectsController extends BaseController
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Creation Not Implemented Yet.'];
         } elseif ($success) {
-            $response = ['success' => true, 'msg' => 'Project Creation Succeeded.'];
+            $response = ['success' => true, 'msg' => 'Project Creation Succeeded.', 'ProjectID' => $project->ProjectID];
         } else {
             $response = ['success' => false, 'msg' => 'Project Creation Failed.'];
         }
