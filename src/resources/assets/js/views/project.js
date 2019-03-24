@@ -239,7 +239,7 @@
             let paginator = new Backgrid.Extension.Paginator({
                 collection: this.collection
             });
-
+            this.paginator = paginator;
             // Render the paginator
             this.projectGridManagerContainerToolbar.$('.projects-pagination-controls').html(paginator.render().el);
             _log('App.Views.Projects.render', '$backgridWrapper', $backgridWrapper, '$backgridWrapper.find(\'thead\')', $backgridWrapper.find('thead'));
@@ -306,10 +306,11 @@
             App.PageableCollections.projectCollection.fetch({
                 reset: true,
                 success: function (model, response, options) {
-                    //console.log('project collection fetch success', model, response, options)
+                    //console.log('handleSiteStatusIDChange project collection fetch success', {model: model, response: response, response_0: response[0], options: options})
                     if (!_.isUndefined(response[0])) {
                         App.Vars.currentProjectID = response[0]['ProjectID'];
                         App.Models.projectModel.set(response[0])
+                        self.$el.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
                     } else {
                         window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     }
@@ -356,9 +357,34 @@
                     ' ProjectID:' + $('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:' + ProjectID);
                 // Refresh tabs on new row select
                 App.Models.projectModel.url = '/admin/project/' + ProjectID;
+                App.Vars.currentProjectID = ProjectID;
                 App.Models.projectModel.fetch({reset: true});
+                //this.collection.length ? this.collection.at(0).get('ProjectID') : null;
+                //console.log('updateProjectDataViews projectModel fetch', {ProjectID: ProjectID, projectModel: App.Models.projectModel, currentProjectID:App.Vars.currentProjectID})
             }
 
+        },
+        refocusProjectRecord: function () {
+            let self = this;
+            let recordIdx = 1;
+            this.paginator.collection.fullCollection.each(function (model, idx) {
+
+                if (model.get(App.Models.projectModel.idAttribute) == App.Vars.currentProjectID) {
+                    recordIdx = idx;
+                }
+            });
+            recordIdx = recordIdx === 0 ? 1 : recordIdx;
+            let page = Math.ceil(recordIdx / this.paginator.collection.state.pageSize)
+            if (page > 1) {
+                _.each(this.paginator.handles, function (handle, idx) {
+                    if (handle.pageIndex == page && handle.label == page) {
+                        //console.log(handle, handle.pageIndex, handle.el)
+                        $(handle.el).find('a').trigger('click')
+                    }
+                })
+            }
+            //console.log(recordIdx, this.paginator.collection.state.pageSize, page, this.backgrid, this.paginator, this.backgrid.collection)
+            self.$el.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
         },
         update: function (e) {
             let self = this;
@@ -371,8 +397,14 @@
                 }
                 //'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector
                 _log('App.Views.Projects.update.event', e, 'updating project model id:' + e.attributes.ProjectID);
+                if (e.attributes.ProjectID !== App.Models.projectModel.get(App.Models.projectModel.idAttribute)){
+                    growl('I just caught the disappearing project bug scenario and have cancelled the update so it does not disappear.', 'error');
+                }
                 App.Models.projectModel.url = '/admin/project/' + e.attributes.ProjectID;
-                App.Models.projectModel.save(_.extend({ProjectID: e.attributes.ProjectID}, e.changed),
+                let projectData = _.extend({ProjectID: e.attributes.ProjectID}, e.changed);
+                //console.log('projectView update', {currentProjectID: App.Vars.currentProjectID,e_changed: e.changed, e_attributes: e.attributes, projectData: projectData, projectModel: App.Models.projectModel, url: App.Models.projectModel.url});
+
+                App.Models.projectModel.save(projectData,
                     {
                         success: function (model, response, options) {
                             if (bFetchCollection) {
@@ -386,8 +418,10 @@
                                     self.collection.fetch({reset: true})
                                 ).then(function () {
                                     //initialize your views here
+                                    self.refocusProjectRecord();
                                     _log('App.Views.Project.update.event', 'SequenceNumber updated. project collection fetch promise done');
                                     window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
+
                                 });
                             }
                         },
@@ -406,7 +440,7 @@
                 window.ajaxWaiting('show', '.projects-backgrid-wrapper');
                 App.Models.projectModel.url = '/admin/project/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
                 let projectData = _.extend({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)}, data);
-                console.log('projectView saveEditForm',{data:data, projectData:projectData,projectModel: App.Models.projectModel, url: App.Models.projectModel.url});
+                //console.log('projectView saveEditForm',{data:data, projectData:projectData,projectModel: App.Models.projectModel, url: App.Models.projectModel.url});
                 App.Models.projectModel.save(projectData,
                     {
                         success: function (model, response, options) {
@@ -421,6 +455,7 @@
                                     self.collection.fetch({reset: true})
                                 ).then(function () {
                                     //initialize your views here
+                                    self.refocusProjectRecord();
                                     _log('App.Views.Project.update.event', 'project updated. project collection fetch promise done');
                                     window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
                                 });
@@ -571,11 +606,13 @@
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
+                        App.Vars.currentProjectID = !_.isUndefined(response.ProjectID) ? response.ProjectID : null;
                         self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
                             //initialize your views here
+                            self.refocusProjectRecord();
                             _log('App.Views.Project.create.event', 'project collection fetch promise done');
                             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
                             self.trigger('toggle-project-tabs-box');
@@ -608,6 +645,8 @@
                     $.when(
                         self.collection.fetch({reset: true})
                     ).then(function () {
+                        App.Vars.currentProjectID = self.collection.length ? self.collection.at(0).get('ProjectID') : null;
+                        self.refocusProjectRecord();
                         //initialize your views here
                         _log('App.Views.Project.destroy.event', 'project collection fetch promise done');
                         window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
