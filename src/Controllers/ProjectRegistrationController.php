@@ -103,6 +103,9 @@ class ProjectRegistrationController extends BaseController
                     if (isset($contactInfo['ResponseID']) && $contactInfo['ResponseID'] === '') {
                         $contactInfo['ResponseID'] = 0;
                     }
+                    if (isset($contactInfo['TeamLeaderWilling']) && $contactInfo['TeamLeaderWilling'] === '') {
+                        $contactInfo['TeamLeaderWilling'] = 0;
+                    }
                     $contactInfo['IndividualID'] = empty($contactInfo['groveId']) ? 0 : $contactInfo['groveId'];
                     array_walk(
                         $contactInfo,
@@ -138,6 +141,9 @@ class ProjectRegistrationController extends BaseController
                     }
                     if (isset($contactInfo['ResponseID']) && $contactInfo['ResponseID'] === '') {
                         $contactInfo['ResponseID'] = 0;
+                    }
+                    if (isset($contactInfo['TeamLeaderWilling']) && $contactInfo['TeamLeaderWilling'] === '') {
+                        $contactInfo['TeamLeaderWilling'] = 0;
                     }
                     $contactInfo['IndividualID'] = empty($contactInfo['groveId']) ? 0 : $contactInfo['groveId'];
                     array_walk(

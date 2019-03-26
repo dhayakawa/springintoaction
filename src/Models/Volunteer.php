@@ -99,7 +99,7 @@
             'PhysicalRestrictions'=>'',
             'SchoolPreference'=>'',
             'Equipment'=>'',
-            'TeamLeaderWilling'=>'',
+            'TeamLeaderWilling'=>0,
             'Church'=>'',
             'AssignmentInformationSendStatus' => ''
         ];
