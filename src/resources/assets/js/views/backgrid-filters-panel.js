@@ -229,6 +229,7 @@
             let primarySkillOptions = App.Models.volunteerModel.getPrimarySkillOptions();
             let statusOptions = App.Models.volunteerModel.getStatusOptions();
             let schoolOptions = App.Models.volunteerModel.getSchoolOptions();
+            let yesNoOptions = App.Models.projectModel.getYesNoOptions();
             this.selectTypeFilterDefinitions = [
                 {name: 'Status', options: statusOptions},
                 {name: 'PrimarySkill', options: primarySkillOptions},
@@ -239,7 +240,8 @@
                 {name: 'Electrical', options: skillOptions},
                 {name: 'CabinetryFinishWork', options: skillOptions},
                 {name: 'Plumbing', options: skillOptions},
-                {name: 'SchoolPreference', options: schoolOptions}
+                {name: 'SchoolPreference', options: schoolOptions},
+                {name: 'TeamLeaderWilling', options: yesNoOptions}
             ];
 
             this.selectTypeFilters = [];
