@@ -1452,8 +1452,8 @@
                     //console.log('handleSiteStatusIDChange project collection fetch success', {model: model, response: response, response_0: response[0], options: options})
                     if (!_.isUndefined(response[0])) {
                         App.Vars.currentProjectID = response[0]['ProjectID'];
-                        App.Models.projectModel.set(response[0])
-                        self.$el.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
+                        App.Models.projectModel.set(response[0]);
+                        self.refocusProjectRecord();
                     } else {
                         window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     }
@@ -1749,7 +1749,7 @@
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        App.Vars.currentProjectID = model.get(App.Models.projectModel.idAttribute);
+                        App.Vars.currentProjectID = !_.isUndefined(response.ProjectID) ? response.ProjectID : null;
                         self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})

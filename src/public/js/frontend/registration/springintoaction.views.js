@@ -211,8 +211,10 @@
             };
 
             let html = self.template(tplVars);
-            $(self.el).html(html);
-
+            self.$el.html(html);
+            if (self.contactInfoIdx === 0) {
+                self.$el.find('.team-leader-willing').removeClass('hidden');
+            }
             return self;
         },
         formatPhoneNumber: function (el) {
