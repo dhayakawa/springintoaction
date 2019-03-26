@@ -93,8 +93,37 @@ class ProjectRegistrationController extends BaseController
                     ]
                 )->get()->first();
                 if (!empty($volunteer)) {
+                    $contactInfo['Active'] = 1;
+                    $contactInfo['Status'] = 5;
+                    $contactInfo['FullName'] = "{$contactInfo['FirstName']} {$contactInfo['LastName']}";
+
+                    if (isset($contactInfo['PreferredSiteID']) && $contactInfo['PreferredSiteID'] === '') {
+                        $contactInfo['PreferredSiteID'] = 0;
+                    }
+                    if (isset($contactInfo['ResponseID']) && $contactInfo['ResponseID'] === '') {
+                        $contactInfo['ResponseID'] = 0;
+                    }
+                    $contactInfo['IndividualID'] = empty($contactInfo['groveId']) ? 0 : $contactInfo['groveId'];
+                    array_walk(
+                        $contactInfo,
+                        function (&$value, $key) {
+                            if (is_string($value)) {
+                                $value = \urldecode($value);
+                            }
+                            if ($key === 'groveId') {
+                                $value = (int) $value;
+                            }
+                        }
+                    );
+
+                    $volunteer->fill($contactInfo);
+
+                    $volunteer->save();
+
                     $volunteerID = $volunteer->VolunteerID;
                     $groveId = $volunteer->IndividualID;
+
+
                 } else {
                     $model = new Volunteer();
 
@@ -125,16 +154,16 @@ class ProjectRegistrationController extends BaseController
 
                     $model->fill($contactInfo);
 
-                    \Illuminate\Support\Facades\Log::debug(
-                        '',
-                        [
-                            'File:' . __FILE__,
-                            'Method:' . __METHOD__,
-                            'Line:' . __LINE__,
-                            $contactInfo,
-                            $model->toArray(),
-                        ]
-                    );
+                    // \Illuminate\Support\Facades\Log::debug(
+                    //     '',
+                    //     [
+                    //         'File:' . __FILE__,
+                    //         'Method:' . __METHOD__,
+                    //         'Line:' . __LINE__,
+                    //         $contactInfo,
+                    //         $model->toArray(),
+                    //     ]
+                    // );
                     $model->save();
                     $volunteerID = $model->VolunteerID;
                     $groveId = $model->IndividualID;
@@ -327,30 +356,30 @@ class ProjectRegistrationController extends BaseController
 
         $login = preg_replace('/[ \s]/', '', $request->GroveEmail);
         $password = preg_replace('/[ \s]/', '', $request->GrovePassword);
-        \Illuminate\Support\Facades\Log::debug(
-            '',
-            [
-                'File:' . __FILE__,
-                'Method:' . __METHOD__,
-                'Line:' . __LINE__,
-                [
-                    'l' => $login,
-                    'p' => $password,
-                    't' => $RegisterProcessType,
-                ],
-            ]
-        );
+        // \Illuminate\Support\Facades\Log::debug(
+        //     '',
+        //     [
+        //         'File:' . __FILE__,
+        //         'Method:' . __METHOD__,
+        //         'Line:' . __LINE__,
+        //         [
+        //             'l' => $login,
+        //             'p' => $password,
+        //             't' => $RegisterProcessType,
+        //         ],
+        //     ]
+        // );
         $groveApi = new GroveApi();
         $response = $groveApi->individual_profile_from_login_password($login, $password);
-        \Illuminate\Support\Facades\Log::debug(
-            '$response from grove login api request',
-            [
-                'File:' . __FILE__,
-                'Method:' . __METHOD__,
-                'Line:' . __LINE__,
-                $response,
-            ]
-        );
+        // \Illuminate\Support\Facades\Log::debug(
+        //     '$response from grove login api request',
+        //     [
+        //         'File:' . __FILE__,
+        //         'Method:' . __METHOD__,
+        //         'Line:' . __LINE__,
+        //         $response,
+        //     ]
+        // );
         $bGroveLoginSuccessful = $response && isset($response["individuals"]) && $response["individuals"]['@attributes']['count'] === '1';
         $contact_info = [];
         if ($bGroveLoginSuccessful) {

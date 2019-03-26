@@ -82,3 +82,14 @@
         </div>
     </div>
 </div>
+<div class="row team-leader-willing hidden">
+    <div class="col-xs-12">
+        <div class="checkbox">
+            <label for="inputTeamLeaderWilling<%= idx %>"><input type="checkbox"
+                    name="contact_info[<%= idx %>][TeamLeaderWilling]"
+                    id="inputTeamLeaderWilling<%= idx %>"
+                    value="1"/> I would be willing to be a team leader if needed.</label>
+        </div>
+    </div>
+</div>
+
