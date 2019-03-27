@@ -190,6 +190,10 @@
             self.bIsWoodlands = self.contactInfoData.Church === 'woodlands';
             self.$el.data('contact-info-idx', self.contactInfoIdx);
             self.$el.addClass('contact-info-idx-' + self.contactInfoIdx);
+            if (self.groveId) {
+                self.$el.data('contact-info-grove-id', self.groveId);
+                self.$el.addClass('contact-info-grove-id-' + self.groveId);
+            }
             _log('App.Views.ContactInfo.initialize', options);
         },
         events: {
@@ -579,8 +583,8 @@
                         let expirationMsg = 'Your reservations have expired.<br>';
                         expirationMsg += 'Please continue to register if you lose your reservations, we\'re just trying to keep our over booked projects to a minimum.<br>';
                         if (iReserved <= volunteersNeeded) {
-                            expirationMsg += '<br>If you accidentally let your reservations expire, you can click the [Renew Reservations] button to reserve them again.<br><br>'+
-                            'If this is not your registration and someone else just left it like this, click the [Do Not Renew Reservations] button and then the [Cancel] button ' +
+                            expirationMsg += '<br>If you accidentally let your reservations expire, you can click the [Renew Reservations] button to reserve them again.<br><br>' +
+                                             'If this is not your registration and someone else just left it like this, click the [Do Not Renew Reservations] button and then the [Cancel] button ' +
                                              'at the bottom of the registration form.';
                             $confirm.find('.confirm-body').find('button.btn-yes').text('Renew Reservations');
                             $confirm.find('.confirm-body').find('button.btn-no').text('Do Not Renew Reservations');
@@ -603,7 +607,7 @@
                                 type: "post",
                                 dataType: "json",
                                 url: 'project_registration/reserve',
-                                data: {reserve:iReserved, ProjectID: self.model.get('ProjectID'), _token: $('form[name="newProjectReservation"]').find('[name="_token"]').val()},
+                                data: {reserve: iReserved, ProjectID: self.model.get('ProjectID'), _token: $('form[name="newProjectReservation"]').find('[name="_token"]').val()},
                                 success: function (response) {
                                     self.iReserved = iReserved;
                                     App.Vars.reservedProjectID = self.model.get('ProjectID');
@@ -887,7 +891,7 @@
         },
         getGroveOverageAmt: function () {
             let self = this;
-            let overageAmt = self.iReserved - ($('.grove-register').find('.grove-contacts-confirm-list tbody tr').length + 1);
+            let overageAmt = self.iReserved - (self.groveContacts.length + 1);
             return overageAmt > 0 ? overageAmt : 0;
         },
         getIsGroveOverage: function () {
@@ -897,12 +901,14 @@
         handleGroveContactCheckbox: function (e) {
             let self = this;
             self.resetCheckIfSomeoneIsThereInterval();
+            // rebuild self.groveContacts array right away
+            self.getCheckedGroveContacts();
             let bChecked = e.currentTarget.checked;
-            let contactIdx = $(e.currentTarget).data('contact-idx');
-            let contactViewIdx = contactIdx + 1;
-
-            if (!bChecked) {
-                $('.contact-info-idx-' + contactViewIdx).siblings('.manual-delete-registration-contact').trigger('click');
+            let groveId = $(e.currentTarget).data('groveId');
+            //console.log({currentTarget:e.currentTarget,bChecked:bChecked, groveId: groveId});
+            if (!bChecked && !_.isEmpty(groveId)) {
+                //console.log('removing unchecked manual registration contact', $('.contact-info-grove-id-' + groveId))
+                $('.contact-info-grove-id-' + groveId).siblings('.manual-delete-registration-contact').trigger('click');
             }
         },
         showGroveContactList: function () {
@@ -981,6 +987,7 @@
             let data = {};
             let html = '';
             $('.project-registration-confirm-list tbody').empty();
+            //console.log('buildConfirmationList', {contactInfoViews: self.contactInfoViews})
             _.each(self.contactInfoViews, function (val, key) {
                 if (!_.isUndefined(val)) {
                     try {
@@ -1012,18 +1019,24 @@
         },
         getCheckedGroveContacts: function () {
             let self = this;
-            let aNotChecked = $('.grove-contact').not(':checked').toArray().reverse();
-
-            $.each(aNotChecked, function (idx, el) {
-                let contactIdx = $(el).data('contact-idx');
-                self.groveContacts = _.reject(self.groveContacts, function (val, key) {
-                    return key === contactIdx;
-                });
+            let aChecked = [];
+            let aNotChecked = [];
+            $('.grove-contact').not(':checked').each(function (idx, el) {
+                aNotChecked.push($(el).data('grove-id'));
             });
+
+            _.each(self.groveContacts, function (val, idx) {
+                //console.log(aNotChecked, aNotChecked.indexOf(val.groveId.toString()), val.groveId.toString())
+                if (-1 === aNotChecked.indexOf(val.groveId)) {
+                    aChecked.push(val)
+                }
+            })
+            self.groveContacts = aChecked;
+            //console.log('getCheckedGroveContacts return', {aNotChecked: aNotChecked, aChecked: aChecked, groveContacts: self.groveContacts})
 
             return self.groveContacts;
         },
-        getIsRegistrationTotalOverReserved: function() {
+        getIsRegistrationTotalOverReserved: function () {
             let self = this;
             let numberOfRegistrants = self.getRegistrantsTotal(false);
             return numberOfRegistrants > self.iReserved;
@@ -1048,7 +1061,7 @@
             }
             self.updateReservedAmtMsg();
         },
-        removeReservations: function(){
+        removeReservations: function () {
             let self = this;
             self.iReserved = 0;
             self.parentView.removeReservations();
@@ -1100,7 +1113,7 @@
             bIncludeEmptyManualSpots = !_.isUndefined(bIncludeEmptyManualSpots) ? bIncludeEmptyManualSpots : false;
             let iPersonRegistering = 1;
             let iNumberOfManualContactRegistrants = self.getManualContactsTotal(bIncludeEmptyManualSpots);
-            let iNumberOfCheckedGroveRegistrants = self.getCheckedGroveContacts().length;
+            let iNumberOfCheckedGroveRegistrants = self.bIsGroveImport ? self.getCheckedGroveContacts().length : 0;
             return iPersonRegistering + iNumberOfManualContactRegistrants + iNumberOfCheckedGroveRegistrants;
         },
         /**
@@ -1160,19 +1173,20 @@
                 }
             }
             App.Vars.bTooManyRegistrants = false;
-            let totalRegistrantCnt = self.getCheckedGroveContacts().length + self.getContactInfoViewsLength(false);
+            // This call will reset the self.groveContacts array to the checked contacts
+            let totalRegistrantCnt = self.getRegistrantsTotal();
             // console.log({
-            //  checkGroveContacts: self.getCheckedGroveContacts().length,
-            //  ContactInfoViewsLength_not_inc_grove_contacts: self.getContactInfoViewsLength(false),
+            //     checkGroveContacts: self.groveContacts.length,
+            //     ContactInfoViewsLength_not_inc_grove_contacts: self.getContactInfoViewsLength(false),
+            //     getManualContactsTotal_inc_empties: self.getManualContactsTotal(true),
             //     totalRegistrantCnt: totalRegistrantCnt,
-            //     getRegistrantsTotal:self.getRegistrantsTotal(),
-            //  iReserved: self.iReserved
-            //  })
+            //     iReserved: self.iReserved
+            // });
             if (self.getIsRegistrationTotalOverReserved()) {
                 let volunteersNeeded = self.model.getVolunteersNeeded();
                 let overAmt = totalRegistrantCnt - self.iReserved;
-                //console.log({overAmt:overAmt, totalRegistrantCnt: totalRegistrantCnt, iReserved: self.iReserved, volunteersNeeded: volunteersNeeded})
-                if (totalRegistrantCnt <= volunteersNeeded){
+                //console.log({overAmt: overAmt, totalRegistrantCnt: totalRegistrantCnt, iReserved: self.iReserved, volunteersNeeded: volunteersNeeded})
+                if (totalRegistrantCnt <= volunteersNeeded) {
                     // Increase reservations to accommodate
                     self.iReserved += overAmt;
                     self.updateReservations(self.iReserved);
@@ -1186,14 +1200,14 @@
                 }
 
             }
-            //console.log('valid', valid === self.getContactInfoViewsLength(),{valid:valid, getContactInfoViewsLength: self.getContactInfoViewsLength(), getContactInfoViewsLengthFalse: self.getContactInfoViewsLength(false), contactInfoViews: self.contactInfoViews})
+            // console.log('valid', valid === self.getContactInfoViewsLength(), {valid: valid, getContactInfoViewsLength: self.getContactInfoViewsLength(), getContactInfoViewsLengthFalse: self.getContactInfoViewsLength(false), contactInfoViews: self.contactInfoViews})
             if (valid === self.getContactInfoViewsLength()) {
                 self.setStepAsValidated('.step-two.steps', $(e.currentTarget));
                 if (self.bIsGroveImport) {
-                    self.groveContacts = self.getCheckedGroveContacts();
+                    //self.groveContacts = self.getCheckedGroveContacts();
                     if (self.groveContacts.length) {
                         if (self.getManualContactsTotal(true)) {
-                            //console.log('confirmRegistrations for bIsGroveImport',{contactInfoViews: self.contactInfoViews, groveContacts: self.groveContacts})
+                            //console.log('confirmRegistrations for bIsGroveImport', {contactInfoViews: self.contactInfoViews, groveContacts: self.groveContacts})
                             _.each(self.contactInfoViews, function (contactView, idx) {
                                 if (idx > 0 && !_.isUndefined(contactView)) {
                                     let bIsInGroveContactList = _.find(self.groveContacts, function (groveContact) {
@@ -1201,14 +1215,14 @@
                                     });
                                     // add any contactViews to the groveContact List that aren't there.
                                     if (!bIsInGroveContactList && !_.isEmpty(contactView.contactInfoData.FirstName)) {
-                                        //console.log('confirmRegistrations for bIsGroveImport. adding contactView to self.groveContacts', contactView.contactInfoData)
-                                        //console.log('contactView data to push into grove contacts',self.convertContactViewDataToGroveContact(contactView.getContactInfoData(), idx));
+                                        // console.log('confirmRegistrations for bIsGroveImport. adding contactView to self.groveContacts', contactView.contactInfoData)
+                                        // console.log('!!! adding unchecked? contactView data to push into grove contacts', self.convertContactViewDataToGroveContact(contactView.getContactInfoData(), idx));
                                         self.groveContacts.push(self.convertContactViewDataToGroveContact(contactView.getContactInfoData(), idx));
                                     }
                                 }
                             });
                         }
-                        //console.log('building ManualContactInfo with self.groveContacts for submission should have d@d.com',{groveContacts: self.groveContacts});
+                        //console.log('building ManualContactInfo with self.groveContacts for submission', {groveContacts: self.groveContacts});
                         self.buildManualContactInfo(self.groveContacts, false, false);
                         // needs to show so the post uses the form data but it won't be visible to user?
                         $('.manual-multiple-register').show();
