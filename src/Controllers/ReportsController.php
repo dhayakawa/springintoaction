@@ -440,7 +440,7 @@ class ReportsController extends BaseController
                 )->where(
                     'project_roles.Role',
                     'Estimator'
-                )->whereNull('project_volunteers.deleted_at')->whereNull(
+                )->whereNull(
                         'project_volunteer_role.deleted_at'
                     )->whereNull('volunteers.deleted_at')->get()->toArray();
                 $estimator = '';

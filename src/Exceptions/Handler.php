@@ -21,4 +21,13 @@ class Handler extends \App\Exceptions\Handler
         return $request->expectsJson() ? response()->json(['message' => $exception->getMessage()], 401) :
             redirect()->guest(route('unauthorized'));
     }
+
+    public function report(Exception $exception)
+    {
+        if (app()->bound('sentry') && $this->shouldReport($exception)) {
+            app('sentry')->captureException($exception);
+        }
+
+        parent::report($exception);
+    }
 }
