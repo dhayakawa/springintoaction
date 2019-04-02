@@ -809,7 +809,8 @@ class ReportsController extends BaseController
         $aVolunteers = Volunteer::select(
             'volunteers.Email',
             'volunteers.FirstName as First Name',
-            'volunteers.LastName as Last Name'
+            'volunteers.LastName as Last Name',
+            'project_volunteers.created_at'
         )->join(
             'project_volunteers',
             'project_volunteers.VolunteerID',
