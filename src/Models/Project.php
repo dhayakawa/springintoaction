@@ -460,7 +460,7 @@ FROM (
                 'projects.ProjectDescription',
                 'projects.Comments',
                 DB::raw(
-                    '(SELECT GROUP_CONCAT(distinct bso.option_label SEPARATOR \',\') FROM budgets join budget_source_options bso on bso.id = budgets.BudgetSource where budgets.ProjectID = projects.ProjectID where budgets.deleted_at is null) as BudgetSources'
+                    '(SELECT GROUP_CONCAT(distinct bso.option_label SEPARATOR \',\') FROM budgets join budget_source_options bso on bso.id = budgets.BudgetSource where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
                 ),
                 'projects.ChildFriendly',
                 'projects.PrimarySkillNeeded',
