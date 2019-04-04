@@ -810,6 +810,9 @@ class ReportsController extends BaseController
             'volunteers.Email',
             'volunteers.FirstName as First Name',
             'volunteers.LastName as Last Name',
+            'sites.SiteName as Site Name',
+            'projects.SequenceNumber as Proj Num',
+            'projects.ProjectDescription as Project Description',
             'project_volunteers.created_at'
         )->join(
             'project_volunteers',
@@ -831,7 +834,13 @@ class ReportsController extends BaseController
             'sites.SiteID',
             '=',
             'site_status.SiteID'
-        )->whereNull('volunteers.deleted_at')->whereNull('project_volunteers.deleted_at')->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->where('site_status.Year', $Year)->orderBy('volunteers.LastName', 'asc')->get()->toArray();
+        )->whereNull('volunteers.deleted_at')
+         ->whereNull('project_volunteers.deleted_at')
+         ->whereNull('projects.deleted_at')
+         ->whereNull('site_status.deleted_at')
+         ->whereNull('sites.deleted_at')
+         ->where('site_status.Year', $Year)->orderBy('sites.SiteName', 'asc')->orderBy('projects.SequenceNumber', 'asc')
+         ->orderBy('volunteers.LastName', 'asc')->get()->toArray();
 
         if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
             return "This report is too big to download as a PDF. Please choose a different download type.";
