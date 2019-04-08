@@ -1022,7 +1022,7 @@
 
             let volunteerSelect = new App.Views.Select({
                 el: '',
-                attributes: {id: 'VolunteerID', name: 'selectVolunteerID', class: 'form-control'},
+                attributes: {id: 'selectVolunteerID', name: 'VolunteerID', class: 'form-control'},
                 buildHTML: true,
                 collection: App.Collections.projectVolunteersCollection,
                 optionValueModelAttrName: 'VolunteerID',
