@@ -37,7 +37,7 @@
         public function store(Request $request) {
             $params = $request->all();
             $model = new ProjectVolunteerRole;
-            $model->fill(['VolunteerID' => $params['selectVolunteerID'], 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID'], 'Status' => $params['Status']]);
+            $model->fill(['VolunteerID' => $params['VolunteerID'], 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID'], 'Status' => $params['Status']]);
             $success = $model->save();
 
             if(!isset($success)) {

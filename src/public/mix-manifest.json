@@ -8,7 +8,7 @@
     "/js/springintoaction.packages.min.js": "/js/springintoaction.packages.min.js?id=b8316fe32d5c3459c4e5",
     "/js/springintoaction.models.js": "/js/springintoaction.models.js?id=e5f9249f87ade4d5c89c",
     "/js/springintoaction.collections.js": "/js/springintoaction.collections.js?id=6d7778897d5ecd87cfa5",
-    "/js/springintoaction.views.js": "/js/springintoaction.views.js?id=09e85e7ae598e3fb62e5",
+    "/js/springintoaction.views.js": "/js/springintoaction.views.js?id=0366f2775d3f0c7713ec",
     "/js/springintoaction.init.js": "/js/springintoaction.init.js?id=56394b53a737b19f09d0",
     "/js/springintoaction.logging.js": "/js/springintoaction.logging.js?id=4e6cffe87e03bc27ec92",
     "/js/springintoaction.main.js": "/js/springintoaction.main.js?id=8e42fbb08d4f521230c0",
@@ -21,9 +21,9 @@
     "/js/frontend/registration/springintoaction.main.js": "/js/frontend/registration/springintoaction.main.js?id=2d8575fa2a34b5e38c94",
     "/css/springintoaction.packages.css": "/css/springintoaction.packages.css?id=1ed09459c57b9f477d36",
     "/js/springintoaction.templates.js": "/js/springintoaction.templates.js?id=19d698e4517f223aff24",
-    "/js/app-initial-models-vars-data.js": "/js/app-initial-models-vars-data.js?id=22ddc3cb7a8a2a14536f",
-    "/js/app-initial-collections-view-data.js": "/js/app-initial-collections-view-data.js?id=e44ee020c2d3ae44ab0d",
+    "/js/app-initial-models-vars-data.js": "/js/app-initial-models-vars-data.js?id=ba1ad86241c6908ca60e",
+    "/js/app-initial-collections-view-data.js": "/js/app-initial-collections-view-data.js?id=293ee3d41d834b12c3d8",
     "/js/frontend/registration/springintoaction.templates.js": "/js/frontend/registration/springintoaction.templates.js?id=c26b358e327db7a38ceb",
-    "/js/frontend/registration/app-initial-models-vars-data.js": "/js/frontend/registration/app-initial-models-vars-data.js?id=954d146a3ee420f0049e",
+    "/js/frontend/registration/app-initial-models-vars-data.js": "/js/frontend/registration/app-initial-models-vars-data.js?id=7960088400fd5bd4ddd9",
     "/js/frontend/registration/app-initial-collections-view-data.js": "/js/frontend/registration/app-initial-collections-view-data.js?id=8eb682de809e1ac81b62"
 }

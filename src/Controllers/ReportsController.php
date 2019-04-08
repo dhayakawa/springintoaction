@@ -840,7 +840,7 @@ class ReportsController extends BaseController
          ->whereNull('site_status.deleted_at')
          ->whereNull('sites.deleted_at')
          ->where('site_status.Year', $Year)->orderBy('sites.SiteName', 'asc')->orderBy('projects.SequenceNumber', 'asc')
-         ->orderBy('volunteers.LastName', 'asc')->get()->toArray();
+         ->orderBy('project_volunteers.created_at', 'asc')->get()->toArray();
 
         if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
             return "This report is too big to download as a PDF. Please choose a different download type.";
