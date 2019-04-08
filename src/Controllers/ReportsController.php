@@ -175,6 +175,13 @@ class ReportsController extends BaseController
         $projectModel = new Project();
         $sSqlVoluneersAssigned = $projectModel->getVolunteersAssignedSql();
         $sSqlPeopleNeeded = $projectModel->getPeopleNeededSql($Year);
+        $aRegistered = $this->getRegisteredVolunteerEmailsReport(
+            $Year,
+            null,
+            null,
+            true
+        );
+        $iRegisteredCnt = count($aRegistered);
         foreach ($aSites as $site) {
             $project = Project::select(
                 'projects.SequenceNumber as Proj Num',
@@ -198,15 +205,26 @@ class ReportsController extends BaseController
             )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at');
 
             $aProjects = $project->get()->toArray();
+
             if ($bReturnArray) {
                 $html[] = $site['SiteName'];
                 $html = array_merge($html, $aProjects);
+
             } else {
                 $response = $this->getResultsHtmlTable($aProjects);
                 $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
                 $html .= $response;
             }
         }
+        if($bReturnArray){
+            $html[] = "Total Registered:$iRegisteredCnt";
+        } else {
+            $html .= "<table class=\"table\">";
+            $html .= "<tr>
+                        <td><h2>Total Registered:$iRegisteredCnt</h2></td>
+                        ";
+
+            $html .= "</tr></table>";}
 
         return $html;
     }
