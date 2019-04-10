@@ -5,7 +5,9 @@
         defaults: {
             'VolunteerID': '',
             'SiteStatusID': '',
-            'SiteVolunteerRoleID': ''
+            'SiteVolunteerRoleID': '',
+            'Comments': '',
+            'Status': ''
         },
         getRoleOptions: function (bReturnHtml) {
             let options = _.pairs(App.Vars.selectOptions['site_roles']);
