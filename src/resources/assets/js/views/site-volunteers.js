@@ -299,7 +299,6 @@
             let model = this.model.clone().clear({silent: true});
             _log('App.Views.SiteVolunteer.create', self.routeName, attributes, model, self.ajaxWaitingSelector);
             model.url = '/admin/' + self.routeName;
-            attributes['Status'] = attributes['SiteVolunteerRoleStatus'];
             attributes['SiteStatusID'] = App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
             model.save(attributes,
                 {
