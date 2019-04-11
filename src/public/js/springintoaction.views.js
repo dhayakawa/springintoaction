@@ -2486,7 +2486,7 @@
                 data: attributes,
                 success: function (response) {
                     window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.collection.url = '/admin/' + self.routeName + '/list/all';
+                    self.collection.url = '/admin/' + self.routeName + '/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                     $.when(
                         self.collection.fetch({reset: true})
                     ).then(function () {
