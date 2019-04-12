@@ -14,7 +14,8 @@ window.App = {
         projectVolunteerRoleModel: null,
         annualBudgetModel: null,
         reportModel: null,
-        statusManagementModel: null
+        statusManagementModel: null,
+        siteVolunteerRoleModel: null
     },
     PageableCollections: {
         backGridFiltersPanelCollection: null,
@@ -26,7 +27,8 @@ window.App = {
         projectVolunteersCollection: null,
         unassignedProjectVolunteersCollection: null,
         volunteersManagementCollection: null,
-        projectAttachmentsCollection: null
+        projectAttachmentsCollection: null,
+        siteVolunteersRoleCollection:null
     },
     Collections: {
         siteSettingsCollection: null,

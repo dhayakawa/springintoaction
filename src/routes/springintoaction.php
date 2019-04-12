@@ -365,6 +365,31 @@ Route::group(
             ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@getSiteVolunteers']
         );
 
+        Route::post(
+            'site_volunteer_role',
+            ['as' => 'site_volunteer_role.batch.store', 'uses' => 'SiteVolunteerRoleController@store']
+        );
+        Route::post(
+            'site_volunteer_role/batch/destroy',
+            ['as' => 'site_volunteer_role.batch.destroy', 'uses' => 'SiteVolunteerRoleController@batchDestroy']
+        );
+        Route::get(
+            'site_volunteer_role/unassigned/{SiteStatusID}/{Year}',
+            ['as' => 'site_volunteer_role.unassigned', 'uses' => 'SiteVolunteerRoleController@getUnassigned']
+        );
+        Route::put(
+            'site_volunteer_role/{SiteVolunteerRoleID}',
+            ['as' => 'site_volunteer_role.update', 'uses' => 'SiteVolunteerRoleController@update']
+        );
+        Route::get(
+            'site_volunteer_role/{SiteVolunteerRoleID}',
+            ['as' => 'site_volunteer_role', 'uses' => 'SiteVolunteerRoleController@show']
+        );
+        Route::get(
+            'site_volunteer_role/all/{SiteStatusID}',
+            ['as' => 'site_volunteer_role', 'uses' => 'SiteVolunteerRoleController@getSiteVolunteers']
+        );
+
         Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
 
         Route::get(

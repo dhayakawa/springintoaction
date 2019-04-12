@@ -71,7 +71,7 @@
             this.options = options;
             this.optionsView = [];
             this.parentView = this.options.parentView;
-            _.bindAll(this, 'addOne', 'addAll', 'changeSelected');
+            _.bindAll(this, 'addOne', 'addAll', 'changeSelected','setSelectedId','refocusSiteVolunteerRecord');
             this.collection.bind('reset', this.addAll, this);
         },
         events: {
@@ -111,10 +111,10 @@
                 }
                 // fetch new sitestatus
                 App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
-                App.PageableCollections.siteVolunteersCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
+                App.PageableCollections.siteVolunteersRoleCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
                 $.when(
                     App.Models.siteStatusModel.fetch({reset: true}),
-                    App.PageableCollections.siteVolunteersCollection.fetch({reset: true})
+                    App.PageableCollections.siteVolunteersRoleCollection.fetch({reset: true})
                 ).then(function () {
                     //initialize your views here
                     _log('App.Views.Site.create.event', 'site collection fetch promise done');
@@ -123,13 +123,40 @@
                         window.ajaxWaiting('remove', '#site-well');
                         window.ajaxWaiting('remove', '#site-status-well');
                         window.ajaxWaiting('remove', '#site-volunteers-well');
+                        if (App.PageableCollections.siteVolunteersRoleCollection.length) {
+                            App.Vars.currentSiteVolunteerRoleID = App.PageableCollections.siteVolunteersRoleCollection.at(0).get('SiteVolunteerRoleID');
+                            App.Models.siteVolunteerRoleModel.set(App.PageableCollections.siteVolunteersRoleCollection.at(0));
+                            self.refocusSiteVolunteerRecord();
+                        }
                     }
                     if (!self.parentView.$el.hasClass('site-management-view')) {
                         self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
                     }
                 });
             }
-        }
+        },
+        refocusSiteVolunteerRecord: function () {
+            let self = this;
+            let recordIdx = 1;
+            App.Views.siteVolunteersView.paginator.collection.fullCollection.each(function (model, idx) {
+
+                if (model.get(App.Models.siteVolunteerRoleModel.idAttribute) === App.Vars.currentSiteVolunteerRoleID) {
+                    recordIdx = idx;
+                }
+            });
+            recordIdx = recordIdx === 0 ? 1 : recordIdx;
+            let page = Math.ceil(recordIdx / App.Views.siteVolunteersView.paginator.collection.state.pageSize)
+            if (page > 1) {
+                _.each(this.paginator.handles, function (handle, idx) {
+                    if (handle.pageIndex === page && handle.label === page) {
+                        //console.log(handle, handle.pageIndex, handle.el)
+                        $(handle.el).find('a').trigger('click')
+                    }
+                })
+            }
+            //console.log(recordIdx, this.paginator.collection.state.pageSize, page, this.backgrid, this.paginator, this.backgrid.collection)
+            self.$el.find('input[type="radio"][name="SiteVolunteerRoleID"][value="' + App.Vars.currentSiteVolunteerRoleID + '"]').parents('tr').trigger('focusin');
+        },
     });
 
     /**

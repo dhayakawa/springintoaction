@@ -15,6 +15,7 @@
     App.Models.siteStatusModel = new App.Models.SiteStatus(@json($appInitialData['siteStatus']));
     App.Models.projectModel = new App.Models.Project(@json($appInitialData['project']));
     App.Models.siteVolunteerModel = new App.Models.SiteVolunteer(@json($appInitialData['site_volunteer']));
+    App.Models.siteVolunteerRoleModel = new App.Models.SiteVolunteerRole(@json($appInitialData['site_volunteer']));
 
     /**
      * Models for the contacts and volunteer management

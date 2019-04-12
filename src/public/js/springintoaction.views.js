@@ -1932,7 +1932,7 @@
             this.options = options;
             this.optionsView = [];
             this.parentView = this.options.parentView;
-            _.bindAll(this, 'addOne', 'addAll', 'changeSelected');
+            _.bindAll(this, 'addOne', 'addAll', 'changeSelected','setSelectedId','refocusSiteVolunteerRecord');
             this.collection.bind('reset', this.addAll, this);
         },
         events: {
@@ -1972,10 +1972,10 @@
                 }
                 // fetch new sitestatus
                 App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
-                App.PageableCollections.siteVolunteersCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
+                App.PageableCollections.siteVolunteersRoleCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
                 $.when(
                     App.Models.siteStatusModel.fetch({reset: true}),
-                    App.PageableCollections.siteVolunteersCollection.fetch({reset: true})
+                    App.PageableCollections.siteVolunteersRoleCollection.fetch({reset: true})
                 ).then(function () {
                     //initialize your views here
                     _log('App.Views.Site.create.event', 'site collection fetch promise done');
@@ -1984,13 +1984,40 @@
                         window.ajaxWaiting('remove', '#site-well');
                         window.ajaxWaiting('remove', '#site-status-well');
                         window.ajaxWaiting('remove', '#site-volunteers-well');
+                        if (App.PageableCollections.siteVolunteersRoleCollection.length) {
+                            App.Vars.currentSiteVolunteerRoleID = App.PageableCollections.siteVolunteersRoleCollection.at(0).get('SiteVolunteerRoleID');
+                            App.Models.siteVolunteerRoleModel.set(App.PageableCollections.siteVolunteersRoleCollection.at(0));
+                            self.refocusSiteVolunteerRecord();
+                        }
                     }
                     if (!self.parentView.$el.hasClass('site-management-view')) {
                         self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
                     }
                 });
             }
-        }
+        },
+        refocusSiteVolunteerRecord: function () {
+            let self = this;
+            let recordIdx = 1;
+            App.Views.siteVolunteersView.paginator.collection.fullCollection.each(function (model, idx) {
+
+                if (model.get(App.Models.siteVolunteerRoleModel.idAttribute) === App.Vars.currentSiteVolunteerRoleID) {
+                    recordIdx = idx;
+                }
+            });
+            recordIdx = recordIdx === 0 ? 1 : recordIdx;
+            let page = Math.ceil(recordIdx / App.Views.siteVolunteersView.paginator.collection.state.pageSize)
+            if (page > 1) {
+                _.each(this.paginator.handles, function (handle, idx) {
+                    if (handle.pageIndex === page && handle.label === page) {
+                        //console.log(handle, handle.pageIndex, handle.el)
+                        $(handle.el).find('a').trigger('click')
+                    }
+                })
+            }
+            //console.log(recordIdx, this.paginator.collection.state.pageSize, page, this.backgrid, this.paginator, this.backgrid.collection)
+            self.$el.find('input[type="radio"][name="SiteVolunteerRoleID"][value="' + App.Vars.currentSiteVolunteerRoleID + '"]').parents('tr').trigger('focusin');
+        },
     });
 
     /**
@@ -2206,7 +2233,7 @@
                     }
                     _log('App.Views.SiteVolunteerGridManagerContainerToolbar.deleteCheckedRows', 'selectedModels', selectedModels);
                     let modelIDs = _.map(selectedModels, function (model) {
-                        return model.get('SiteVolunteerID');
+                        return model.get('SiteVolunteerRoleID');
                     });
 
                     App.Views.siteVolunteersView.destroy({deleteModelIDs: modelIDs});
@@ -2245,7 +2272,7 @@
             this.ajaxWaitingSelector = this.backgridWrapperClassSelector;
             this.modelNameLabel = this.options.modelNameLabel;
             this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
-            this.routeName = 'site_volunteer';
+            this.routeName = 'site_volunteer_role';
 
             _log('App.Views.SiteVolunteer.initialize', options);
         },
@@ -2273,16 +2300,16 @@
             });
 
             let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
-            let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
-                initialColumnsVisible: initialColumnsVisible,
-                trackSize: true,
-                trackOrder: true,
-                trackVisibility: true,
-                saveState: App.Vars.bBackgridColumnManagerSaveState,
-                saveStateKey: 'site-volunteers',
-                loadStateOnInit: true,
-                stateChecking: "loose"
-            });
+            // let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
+            //     initialColumnsVisible: initialColumnsVisible,
+            //     trackSize: true,
+            //     trackOrder: true,
+            //     trackVisibility: true,
+            //     saveState: App.Vars.bBackgridColumnManagerSaveState,
+            //     saveStateKey: 'site-volunteers',
+            //     loadStateOnInit: true,
+            //     stateChecking: "loose"
+            // });
 
             // let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
             //     columnManager: colManager
@@ -2300,7 +2327,7 @@
             let paginator = new Backgrid.Extension.Paginator({
                 collection: this.collection
             });
-
+            this.paginator = paginator;
             // Render the paginator
             this.$siteVolunteersGridManagerContainer.find('.site-volunteers-pagination-controls').html(paginator.render().el);
 
@@ -2412,7 +2439,7 @@
 
             }
 
-            if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
+            if (App.Vars.mainAppDoneLoading && currentModelID && App.Vars.currentSiteVolunteerRoleID !== currentModelID) {
                 // Refresh tabs on new row select
                 this.model.url = '/admin/' + self.routeName + '/' + currentModelID;
                 this.model.fetch({reset: true});
@@ -2423,8 +2450,11 @@
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
+                if (!_.isUndefined(e.changed['SiteVolunteerRoleStatus'])) {
+                    e.changed['Status'] = e.changed['SiteVolunteerRoleStatus'];
+                }
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
-                attributes['Status'] = attributes['SiteVolunteerRoleStatus'];
+
                 attributes['SiteStatusID'] = App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                 _log('App.Views.SiteVolunteer.update', self.routeName, e.changed, attributes, this.model);
                 this.model.url = '/admin/' + self.routeName + '/' + currentModelID;
@@ -2607,9 +2637,9 @@
             App.Views.siteVolunteersView = this.siteVolunteersView = new this.siteVolunteersViewClass({
                 el: this.$('.site-volunteers-backgrid-wrapper'),
                 parentView: this,
-                model: App.Models.siteVolunteerModel,
-                modelNameLabel: 'SiteVolunteer',
-                collection: App.PageableCollections.siteVolunteersCollection,
+                model: App.Models.siteVolunteerRoleModel,
+                modelNameLabel: 'SiteVolunteerRole',
+                collection: App.PageableCollections.siteVolunteersRoleCollection,
                 columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
                 hideCellCnt: 0//2
             });
@@ -5273,6 +5303,7 @@
             self.bOnlyRenderRouteView   = false;
             App.Vars.currentSiteID      = App.Vars.appInitialData.site.SiteID;
             App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
+            App.Vars.currentSiteVolunteerRoleID   = App.Vars.appInitialData.site_volunteer.SiteVolunteerRoleID;
             App.Vars.mainAppDoneLoading = false;
             self.listenTo(App.Models.projectModel, 'sync', function (e) {
                 App.Collections.statusManagementCollection.fetch({reset: true})
