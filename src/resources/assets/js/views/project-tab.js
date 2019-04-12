@@ -166,7 +166,7 @@
                 if (attributes['ProjectID'] === '') {
                     attributes['ProjectID'] = App.Vars.currentProjectID;
                 }
-                _log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
+                console.log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.save(attributes,
                     {
@@ -187,7 +187,7 @@
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
 
             let model = this.model.clone().clear({silent: true});
-            _log('App.Views.ProjectTab.create', self.options.tab, {attributes: attributes,model:model, thisModel: this.model});
+            console.log('App.Views.ProjectTab.create', self.options.tab, {attributes: attributes,model:model, thisModel: this.model});
             model.url = '/admin/' + self.options.tab;
             model.save(attributes,
                 {
@@ -233,7 +233,7 @@
                         ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
                         ProjectRoleID: self.model.get('ProjectRoleID')
                     });
-                    _log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:'+ deleteCnt,'self.collection.fullCollection.length:'+
+                    console.log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:'+ deleteCnt,'self.collection.fullCollection.length:'+
                         self.collection.fullCollection.length, self.model);
                     $.ajax({
                         type: "POST",
