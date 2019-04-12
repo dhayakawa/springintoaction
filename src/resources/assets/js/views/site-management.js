@@ -58,9 +58,9 @@
             App.Views.siteVolunteersView = this.siteVolunteersView = new this.siteVolunteersViewClass({
                 el: this.$('.site-volunteers-backgrid-wrapper'),
                 parentView: this,
-                model: App.Models.siteVolunteerModel,
-                modelNameLabel: 'SiteVolunteer',
-                collection: App.PageableCollections.siteVolunteersCollection,
+                model: App.Models.siteVolunteerRoleModel,
+                modelNameLabel: 'SiteVolunteerRole',
+                collection: App.PageableCollections.siteVolunteersRoleCollection,
                 columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
                 hideCellCnt: 0//2
             });
