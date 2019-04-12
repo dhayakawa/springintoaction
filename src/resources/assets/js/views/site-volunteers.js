@@ -57,7 +57,7 @@
                     }
                     _log('App.Views.SiteVolunteerGridManagerContainerToolbar.deleteCheckedRows', 'selectedModels', selectedModels);
                     let modelIDs = _.map(selectedModels, function (model) {
-                        return model.get('SiteVolunteerID');
+                        return model.get('SiteVolunteerRoleID');
                     });
 
                     App.Views.siteVolunteersView.destroy({deleteModelIDs: modelIDs});
@@ -96,7 +96,7 @@
             this.ajaxWaitingSelector = this.backgridWrapperClassSelector;
             this.modelNameLabel = this.options.modelNameLabel;
             this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
-            this.routeName = 'site_volunteer';
+            this.routeName = 'site_volunteer_role';
 
             _log('App.Views.SiteVolunteer.initialize', options);
         },
@@ -124,16 +124,16 @@
             });
 
             let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
-            let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
-                initialColumnsVisible: initialColumnsVisible,
-                trackSize: true,
-                trackOrder: true,
-                trackVisibility: true,
-                saveState: App.Vars.bBackgridColumnManagerSaveState,
-                saveStateKey: 'site-volunteers',
-                loadStateOnInit: true,
-                stateChecking: "loose"
-            });
+            // let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
+            //     initialColumnsVisible: initialColumnsVisible,
+            //     trackSize: true,
+            //     trackOrder: true,
+            //     trackVisibility: true,
+            //     saveState: App.Vars.bBackgridColumnManagerSaveState,
+            //     saveStateKey: 'site-volunteers',
+            //     loadStateOnInit: true,
+            //     stateChecking: "loose"
+            // });
 
             // let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
             //     columnManager: colManager
@@ -151,7 +151,7 @@
             let paginator = new Backgrid.Extension.Paginator({
                 collection: this.collection
             });
-
+            this.paginator = paginator;
             // Render the paginator
             this.$siteVolunteersGridManagerContainer.find('.site-volunteers-pagination-controls').html(paginator.render().el);
 
@@ -263,7 +263,7 @@
 
             }
 
-            if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
+            if (App.Vars.mainAppDoneLoading && currentModelID && App.Vars.currentSiteVolunteerRoleID !== currentModelID) {
                 // Refresh tabs on new row select
                 this.model.url = '/admin/' + self.routeName + '/' + currentModelID;
                 this.model.fetch({reset: true});
@@ -274,8 +274,11 @@
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
+                if (!_.isUndefined(e.changed['SiteVolunteerRoleStatus'])) {
+                    e.changed['Status'] = e.changed['SiteVolunteerRoleStatus'];
+                }
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
-                attributes['Status'] = attributes['SiteVolunteerRoleStatus'];
+
                 attributes['SiteStatusID'] = App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                 _log('App.Views.SiteVolunteer.update', self.routeName, e.changed, attributes, this.model);
                 this.model.url = '/admin/' + self.routeName + '/' + currentModelID;

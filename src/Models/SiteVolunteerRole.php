@@ -29,12 +29,14 @@ class SiteVolunteerRole extends Model
     protected $fillable = [
         'SiteVolunteerID',
         'SiteRoleID',
+        'SiteStatusID',
         'Comments',
         'Status'
     ];
     private $defaultRecordData = [
         'SiteVolunteerID' => 0,
         'SiteRoleID' => 0,
+        'SiteStatusID' => 0,
         'Comments' => '',
         'Status' => ''
     ];
@@ -58,6 +60,7 @@ class SiteVolunteerRole extends Model
         )->select(
             [
                 'site_volunteers.SiteVolunteerID',
+                'site_volunteers.SiteStatusID',
                 'site_volunteer_role.*',
                 'volunteers.VolunteerID',
                 'volunteers.Active',
@@ -89,6 +92,7 @@ class SiteVolunteerRole extends Model
         )->select(
             [
                 'site_volunteers.SiteVolunteerID',
+                'site_volunteers.SiteStatusID',
                 'site_volunteer_role.*',
                 'volunteers.VolunteerID',
                 'volunteers.Active',
@@ -120,6 +124,7 @@ class SiteVolunteerRole extends Model
         )->join('site_roles', 'site_volunteer_role.SiteRoleID', '=', 'site_roles.SiteRoleID')->select(
             [
                 'site_volunteers.SiteVolunteerID',
+                'site_volunteers.SiteStatusID',
                 'site_volunteer_role.*',
                 'volunteers.VolunteerID',
                 'volunteers.Active',

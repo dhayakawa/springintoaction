@@ -4,6 +4,7 @@
 
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Dhayakawa\SpringIntoAction\Models\Volunteer;
+    use Dhayakawa\SpringIntoAction\Models\SiteVolunteer;
     use Dhayakawa\SpringIntoAction\Models\SiteVolunteerRole;
     use Illuminate\Http\Request;
 
@@ -35,17 +36,72 @@
          * @return \Illuminate\Http\Response
          */
         public function store(Request $request) {
-            $params = $request->all();
-            $model = new SiteVolunteerRole;
-            $model->fill(['VolunteerID' => $params['VolunteerID'], 'SiteStatusID' => $params['SiteStatusID'], 'SiteRoleID' => $params['SiteRoleID'], 'Status' => $params['Status']]);
-            $success = $model->save();
+            $siteVolunteer = SiteVolunteer::where(
+                [
+                    [
+                        'VolunteerID',
+                        '=',
+                        $request['VolunteerID'],
+                    ],
+                    [
+                        'SiteStatusID',
+                        '=',
+                        $request['SiteStatusID'],
+                    ]
+                ]
+            )->get()->first();
+            if (!empty($siteVolunteer)) {
+                $success = true;
+                $SiteVolunteerID = $siteVolunteer->SiteVolunteerID;
+            } else {
+                $model = new SiteVolunteer;
+                $data = array_map(
+                    function ($value) {
+                        if (is_array($value)) {
+                            return join(',', $value);
+                        }
+
+                        return $value;
+                    },
+                    $request->only($model->getFillable())
+                );
+                array_walk(
+                    $data,
+                    function (&$value, $key) {
+                        if (is_string($value)) {
+                            $value = \urldecode($value);
+                        }
+                    }
+                );
+                $model->fill($data);
+
+                $success = $model->save();
+                $SiteVolunteerID = $model->SiteVolunteerID;
+            }
+
+            if ($success) {
+                $model = new SiteVolunteerRole;
+                $data = array_map(
+                    function ($value) {
+                        if (is_array($value)) {
+                            return join(',', $value);
+                        }
+
+                        return $value;
+                    },
+                    $request->only($model->getFillable())
+                );
+                $data['SiteVolunteerID'] = $SiteVolunteerID;
+                $model->fill($data);
+                $success = $model->save();
+            }
 
             if(!isset($success)) {
-                $response = ['success' => false, 'msg' => 'Site Lead Addition Not Implemented Yet.'];
+                $response = ['success' => false, 'msg' => 'Site Volunteer Role Addition Not Implemented Yet.'];
             } elseif($success) {
-                $response = ['success' => true, 'msg' => 'Site Lead Addition Succeeded.'];
+                $response = ['success' => true, 'msg' => 'Site Volunteer Role Addition Succeeded.'];
             } else {
-                $response = ['success' => false, 'msg' => 'Site Lead Addition Failed.'];
+                $response = ['success' => false, 'msg' => 'Site Volunteer Role Addition Failed.'];
             }
 
 
@@ -53,17 +109,15 @@
         }
 
         /**
-         * Display the specified resource.
+         * @param $SiteVolunteerRoleID
          *
-         * @param  int $id
-         *
-         * @return \Illuminate\Http\Response
+         * @return array
          */
-        public function show($id) {
+        public function show($SiteVolunteerRoleID) {
             $model  = new SiteVolunteerRole;
             $result = $model->getDefaultRecordData();
             try {
-                $result = $model->getSiteLead($id);
+                $result = $model->getSiteVolunteer($SiteVolunteerRoleID);
             } catch(\Exception $e) {
                 report($e);
             }
@@ -83,57 +137,46 @@
         }
 
         /**
-         * Update the specified resource in storage.
+         * @param Request $request
+         * @param         $SiteVolunteerRoleID
          *
-         * @param  \Illuminate\Http\Request $request
-         * @param  int $id
-         *
-         * @return \Illuminate\Http\Response
+         * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
          */
-        public function update(Request $request, $id) {
-            $batchSuccess = true;
+        public function update(Request $request, $SiteVolunteerRoleID) {
             $failMsg = '';
-            $params = $request->all();
-            array_walk(
-                $params,
-                function (&$value, $key) {
-                    if (is_string($value)) {
-                        $value = \urldecode($value);
-                    } elseif(is_array($value)){
-                        $value = join(",", $value);
+
+            $model = SiteVolunteerRole::findOrFail($SiteVolunteerRoleID);
+            $data = array_map(
+                function ($value) {
+                    if (is_array($value)) {
+                        return join(',', $value);
                     }
-                }
+
+                    return $value;
+                },
+                $request->only($model->getFillable())
             );
-            $projectVolunteerRoleModel  = new SiteVolunteerRole;
-            $projectVolunteerRoleModel->fill(['VolunteerID' => $params['VolunteerID'], 'SiteStatusID' => $params['SiteStatusID'], 'SiteRoleID' => $params['SiteRoleID'], 'Status' => $params['SiteVolunteerRoleStatus']]);
-            $success = $projectVolunteerRoleModel->save();
-            if(!$success) {
-                $batchSuccess = false;
-                $failMsg      .= ' Site Volunteer Role update failed. ';
+            $requestData = $request->all();
+            if(isset($requestData['SiteVolunteerRoleStatus'])){
+                $data['Status'] = is_array($requestData['SiteVolunteerRoleStatus']) ? current(
+                    $requestData['SiteVolunteerRoleStatus']): $requestData['SiteVolunteerRoleStatus'];
             }
-            $model = Volunteer::findOrFail($id);
-            $data = $request->only($model->getFillable());
-            array_walk(
-                $data,
-                function (&$value, $key) {
-                    if (is_string($value)) {
-                        $value = \urldecode($value);
-                    } elseif (is_array($value)) {
-                        $value = join(",", $value);
-                    }
-                }
-            );
+            // \Illuminate\Support\Facades\Log::debug(
+            //     'SiteVolunteerRole $data',
+            //     [
+            //         'File:' . __FILE__,
+            //         'Method:' . __METHOD__,
+            //         'Line:' . __LINE__,
+            //         $data
+            //     ]
+            // );
             $model->fill($data);
             $success = $model->save();
-            if(!$success) {
-                $batchSuccess = false;
-                $failMsg      .= ' Volunteer update failed. ';
-            }
-            $success = $batchSuccess;
+
             if($success) {
-                $response = ['success' => true, 'msg' => 'Volunteer Update Succeeded.'];
+                $response = ['success' => true, 'msg' => 'Site Volunteer Role Update Succeeded.'];
             } else {
-                $response = ['success' => false, 'msg' => 'Volunteer Update Failed.' . $failMsg];
+                $response = ['success' => false, 'msg' => 'Site Volunteer Role Update Failed.'];
             }
 
 
@@ -152,14 +195,74 @@
             //
         }
 
-        public function getSiteLeads($SiteStatusID){
-            $model = new SiteVolunteerRole();
-            return $model->getSiteLeads($SiteStatusID);
+        public function batchDestroy(Request $request)
+        {
+            $params = $request->all();
+            $batchSuccess = true;
+            $failMsg = '';
+            if (is_array($params['deleteModelIDs'])) {
+                foreach ($params['deleteModelIDs'] as $modelID) {
+
+                    $projectVolunteerRoleModel = SiteVolunteerRole::findOrFail($modelID)->get()->first();
+                    $SiteVolunteerID = $projectVolunteerRoleModel->SiteVolunteerID;
+                    $SiteStatusID = $projectVolunteerRoleModel->SiteStatusID;
+                    $success = $projectVolunteerRoleModel->delete();
+
+                    if (!$success) {
+                        $batchSuccess = false;
+                        $failMsg .= ' Site Volunteer Role failed. ';
+                    } else {
+                        $projectVolunteerRoleModel = SiteVolunteerRole::where('SiteVolunteerID', '=', $SiteVolunteerID)->where(
+                            'SiteStatusID',
+                            '=',
+                            $SiteStatusID)->get()->first();
+
+                        if(!$projectVolunteerRoleModel){
+                            $siteVolunteer = SiteVolunteer::where('SiteVolunteerID', '=', $SiteVolunteerID)->where(
+                                'SiteStatusID',
+                                '=',
+                                $SiteStatusID
+                            );
+                            $siteVolunteer->delete();
+                        }
+                    }
+
+                }
+            } else {
+                $success = false;
+                $failMsg = ' Oops. Nothing was sent to be deleted. If this keeps happening, tell David Hayakawa.';
+            }
+            $success = $batchSuccess;
+
+            if (!isset($success)) {
+                $response = ['success' => false, 'msg' => 'Site Volunteer Batch Removal Not Implemented Yet.'];
+            } elseif ($success) {
+                $response = ['success' => true, 'msg' => 'Site Volunteer Batch Removal Succeeded.'];
+            } else {
+                $response = ['success' => false, 'msg' => 'Site Volunteer Batch Removal Failed.' . $failMsg];
+            }
+
+            return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
-        public function getAllSiteLeads() {
+        public function getSiteVolunteers($SiteStatusID)
+        {
             $model = new SiteVolunteerRole();
 
-            return $model->getAllSiteLeads();
+            return $model->getSiteVolunteers($SiteStatusID);
+        }
+
+        public function getAllSiteVolunteers()
+        {
+            $model = new SiteVolunteerRole();
+
+            return $model->getAllSiteVolunteers();
+        }
+
+        public function getUnassigned($SiteStatusID, $Year)
+        {
+            $model = new SiteVolunteer();
+
+            return $model->getUnassigned($SiteStatusID, $Year);
         }
     }

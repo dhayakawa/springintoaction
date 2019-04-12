@@ -6,7 +6,7 @@
     App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown(@json($appInitialData['select_options']['projects_dropdown']));
     App.PageableCollections.projectCollection = new App.PageableCollections.Project(@json($appInitialData['projects']));
     App.Collections.allProjectsCollection = new App.Collections.Project(@json($appInitialData['all_projects']));
-    App.PageableCollections.siteVolunteersCollection= new App.PageableCollections.Project(@json($appInitialData['site_volunteers']));
+    App.PageableCollections.siteVolunteersRoleCollection= new App.PageableCollections.SiteVolunteerRoles(@json($appInitialData['site_volunteers']));
     // project tabs
     App.PageableCollections.projectLeadsCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_leads']));
     App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget(@json($appInitialData['project_budgets']));

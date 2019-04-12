@@ -4,6 +4,7 @@
     App.Models.siteStatusModel = new App.Models.SiteStatus();
     App.Models.projectModel = new App.Models.Project();
     App.Models.siteVolunteerModel = new App.Models.SiteVolunteer();
+    App.Models.siteVolunteerRoleModel = new App.Models.SiteVolunteerRole();
 
     /**
      * Models for the contacts and volunteer management
