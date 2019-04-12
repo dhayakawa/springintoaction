@@ -8,7 +8,7 @@
     App.Collections.allProjectsCollection = new App.Collections.Project(@json($appInitialData['all_projects']));
     App.PageableCollections.siteVolunteersRoleCollection= new App.PageableCollections.SiteVolunteerRoles(@json($appInitialData['site_volunteers']));
     // project tabs
-    App.PageableCollections.projectLeadsCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_leads']));
+    App.PageableCollections.projectLeadsCollection = new App.PageableCollections.ProjectLead(@json($appInitialData['project_leads']));
     App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget(@json($appInitialData['project_budgets']));
     App.PageableCollections.projectContactsCollection = new App.PageableCollections.Contact(@json($appInitialData['project_contacts']));
     App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.Volunteer(@json($appInitialData['project_volunteers']));
