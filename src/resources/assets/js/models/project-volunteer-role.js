@@ -4,10 +4,12 @@
         idAttribute: "ProjectVolunteerRoleID",
         defaults: {
             'ProjectID': '',
+            'ProjectVolunteerID': '',
             'VolunteerID': '',
             'ProjectRoleID': '',
             'Comments': '',
-            'Status': ''
+            'Status': '',
+            'ProjectVolunteerRoleStatus':''
         }
     });
 })(window.App);

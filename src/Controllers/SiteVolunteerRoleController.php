@@ -197,13 +197,14 @@
 
         public function batchDestroy(Request $request)
         {
+
             $params = $request->all();
             $batchSuccess = true;
             $failMsg = '';
             if (is_array($params['deleteModelIDs'])) {
                 foreach ($params['deleteModelIDs'] as $modelID) {
 
-                    $projectVolunteerRoleModel = SiteVolunteerRole::findOrFail($modelID)->get()->first();
+                    $projectVolunteerRoleModel = SiteVolunteerRole::find($modelID);
                     $SiteVolunteerID = $projectVolunteerRoleModel->SiteVolunteerID;
                     $SiteStatusID = $projectVolunteerRoleModel->SiteStatusID;
                     $success = $projectVolunteerRoleModel->delete();
