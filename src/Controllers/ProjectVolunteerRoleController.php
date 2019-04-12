@@ -5,6 +5,7 @@
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Dhayakawa\SpringIntoAction\Models\Volunteer;
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
+    use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
     use Illuminate\Http\Request;
 
     class ProjectVolunteerRoleController extends BaseController {
@@ -35,10 +36,66 @@
          * @return \Illuminate\Http\Response
          */
         public function store(Request $request) {
-            $params = $request->all();
-            $model = new ProjectVolunteerRole;
-            $model->fill(['VolunteerID' => $params['VolunteerID'], 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID'], 'Status' => $params['Status']]);
-            $success = $model->save();
+
+            $projectVolunteer = ProjectVolunteer::where(
+                [
+                    [
+                        'VolunteerID',
+                        '=',
+                        $request['VolunteerID'],
+                    ],
+                    [
+                        'ProjectID',
+                        '=',
+                        $request['ProjectID'],
+                    ]
+                ]
+            )->get()->first();
+            if (!empty($projectVolunteer)) {
+                $success = true;
+                $ProjectVolunteerID = $projectVolunteer->ProjectVolunteerID;
+            } else {
+                $model = new ProjectVolunteer;
+                $data = array_map(
+                    function ($value) {
+                        if (is_array($value)) {
+                            return join(',', $value);
+                        }
+
+                        return $value;
+                    },
+                    $request->only($model->getFillable())
+                );
+                array_walk(
+                    $data,
+                    function (&$value, $key) {
+                        if (is_string($value)) {
+                            $value = \urldecode($value);
+                        }
+                    }
+                );
+                $model->fill($data);
+
+                $success = $model->save();
+                $ProjectVolunteerID = $model->ProjectVolunteerID;
+            }
+
+            if ($success) {
+                $model = new ProjectVolunteerRole;
+                $data = array_map(
+                    function ($value) {
+                        if (is_array($value)) {
+                            return join(',', $value);
+                        }
+
+                        return $value;
+                    },
+                    $request->only($model->getFillable())
+                );
+                //$data['SiteVolunteerID'] = $ProjectVolunteerID;
+                $model->fill($data);
+                $success = $model->save();
+            }
 
             if(!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Project Lead Addition Not Implemented Yet.'];
@@ -83,57 +140,45 @@
         }
 
         /**
-         * Update the specified resource in storage.
+         * @param Request $request
+         * @param         $ProjectVolunteerRoleID
          *
-         * @param  \Illuminate\Http\Request $request
-         * @param  int $id
-         *
-         * @return \Illuminate\Http\Response
+         * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
          */
-        public function update(Request $request, $id) {
-            $batchSuccess = true;
-            $failMsg = '';
-            $params = $request->all();
-            array_walk(
-                $params,
-                function (&$value, $key) {
-                    if (is_string($value)) {
-                        $value = \urldecode($value);
-                    } elseif(is_array($value)){
-                        $value = join(",", $value);
+        public function update(Request $request, $ProjectVolunteerRoleID) {
+            $model = ProjectVolunteerRole::findOrFail($ProjectVolunteerRoleID);
+            $data = array_map(
+                function ($value) {
+                    if (is_array($value)) {
+                        return join(',', $value);
                     }
-                }
+
+                    return $value;
+                },
+                $request->only($model->getFillable())
             );
-            $projectVolunteerRoleModel  = new ProjectVolunteerRole;
-            $projectVolunteerRoleModel->fill(['VolunteerID' => $params['VolunteerID'], 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID'], 'Status' => $params['ProjectVolunteerRoleStatus']]);
-            $success = $projectVolunteerRoleModel->save();
-            if(!$success) {
-                $batchSuccess = false;
-                $failMsg      .= ' Project Volunteer Role update failed. ';
+            $requestData = $request->all();
+            if (isset($requestData['ProjectVolunteerRoleStatus'])) {
+                $data['Status'] = is_array($requestData['ProjectVolunteerRoleStatus']) ? current(
+                    $requestData['ProjectVolunteerRoleStatus']
+                ) : $requestData['ProjectVolunteerRoleStatus'];
             }
-            $model = Volunteer::findOrFail($id);
-            $data = $request->only($model->getFillable());
-            array_walk(
-                $data,
-                function (&$value, $key) {
-                    if (is_string($value)) {
-                        $value = \urldecode($value);
-                    } elseif (is_array($value)) {
-                        $value = join(",", $value);
-                    }
-                }
-            );
+            // \Illuminate\Support\Facades\Log::debug(
+            //     'SiteVolunteerRole $data',
+            //     [
+            //         'File:' . __FILE__,
+            //         'Method:' . __METHOD__,
+            //         'Line:' . __LINE__,
+            //         $data
+            //     ]
+            // );
             $model->fill($data);
             $success = $model->save();
-            if(!$success) {
-                $batchSuccess = false;
-                $failMsg      .= ' Volunteer update failed. ';
-            }
-            $success = $batchSuccess;
+
             if($success) {
-                $response = ['success' => true, 'msg' => 'Volunteer Update Succeeded.'];
+                $response = ['success' => true, 'msg' => 'Project Volunteer Role Update Succeeded.'];
             } else {
-                $response = ['success' => false, 'msg' => 'Volunteer Update Failed.' . $failMsg];
+                $response = ['success' => false, 'msg' => 'Project Volunteer Role  Update Failed.'];
             }
 
 

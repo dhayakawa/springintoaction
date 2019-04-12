@@ -10,13 +10,7 @@
         },
         mode: "client" // page entirely on the client side
     });
-    App.PageableCollections.ProjectLead = Backbone.PageableCollection.extend({
-        model: App.Models.Volunteer,
-        state: {
-            pageSize: 10
-        },
-        mode: "client" // page entirely on the client side
-    });
+
 
     let SkillsCell = Backgrid.Extension.Select2Cell.extend({
         editor: App.CellEditors.Select2CellEditor,
@@ -45,24 +39,7 @@
         }]
 
     });
-    let VolunteerRoleCell = Backgrid.Extension.Select2Cell.extend({
-        editor: App.CellEditors.Select2CellEditor,
-        // any options specific to `select2` goes here
-        select2Options: {
-            // default is false because Backgrid will save the cell's value
-            // and exit edit mode on enter
-            openOnEnter: false
-        },
-        optionValues: [{
-            values: App.Models.volunteerModel.getRoleOptions(false)
-        }],
-        formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
-            toRaw: function (formattedValue, model) {
-                return formattedValue === null ? [] : parseInt(formattedValue);
-            }
-        })
 
-    });
     let SchoolCell = Backgrid.Extension.Select2Cell.extend({
         editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
@@ -421,38 +398,9 @@
     _.each(App.Vars.volunteersBackgridColumnDefinitions, function (value, key) {
         value.displayOrder = displayOrderCnt++;
     });
-    displayOrderCnt = 1;
-    App.Vars.volunteerLeadsBackgridColumnDefinitions = [];
-    let sharedCells = ['', 'VolunteerID', 'Active', 'LastName', 'FirstName', 'Status', 'MobilePhoneNumber', 'HomePhoneNumber', 'Email', 'Comments'];
-    _.each(sharedCells, function (value, key) {
-        let cellDefinition = _.findWhere(App.Vars.volunteersBackgridColumnDefinitions, {name: value});
-        cellDefinition = _.clone(cellDefinition);
-        cellDefinition.displayOrder = displayOrderCnt++;
-        if (cellDefinition.name === 'Status') {
-            cellDefinition.name = 'ProjectVolunteerRoleStatus';
-        }
-        if (cellDefinition.name === 'VolunteerID' ||cellDefinition.name === 'Active' || cellDefinition.name === 'FirstName' || cellDefinition.name === 'LastName' || cellDefinition.name === 'MobilePhoneNumber' || cellDefinition.name === 'HomePhoneNumber' || cellDefinition.name === 'Email') {
-            cellDefinition.editable = false;
-        } else {
-            cellDefinition.editable = App.Vars.Auth.bCanEditProjectTabGridFields;
-        }
-        App.Vars.volunteerLeadsBackgridColumnDefinitions.push(cellDefinition);
-        if (cellDefinition.name === 'FirstName') {
-            App.Vars.volunteerLeadsBackgridColumnDefinitions.push({
-                name: "ProjectRoleID",
-                label: "Project Lead Role",
-                cell: VolunteerRoleCell,
-                editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-                resizeable: true,
-                orderable: true,
-                width: "250",
-                filterType: "string",
-                displayOrder: displayOrderCnt++
-            });
-        }
-    });
+
 
 
     _log('App.Vars.CollectionsGroup', 'App.Vars.volunteersBackgridColumnDefinitions:', App.Vars.volunteersBackgridColumnDefinitions);
-    _log('App.Vars.CollectionsGroup', 'App.Vars.volunteerLeadsBackgridColumnDefinitions:', App.Vars.volunteerLeadsBackgridColumnDefinitions);
+
 })(window.App);

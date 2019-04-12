@@ -185,8 +185,9 @@
         create: function (attributes) {
             let self = this;
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
-            _log('App.Views.ProjectTab.create', self.options.tab, attributes, this.model);
+
             let model = this.model.clone().clear({silent: true});
+            _log('App.Views.ProjectTab.create', self.options.tab, {attributes: attributes,model:model, thisModel: this.model});
             model.url = '/admin/' + self.options.tab;
             model.save(attributes,
                 {

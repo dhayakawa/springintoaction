@@ -158,7 +158,7 @@
             $failMsg = '';
             if(is_array($params['deleteModelIDs'])) {
                 foreach($params['deleteModelIDs'] as $modelID) {
-                    $model   = ProjectVolunteerRole::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $params['ProjectRoleID']);
+                    $model   = ProjectVolunteerRole::where('ProjectVolunteerRoleID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $params['ProjectRoleID']);
                     if($model->get()->count()) {
                         $success = $model->forceDelete();
                     } else {

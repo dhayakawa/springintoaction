@@ -26,7 +26,7 @@
      * For the initial site data load, the project tab models are set to the first item in the array
      */
     App.Models.projectContactModel = new App.Models.ProjectContact(@json(current($appInitialData['project_contacts'])));
-    App.Models.projectLeadModel = new App.Models.Volunteer(@json(current($appInitialData['project_leads'])));
+    App.Models.projectLeadModel = new App.Models.ProjectVolunteerRole(@json(current($appInitialData['project_leads'])));
     App.Models.projectBudgetModel = new App.Models.Budget(@json(current($appInitialData['project_budgets'])));
     App.Models.projectAttachmentModel = new App.Models.ProjectAttachment(@json(current($appInitialData['project_attachments'])));
     App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
