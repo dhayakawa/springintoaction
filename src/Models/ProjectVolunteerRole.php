@@ -110,7 +110,7 @@ class ProjectVolunteerRole extends Model
         //     ]
         // );
 
-        return $collection->get()->toArray();
+        return current($collection->get()->toArray());
     }
 
     public function getProjectLeads($ProjectID)

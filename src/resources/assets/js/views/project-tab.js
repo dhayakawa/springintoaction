@@ -4,7 +4,8 @@
             let self = this;
             this.options = options;
             this.childViews = [];
-            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn','showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+            this.currentModelID = null;
+            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
             self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
         },
@@ -38,6 +39,9 @@
             this.$tabBtnPane = $(this.options.parentViewEl).find('.' + this.options.tab + '.tabButtonPane');
             this.$tabBtnPanePaginationContainer = this.$tabBtnPane.find('.tab-pagination-controls');
             this.model = App.Vars.currentTabModels[this.options.tab];
+            this.currentModelID = this.model.get(this.model.idAttribute);
+            // Set the current model id on the tab so we can reference it in other views
+            $('#' + this.options.tab).data('current-model-id', this.currentModelID);
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
 
             this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
@@ -118,8 +122,7 @@
 
             window.ajaxWaiting('remove', self.ajaxWaitingSelector);
             _log('App.Views.ProjectTab.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
-            // Set the current model id on the tab so we can reference it in other views
-            $('#' + this.options.tab).data('current-model-id', this.model.get(this.model.idAttribute));
+
             // Show a popup of the text that has been truncated
             $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
                 placement: 'auto right',
@@ -189,8 +192,16 @@
 
             if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
                 // Refresh tabs on new row select
-                // this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
-                // this.model.fetch({reset: true});
+                this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
+                this.model.fetch({
+                    reset: true,
+                    success: function (model, response, options) {
+                        self.currentModelID = self.model.get(self.model.idAttribute);
+                        $('#' + self.options.tab).data('current-model-id', self.currentModelID);
+                        console.log('tab model fetch', self.options.tab, currentModelID, self.model)
+                    }
+                });
+
             }
 
         },
@@ -202,7 +213,7 @@
                 if (attributes['ProjectID'] === '') {
                     attributes['ProjectID'] = App.Vars.currentProjectID;
                 }
-                console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged:e.changed, saveAttributes:attributes, tModel:this.model});
+                console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged: e.changed, saveAttributes: attributes, tModel: this.model});
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.save(attributes,
                     {
@@ -223,7 +234,7 @@
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
 
             let model = this.model.clone().clear({silent: true});
-            console.log('App.Views.ProjectTab.create', self.options.tab, {attributes: attributes,model:model, thisModel: this.model});
+            console.log('App.Views.ProjectTab.create', self.options.tab, {attributes: attributes, model: model, thisModel: this.model});
             model.url = '/admin/' + self.options.tab;
             model.save(attributes,
                 {
@@ -257,9 +268,9 @@
             let self = this;
             let deleteCnt = attributes.deleteModelIDs.length;
             let confirmMsg = "Do you really want to delete the checked " + self.options.tab + "s?";
-            if (deleteCnt === self.collection.fullCollection.length){
+            if (deleteCnt === self.collection.fullCollection.length) {
                 confirmMsg = "You are about to delete every checked " + self.options.tab + ". Do you really want to" +
-                    " continue with deleting them all?";
+                             " continue with deleting them all?";
             }
 
             bootbox.confirm(confirmMsg, function (bConfirmed) {
@@ -269,8 +280,8 @@
                         ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
                         ProjectRoleID: self.model.get('ProjectRoleID')
                     });
-                    console.log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:'+ deleteCnt,'self.collection.fullCollection.length:'+
-                        self.collection.fullCollection.length, self.model);
+                    console.log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:' + deleteCnt, 'self.collection.fullCollection.length:' +
+                                                                                                                        self.collection.fullCollection.length, self.model);
                     $.ajax({
                         type: "POST",
                         dataType: "json",
@@ -336,7 +347,7 @@
             if (bOverflown) {
                 $element.popover('hide');
             }
-           //_log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
+            //_log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
         }
     });
 })(window.App);
