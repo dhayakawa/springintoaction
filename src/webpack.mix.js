@@ -151,15 +151,17 @@ mix.scripts([
     'resources/assets/js/routes/route.js',
     'resources/assets/js/sia.js'
 ], 'public/js/springintoaction.main.js');
+
+/************************************************************
+ * Registration app
+ */
 mix.scripts([
     'resources/assets/js/frontend/springintoaction.project-request.js'
 ], 'public/js/frontend/springintoaction.project-request.js');
 mix.scripts([
     'resources/assets/js/frontend/springintoaction.project-registration.js'
 ], 'public/js/frontend/springintoaction.project-registration.js');
-/**
- * Registration app
- */
+
 mix.scripts([
     'resources/assets/js/frontend/registration/models/project.js',
     'resources/assets/js/models/project-volunteer.js',

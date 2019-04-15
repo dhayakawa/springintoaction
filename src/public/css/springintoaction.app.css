@@ -1,6 +1,10 @@
 .badge {
   padding: 1px 7px 3px 7px;
 }
+.sia-main-app {
+  min-height: 439px;
+  width: 100%;
+}
 .sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-image i {
   width: 32px;
   height: auto;

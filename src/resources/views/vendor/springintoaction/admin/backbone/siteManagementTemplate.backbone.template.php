@@ -7,7 +7,7 @@
     &nbsp;
     <button id="btnDeleteSite" type="button" class="btn btn-sm btn-danger">Delete Site</button>
     <div class="pull-right">
-        <a href="#" class="btn btn-box-tool"><i class="fa fa-times"></i></a>
+        <a href="#" class="btn btn-box-tool close-view"><i class="fa fa-times"></i></a>
     </div>
 </div>
 <div class="box-body">

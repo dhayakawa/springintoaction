@@ -14,9 +14,6 @@
             this.mainApp    = this.options.mainApp;
             _.bindAll(this, 'render', 'updateProjectDataViews', 'updateProjectDataTabButtons');
         },
-        events: {
-
-        },
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
@@ -27,7 +24,7 @@
                 collection: App.Collections.sitesDropDownCollection
             });
             this.sitesDropDownView.render();
-
+            this.childViews.push(this.sitesDropDownView);
 
             App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
                 el: this.$('select#site_years'),
@@ -35,6 +32,7 @@
                 collection: App.Collections.siteYearsDropDownCollection
             });
             this.siteYearsDropDownView.render();
+            this.childViews.push(this.siteYearsDropDownView);
 
             App.Views.projectsView = this.projectsView = new this.projectsViewClass({
                 el: this.$('.projects-backgrid-wrapper'),
@@ -44,6 +42,7 @@
                 model: App.Models.projectModel
             });
             this.projectsView.render();
+            this.childViews.push(this.projectsView);
 
             App.Views.siteProjectTabsView = this.siteProjectTabsView = new this.siteProjectTabsViewClass({
                 el: this.$('.site-projects-tabs'),
@@ -52,6 +51,7 @@
                 model: App.Models.projectModel
             });
             this.siteProjectTabsView.render();
+            this.childViews.push(this.siteProjectTabsView);
 
             return this;
         },

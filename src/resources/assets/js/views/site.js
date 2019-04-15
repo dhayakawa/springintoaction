@@ -166,9 +166,16 @@
         tagName: 'div',
         template: template('siteTemplate'),
         initialize: function (options) {
+            let self = this;
             _.bindAll(this, 'update');
-            this.model.on('change', this.render, this);
-            this.model.on('set', this.render, this);
+            this.listenTo(this.model, 'change', function (e) {
+                self.render();
+            });
+            this.listenTo(this.model, 'set', function (e) {
+                self.render();
+            });
+            // this.model.on('change', this.render, this);
+            // this.model.on('set', this.render, this);
         },
         events: {
             'change input[type="text"]': 'update'
@@ -259,9 +266,16 @@
     App.Views.SiteStatus = Backbone.View.extend({
         template: template('siteStatusTemplate'),
         initialize: function (options) {
+            let self = this;
             _.bindAll(this, 'update');
-            this.model.on('change', this.render, this);
-            this.model.on('destroy', this.remove, this); // 3.
+            this.listenTo(this.model, 'change', function (e) {
+                self.render();
+            });
+            this.listenTo(this.model, 'destroy', function (e) {
+                self.remove();
+            });
+            // this.model.on('change', this.render, this);
+            // this.model.on('destroy', this.remove, this); // 3.
         },
         events: {
             'click input[type="checkbox"]': 'update',

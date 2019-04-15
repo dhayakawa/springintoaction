@@ -1,7 +1,7 @@
 (function (App) {
     App.Views.Dashboard = Backbone.View.extend({
         attributes: {
-            class: 'dashboard'
+            class: 'route-view dashboard'
         },
         template: _.template([
             '<div class="row">',
@@ -19,10 +19,28 @@
             _.bindAll(this, 'render');
         },
         render: function () {
+            this.$el.off();
             this.$el.empty().append(this.template({
                 dashboardPanelViews: this.dashboardPanelViews
             }));
             return this;
+        },
+        close: function () {
+            this.remove();
+            // handle other unbinding needs, here
+            _.each(this.dashboardPanelViews, function (childView) {
+                if (childView.close) {
+                    try {
+                        childView.close();
+                    } catch (e) {
+                    }
+                } else if (childView.remove) {
+                    try {
+                        childView.remove();
+                    } catch (e) {
+                    }
+                }
+            })
         }
     });
     App.Views.DashboardPanel = Backbone.View.extend({
