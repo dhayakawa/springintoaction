@@ -45,7 +45,18 @@
 @section('content')
 <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 sia-main-app" data-rooturl="{{ Request::url() }}">
-
+        <div class="ajax-spinner-overlay" style="width:auto;height:auto;top:0;left:0;right:0;bottom:0">
+            <div id="floatingCirclesG" style="margin-top:157px">
+                <div class="f_circleG" id="frotateG_01"></div>
+                <div class="f_circleG" id="frotateG_02"></div>
+                <div class="f_circleG" id="frotateG_03"></div>
+                <div class="f_circleG" id="frotateG_04"></div>
+                <div class="f_circleG" id="frotateG_05"></div>
+                <div class="f_circleG" id="frotateG_06"></div>
+                <div class="f_circleG" id="frotateG_07"></div>
+                <div class="f_circleG" id="frotateG_08"></div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

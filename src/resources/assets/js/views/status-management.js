@@ -80,7 +80,7 @@
             'change [name="value"]': 'enableSave',
             'inserted.bs.popover [data-popover="true"]': 'setPopOverContent',
             'click .popover-status-management-form .cancel': 'cancelSaveStatusManagementOption',
-            'click .popover-status-management-form .save': 'saveStatusManagementOption',
+            'click .popover-status-management-form .save': 'saveStatusManagementOption'
         },
         render: function () {
             let self = this;

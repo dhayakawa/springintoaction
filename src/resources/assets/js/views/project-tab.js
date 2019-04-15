@@ -3,6 +3,7 @@
         initialize: function (options) {
             let self = this;
             this.options = options;
+            this.childViews = [];
             _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn','showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
             self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
@@ -12,6 +13,23 @@
             'mouseenter thead th button': 'showColumnHeaderLabel',
             'mouseenter tbody td': 'showTruncatedCellContentPopup',
             'mouseleave tbody td': 'hideTruncatedCellContentPopup'
+        },
+        close: function () {
+            this.remove();
+            // handle other unbinding needs, here
+            _.each(this.childViews, function (childView) {
+                if (childView.close) {
+                    try {
+                        childView.close();
+                    } catch (e) {
+                    }
+                } else if (childView.remove) {
+                    try {
+                        childView.remove();
+                    } catch (e) {
+                    }
+                }
+            })
         },
         render: function (e) {
             let self = this;
@@ -85,16 +103,19 @@
             this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
-            this.backgrid.collection.on('backgrid:editing', function (e) {
+            this.listenTo(this.backgrid.collection, 'backgrid:editing', function (e) {
                 _log('App.Views.ProjectTab.render', self.options.tab, 'backgrid.collection.on backgrid:editing', e);
                 self.updateProjectTabView(e);
             });
-            this.backgrid.collection.on('backgrid:edited', function (e) {
+
+            this.listenTo(this.backgrid.collection, 'backgrid:edited', function (e) {
                 self.update(e);
             });
-            this.backgrid.collection.on('backgrid:selected', function (e) {
+
+            this.listenTo(this.backgrid.collection, 'backgrid:selected', function (e) {
                 self.toggleDeleteBtn(e);
             });
+
             window.ajaxWaiting('remove', self.ajaxWaitingSelector);
             _log('App.Views.ProjectTab.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
             // Set the current model id on the tab so we can reference it in other views
@@ -109,7 +130,8 @@
                 }
             });
             // hide popover if it is not overflown
-            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
+            let $cells = $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]');
+            this.listenTo($cells, 'show.bs.popover', function (e) {
                 let element = this;
 
                 let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
@@ -117,10 +139,31 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-            $gridContainer.find('td').on('click', function () {
+            // $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
+            //     let element = this;
+            //
+            //     let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            //     if (!bOverflown) {
+            //         $gridContainer.find('td.renderable').popover('hide')
+            //     }
+            // });
+            let $cell = $gridContainer.find('td');
+            this.listenTo($cell, 'click', function (e) {
                 $gridContainer.find('td.renderable').popover('hide')
             });
+            // $gridContainer.find('td').on('click', function () {
+            //     $gridContainer.find('td.renderable').popover('hide')
+            // });
             this.$gridContainer = $gridContainer;
+
+            this.childViews.push(this.backgrid);
+            this.childViews.push(colVisibilityControl);
+            this.childViews.push(this.projectGridManagerContainerToolbar);
+            this.childViews.push(this.paginator);
+            this.childViews.push(sizeAbleCol);
+            this.childViews.push(sizeHandler);
+            this.childViews.push(orderHandler);
+
             return this;
         },
         /**

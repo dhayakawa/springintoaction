@@ -11,7 +11,7 @@
         events: {
             'click button': 'update',
             'change .form-control': 'enableSave',
-            'change [name="value"]': 'enableSave',
+            'change [name="value"]': 'enableSave'
         },
         render: function () {
             let self = this;

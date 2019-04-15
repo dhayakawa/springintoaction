@@ -8,6 +8,7 @@
             this.options = options;
             this.parentView = this.options.parentView;
             this.tabs = this.parentView.$('.nav-tabs [role="tab"]');
+            this.childViews = [];
             this.listenTo(App.Views.siteProjectTabsView, 'cleared-child-views', function () {
                 self.remove();
             });
@@ -21,6 +22,23 @@
             'click .btnTabAdd': 'addGridRow',
             'click .btnTabDeleteChecked': 'deleteCheckedRows',
             'click .btnTabClearStored': 'clearStoredColumnState'
+        },
+        close: function () {
+            this.remove();
+            // handle other unbinding needs, here
+            _.each(this.childViews, function (childView) {
+                if (childView.close) {
+                    try {
+                        childView.close();
+                    } catch (e) {
+                    }
+                } else if (childView.remove) {
+                    try {
+                        childView.remove();
+                    } catch (e) {
+                    }
+                }
+            })
         },
         render: function () {
             let self = this;
@@ -64,6 +82,7 @@
             _log('App.Views.ProjectTabsGridManagerContainerToolbar.addGridRow', e, tabName, tabView);
 
             $('#sia-modal').one('show.bs.modal', function (event) {
+                let $fileInput = null;
                 let button = $(event.relatedTarget); // Button that triggered the modal
                 let recipient = button.data('whatever'); // Extract info from data-* attributes
                 // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
@@ -74,7 +93,8 @@
                 if (tabName === 'project_attachment') {
                     let selfView = modal.find('form[name="newProjectAttachment"]');
                     let sAjaxFileUploadURL = '/admin/project_attachment/upload';
-                    $(selfView.find('input[type="file"]')).fileupload({
+                    $fileInput = $(selfView.find('input[type="file"]'));
+                    $fileInput.fileupload({
                         url: sAjaxFileUploadURL,
                         dataType: 'json',
                         done: function (e, data) {
@@ -118,7 +138,12 @@
                     } else {
                         tabView[tabName].create($.unserialize(modal.find('form').serialize()));
                     }
-
+                    if (tabName === 'project_attachment') {
+                        try {
+                            $fileInput.fileupload('destroy');
+                        } catch (e) {
+                        }
+                    }
                     $('#sia-modal').modal('hide');
                 });
 
@@ -185,6 +210,7 @@
             this.mainApp = this.options.mainApp;
             this.parentView = this.options.parentView;
             this.options.mainAppEl = this.mainApp.el;
+            this.childTabViews = [];
             this.childViews = [];
             _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID', 'toggleProductTabsBox');
             // this.model is App.Models.projectModel
@@ -194,6 +220,23 @@
         events: {
             'shown.bs.tab a[data-toggle="tab"]': 'notifyProjectTabToolbar',
             'clear-child-views': 'removeChildViews'
+        },
+        close: function () {
+            this.remove();
+            // handle other unbinding needs, here
+            _.each(this.childViews, function (childView) {
+                if (childView.close) {
+                    try {
+                        childView.close();
+                    } catch (e) {
+                    }
+                } else if (childView.remove) {
+                    try {
+                        childView.remove();
+                    } catch (e) {
+                    }
+                }
+            })
         },
         render: function () {
             let self = this;
@@ -206,7 +249,7 @@
                 columnCollectionDefinitions: App.Vars.volunteerLeadsBackgridColumnDefinitions,
                 hideCellCnt: 0//8
             });
-            this.childViews.push({project_lead: this.projectLeadsView});
+            this.childTabViews.push({project_lead: this.projectLeadsView});
 
             App.Views.projectBudgetView = this.projectBudgetView = new this.projectBudgetViewClass({
                 el: this.$('.project-budget-backgrid-wrapper'),
@@ -217,7 +260,7 @@
                 columnCollectionDefinitions: App.Vars.BudgetsBackgridColumnDefinitions,
                 hideCellCnt: 0//1
             });
-            this.childViews.push({project_budget: this.projectBudgetView});
+            this.childTabViews.push({project_budget: this.projectBudgetView});
 
             App.Views.projectContactsView = this.projectContactsView = new this.projectContactsViewClass({
                 el: this.$('.project-contacts-backgrid-wrapper'),
@@ -228,7 +271,7 @@
                 columnCollectionDefinitions: App.Vars.projectContactsBackgridColumnDefinitions,
                 hideCellCnt: 0//2
             });
-            this.childViews.push({project_contact: this.projectContactsView});
+            this.childTabViews.push({project_contact: this.projectContactsView});
 
             App.Views.projectVolunteersView = this.projectVolunteersView = new this.projectVolunteersViewClass({
                 el: this.$('.project-volunteers-backgrid-wrapper'),
@@ -239,7 +282,7 @@
                 columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
                 hideCellCnt: 0//8
             });
-            this.childViews.push({project_volunteer: this.projectVolunteersView});
+            this.childTabViews.push({project_volunteer: this.projectVolunteersView});
 
             App.Views.projectAttachmentsView = this.projectAttachmentsView = new this.projectAttachmentsViewClass({
                 el: this.$('.project-attachments-backgrid-wrapper'),
@@ -250,7 +293,7 @@
                 columnCollectionDefinitions: App.Vars.ProjectAttachmentsBackgridColumnDefinitions,
                 hideCellCnt: 0//8
             });
-            this.childViews.push({project_attachment: this.projectAttachmentsView});
+            this.childTabViews.push({project_attachment: this.projectAttachmentsView});
 
             /**
              * Handles the buttons below the tabbed grids
@@ -258,9 +301,10 @@
             App.Views.projectTabsGridManagerContainerToolbarView = this.projectTabsGridManagerContainerToolbarView = new App.Views.ProjectTabsGridManagerContainerToolbar({
                 parentView: this,
                 el: this.parentView.$('.project-tabs-grid-manager-container'),
-                parentChildViews: this.childViews
+                parentChildViews: this.childTabViews
             });
-
+            this.childViews = _.values(this.childTabViews);
+            this.childViews.push(this.projectTabsGridManagerContainerToolbarView);
             this.projectTabsGridManagerContainerToolbarView.render();
             this.projectLeadsView.render();
             this.projectBudgetView.render();

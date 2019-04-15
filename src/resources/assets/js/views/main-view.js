@@ -5,6 +5,7 @@
             let self = this;
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
             _.bindAll(self, 'render', 'setRouteView');
+            self.preRenderedView = false;
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;
             App.Vars.currentSiteID      = App.Vars.appInitialData.site.SiteID;
@@ -55,6 +56,9 @@
             }
             return this;
         },
+        getRouteViewExists: function($el){
+            return this.$el.find($el).length;
+        },
         render: function () {
             let self = this;
 
@@ -68,7 +72,18 @@
                     self.routeView.render();
 
                 } else {
-                    this.$el.html(self.routeView.render().el);
+                    if (self.getRouteViewExists(self.routeView.$el)) {
+                        window.ajaxWaiting('remove', '.sia-main-app');
+                        self.routeView.$el.show()
+                    } else {
+                        let viewEl = self.routeView.render().el;
+                        if (self.preRenderedView){
+                            $(viewEl).hide();
+                        } else {
+                            window.ajaxWaiting('remove', '.sia-main-app');
+                        }
+                        this.$el.append(viewEl);
+                    }
                 }
             }
 
