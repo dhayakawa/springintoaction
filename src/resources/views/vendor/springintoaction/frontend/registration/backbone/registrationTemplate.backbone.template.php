@@ -90,7 +90,7 @@
                     <% goTo = 0; %>
                     <div class="item" data-number="4" data-helper-question="show-project-list">
                         <p class="show-project-list-intro"><span class="search-criteria-result-msg">We found <span class="welcome-helper-projects-found-amt"></span> that met your criteria.</span><br><br>When you find a project that interests you,<br>click the
-                            <span class="btn btn-primary btn-sm" role="button">Register</span> button to begin the registration process.</p>
+                            blue [Register] button to begin the registration process.</p>
 
                         <div class="carasel-caption">
                             <span class="btn btn-success btn-lg" data-helper-question="show-project-list" data-val="yes" data-goto-number="<%= goTo %>" role="button">Show me the list!</span>
