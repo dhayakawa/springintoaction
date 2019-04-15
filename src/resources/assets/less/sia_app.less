@@ -424,7 +424,16 @@ textarea#AttachmentPath {
 
 .backgrid-paginator ul {
     margin: 0;
+    & > li > a, & > li > span {
+        position:relative;
+        display:inline-block;
+        border: 1px solid #ddd;
+        margin: 0 1px;
+        border-radius: 4px;
+        background-color: #ebebeb;
+    }
 }
+
 
 .ajax-spinner-overlay {
     position: absolute;
