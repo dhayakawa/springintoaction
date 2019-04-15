@@ -1,3 +1,6 @@
+AppEvents = {};
+_.extend(AppEvents, Backbone.Events);
+
 // Global object for spring into action backbone app
 window.App = {
     Models: {
@@ -179,16 +182,22 @@ window.template = function (id) {
 
 window.ajaxWaiting = function (action, selector) {
     let $el = $(selector);
-    if (action === 'show'){
-
-        let t = window.template('ajaxSpinnerTemplate');
-        if ($el.css('position') !== 'absolute'){
-            $el.css('position','relative')
+    if ($el.is(':visible')) {
+        if (action === 'show') {
+            let t = window.template('ajaxSpinnerTemplate');
+            if ($el.css('position') !== 'absolute') {
+                $el.css('position', 'relative')
+            }
+            $el.append(t());
+            $el.find('.ajax-spinner-overlay').css({width: $el.outerWidth(), height: $el.outerHeight()}).find('#floatingCirclesG').css('margin-top', ($el.outerHeight() / 2) - (125 / 2))
+        } else {
+            $el.find('.ajax-spinner-overlay').remove();
         }
-        $el.append(t());
-        $el.find('.ajax-spinner-overlay').css({width:$el.outerWidth(),height:$el.outerHeight()}).find('#floatingCirclesG').css('margin-top',($el.outerHeight()/2)-(125/2))
     } else {
-        $el.find('.ajax-spinner-overlay').remove();
+        try {
+            $el.find('.ajax-spinner-overlay').remove();
+        } catch (e) {
+        }
     }
 };
 
@@ -354,6 +363,7 @@ $('#sia-modal').modal({
     App.Views.Select = Backbone.View.extend({
         tagName: 'select',
         initialize: function (options) {
+            this.childViews = [];
             if (!_.isNull(options) && !_.isUndefined(options)){
                 this.buildHTML = !_.isUndefined(options.buildHTML) ? options.buildHTML : false;
                 this.setSelectedValue = !this.buildHTML && !_.isUndefined(options.setSelectedValue) ? options.setSelectedValue : null;
@@ -373,12 +383,15 @@ $('#sia-modal').modal({
             "change": "changeSelected"
         },
         addOne: function (model) {
-            let optionHTML = new App.Views.SelectOption({
+            let option = new App.Views.SelectOption({
                 model: model,
                 setSelectedValue: this.setSelectedValue,
                 optionValueModelAttrName: this.optionValueModelAttrName,
                 optionLabelModelAttrName: this.optionLabelModelAttrName
-            }).render().el;
+            });
+            this.childViews.push(option);
+            let optionHTML = option.render().el;
+
             $(this.el).append(optionHTML);
 
         },

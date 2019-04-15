@@ -264,6 +264,7 @@ function getSIAConfirmModal(id){
     App.Views.Select = Backbone.View.extend({
         tagName: 'select',
         initialize: function (options) {
+            this.childViews = [];
             if (!_.isNull(options) && !_.isUndefined(options)){
                 this.buildHTML = !_.isUndefined(options.buildHTML) ? options.buildHTML : false;
                 this.setSelectedValue = !this.buildHTML && !_.isUndefined(options.setSelectedValue) ? options.setSelectedValue : null;
@@ -283,12 +284,15 @@ function getSIAConfirmModal(id){
             "change": "changeSelected"
         },
         addOne: function (model) {
-            let optionHTML = new App.Views.SelectOption({
+            let option = new App.Views.SelectOption({
                 model: model,
                 setSelectedValue: this.setSelectedValue,
                 optionValueModelAttrName: this.optionValueModelAttrName,
                 optionLabelModelAttrName: this.optionLabelModelAttrName
-            }).render().el;
+            });
+            this.childViews.push(option);
+            let optionHTML = option.render().el;
+
             $(this.el).append(optionHTML);
 
         },

@@ -20,6 +20,13 @@
             'click .btnDeleteChecked': 'deleteCheckedRows',
             'click .btnClearStored': 'clearStoredColumnState',
         },
+        close: function () {
+            try {
+                this.$el.find('input[type="file"]').fileupload('destroy');
+            } catch (e) {
+            }
+            this.remove();
+        },
         render: function () {
             this.$el.html(this.template({modelName: this.modelNameLabel}));
             // initialize all file upload inputs on the page at load time
@@ -147,8 +154,8 @@
                 nextColIdx + ')').remove();
 
             $tCloneWrapper.append($tClone);
-            console.log('$backgridTable', $backgridTable, backgridTableHeight)
-            console.log('$tCloneWrapper', $tCloneWrapper)
+            // console.log('$backgridTable', $backgridTable, backgridTableHeight)
+            // console.log('$tCloneWrapper', $tCloneWrapper)
         }
 
     });

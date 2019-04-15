@@ -27,7 +27,12 @@
             _log(this.viewName + '.initialize', options, this);
         },
         events: {
-            'click .btnRefreshTotals': 'refresh'
+            'click .btnRefreshTotals': 'refresh',
+            'click .box-header .btn.btn-box-tool': 'close'
+        },
+        close: function (e) {
+            e.stopPropagation();
+            this.$el.hide()
         },
         addOne: function (sSiteName, key, data) {
             let self = this;

@@ -184,6 +184,7 @@
             this.rowBgColor                  = 'lightYellow';
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
             this.parentView                  = this.options.parentView;
+            this.childViews = [];
             this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e) {
                 self.handleSiteStatusIDChange(e);
             });
@@ -195,6 +196,23 @@
             'mouseenter tbody td': 'showTruncatedCellContentPopup',
             'click tbody td': 'hideTruncatedCellContentPopup',
             'mouseleave tbody td': 'hideTruncatedCellContentPopup'
+        },
+        close: function () {
+            this.remove();
+            // handle other unbinding needs, here
+            _.each(this.childViews, function (childView) {
+                if (childView.close) {
+                    try {
+                        childView.close();
+                    } catch (e) {
+                    }
+                } else if (childView.remove) {
+                    try {
+                        childView.remove();
+                    } catch (e) {
+                    }
+                }
+            })
         },
         render: function (e) {
             let self = this;
@@ -277,20 +295,35 @@
             $backgridWrapper.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
-            this.backgrid.collection.on('backgrid:editing', function (e) {
+            this.listenTo(this.backgrid.collection, 'backgrid:editing', function (e) {
                 _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:editing', e);
                 self.updateProjectDataViews(e);
             });
-            this.backgrid.collection.on('backgrid:edited', function (e) {
+            this.listenTo(this.backgrid.collection, 'backgrid:edited', function (e) {
                 _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:edited', e);
                 self.update(e);
             });
-            this.backgrid.collection.on('backgrid:selected', function (e) {
+            this.listenTo(this.backgrid.collection, 'backgrid:selected', function (e) {
                 self.toggleDeleteBtn(e);
             });
+            // this.backgrid.collection.on('backgrid:edited', function (e) {
+            //     _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:edited', e);
+            //     self.update(e);
+            // });
+            // this.backgrid.collection.on('backgrid:selected', function (e) {
+            //     self.toggleDeleteBtn(e);
+            // });
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
 
             this.$gridContainer = $backgridWrapper;
+
+            this.childViews.push(this.backgrid);
+            this.childViews.push(colVisibilityControl);
+            this.childViews.push(this.projectGridManagerContainerToolbar);
+            this.childViews.push(paginator);
+            this.childViews.push(sizeAbleCol);
+            this.childViews.push(sizeHandler);
+            this.childViews.push(orderHandler);
 
             return this;
 

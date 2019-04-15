@@ -1,7 +1,7 @@
 <div class="box-header with-border">
     <h3 class="box-title <%= modelNameLabelLowerCase %>s-management"><%= modelNameLabel %>s Management:</h3>
     <div class="pull-right">
-        <a href="#" class="btn btn-box-tool"><i class="fa fa-times"></i></a>
+        <a href="#" class="btn btn-box-tool close-view"><i class="fa fa-times"></i></a>
     </div>
 </div>
 <div class="box-body">

@@ -34,7 +34,7 @@
         },
         preRouteViewRender: function () {
             let self = this;
-            self.mainApp.$el.html('');
+            self.mainApp.$el.find('> .route-view').hide();
             self.bRouteViewRendered = false;
         },
         postRouteViewRender: function () {
@@ -243,6 +243,15 @@
                 App.Views.dashboardView = self.dashboardView = new self.dashboardViewClass({
                     dashboardPanelViews: aDashboardPanelViews
                 });
+
+                // pre-render core management views
+                self.mainApp.preRenderedView = true;
+                this.loadView('site','management','');
+                this.loadView('project','management','');
+                this.loadView('project', 'status', '');
+                this.loadView('site_contacts','management','');
+                this.loadView('volunteers','management','');
+                self.mainApp.preRenderedView = false;
             }
             self.mainApp.setRouteView(self.dashboardView).render();
             self.bRouteViewRendered = true;
@@ -251,15 +260,19 @@
         loadView: function (route, action, type) {
             let self = this;
             type     = typeof type !== 'undefined' ? type : '';
+
             self.preRouteViewRender();
-            if (App.Vars.devMode) {
+
+            if (App.Vars.devMode && !self.mainApp.preRenderedView) {
                 growl('SIA loadView route has been called:' + route + '_' + action);
             }
             self.routeRequested = route + '_' + action;
 
             // The backbone View to render
             let routeView = null;
-
+            if (!self.mainApp.preRenderedView) {
+                window.ajaxWaiting('show', '.sia-main-app');
+            }
             try {
                 switch (self.routeRequested) {
                     case 'settings_management':
@@ -309,7 +322,7 @@
                     case 'site_contacts_management':
                         if (self.contactsManagementView === null) {
                             App.Views.contactsManagementView = self.contactsManagementView = new self.contactsManagementViewClass({
-                                className: 'box box-primary contacts-management-view',
+                                className: 'route-view box box-primary contacts-management-view',
                                 viewClassName: 'contacts-management-view',
                                 mainAppEl: self.mainApp.el,
                                 mainApp: self.mainApp,
@@ -325,7 +338,7 @@
                     case 'volunteers_management':
                         if (self.volunteersManagementView === null) {
                             App.Views.volunteersManagementView = self.volunteersManagementView = new self.volunteersManagementViewClass({
-                                className: 'box box-primary volunteers-management-view',
+                                className: 'route-view box box-primary volunteers-management-view',
                                 viewClassName: 'volunteers-management-view',
                                 mainAppEl: self.mainApp.el,
                                 mainApp: self.mainApp,
@@ -341,7 +354,7 @@
                     case 'budget_management':
                         if (self.annualBudgetsManagementView === null) {
                             App.Views.annualBudgetsManagementView = self.annualBudgetsManagementView = new self.annualBudgetsManagementViewClass({
-                                className: 'box box-primary annualbudgets-management-view',
+                                className: 'route-view box box-primary annualbudgets-management-view',
                                 viewClassName: 'annualbudgets-management-view',
                                 model: App.Models.annualBudgetModel,
                                 mainAppEl: self.mainApp.el,
@@ -360,7 +373,7 @@
                         if (typeof self.reportsManagementView[type] === 'undefined' || self.reportsManagementView[type] === null) {
                             App.Views.reportsManagementView.push(type);
                             App.Views.reportsManagementView[type] = new self.reportsManagementViewClass({
-                                className: 'box box-primary reports-management-view',
+                                className: 'route-view box box-primary reports-management-view',
                                 viewClassName: 'reports-management-view',
                                 model: App.Models.reportModel,
                                 mainAppEl: self.mainApp.el,
