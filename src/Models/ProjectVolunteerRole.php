@@ -60,67 +60,144 @@ class ProjectVolunteerRole extends Model
 
     public function getProjectLead($ProjectVolunteerRoleID)
     {
-        return Volunteer::join(
-            'project_volunteers',
-            'volunteers.VolunteerID',
-            '=',
-            'project_volunteers.VolunteerID'
+        $collection = ProjectVolunteerRole::select(
+            [
+                'project_volunteers.ProjectVolunteerID',
+                'project_volunteer_role.*',
+                'project_volunteer_role.Status as ProjectVolunteerRoleStatus',
+                'volunteers.VolunteerID',
+                'volunteers.Active',
+                'volunteers.LastName',
+                'volunteers.FirstName',
+                'volunteers.MobilePhoneNumber',
+                'volunteers.HomePhoneNumber',
+                'volunteers.Email',
+            ]
         )->join(
-            'project_volunteer_role',
-            'volunteers.VolunteerID',
-            '=',
-            'project_volunteer_role.VolunteerID'
-        )->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')->where(
+                'project_volunteers',
+                function ($join) {
+                    $join->on(
+                        'project_volunteer_role.VolunteerID',
+                        '=',
+                        'project_volunteers.VolunteerID'
+                    )->whereRaw(
+                        'project_volunteers.ProjectID=project_volunteer_role.ProjectID'
+                    );
+                }
+            )->join(
+                'project_roles',
+                'project_volunteer_role.ProjectRoleID',
+                '=',
+                'project_roles.ProjectRoleID'
+            )->join(
+                'volunteers',
+                'volunteers.VolunteerID',
+                '=',
+                'project_volunteer_role.VolunteerID'
+            )->where(
                 'project_volunteer_role.ProjectVolunteerRoleID',
                 '=',
                 $ProjectVolunteerRoleID
-            )->select(
-                [
-                    'project_volunteers.ProjectVolunteerID',
-                    'project_volunteer_role.*',
-                    'project_volunteer_role.Status as ProjectVolunteerRoleStatus',
-                    'volunteers.VolunteerID',
-                    'volunteers.Active',
-                    'volunteers.LastName',
-                    'volunteers.FirstName',
-                    'volunteers.MobilePhoneNumber',
-                    'volunteers.HomePhoneNumber',
-                    'volunteers.Email'
-                ]
-            )->whereNull('project_volunteer_role.deleted_at')->get()->toArray();
+            )->whereNull('project_volunteers.deleted_at')->whereNull('project_volunteer_role.deleted_at');
+        // \Illuminate\Support\Facades\Log::debug(
+        //     '',
+        //     [
+        //         'File:' . __FILE__,
+        //         'Method:' . __METHOD__,
+        //         'Line:' . __LINE__,
+        //         $ProjectVolunteerRoleID,
+        //         $collection->toSql(),
+        //     ]
+        // );
+
+        return $collection->get()->toArray();
     }
 
     public function getProjectLeads($ProjectID)
     {
-        $collection = Volunteer::join(
-            'project_volunteers',
-            'volunteers.VolunteerID',
-            '=',
-            'project_volunteers.VolunteerID'
+        // $collection = Volunteer::join(
+        //     'project_volunteers',
+        //     'volunteers.VolunteerID',
+        //     '=',
+        //     'project_volunteers.VolunteerID'
+        // )->join(
+        //     'project_volunteer_role',
+        //     'volunteers.VolunteerID',
+        //     '=',
+        //     'project_volunteer_role.VolunteerID'
+        // )->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')->whereRaw(
+        //     'project_volunteer_role.ProjectID = ? and project_roles.role != \'Worker\'',
+        //     [$ProjectID]
+        // )->select(
+        //     [
+        //         'project_volunteers.ProjectVolunteerID',
+        //         'project_volunteer_role.*',
+        //         'project_volunteer_role.Status as ProjectVolunteerRoleStatus',
+        //         'volunteers.VolunteerID',
+        //         'volunteers.Active',
+        //         'volunteers.LastName',
+        //         'volunteers.FirstName',
+        //         'volunteers.MobilePhoneNumber',
+        //         'volunteers.HomePhoneNumber',
+        //         'volunteers.Email',
+        //     ]
+        // )->whereNull('project_volunteers.deleted_at')->whereNull('project_volunteer_role.deleted_at');
+        // \Illuminate\Support\Facades\Log::debug(
+        //     '',
+        //     [
+        //         'File:' . __FILE__,
+        //         'Method:' . __METHOD__,
+        //         'Line:' . __LINE__,
+        //         $ProjectID,
+        //         $collection->toSql(),
+        //     ]
+        // );
+        $collection = ProjectVolunteerRole::select(
+            [
+                'project_volunteers.ProjectVolunteerID',
+                'project_volunteer_role.*',
+                'project_volunteer_role.Status as ProjectVolunteerRoleStatus',
+                'volunteers.VolunteerID',
+                'volunteers.Active',
+                'volunteers.LastName',
+                'volunteers.FirstName',
+                'volunteers.MobilePhoneNumber',
+                'volunteers.HomePhoneNumber',
+                'volunteers.Email',
+            ]
         )->join(
-            'project_volunteer_role',
+            'project_volunteers',
+            function ($join) {
+                $join->on(
+                    'project_volunteer_role.VolunteerID',
+                    '=',
+                    'project_volunteers.VolunteerID'
+                )->whereRaw(
+                    'project_volunteers.ProjectID=project_volunteer_role.ProjectID'
+                );
+            }
+        )->join(
+            'project_roles',
+            function ($join) {
+                $join->on(
+                    'project_volunteer_role.ProjectRoleID',
+                    '=',
+                    'project_roles.ProjectRoleID'
+                )->whereRaw(
+                    'project_roles.role != \'Worker\''
+                );
+            }
+        )->join(
+            'volunteers',
             'volunteers.VolunteerID',
             '=',
             'project_volunteer_role.VolunteerID'
-        )->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')->whereRaw(
-                'project_volunteer_role.ProjectID = ? and project_roles.role != \'Worker\'',
-                [$ProjectID]
-            )->select(
-                [
-                    'project_volunteers.ProjectVolunteerID',
-                    'project_volunteer_role.*',
-                    'project_volunteer_role.Status as ProjectVolunteerRoleStatus',
-                    'volunteers.VolunteerID',
-                    'volunteers.Active',
-                    'volunteers.LastName',
-                    'volunteers.FirstName',
-                    'volunteers.MobilePhoneNumber',
-                    'volunteers.HomePhoneNumber',
-                    'volunteers.Email'
-                ]
-            )->whereNull('project_volunteer_role.deleted_at');
-        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
-            $ProjectID,$collection->toSql()]);
+        )->where(
+            'project_volunteer_role.ProjectID',
+            '=',
+            $ProjectID
+        )->whereNull('project_volunteers.deleted_at')->whereNull('project_volunteer_role.deleted_at');
+
         return $collection->get()->toArray();
     }
 
@@ -137,23 +214,23 @@ class ProjectVolunteerRole extends Model
             '=',
             'project_volunteer_role.VolunteerID'
         )->join('project_roles', 'project_volunteer_role.ProjectRoleID', '=', 'project_roles.ProjectRoleID')->where(
-                'project_roles.role',
-                '!=',
-                'Worker'
-            )->select(
-                [
-                    'project_volunteers.ProjectVolunteerID',
-                    'project_volunteer_role.*',
-                    'project_volunteer_role.Status as ProjectVolunteerRoleStatus',
-                    'volunteers.VolunteerID',
-                    'volunteers.Active',
-                    'volunteers.LastName',
-                    'volunteers.FirstName',
-                    'volunteers.MobilePhoneNumber',
-                    'volunteers.HomePhoneNumber',
-                    'volunteers.Email'
-                ]
-            )->whereNull('project_volunteer_role.deleted_at')->get()->toArray();
+            'project_roles.role',
+            '!=',
+            'Worker'
+        )->select(
+            [
+                'project_volunteers.ProjectVolunteerID',
+                'project_volunteer_role.*',
+                'project_volunteer_role.Status as ProjectVolunteerRoleStatus',
+                'volunteers.VolunteerID',
+                'volunteers.Active',
+                'volunteers.LastName',
+                'volunteers.FirstName',
+                'volunteers.MobilePhoneNumber',
+                'volunteers.HomePhoneNumber',
+                'volunteers.Email',
+            ]
+        )->whereNull('project_volunteer_role.deleted_at')->get()->toArray();
     }
 
     /**

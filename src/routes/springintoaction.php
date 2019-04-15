@@ -238,7 +238,7 @@ Route::group(
             ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getProjectLeads']
         );
         Route::get(
-            'project_lead/{VolunteerID}',
+            'project_lead/{ProjectVolunteerRoleID}',
             ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@show']
         );
         Route::put(

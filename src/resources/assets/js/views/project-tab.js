@@ -139,14 +139,7 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-            // $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
-            //     let element = this;
-            //
-            //     let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            //     if (!bOverflown) {
-            //         $gridContainer.find('td.renderable').popover('hide')
-            //     }
-            // });
+
             let $cell = $gridContainer.find('td');
             this.listenTo($cell, 'click', function (e) {
                 $gridContainer.find('td.renderable').popover('hide')
@@ -196,8 +189,8 @@
 
             if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
                 // Refresh tabs on new row select
-                this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
-                this.model.fetch({reset: true});
+                // this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
+                // this.model.fetch({reset: true});
             }
 
         },
@@ -209,7 +202,7 @@
                 if (attributes['ProjectID'] === '') {
                     attributes['ProjectID'] = App.Vars.currentProjectID;
                 }
-                console.log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
+                console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged:e.changed, saveAttributes:attributes, tModel:this.model});
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.save(attributes,
                     {
