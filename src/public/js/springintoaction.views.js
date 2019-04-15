@@ -775,14 +775,7 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-            // $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
-            //     let element = this;
-            //
-            //     let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            //     if (!bOverflown) {
-            //         $gridContainer.find('td.renderable').popover('hide')
-            //     }
-            // });
+
             let $cell = $gridContainer.find('td');
             this.listenTo($cell, 'click', function (e) {
                 $gridContainer.find('td.renderable').popover('hide')
@@ -832,8 +825,8 @@
 
             if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
                 // Refresh tabs on new row select
-                this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
-                this.model.fetch({reset: true});
+                // this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
+                // this.model.fetch({reset: true});
             }
 
         },
@@ -845,7 +838,7 @@
                 if (attributes['ProjectID'] === '') {
                     attributes['ProjectID'] = App.Vars.currentProjectID;
                 }
-                console.log('App.Views.ProjectTab.update', self.options.tab, e.changed, attributes, this.model);
+                console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged:e.changed, saveAttributes:attributes, tModel:this.model});
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.save(attributes,
                     {
@@ -3151,15 +3144,16 @@
                 App.PageableCollections.projectAttachmentsCollection.url = '/admin/project/project_attachment/' + ProjectID;
 
                 $.when(
-                    App.PageableCollections.projectLeadsCollection.fetch({reset: true}),
-                    App.PageableCollections.projectBudgetsCollection.fetch({reset: true}),
-                    App.PageableCollections.projectContactsCollection.fetch({reset: true}),
-                    App.PageableCollections.projectVolunteersCollection.fetch({reset: true}),
-                    App.PageableCollections.projectAttachmentsCollection.fetch({reset: true})
+                    App.PageableCollections.projectLeadsCollection.fetch({reset: true, success: self.tabFetchSuccess}),
+                    App.PageableCollections.projectBudgetsCollection.fetch({reset: true, success: self.tabFetchSuccess}),
+                    App.PageableCollections.projectContactsCollection.fetch({reset: true, success: self.tabFetchSuccess}),
+                    App.PageableCollections.projectVolunteersCollection.fetch({reset: true, success: self.tabFetchSuccess}),
+                    App.PageableCollections.projectAttachmentsCollection.fetch({reset: true, success: self.tabFetchSuccess})
                 ).then(function () {
                     //initialize your views here
                     _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'tab collections fetch promise done');
                     self.mainApp.$('h3.box-title small').html(self.model.get('ProjectDescription'));
+                    // DO NOT RE-Render or duplicate data and events start up
                     // self.projectLeadsView.render();
                     // self.projectBudgetView.render();
                     // self.projectContactsView.render();
@@ -3173,6 +3167,9 @@
                 _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'fetchIfNewProjectID has not changed', this.model.get('ProjectID'));
             }
             return this;
+        },
+        tabFetchSuccess: function (model, response, options) {
+            //console.log('tabFetchSuccess',model, response, options)
         },
         /**
          * Not called anywhere anymore...
