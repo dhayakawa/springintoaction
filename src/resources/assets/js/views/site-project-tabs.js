@@ -354,11 +354,11 @@
                 App.PageableCollections.projectAttachmentsCollection.url = '/admin/project/project_attachment/' + ProjectID;
 
                 $.when(
-                    App.PageableCollections.projectLeadsCollection.fetch({reset: true}),
-                    App.PageableCollections.projectBudgetsCollection.fetch({reset: true}),
-                    App.PageableCollections.projectContactsCollection.fetch({reset: true}),
-                    App.PageableCollections.projectVolunteersCollection.fetch({reset: true}),
-                    App.PageableCollections.projectAttachmentsCollection.fetch({reset: true})
+                    App.PageableCollections.projectLeadsCollection.fetch({reset: true, success: self.tabFetchSuccess}),
+                    App.PageableCollections.projectBudgetsCollection.fetch({reset: true, success: self.tabFetchSuccess}),
+                    App.PageableCollections.projectContactsCollection.fetch({reset: true, success: self.tabFetchSuccess}),
+                    App.PageableCollections.projectVolunteersCollection.fetch({reset: true, success: self.tabFetchSuccess}),
+                    App.PageableCollections.projectAttachmentsCollection.fetch({reset: true, success: self.tabFetchSuccess})
                 ).then(function () {
                     //initialize your views here
                     _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'tab collections fetch promise done');
@@ -377,6 +377,9 @@
                 _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'fetchIfNewProjectID has not changed', this.model.get('ProjectID'));
             }
             return this;
+        },
+        tabFetchSuccess: function (model, response, options) {
+            //console.log('tabFetchSuccess',model, response, options)
         },
         /**
          * Not called anywhere anymore...

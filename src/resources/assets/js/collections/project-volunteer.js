@@ -44,9 +44,7 @@
         }],
         formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
             toRaw: function (formattedValue, model) {
-                return formattedValue === null ? [] : _.map(formattedValue, function (v) {
-                    return parseInt(v);
-                })
+                return formattedValue === null ? [] : parseInt(formattedValue)
             }
         })
     });
@@ -134,7 +132,7 @@
             resizeable: true,
             orderable: true,
             width: "250",
-            filterType: "string",
+            filterType: "integer",
             displayOrder: displayOrder++
         },
         {
@@ -145,7 +143,7 @@
             resizeable: true,
             orderable: true,
             width: "250",
-            filterType: "string",
+            filterType: "integer",
             displayOrder: displayOrder++
         },
         {

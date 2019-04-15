@@ -112,15 +112,15 @@
         /**
          * Display the specified resource.
          *
-         * @param  int $id
+         * @param  int $ProjectVolunteerRoleID
          *
          * @return \Illuminate\Http\Response
          */
-        public function show($id) {
+        public function show($ProjectVolunteerRoleID) {
             $model  = new ProjectVolunteerRole;
             $result = $model->getDefaultRecordData();
             try {
-                $result = $model->getProjectLead($id);
+                $result = $model->getProjectLead($ProjectVolunteerRoleID);
             } catch(\Exception $e) {
                 report($e);
             }
