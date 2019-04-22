@@ -831,7 +831,8 @@ class ReportsController extends BaseController
             'sites.SiteName as Site Name',
             'projects.SequenceNumber as Proj Num',
             'projects.ProjectDescription as Project Description',
-            'project_volunteers.created_at'
+            'project_volunteers.created_at',
+            'volunteers.TeamLeaderWilling'
         )->join(
             'project_volunteers',
             'project_volunteers.VolunteerID',
