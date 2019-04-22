@@ -692,7 +692,7 @@
                 saveState: App.Vars.bBackgridColumnManagerSaveState,
                 saveStateKey: 'site-project-tab-' + this.options.tab,
                 loadStateOnInit: true,
-                stateChecking: "loose"
+                stateChecking: "strict"
             });
 
             let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
@@ -1461,7 +1461,7 @@
                 saveStateKey: 'site-projects',
                 //saveStateKey: 'site-projects-' + App.Models.siteModel.get(App.Models.siteModel.idAttribute) + '-' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute) + '-' + _.uniqueId('-'),
                 loadStateOnInit: true,
-                stateChecking: "loose"
+                stateChecking: "strict"
             });
 
             let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
@@ -3080,7 +3080,7 @@
                 parentViewEl: this.el,
                 mainAppEl: this.mainApp.el,
                 collection: App.PageableCollections.projectVolunteersCollection,
-                columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
+                columnCollectionDefinitions: App.Vars.projectVolunteersBackgridColumnDefinitions,
                 hideCellCnt: 0//8
             });
             this.childTabViews.push({project_volunteer: this.projectVolunteersView});

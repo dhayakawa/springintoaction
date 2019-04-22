@@ -29,7 +29,7 @@
     App.Models.projectLeadModel = new App.Models.ProjectVolunteerRole(@json(current($appInitialData['project_leads'])));
     App.Models.projectBudgetModel = new App.Models.Budget(@json(current($appInitialData['project_budgets'])));
     App.Models.projectAttachmentModel = new App.Models.ProjectAttachment(@json(current($appInitialData['project_attachments'])));
-    App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer();
+    App.Models.projectVolunteerModel = new App.Models.ProjectVolunteer(@json(current($appInitialData['project_volunteers'])));
     App.Models.projectVolunteerRoleModel = new App.Models.ProjectVolunteerRole();
     App.Models.annualBudgetModel = new App.Models.AnnualBudget(@json(current($appInitialData['annual_budget'])));
     /**
@@ -41,7 +41,7 @@
             project_lead: App.Models.projectLeadModel,
             project_budget: App.Models.projectBudgetModel,
             project_contact: App.Models.projectContactModel,
-            project_volunteer: App.Models.volunteerModel,
+            project_volunteer: App.Models.projectVolunteerModel,
             project_attachment: App.Models.projectAttachmentModel
         }
     ;

@@ -240,7 +240,7 @@
                 saveStateKey: 'site-projects',
                 //saveStateKey: 'site-projects-' + App.Models.siteModel.get(App.Models.siteModel.idAttribute) + '-' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute) + '-' + _.uniqueId('-'),
                 loadStateOnInit: true,
-                stateChecking: "loose"
+                stateChecking: "strict"
             });
 
             let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({

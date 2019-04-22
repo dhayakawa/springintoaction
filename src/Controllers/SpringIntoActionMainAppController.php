@@ -22,6 +22,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectRole;
 use Dhayakawa\SpringIntoAction\Models\SiteRole;
 use Dhayakawa\SpringIntoAction\Models\SiteVolunteerRole;
 use Dhayakawa\SpringIntoAction\Models\Volunteer;
+use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
 use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
 use \Dhayakawa\SpringIntoAction\Models\BudgetSourceOptions;
 use \Dhayakawa\SpringIntoAction\Models\BudgetStatusOptions;
@@ -212,7 +213,8 @@ class SpringIntoActionMainAppController extends BaseController
             }
         }
         try {
-            $project_volunteers = Project::find($project['ProjectID'])->volunteers;
+            $model = new ProjectVolunteer();
+            $project_volunteers = $model->getProjectVolunteers($project['ProjectID']);
             $project_volunteers = $project_volunteers ? $project_volunteers : [];
         } catch (\Exception $e) {
             $project_volunteers = [];

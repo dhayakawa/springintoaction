@@ -279,7 +279,7 @@
                 parentViewEl: this.el,
                 mainAppEl: this.mainApp.el,
                 collection: App.PageableCollections.projectVolunteersCollection,
-                columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
+                columnCollectionDefinitions: App.Vars.projectVolunteersBackgridColumnDefinitions,
                 hideCellCnt: 0//8
             });
             this.childTabViews.push({project_volunteer: this.projectVolunteersView});

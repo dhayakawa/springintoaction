@@ -1,50 +1,65 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: dhayakawa
+ * Date: 2/24/2018
+ * Time: 1:13 PM
+ */
+
+namespace Dhayakawa\SpringIntoAction\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class ProjectVolunteer extends Model
+{
+    use \Illuminate\Database\Eloquent\SoftDeletes;
+    protected $dates = ['deleted_at'];
     /**
-     * Created by PhpStorm.
-     * User: dhayakawa
-     * Date: 2/24/2018
-     * Time: 1:13 PM
+     * The table associated with the model.
+     *
+     * @var string
      */
+    protected $table = 'project_volunteers';
+    /**
+     * The primary key for the model.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'ProjectVolunteerID';
+    protected $fillable = [
+        'ProjectID',
+        'VolunteerID',
+    ];
 
-    namespace Dhayakawa\SpringIntoAction\Models;
+    public function volunteer()
+    {
+        return $this->belongsTo('Dhayakawa\SpringIntoAction\Models\Volunteer');
+    }
 
-    use Illuminate\Database\Eloquent\Model;
-    use Illuminate\Support\Facades\DB;
+    public function project()
+    {
+        return $this->belongsTo('Dhayakawa\SpringIntoAction\Models\Project');
+    }
 
-    class ProjectVolunteer extends Model {
+    public function getProjectVolunteer($ProjectVolunteerRoleID)
+    {
+        $model = new ProjectVolunteerRole;
 
-        use \Illuminate\Database\Eloquent\SoftDeletes;
-        protected $dates = ['deleted_at'];
-        /**
-         * The table associated with the model.
-         *
-         * @var string
-         */
-        protected $table = 'project_volunteers';
-        /**
-         * The primary key for the model.
-         *
-         * @var string
-         */
-        protected $primaryKey = 'ProjectVolunteerID';
-        protected $fillable = ['ProjectID',
-            'VolunteerID'];
+        return $model->getProjectVolunteerByRoleId($ProjectVolunteerRoleID);
+    }
 
-        public function volunteer() {
-            return $this->belongsTo('Dhayakawa\SpringIntoAction\Models\Volunteer');
-        }
+    public function getProjectVolunteers($ProjectID)
+    {
+        $model = new ProjectVolunteerRole;
 
-        public function project() {
-            return $this->belongsTo('Dhayakawa\SpringIntoAction\Models\Project');
-        }
+        return $model->getProjectVolunteers($ProjectID);
+    }
 
-        public function updateLeadVolunteer(){
-
-        }
-
-        public function getUnassigned($SiteID, $Year) {
-
-            $sql    = "SELECT volunteers.* FROM volunteers
+    public function getUnassigned($SiteID, $Year)
+    {
+        $sql = "SELECT volunteers.* FROM volunteers
                       LEFT JOIN
                     (SELECT pv.*
                     FROM project_volunteers pv
@@ -58,9 +73,8 @@
                                                  INNER JOIN `sites` ON `sites`.`SiteID` = `site_status`.`SiteID`
                                                WHERE `site_status`.deleted_at IS NULL AND `site_status`.`Year` = ? AND `sites`.deleted_at IS NULL AND `sites`.`SiteID` = ?))) fakeTable ON fakeTable.VolunteerID = volunteers.VolunteerID
                     WHERE fakeTable.VolunteerID IS NULL;";
-            $result = DB::select($sql, [$Year, $SiteID]);
+        $result = DB::select($sql, [$Year, $SiteID]);
 
-
-            return $result;
-        }
+        return $result;
     }
+}
