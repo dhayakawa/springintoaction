@@ -32,46 +32,105 @@
         /**
          * Store a newly created resource in storage.
          *
-         * @param  \Illuminate\Http\Request $request
+         * @param \Illuminate\Http\Request $request
          *
          * @return \Illuminate\Http\Response
          */
-        public function store(Request $request) {
+        public function store(Request $request)
+        {
+            $projectVolunteer = ProjectVolunteer::where(
+                [
+                    [
+                        'VolunteerID',
+                        '=',
+                        $request['VolunteerID'],
+                    ],
+                    [
+                        'ProjectID',
+                        '=',
+                        $request['ProjectID'],
+                    ],
+                ]
+            )->get()->first();
+            if (!empty($projectVolunteer)) {
+                $success = true;
+                $ProjectVolunteerID = $projectVolunteer->ProjectVolunteerID;
+            } else {
+                $model = new ProjectVolunteer;
+                $data = array_map(
+                    function ($value) {
+                        if (is_array($value)) {
+                            return join(',', $value);
+                        }
 
-            if(!isset($success)) {
+                        return $value;
+                    },
+                    $request->only($model->getFillable())
+                );
+                array_walk(
+                    $data,
+                    function (&$value, $key) {
+                        if (is_string($value)) {
+                            $value = \urldecode($value);
+                        }
+                    }
+                );
+                $model->fill($data);
+
+                $success = $model->save();
+                $ProjectVolunteerID = $model->ProjectVolunteerID;
+            }
+
+            if ($success) {
+                $model = new ProjectVolunteerRole;
+                $data = array_map(
+                    function ($value) {
+                        if (is_array($value)) {
+                            return join(',', $value);
+                        }
+
+                        return $value;
+                    },
+                    $request->only($model->getFillable())
+                );
+                //$data['SiteVolunteerID'] = $ProjectVolunteerID;
+                $model->fill($data);
+                $success = $model->save();
+            }
+
+            if (!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Project Volunteer Addition Not Implemented Yet.'];
-            } elseif($success) {
+            } elseif ($success) {
                 $response = ['success' => true, 'msg' => 'Project Volunteer Addition Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Project Volunteer Addition Failed.'];
             }
 
-
             return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
         public function batchStore(Request $request) {
-            $params       = $request->all();
-            $batchSuccess = true;
-            if(is_array($params['VolunteerIDs'])) {
-                foreach($params['VolunteerIDs'] as $volunteerID) {
-                    $model = new ProjectVolunteer;
-                    $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $params['ProjectID']]);
-                    $success = $model->save();
-                    if(!$success) {
-                        $batchSuccess = false;
-                    }
-                    $model = new ProjectVolunteerRole;
-                    $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID']]);
-                    $success = $model->save();
-                    if(!$success) {
-                        $batchSuccess = false;
-                    }
-                }
-            } else {
-                $success = false;
-            }
-            $success = $batchSuccess;
+            // $params       = $request->all();
+            // $batchSuccess = true;
+            // if(is_array($params['VolunteerIDs'])) {
+            //     foreach($params['VolunteerIDs'] as $volunteerID) {
+            //         $model = new ProjectVolunteer;
+            //         $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $params['ProjectID']]);
+            //         $success = $model->save();
+            //         if(!$success) {
+            //             $batchSuccess = false;
+            //         }
+            //         $model = new ProjectVolunteerRole;
+            //         $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID']]);
+            //         $success = $model->save();
+            //         if(!$success) {
+            //             $batchSuccess = false;
+            //         }
+            //     }
+            // } else {
+            //     $success = false;
+            // }
+            // $success = $batchSuccess;
 
             if(!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Project Volunteer Batch Addition Not Implemented Yet.'];
@@ -96,7 +155,7 @@
             $model  = new ProjectVolunteerRole;
             $result = $model->getDefaultRecordData();
             try {
-                $result = $model->getProjectLead($id);
+                $result = $model->getProjectVolunteerByRoleId($id);
             } catch(\Exception $e) {
                 report($e);
             }
@@ -116,29 +175,49 @@
         }
 
         /**
-         * Update the specified resource in storage.
+         * @param Request $request
+         * @param         $ProjectVolunteerRoleID
          *
-         * @param  \Illuminate\Http\Request $request
-         * @param  int $id
-         *
-         * @return \Illuminate\Http\Response
+         * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
          */
-        public function update(Request $request, $id) {
-            //$model = Volunteer::findOrFail($id);
-            //
-            //$model->fill($request->only($model->getFillable()));
-            //$success = $model->save();
-            if(!isset($success)) {
-                $response = ['success' => false, 'msg' => 'Project Volunteer Update Not Implemented Yet.'];
-            } elseif($success) {
-                $response = ['success' => true, 'msg' => 'Project Volunteer Update Succeeded.'];
+        public function update(Request $request, $ProjectVolunteerRoleID)
+        {
+            $model = ProjectVolunteerRole::findOrFail($ProjectVolunteerRoleID);
+            $data = array_map(
+                function ($value) {
+                    if (is_array($value)) {
+                        return join(',', $value);
+                    }
+
+                    return $value;
+                },
+                $request->only($model->getFillable())
+            );
+            $requestData = $request->all();
+            if (isset($requestData['ProjectVolunteerRoleStatus'])) {
+                $data['Status'] = is_array($requestData['ProjectVolunteerRoleStatus']) ? current(
+                    $requestData['ProjectVolunteerRoleStatus']
+                ) : $requestData['ProjectVolunteerRoleStatus'];
+            }
+            // \Illuminate\Support\Facades\Log::debug(
+            //     'SiteVolunteerRole $data',
+            //     [
+            //         'File:' . __FILE__,
+            //         'Method:' . __METHOD__,
+            //         'Line:' . __LINE__,
+            //         $data
+            //     ]
+            // );
+            $model->fill($data);
+            $success = $model->save();
+
+            if ($success) {
+                $response = ['success' => true, 'msg' => 'Project Volunteer  Update Succeeded.'];
             } else {
-                $response = ['success' => false, 'msg' => 'Project Volunteer Update Failed.'];
+                $response = ['success' => false, 'msg' => 'Project Volunteer   Update Failed.'];
             }
 
-
             return view('springintoaction::admin.main.response', $request, compact('response'));
-
         }
 
         /**
@@ -202,16 +281,16 @@
             return view('springintoaction::admin.main.response', $request, compact('response'));
         }
 
-        public function getProjectLeads($ProjectID) {
+        public function getProjectVolunteers($ProjectID) {
             $model = new ProjectVolunteerRole();
 
-            return $model->getProjectLeads($ProjectID);
+            return $model->getProjectVolunteers($ProjectID);
         }
 
-        public function getAllProjectLeads() {
+        public function getAllProjectVolunteers() {
             $model = new ProjectVolunteerRole();
 
-            return $model->getAllProjectLeads();
+            return $model->getAllProjectVolunteers();
         }
 
         public function getUnassigned($SiteID, $Year) {

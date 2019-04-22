@@ -299,16 +299,16 @@ Route::group(
             ['as' => 'project_volunteer.unassigned', 'uses' => 'ProjectVolunteerController@getUnassigned']
         );
         Route::put(
-            'project_volunteer/{VolunteerID}',
-            ['as' => 'project_volunteer.update', 'uses' => 'VolunteerController@update']
+            'project_volunteer/{ProjectVolunteerRoleID}',
+            ['as' => 'project_volunteer.update', 'uses' => 'ProjectVolunteerController@update']
         );
         Route::get(
-            'project_volunteer/{VolunteerID}',
-            ['as' => 'project_volunteer', 'uses' => 'VolunteerController@show']
+            'project_volunteer/{ProjectVolunteerRoleID}',
+            ['as' => 'project_volunteer', 'uses' => 'ProjectVolunteerController@show']
         );
         Route::get(
             'project_volunteer/all/{ProjectID}',
-            ['as' => 'project_volunteer', 'uses' => 'VolunteerController@getProjectVolunteers']
+            ['as' => 'project_volunteer', 'uses' => 'ProjectVolunteerController@getProjectVolunteers']
         );
 
         Route::get(

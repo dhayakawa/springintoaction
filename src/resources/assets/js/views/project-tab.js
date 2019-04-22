@@ -56,7 +56,7 @@
                 saveState: App.Vars.bBackgridColumnManagerSaveState,
                 saveStateKey: 'site-project-tab-' + this.options.tab,
                 loadStateOnInit: true,
-                stateChecking: "loose"
+                stateChecking: "strict"
             });
 
             let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
