@@ -275,9 +275,9 @@ class ProjectsController extends BaseController
     public function getVolunteers($ProjectID)
     {
         try {
-            if ($v = Project::find($ProjectID)->volunteers) {
-                return $v->toArray();
-            }
+            $model = new ProjectVolunteer();
+            $project_volunteers = $model->getProjectVolunteers($ProjectID);
+            return $project_volunteers;
         } catch (\Exception $e) {
             return [];
         }

@@ -10,7 +10,7 @@
     App.PageableCollections.projectLeadsCollection = new App.PageableCollections.ProjectLead();
     App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget();
     App.PageableCollections.projectContactsCollection = new App.PageableCollections.Contact();
-    App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.Volunteer();
+    App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.ProjectVolunteer();
 
     // @App.Collections.projectVolunteersCollection- This is for the drop down in the select new project lead form
     App.Collections.projectVolunteersCollection = new App.Collections.Volunteer();
@@ -24,7 +24,7 @@
     // @App.PageableCollections.backGridFiltersPanelCollection - filter for volunteer collection
     App.PageableCollections.backGridFiltersPanelCollection = App.PageableCollections.volunteersManagementCollection;
     // This is for the project volunteers tab
-    App.PageableCollections.unassignedProjectVolunteersCollection = new App.PageableCollections.Volunteer();
+    App.PageableCollections.unassignedProjectVolunteersCollection = new App.PageableCollections.ProjectVolunteer();
 
     // @App.Collections.reportsManagementCollection- This is for the reports management
     App.Collections.reportsManagementCollection = new App.Collections.Report();
