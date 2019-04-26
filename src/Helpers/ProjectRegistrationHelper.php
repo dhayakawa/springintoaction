@@ -8,41 +8,11 @@
 
 namespace Dhayakawa\SpringIntoAction\Helpers;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
-use Illuminate\Database\Eloquent\Builder;
-use Dhayakawa\SpringIntoAction\Models\AnnualBudget;
-use Dompdf\Exception;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Dhayakawa\SpringIntoAction\Models\Site;
-use Dhayakawa\SpringIntoAction\Models\SiteStatus;
-use Dhayakawa\SpringIntoAction\Models\ProjectContact;
-use Dhayakawa\SpringIntoAction\Models\Contact;
-use Dhayakawa\SpringIntoAction\Models\Budget;
-use Dhayakawa\SpringIntoAction\Models\ProjectRole;
-use Dhayakawa\SpringIntoAction\Models\SiteRole;
-use Dhayakawa\SpringIntoAction\Models\SiteVolunteerRole;
-use Dhayakawa\SpringIntoAction\Models\Volunteer;
-use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
-use \Dhayakawa\SpringIntoAction\Models\BudgetSourceOptions;
-use \Dhayakawa\SpringIntoAction\Models\BudgetStatusOptions;
 use \Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
 use \Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
-use \Dhayakawa\SpringIntoAction\Models\SendStatusOptions;
-use \Dhayakawa\SpringIntoAction\Models\VolunteerAgeRangeOptions;
-use \Dhayakawa\SpringIntoAction\Models\VolunteerPrimarySkillOptions;
-use \Dhayakawa\SpringIntoAction\Models\VolunteerSkillLevelOptions;
-use \Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Input;
-use Dhayakawa\SpringIntoAction\Models\ProjectAttachment;
-use Dhayakawa\SpringIntoAction\Requests\ProjectRequestPost;
-use Illuminate\Support\Facades\App;
+
 
 trait ProjectRegistrationHelper
 {

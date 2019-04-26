@@ -8,20 +8,22 @@
 
 namespace Dhayakawa\SpringIntoAction\Models;
 
+use Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
-use Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
-use Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
-use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
-use Dhayakawa\SpringIntoAction\Models\Budget;
-use Dhayakawa\SpringIntoAction\Models\SiteStatus;
 
+/**
+ * Class Project
+ *
+ * @package Dhayakawa\SpringIntoAction\Models
+ */
 class Project extends Model
 {
-    use \Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
+    use ProjectRegistrationHelper;
 
-    use \Illuminate\Database\Eloquent\SoftDeletes;
+    use SoftDeletes;
     protected $dates = ['deleted_at'];
     /**
      * The table associated with the model.
@@ -239,31 +241,6 @@ FROM (
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
-        // $requiredPercentage = ".8";
-        // $reservationLifeTime = config('springintoaction.registration.reservation_lifetime_minutes');
-        // $sSqlVolunteersAssigned =
-        //     "(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID)";
-        //
-        // $sSqlProjectReservations =
-        //     "(IFNULL((select sum(`pr`.`reserve`) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < {$reservationLifeTime}),0))";
-        //
-        // $sSqlProjectsAtReqPerc = "(select count(*)
-        //     from projects p
-        //            join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL
-        //     where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null
-        //       and ((" .
-        //                          str_replace('projects.', 'p.', $sSqlVolunteersAssigned) .
-        //                          " + " .
-        //                          str_replace('projects.', 'p.', $sSqlProjectReservations) .
-        //                          ") / p.VolunteersNeededEst) >= {$requiredPercentage})";
-        //
-        // $sSqlActiveProjects = "(select count(*) from projects p
-        //            join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$ProjectStatusApprovedOptionID} and `p`.`deleted_at` is null)";
-        //
-        // $sSqlVolunteersNeeded =
-        //     "IF({$sSqlProjectsAtReqPerc} = {$sSqlActiveProjects}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$requiredPercentage}))";
-        //
-        // $sSqlPeopleNeeded = "{$sSqlVolunteersNeeded} - {$sSqlVolunteersAssigned} - {$sSqlProjectReservations}";
         $sSqlVolunteersAssigned = $this->getVolunteersAssignedSql();
         $sSqlVolunteersNeeded = $this->getVolunteersNeededSql($Year);
         $sSqlPeopleNeeded = $this->getPeopleNeededSql($Year);
@@ -360,6 +337,7 @@ FROM (
         //         'Method:' . __METHOD__,
         //         'Line:' . __LINE__,
         //         $projects->toSql(),
+        //         $filter
         //     ]
         // );
         $all_projects = $projects->get()->toArray();
@@ -406,7 +384,14 @@ FROM (
 
     public function getVolunteersNeededSql($Year)
     {
-        return "IF({$this->getProjectsAtReqPercSql($Year)} = {$this->getActiveProjectsSql($Year)}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$this->requiredPercentage}))";
+        $SiteSetting = new SiteSetting();
+
+        if ($SiteSetting->getSettingValue('require_min_registrations')) {
+            return "IF({$this->getProjectsAtReqPercSql($Year)} = {$this->getActiveProjectsSql($Year)}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$this->requiredPercentage}))";
+        } else {
+            return "projects.VolunteersNeededEst";
+        }
+
     }
 
     public function getProjectReservationsSql()
@@ -643,7 +628,7 @@ FROM (
             foreach ($ProjectSkillNeededOptions as $option) {
                 $aProjectSkillNeededOptions[] = $option['id'];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $aProjectSkillNeededOptions = [];
             report($e);
         }
@@ -686,7 +671,7 @@ FROM (
             )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc')->get();
 
             return $bReturnArr ? $projects->toArray() : $projects;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $bReturnArr ? [] : null;
         }
     }
@@ -705,7 +690,7 @@ FROM (
             )->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get();
 
             return $bReturnArr ? $projects->toArray() : $projects;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $bReturnArr ? [] : null;
         }
     }
