@@ -43,7 +43,7 @@
             label: "Attachment URL",
             cell: "uri",
             editable: false,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "*"
         }

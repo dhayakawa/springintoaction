@@ -127,13 +127,13 @@
                     e.preventDefault();
                     if (tabName === 'project_volunteer') {
                         let formData = $.unserialize(modal.find('form').serialize());
-                        let selectedModels = tabView[tabName].backgrid.getSelectedModels();
+                        let selectedModels = tabView[tabName].modalBackgrid.getSelectedModels();
+                        tabView[tabName].modalBackgrid.clearSelectedModels();
                         let volunteerIDs = _.map(selectedModels, function (model) {
-                            return model.get(model.idAttribute);
+                            return model.get('VolunteerID');
                         });
                         // Can't be VolunteerID or backbone will flag as an update instead of create
                         formData.VolunteerIDs = volunteerIDs;
-
                         tabView[tabName].create(formData);
                     } else {
                         tabView[tabName].create($.unserialize(modal.find('form').serialize()));

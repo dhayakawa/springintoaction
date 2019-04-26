@@ -58,7 +58,7 @@
             label: "Attachment URL",
             cell: "uri",
             editable: false,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "*"
         }
@@ -129,8 +129,8 @@
             label: "BudgetSource",
             cell: App.Vars.budgetSourceCell,
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "175"
         },
         {
@@ -138,8 +138,8 @@
             label: "BudgetAmount",
             cell: "number",
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "60"
         },
         {
@@ -147,8 +147,8 @@
             label: "Status",
             cell: BudgetStatusCell,
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150"
         },
         {
@@ -156,8 +156,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "*"
         }
     ];
@@ -348,7 +348,7 @@
             label: "Active",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "50",
             displayOrder: displayOrderCnt++
@@ -358,8 +358,8 @@
             label: "Project ID",
             cell: "integer",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -368,8 +368,8 @@
             label: "Original Request",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             displayOrder: displayOrderCnt++
         },
@@ -378,7 +378,7 @@
             label: "Project Description",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "250",
             displayOrder: displayOrderCnt++
@@ -388,8 +388,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             displayOrder: displayOrderCnt++
         },
@@ -398,8 +398,8 @@
             label: "Status",
             cell: StatusCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "66",
             displayOrder: displayOrderCnt++
         },
@@ -408,8 +408,8 @@
             label: "Status Reason",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -418,8 +418,8 @@
             label: "Budget Sources",
             cell: App.Vars.budgetSourceCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "125",
             displayOrder: displayOrderCnt++
         },
@@ -428,8 +428,8 @@
             label: "Child Friendly",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -438,8 +438,8 @@
             label: "Primary Skill Needed",
             cell: SkillsNeededCell.extend({multiple: true}),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             displayOrder: displayOrderCnt++
         },
@@ -448,8 +448,8 @@
             label: "Volunteers Needed Est",
             cell: "integer",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "166",
             displayOrder: displayOrderCnt++
         },
@@ -458,8 +458,8 @@
             label: "Volunteers Assigned",
             cell: "integer",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "145",
             displayOrder: displayOrderCnt++
         },
@@ -468,8 +468,8 @@
             label: "Materials Needed",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -478,8 +478,8 @@
             label: "Estimated Cost",
             cell: "number",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "120",
             displayOrder: displayOrderCnt++
         },
@@ -488,8 +488,8 @@
             label: "Actual Cost",
             cell: "number",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "95",
             displayOrder: displayOrderCnt++
         },
@@ -498,8 +498,8 @@
             label: "Budget Available For PC",
             cell: "string",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "178",
             displayOrder: displayOrderCnt++
         },
@@ -508,8 +508,8 @@
             label: "Volunteers Last Year",
             cell: "integer",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "153",
             displayOrder: displayOrderCnt++
         },
@@ -518,8 +518,8 @@
             label: "Needs To Be Started Early",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -528,8 +528,8 @@
             label: "TLSeeBeforeSIA",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -538,8 +538,8 @@
             label: "Special Equipment Needed",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -548,8 +548,8 @@
             label: "Permits Or Approvals Needed",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -558,8 +558,8 @@
             label: "Prep Work Required Before SIA",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -568,8 +568,8 @@
             label: "Setup Day Instructions",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -578,8 +578,8 @@
             label: "SIA Day Instructions",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -588,8 +588,8 @@
             label: "Area",
             cell: "string",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -598,8 +598,8 @@
             label: "Paint Or Bark Estimate",
             cell: "string",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -607,8 +607,8 @@
             name: "PaintAlreadyOnHand",
             label: "Paint Already On Hand",
             cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -616,8 +616,8 @@
             name: "PaintOrdered",
             label: "Paint Ordered",
             cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -625,8 +625,8 @@
             name: "CostEstimateDone",
             label: "Cost Estimate Done",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -634,8 +634,8 @@
             name: "MaterialListDone",
             label: "Material List Done",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -643,8 +643,8 @@
             name: "BudgetAllocationDone",
             label: "Budget Allocation Done",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -652,8 +652,8 @@
             name: "VolunteerAllocationDone",
             label: "Volunteer Allocation Done",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -661,8 +661,8 @@
             name: "NeedSIATShirtsForPC",
             label: "Need SIA TShirts For PC",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -670,8 +670,8 @@
             name: "ProjectSend",
             label: "Project Send",
             cell: App.Vars.sendCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -679,8 +679,8 @@
             name: "FinalCompletionStatus",
             label: "Project Completed",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
@@ -688,8 +688,8 @@
             name: "FinalCompletionAssessment",
             label: "Final Completion Assessment",
             cell: App.Vars.TextareaCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
         },
@@ -698,8 +698,8 @@
             label: "updated_at",
             cell: "string",
             editable: false,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: true,
-            orderable: true,
+            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             renderable: true,
             displayOrder: displayOrderCnt++
@@ -796,7 +796,7 @@
             label: "Active",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "50"
         },
@@ -805,8 +805,8 @@
             label: "Site",
             cell: SitesCell,
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -814,8 +814,8 @@
             label: "FirstName",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -823,8 +823,8 @@
             label: "LastName",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -832,8 +832,8 @@
             label: "Title",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -841,8 +841,8 @@
             label: "Email",
             cell: "email",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -850,8 +850,8 @@
             label: "Phone",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -859,8 +859,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -868,8 +868,8 @@
             label: "ContactType",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         }
     ];
@@ -1011,7 +1011,7 @@
             label: "Active",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "50",
             filterType: "integer"
@@ -1021,8 +1021,8 @@
             label: "LastName",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string"
         },
@@ -1031,8 +1031,8 @@
             label: "FirstName",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string"
         },
@@ -1041,8 +1041,8 @@
             label: "Status",
             cell: App.Vars.VolunteerStatusCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1051,8 +1051,8 @@
             label: "MobilePhoneNumber",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string"
         },
@@ -1061,8 +1061,8 @@
             label: "HomePhoneNumber",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string"
         },
@@ -1071,8 +1071,8 @@
             label: "Email",
             cell: "email",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "175",
             filterType: "string"
         },
@@ -1081,8 +1081,8 @@
             label: "PrimarySkill",
             cell: VolunteerPrimarySkillCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1091,8 +1091,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1100,8 +1100,8 @@
             label: "ContactPhone",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1110,8 +1110,8 @@
             label: "AgeRange",
             cell: AgeRangeCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1120,8 +1120,8 @@
             label: "LG",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1130,8 +1130,8 @@
             label: "Family",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1140,8 +1140,8 @@
             label: "CFE",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1149,8 +1149,8 @@
             label: "CFP",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1158,8 +1158,8 @@
             label: "Painting",
             cell: SkillsCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1168,8 +1168,8 @@
             label: "Landscaping",
             cell: SkillsCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1178,8 +1178,8 @@
             label: "Construction",
             cell: SkillsCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1188,8 +1188,8 @@
             label: "Electrical",
             cell: SkillsCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1198,8 +1198,8 @@
             label: "CabinetryFinishWork",
             cell: SkillsCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1208,8 +1208,8 @@
             label: "Plumbing",
             cell: SkillsCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1218,8 +1218,8 @@
             label: "NotesOnYourSkillAssessment",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1227,8 +1227,8 @@
             label: "PhysicalRestrictions",
             cell: SkillsCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1236,8 +1236,8 @@
             label: "SchoolPreference",
             cell: SchoolCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1246,8 +1246,8 @@
             label: "Equipment",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1255,8 +1255,8 @@
             label: "TeamLeaderWilling",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1264,8 +1264,8 @@
             label: "Church",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1274,8 +1274,8 @@
             label: "AssignmentInformationSendStatus",
             cell: App.Vars.sendCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1283,8 +1283,8 @@
             label: "PreferredSiteID",
             cell: "string",
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         }
     ];
@@ -1454,7 +1454,7 @@
             label: "Active",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "50",
             filterType: "integer"
@@ -1464,7 +1464,7 @@
             label: "VolunteerID",
             cell: "string",
             editable: false,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             renderable: false,
             width: "30",
@@ -1475,8 +1475,8 @@
             label: "LastName",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string"
         },
@@ -1485,8 +1485,8 @@
             label: "FirstName",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string"
         }, {
@@ -1494,8 +1494,8 @@
             label: "Project Volunteer Role",
             cell: VolunteerRoleCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "integer"
         },
@@ -1504,8 +1504,8 @@
             label: "Status",
             cell: VolunteerRoleStatusCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1514,8 +1514,8 @@
             label: "MobilePhoneNumber",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string"
         },
@@ -1524,8 +1524,8 @@
             label: "HomePhoneNumber",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string"
         },
@@ -1534,8 +1534,8 @@
             label: "Email",
             cell: "email",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "175",
             filterType: "string"
         },
@@ -1544,8 +1544,8 @@
             label: "PrimarySkill",
             cell: VolunteerPrimarySkillCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1554,8 +1554,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1563,8 +1563,8 @@
             label: "ContactPhone",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1573,8 +1573,8 @@
             label: "AgeRange",
             cell: AgeRangeCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1583,8 +1583,8 @@
             label: "LG",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1593,8 +1593,8 @@
             label: "Family",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1603,8 +1603,8 @@
             label: "CFE",
             cell: App.Vars.yesNoCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1612,8 +1612,8 @@
             label: "CFP",
             cell: App.Vars.yesNoCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1621,8 +1621,8 @@
             label: "Painting",
             cell: SkillsCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1631,8 +1631,8 @@
             label: "Landscaping",
             cell: SkillsCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1641,8 +1641,8 @@
             label: "Construction",
             cell: SkillsCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1651,8 +1651,8 @@
             label: "Electrical",
             cell: SkillsCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1661,8 +1661,8 @@
             label: "CabinetryFinishWork",
             cell: SkillsCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1671,8 +1671,8 @@
             label: "Plumbing",
             cell: SkillsCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1681,8 +1681,8 @@
             label: "NotesOnYourSkillAssessment",
             cell: App.Vars.TextareaCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1690,8 +1690,8 @@
             label: "PhysicalRestrictions",
             cell: SkillsCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1699,8 +1699,8 @@
             label: "SchoolPreference",
             cell: SchoolCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1709,8 +1709,8 @@
             label: "Equipment",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1718,8 +1718,8 @@
             label: "TeamLeaderWilling",
             cell: App.Vars.yesNoCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1727,8 +1727,8 @@
             label: "Church",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string"
         },
@@ -1737,8 +1737,8 @@
             label: "AssignmentInformationSendStatus",
             cell: App.Vars.sendCell,
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -1746,8 +1746,8 @@
             label: "PreferredSiteID",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         }
     ];
@@ -1791,7 +1791,7 @@
             label: "Active",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "50",
             filterType: "integer",
@@ -1802,7 +1802,7 @@
             label: "VolunteerID",
             cell: "string",
             editable: false,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             renderable: false,
             width: "30",
@@ -1814,8 +1814,8 @@
             label: "LastName",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string",
             displayOrder: displayOrder++
@@ -1825,8 +1825,8 @@
             label: "FirstName",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string",
             displayOrder: displayOrder++
@@ -1835,8 +1835,8 @@
             label: "Project Volunteer Role",
             cell: VolunteerRoleCell,
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "integer",
             displayOrder: displayOrder++
@@ -1846,8 +1846,8 @@
             label: "Status",
             cell: VolunteerRoleStatusCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "integer",
             displayOrder: displayOrder++
@@ -1857,8 +1857,8 @@
             label: "MobilePhoneNumber",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string",
             displayOrder: displayOrder++
@@ -1868,8 +1868,8 @@
             label: "HomePhoneNumber",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string",
             displayOrder: displayOrder++
@@ -1879,8 +1879,8 @@
             label: "Email",
             cell: "email",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "175",
             filterType: "string",
             displayOrder: displayOrder++
@@ -1890,8 +1890,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             displayOrder: displayOrder++
         }
@@ -1985,7 +1985,7 @@
             label: "Active",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "50",
             filterType: "integer",
@@ -1996,7 +1996,7 @@
             label: "VolunteerID",
             cell: "string",
             editable: false,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             renderable: false,
             width: "15",
@@ -2008,8 +2008,8 @@
             label: "LastName",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string",
             displayOrder: displayOrder++
@@ -2019,8 +2019,8 @@
             label: "FirstName",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string",
             displayOrder: displayOrder++
@@ -2029,8 +2029,8 @@
             label: "Site Volunteer Role",
             cell: SiteVolunteerRoleCell,
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string",
             displayOrder: displayOrder++
@@ -2040,8 +2040,8 @@
             label: "Status",
             cell: SiteVolunteerRoleStatusCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             filterType: "string",
             displayOrder: displayOrder++
@@ -2051,8 +2051,8 @@
             label: "MobilePhoneNumber",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string",
             displayOrder: displayOrder++
@@ -2062,8 +2062,8 @@
             label: "HomePhoneNumber",
             cell: "string",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150",
             filterType: "string",
             displayOrder: displayOrder++
@@ -2073,8 +2073,8 @@
             label: "Email",
             cell: "email",
             editable: false,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "175",
             filterType: "string",
             displayOrder: displayOrder++
@@ -2084,8 +2084,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditVolunteersGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250",
             displayOrder: displayOrder++
         }

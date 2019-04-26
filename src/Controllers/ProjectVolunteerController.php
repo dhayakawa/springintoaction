@@ -110,27 +110,27 @@
         }
 
         public function batchStore(Request $request) {
-            // $params       = $request->all();
-            // $batchSuccess = true;
-            // if(is_array($params['VolunteerIDs'])) {
-            //     foreach($params['VolunteerIDs'] as $volunteerID) {
-            //         $model = new ProjectVolunteer;
-            //         $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $params['ProjectID']]);
-            //         $success = $model->save();
-            //         if(!$success) {
-            //             $batchSuccess = false;
-            //         }
-            //         $model = new ProjectVolunteerRole;
-            //         $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID']]);
-            //         $success = $model->save();
-            //         if(!$success) {
-            //             $batchSuccess = false;
-            //         }
-            //     }
-            // } else {
-            //     $success = false;
-            // }
-            // $success = $batchSuccess;
+            $params       = $request->all();
+            $batchSuccess = true;
+            if(is_array($params['VolunteerIDs'])) {
+                foreach($params['VolunteerIDs'] as $volunteerID) {
+                    $model = new ProjectVolunteer;
+                    $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $params['ProjectID']]);
+                    $success = $model->save();
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                    $model = new ProjectVolunteerRole;
+                    $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $params['ProjectID'], 'ProjectRoleID' => $params['ProjectRoleID'], 'Status' => 5]);
+                    $success = $model->save();
+                    if(!$success) {
+                        $batchSuccess = false;
+                    }
+                }
+            } else {
+                $success = false;
+            }
+            $success = $batchSuccess;
 
             if(!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Project Volunteer Batch Addition Not Implemented Yet.'];

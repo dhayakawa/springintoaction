@@ -48,7 +48,7 @@
                 initialColumnsVisible: initialColumnsVisible,
                 saveState: App.Vars.bBackgridColumnManagerSaveState,
                 saveStateKey: this.localStorageKey,
-                loadStateOnInit: true
+                loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit
             });
             // Add control
             let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({

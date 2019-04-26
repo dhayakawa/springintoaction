@@ -493,7 +493,7 @@ function renderGrid(gridContainerId) {
         colManager = new Backgrid.Extension.ColumnManager(columnCollection, {
             initialColumnsVisible: 4,
             saveState: true,
-            loadStateOnInit: true
+            loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit
         });
     }
 
