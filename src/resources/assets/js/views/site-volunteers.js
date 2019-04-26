@@ -123,21 +123,23 @@
                 collection: this.collection
             });
 
-            let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
-            // let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
-            //     initialColumnsVisible: initialColumnsVisible,
-            //     trackSize: true,
-            //     trackOrder: true,
-            //     trackVisibility: true,
-            //     saveState: App.Vars.bBackgridColumnManagerSaveState,
-            //     saveStateKey: 'site-volunteers',
-            //     loadStateOnInit: true,
-            //     stateChecking: "loose"
-            // });
+            if (App.Vars.bAllowManagedGridColumns) {
+                let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
+                let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
+                    initialColumnsVisible: initialColumnsVisible,
+                    trackSize: true,
+                    trackOrder: true,
+                    trackVisibility: true,
+                    saveState: App.Vars.bBackgridColumnManagerSaveState,
+                    saveStateKey: 'site-volunteers',
+                    loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit,
+                    stateChecking: "strict"
+                });
 
-            // let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
-            //     columnManager: colManager
-            // });
+                let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
+                    columnManager: colManager
+                });
+            }
             _log('App.Views.SiteVolunteer.render', this.routeName, self.parentView.el, _.isUndefined(e) ? 'no event passed in for this call.' : e, self.parentView.$('.site-volunteers-grid-manager-container').find('.tab-pagination-controls'));
 
             let $gridContainer = this.$el.html(this.backgrid.render().el);
@@ -163,21 +165,23 @@
             });
             $gridContainer.find('thead').before(sizeAbleCol.render().el);
 
-            // Add resize handlers
-            let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
-                sizeAbleColumns: sizeAbleCol,
-                saveColumnWidth: true
-            });
-            $gridContainer.find('thead').before(sizeHandler.render().el);
+            if (App.Vars.bAllowManagedGridColumns) {
+                // Add resize handlers
+                let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
+                    sizeAbleColumns: sizeAbleCol,
+                    saveColumnWidth: true
+                });
+                $gridContainer.find('thead').before(sizeHandler.render().el);
 
-            // Make columns reorderable
-            let orderHandler = new Backgrid.Extension.OrderableColumns({
-                grid: this.backgrid,
-                sizeAbleColumns: sizeAbleCol
-            });
-            $gridContainer.find('thead').before(orderHandler.render().el);
+                // Make columns reorderable
+                let orderHandler = new Backgrid.Extension.OrderableColumns({
+                    grid: this.backgrid,
+                    sizeAbleColumns: sizeAbleCol
+                });
+                $gridContainer.find('thead').before(orderHandler.render().el);
 
-            //this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
+                //this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
+            }
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
             this.backgrid.collection.on('backgrid:editing', function (e) {
