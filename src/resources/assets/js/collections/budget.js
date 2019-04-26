@@ -61,8 +61,8 @@
             label: "BudgetSource",
             cell: App.Vars.budgetSourceCell,
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "175"
         },
         {
@@ -70,8 +70,8 @@
             label: "BudgetAmount",
             cell: "number",
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "60"
         },
         {
@@ -79,8 +79,8 @@
             label: "Status",
             cell: BudgetStatusCell,
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "150"
         },
         {
@@ -88,8 +88,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectTabGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "*"
         }
     ];

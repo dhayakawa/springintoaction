@@ -43,26 +43,27 @@
             // Set the current model id on the tab so we can reference it in other views
             $('#' + this.options.tab).data('current-model-id', this.currentModelID);
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
+            this.columnCollection = this.columnCollectionDefinitions;
 
-            this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
-            this.columnCollection.setPositions().sort();
+            if (App.Vars.bAllowManagedGridColumns) {
+                this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
+                this.columnCollection.setPositions().sort();
+                let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
+                let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
+                    initialColumnsVisible: initialColumnsVisible,
+                    trackSize: true,
+                    trackOrder: true,
+                    trackVisibility: true,
+                    saveState: App.Vars.bBackgridColumnManagerSaveState,
+                    saveStateKey: 'site-project-tab-' + this.options.tab,
+                    loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit,
+                    stateChecking: "strict"
+                });
 
-            let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
-            let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
-                initialColumnsVisible: initialColumnsVisible,
-                trackSize: true,
-                trackOrder: true,
-                trackVisibility: true,
-                saveState: App.Vars.bBackgridColumnManagerSaveState,
-                saveStateKey: 'site-project-tab-' + this.options.tab,
-                loadStateOnInit: true,
-                stateChecking: "strict"
-            });
-
-            let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
-                columnManager: colManager
-            });
-
+                let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
+                    columnManager: colManager
+                });
+            }
             let Header = Backgrid.Header;
             this.backgrid = new Backgrid.Grid({
                 header: Header,
@@ -82,29 +83,30 @@
             // Render the paginator
             this.$tabBtnPanePaginationContainer.html(paginator.render().el);
 
-            // Add sizeable columns
-            let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
-                collection: this.collection,
-                columns: this.columnCollection,
-                grid: this.backgrid
-            });
-            $gridContainer.find('thead').before(sizeAbleCol.render().el);
+            if (App.Vars.bAllowManagedGridColumns) {
+                // Add sizeable columns
+                let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
+                    collection: this.collection,
+                    columns: this.columnCollection,
+                    grid: this.backgrid
+                });
+                $gridContainer.find('thead').before(sizeAbleCol.render().el);
+                // Add resize handlers
+                let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
+                    sizeAbleColumns: sizeAbleCol,
+                    saveColumnWidth: true
+                });
+                $gridContainer.find('thead').before(sizeHandler.render().el);
 
-            // Add resize handlers
-            let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
-                sizeAbleColumns: sizeAbleCol,
-                saveColumnWidth: true
-            });
-            $gridContainer.find('thead').before(sizeHandler.render().el);
+                // Make columns reorderable
+                let orderHandler = new Backgrid.Extension.OrderableColumns({
+                    grid: this.backgrid,
+                    sizeAbleColumns: sizeAbleCol
+                });
+                $gridContainer.find('thead').before(orderHandler.render().el);
 
-            // Make columns reorderable
-            let orderHandler = new Backgrid.Extension.OrderableColumns({
-                grid: this.backgrid,
-                sizeAbleColumns: sizeAbleCol
-            });
-            $gridContainer.find('thead').before(orderHandler.render().el);
-
-            this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
+                this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
+            }
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
             this.listenTo(this.backgrid.collection, 'backgrid:editing', function (e) {
@@ -153,12 +155,14 @@
             this.$gridContainer = $gridContainer;
 
             this.childViews.push(this.backgrid);
-            this.childViews.push(colVisibilityControl);
             this.childViews.push(this.projectGridManagerContainerToolbar);
             this.childViews.push(this.paginator);
-            this.childViews.push(sizeAbleCol);
-            this.childViews.push(sizeHandler);
-            this.childViews.push(orderHandler);
+            if (App.Vars.bAllowManagedGridColumns) {
+                this.childViews.push(colVisibilityControl);
+                this.childViews.push(sizeAbleCol);
+                this.childViews.push(sizeHandler);
+                this.childViews.push(orderHandler);
+            }
 
             return this;
         },
@@ -198,7 +202,7 @@
                     success: function (model, response, options) {
                         self.currentModelID = self.model.get(self.model.idAttribute);
                         $('#' + self.options.tab).data('current-model-id', self.currentModelID);
-                        console.log('tab model fetch', self.options.tab, currentModelID, self.model)
+                        //console.log('tab model fetch', self.options.tab, currentModelID, self.model)
                     }
                 });
 
@@ -276,12 +280,13 @@
             bootbox.confirm(confirmMsg, function (bConfirmed) {
                 if (bConfirmed) {
                     window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+
                     attributes = _.extend(attributes, {
                         ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
                         ProjectRoleID: self.model.get('ProjectRoleID')
                     });
-                    console.log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:' + deleteCnt, 'self.collection.fullCollection.length:' +
-                                                                                                                        self.collection.fullCollection.length, self.model);
+                    // console.log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:' + deleteCnt, 'self.collection.fullCollection.length:' +
+                    //                                                                                                     self.collection.fullCollection.length, self.model);
                     $.ajax({
                         type: "POST",
                         dataType: "json",

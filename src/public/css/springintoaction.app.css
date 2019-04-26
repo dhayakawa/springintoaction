@@ -237,6 +237,288 @@
 .backgrid-wrapper .backgrid tbody tr:hover {
   background-color: lightyellow;
 }
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(1) {
+  width: 30px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(2) {
+  width: 30px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(3) {
+  width: 50px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(4) {
+  width: 30px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(5) {
+  width: 150px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(6) {
+  width: 150px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(7) {
+  width: 250px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(8) {
+  width: 250px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(9) {
+  width: 150px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(10) {
+  width: 150px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(11) {
+  width: 175px;
+}
+.backgrid-wrapper .project-leads-backgrid-wrapper .backgrid thead th:nth-child(12) {
+  width: 250px;
+}
+.backgrid-wrapper .project-budget-backgrid-wrapper .backgrid thead th:nth-child(1) {
+  width: 30px;
+}
+.backgrid-wrapper .project-budget-backgrid-wrapper .backgrid thead th:nth-child(2) {
+  width: 30px;
+}
+.backgrid-wrapper .project-budget-backgrid-wrapper .backgrid thead th:nth-child(3) {
+  width: 175px;
+}
+.backgrid-wrapper .project-budget-backgrid-wrapper .backgrid thead th:nth-child(4) {
+  width: 100px;
+}
+.backgrid-wrapper .project-budget-backgrid-wrapper .backgrid thead th:nth-child(5) {
+  width: 150px;
+}
+.backgrid-wrapper .project-budget-backgrid-wrapper .backgrid thead th:nth-child(6) {
+  width: auto;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(1) {
+  width: 30px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(2) {
+  width: 30px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(3) {
+  width: 50px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(4) {
+  width: 30px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(5) {
+  width: 150px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(6) {
+  width: 150px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(7) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(8) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(9) {
+  width: 150px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(10) {
+  width: 150px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(11) {
+  width: 175px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(12) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(13) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(14) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(15) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(16) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(17) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(18) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(19) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(20) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(21) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(22) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(23) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(24) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(25) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(26) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(27) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(28) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(29) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(30) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(31) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(32) {
+  width: 250px;
+}
+.backgrid-wrapper .project-volunteers-backgrid-wrapper .backgrid thead th:nth-child(33) {
+  width: 250px;
+}
+.backgrid-wrapper .project-attachments-backgrid-wrapper .backgrid thead th:nth-child(1) {
+  width: 30px;
+}
+.backgrid-wrapper .project-attachments-backgrid-wrapper .backgrid thead th:nth-child(2) {
+  width: 30px;
+}
+.backgrid-wrapper .project-attachments-backgrid-wrapper .backgrid thead th:nth-child(3) {
+  width: auto;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(1) {
+  width: 30px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(2) {
+  width: 30px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(3) {
+  width: 30px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(4) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(5) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(6) {
+  width: 250px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(7) {
+  width: 250px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(8) {
+  width: 250px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(9) {
+  width: 66px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(10) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(11) {
+  width: 125px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(12) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(13) {
+  width: 150px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(14) {
+  width: 166px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(15) {
+  width: 145px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(16) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(17) {
+  width: 120px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(18) {
+  width: 95px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(19) {
+  width: 178px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(20) {
+  width: 153px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(21) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(22) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(23) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(24) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(25) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(26) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(27) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(28) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(29) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(30) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(31) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(32) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(33) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(34) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(35) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(36) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(37) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(38) {
+  width: 50px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(39) {
+  width: 255px;
+}
+.backgrid-wrapper.projects-backgrid-wrapper .backgrid thead th:nth-child(40) {
+  width: auto;
+}
 .cloned-backgrid-table-wrapper {
   position: absolute;
   top: 1px;

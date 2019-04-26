@@ -41311,6 +41311,7 @@ var BackgridHeaderRenderMethod = function () {
     if (selectAllHeaderCell) {
       var selectedModels = selectAllHeaderCell.selectedModels;
       var collection = this.collection.fullCollection || this.collection;
+      
       for (var modelId in selectedModels) {
         result.push(collection.get(modelId));
       }

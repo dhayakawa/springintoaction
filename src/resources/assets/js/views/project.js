@@ -216,36 +216,40 @@
         },
         render: function (e) {
             let self = this;
-
-            // I believe we have to re-build this collection every time the view is created or else a js error is thrown when looping through the column elements
-            let backgridOrderableColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
-            backgridOrderableColumnCollection.setPositions().sort();
-
-            let Header    = Backgrid.Extension.GroupedHeader;
+            let columns = this.columnCollectionDefinitions;
+            if (App.Vars.bAllowManagedGridColumns) {
+                // I believe we have to re-build this collection every time the view is created or else a js error is thrown when looping through the column elements
+                let backgridOrderableColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
+                backgridOrderableColumnCollection.setPositions().sort();
+                columns = backgridOrderableColumnCollection;
+            }
+            let Header    = Backgrid.Header;//Backgrid.Extension.GroupedHeader;
             this.backgrid = new Backgrid.Grid({
                 header: Header,
-                columns: backgridOrderableColumnCollection,
+                columns: columns,
                 collection: this.collection
             });
 
-            // Hide db record foreign key ids
-            let hideCellCnt           = 0;//9 + 25;
-            let initialColumnsVisible = App.Vars.projectsBackgridColumnDefinitions.length - hideCellCnt;
-            this.colManager           = new Backgrid.Extension.ColumnManager(backgridOrderableColumnCollection, {
-                initialColumnsVisible: initialColumnsVisible,
-                trackSize: true,
-                trackOrder: true,
-                trackVisibility: true,
-                saveState: App.Vars.bBackgridColumnManagerSaveState,
-                saveStateKey: 'site-projects',
-                //saveStateKey: 'site-projects-' + App.Models.siteModel.get(App.Models.siteModel.idAttribute) + '-' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute) + '-' + _.uniqueId('-'),
-                loadStateOnInit: true,
-                stateChecking: "strict"
-            });
+            if (App.Vars.bAllowManagedGridColumns) {
+                // Hide db record foreign key ids
+                let hideCellCnt = 0;//9 + 25;
+                let initialColumnsVisible = App.Vars.projectsBackgridColumnDefinitions.length - hideCellCnt;
+                this.colManager = new Backgrid.Extension.ColumnManager(backgridOrderableColumnCollection, {
+                    initialColumnsVisible: initialColumnsVisible,
+                    trackSize: true,
+                    trackOrder: true,
+                    trackVisibility: true,
+                    saveState: App.Vars.bBackgridColumnManagerSaveState,
+                    saveStateKey: 'site-projects',
+                    //saveStateKey: 'site-projects-' + App.Models.siteModel.get(App.Models.siteModel.idAttribute) + '-' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute) + '-' + _.uniqueId('-'),
+                    loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit,
+                    stateChecking: "strict"
+                });
 
-            let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
-                columnManager: this.colManager
-            });
+                let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
+                    columnManager: this.colManager
+                });
+            }
             // This is the current View
             let $backgridWrapper     = this.$el.html(this.backgrid.render().el);
 
@@ -261,32 +265,35 @@
             // Render the paginator
             this.projectGridManagerContainerToolbar.$('.projects-pagination-controls').html(paginator.render().el);
             _log('App.Views.Projects.render', '$backgridWrapper', $backgridWrapper, '$backgridWrapper.find(\'thead\')', $backgridWrapper.find('thead'));
-            //Add sizeable columns
-            let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
-                collection: this.collection,
-                columns: backgridOrderableColumnCollection,
-                grid: this.backgrid
-            });
-            $backgridWrapper.find('thead').before(sizeAbleCol.render().el);
-            _log('App.Views.Projects.render', 'after sizeAbleCol.render()');
 
-            //Add resize handlers
-            let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
-                sizeAbleColumns: sizeAbleCol,
-                saveColumnWidth: true
-            });
-            $backgridWrapper.find('thead').before(sizeHandler.render().el);
-            _log('App.Views.Projects.render', 'after sizeHandler.render()');
+            if (App.Vars.bAllowManagedGridColumns) {
+                //Add sizeable columns
+                let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
+                    collection: this.collection,
+                    columns: columns,
+                    grid: this.backgrid
+                });
+                $backgridWrapper.find('thead').before(sizeAbleCol.render().el);
+                _log('App.Views.Projects.render', 'after sizeAbleCol.render()');
 
-            //Make columns reorderable
-            let orderHandler = new Backgrid.Extension.OrderableColumns({
-                grid: this.backgrid,
-                sizeAbleColumns: sizeAbleCol
-            });
-            $backgridWrapper.find('thead').before(orderHandler.render().el);
-            _log('App.Views.Projects.render', 'after orderHandler.render()');
-            //this.options.mainAppEl is passed in through constructor
-            this.projectGridManagerContainerToolbar.$('.file-upload-container').before(colVisibilityControl.render().el);
+                //Add resize handlers
+                let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
+                    sizeAbleColumns: sizeAbleCol,
+                    saveColumnWidth: true
+                });
+                $backgridWrapper.find('thead').before(sizeHandler.render().el);
+                _log('App.Views.Projects.render', 'after sizeHandler.render()');
+
+                //Make columns reorderable
+                let orderHandler = new Backgrid.Extension.OrderableColumns({
+                    grid: this.backgrid,
+                    sizeAbleColumns: sizeAbleCol
+                });
+                $backgridWrapper.find('thead').before(orderHandler.render().el);
+                _log('App.Views.Projects.render', 'after orderHandler.render()');
+                //this.options.mainAppEl is passed in through constructor
+                this.projectGridManagerContainerToolbar.$('.file-upload-container').before(colVisibilityControl.render().el);
+            }
 
             // Always assumes the first row of the backgrid/collection is the current model
             App.Vars.currentProjectID = this.collection.length ? this.collection.at(0).get('ProjectID') : null;
@@ -316,14 +323,15 @@
             window.ajaxWaiting('remove', '.projects-backgrid-wrapper');
 
             this.$gridContainer = $backgridWrapper;
-
             this.childViews.push(this.backgrid);
-            this.childViews.push(colVisibilityControl);
             this.childViews.push(this.projectGridManagerContainerToolbar);
-            this.childViews.push(paginator);
-            this.childViews.push(sizeAbleCol);
-            this.childViews.push(sizeHandler);
-            this.childViews.push(orderHandler);
+            if (App.Vars.bAllowManagedGridColumns) {
+                this.childViews.push(colVisibilityControl);
+                this.childViews.push(paginator);
+                this.childViews.push(sizeAbleCol);
+                this.childViews.push(sizeHandler);
+                this.childViews.push(orderHandler);
+            }
 
             return this;
 

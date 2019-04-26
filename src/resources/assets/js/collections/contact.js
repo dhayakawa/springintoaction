@@ -72,7 +72,7 @@
             label: "Active",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: false,
             width: "50"
         },
@@ -81,8 +81,8 @@
             label: "Site",
             cell: SitesCell,
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -90,8 +90,8 @@
             label: "FirstName",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -99,8 +99,8 @@
             label: "LastName",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -108,8 +108,8 @@
             label: "Title",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -117,8 +117,8 @@
             label: "Email",
             cell: "email",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -126,8 +126,8 @@
             label: "Phone",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -135,8 +135,8 @@
             label: "Comments",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         },
         {
@@ -144,8 +144,8 @@
             label: "ContactType",
             cell: "string",
             editable: App.Vars.Auth.bCanEditSiteContactsGridFields,
-            resizeable: true,
-            orderable: true,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
             width: "250"
         }
     ];
