@@ -366,7 +366,7 @@ FROM (
 
     public function getVolunteersAssignedSql()
     {
-        return "(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID and pv.deleted_at is null)";
+        return "(select count(*) from project_volunteers pv join project_volunteer_role pvr on pvr.ProjectID = pv.ProjectID and pvr.VolunteerID = pv.VolunteerID where pv.ProjectID = projects.ProjectID and pvr.Status = 5 and pvr.ProjectRoleID = 4 and pvr.deleted_at is NULL and pv.deleted_at is null)";
     }
 
     public function getProjectsAtReqPercSql($Year)

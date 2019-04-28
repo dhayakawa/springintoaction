@@ -844,6 +844,12 @@ class ReportsController extends BaseController
             '=',
             'project_volunteers.ProjectID'
         )->join(
+            'project_volunteer_role',
+            function ($join) {
+                $join->on(
+                    "project_volunteer_role.ProjectID", "=", "project_volunteers.ProjectID")->whereRaw("project_volunteer_role.VolunteerID = project_volunteers.VolunteerID and project_volunteer_role.Status = 5");
+            }
+        )->join(
             'site_status',
             'projects.SiteStatusID',
             '=',
@@ -855,6 +861,7 @@ class ReportsController extends BaseController
             'site_status.SiteID'
         )->whereNull('volunteers.deleted_at')
          ->whereNull('project_volunteers.deleted_at')
+         ->whereNull('project_volunteer_role.deleted_at')
          ->whereNull('projects.deleted_at')
          ->whereNull('site_status.deleted_at')
          ->whereNull('sites.deleted_at')
