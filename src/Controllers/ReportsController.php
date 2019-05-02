@@ -125,6 +125,24 @@ class ReportsController extends BaseController
                     $bReturnArray
                 );
                 break;
+            case 'registered_team_leader_emails':
+                $reportName = 'Registered Team Leader Emails Report';
+                $reportHtml = $this->getRegisteredTeamLeaderEmailsReport(
+                    $Year,
+                    $SiteID = null,
+                    $ProjectID = null,
+                    $bReturnArray
+                );
+                break;
+            case 'registered_project_manager_emails':
+                $reportName = 'Registered Project Manager Emails Report';
+                $reportHtml = $this->getRegisteredProjectManagerEmailsReport(
+                    $Year,
+                    $SiteID = null,
+                    $ProjectID = null,
+                    $bReturnArray
+                );
+                break;
             default:
                 $reportName = 'Unknown Report:' . $ReportType;
                 if ($bReturnArray) {
@@ -209,14 +227,13 @@ class ReportsController extends BaseController
             if ($bReturnArray) {
                 $html[] = $site['SiteName'];
                 $html = array_merge($html, $aProjects);
-
             } else {
                 $response = $this->getResultsHtmlTable($aProjects);
                 $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
                 $html .= $response;
             }
         }
-        if($bReturnArray){
+        if ($bReturnArray) {
             $html[] = "Total Registered:$iRegisteredCnt";
         } else {
             $html .= "<table class=\"table\">";
@@ -224,7 +241,8 @@ class ReportsController extends BaseController
                         <td><h2>Total Registered:$iRegisteredCnt</h2></td>
                         ";
 
-            $html .= "</tr></table>";}
+            $html .= "</tr></table>";
+        }
 
         return $html;
     }
@@ -284,7 +302,8 @@ class ReportsController extends BaseController
                 $tmpAmt = '';
                 $aBudgets =
                     Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')
-                        ->whereNull('budgets.deleted_at')->where('ProjectID', $aaProject['ProjectID'])
+                          ->whereNull('budgets.deleted_at')
+                          ->where('ProjectID', $aaProject['ProjectID'])
                           ->get()
                           ->toArray();
                 if (!empty($aBudgets)) {
@@ -422,7 +441,8 @@ class ReportsController extends BaseController
                 $tmpAmt = '';
                 $aBudgets =
                     Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')
-                        ->whereNull('budgets.deleted_at')->where('ProjectID', $aaProject['ProjectID'])
+                          ->whereNull('budgets.deleted_at')
+                          ->where('ProjectID', $aaProject['ProjectID'])
                           ->get()
                           ->toArray();
                 if (!empty($aBudgets)) {
@@ -459,8 +479,8 @@ class ReportsController extends BaseController
                     'project_roles.Role',
                     'Estimator'
                 )->whereNull(
-                        'project_volunteer_role.deleted_at'
-                    )->whereNull('volunteers.deleted_at')->get()->toArray();
+                    'project_volunteer_role.deleted_at'
+                )->whereNull('volunteers.deleted_at')->get()->toArray();
                 $estimator = '';
                 if (!empty($aEstimators)) {
                     foreach ($aEstimators as $aEstimator) {
@@ -638,38 +658,50 @@ class ReportsController extends BaseController
         // DB::raw('CONCAT(volunteers.FirstName, \' \', volunteers.LastName) as Project Manager')
         $aSites = Site::select(
             'sites.SiteName'
-        )->selectRaw("CONCAT(volunteers.FirstName, ' ', volunteers.LastName) as `Project Manager`")->join(
-            'site_status',
-            'sites.SiteID',
-            '=',
-            'site_status.SiteID'
-        )->leftJoin(
-            'site_volunteers',
-            'site_volunteers.SiteStatusID',
-            '=',
-            'site_status.SiteStatusID'
-        )->leftJoin(
-            'site_volunteer_role',
-            function ($join) {
-                $join->on(
-                    'site_volunteer_role.SiteVolunteerID',
-                    '=',
-                    'site_volunteers.SiteVolunteerID'
-                )->where(
-                    'site_volunteer_role.SiteRoleID',
-                    '=',
-                    2
-                );
-            }
-        )->leftJoin(
-            'volunteers',
-            'volunteers.VolunteerID',
-            '=',
-            'site_volunteers.VolunteerID'
-        )->where(
-            'site_status.Year',
-            $Year
-        )->whereNull('volunteers.deleted_at')->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->orderBy('sites.SiteName', 'asc')->get()->toArray();
+        )
+                      ->selectRaw("CONCAT(volunteers.FirstName, ' ', volunteers.LastName) as `Project Manager`")
+                      ->join(
+                          'site_status',
+                          'sites.SiteID',
+                          '=',
+                          'site_status.SiteID'
+                      )
+                      ->leftJoin(
+                          'site_volunteers',
+                          'site_volunteers.SiteStatusID',
+                          '=',
+                          'site_status.SiteStatusID'
+                      )
+                      ->leftJoin(
+                          'site_volunteer_role',
+                          function ($join) {
+                              $join->on(
+                                  'site_volunteer_role.SiteVolunteerID',
+                                  '=',
+                                  'site_volunteers.SiteVolunteerID'
+                              )->where(
+                                  'site_volunteer_role.SiteRoleID',
+                                  '=',
+                                  2
+                              );
+                          }
+                      )
+                      ->leftJoin(
+                          'volunteers',
+                          'volunteers.VolunteerID',
+                          '=',
+                          'site_volunteers.VolunteerID'
+                      )
+                      ->where(
+                          'site_status.Year',
+                          $Year
+                      )
+                      ->whereNull('volunteers.deleted_at')
+                      ->whereNull('site_status.deleted_at')
+                      ->whereNull('sites.deleted_at')
+                      ->orderBy('sites.SiteName', 'asc')
+                      ->get()
+                      ->toArray();
 
         return $bReturnArray ? $aSites : $this->getResultsHtmlTable($aSites);
     }
@@ -792,29 +824,42 @@ class ReportsController extends BaseController
             'sites.SiteName as Site Name',
             'projects.SequenceNumber as Proj Num',
             'projects.ProjectDescription as Project Description'
-        )->join(
-            'project_volunteers',
-            'project_volunteers.VolunteerID',
-            '=',
-            'volunteers.VolunteerID'
-        )->join(
-            'projects',
-            'projects.ProjectID',
-            '=',
-            'project_volunteers.ProjectID'
-        )->join(
-            'site_status',
-            'projects.SiteStatusID',
-            '=',
-            'site_status.SiteStatusID'
-        )->join(
-            'sites',
-            'sites.SiteID',
-            '=',
-            'site_status.SiteID'
-        )->whereNull('volunteers.deleted_at')->whereNull('project_volunteers.deleted_at')->whereNull(
-            'projects.deleted_at'
-        )->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->where('site_status.Year', $Year)->orderBy('volunteers.LastName', 'asc')->get()->toArray();
+        )
+                                ->join(
+                                    'project_volunteers',
+                                    'project_volunteers.VolunteerID',
+                                    '=',
+                                    'volunteers.VolunteerID'
+                                )
+                                ->join(
+                                    'projects',
+                                    'projects.ProjectID',
+                                    '=',
+                                    'project_volunteers.ProjectID'
+                                )
+                                ->join(
+                                    'site_status',
+                                    'projects.SiteStatusID',
+                                    '=',
+                                    'site_status.SiteStatusID'
+                                )
+                                ->join(
+                                    'sites',
+                                    'sites.SiteID',
+                                    '=',
+                                    'site_status.SiteID'
+                                )
+                                ->whereNull('volunteers.deleted_at')
+                                ->whereNull('project_volunteers.deleted_at')
+                                ->whereNull(
+                                    'projects.deleted_at'
+                                )
+                                ->whereNull('site_status.deleted_at')
+                                ->whereNull('sites.deleted_at')
+                                ->where('site_status.Year', $Year)
+                                ->orderBy('volunteers.LastName', 'asc')
+                                ->get()
+                                ->toArray();
 
         if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
             return "This report is too big to download as a PDF. Please choose a different download type.";
@@ -822,6 +867,7 @@ class ReportsController extends BaseController
 
         return $bReturnArray ? $aVolunteers : $this->getResultsHtmlTable($aVolunteers);
     }
+
     public function getRegisteredVolunteerEmailsReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
         $aVolunteers = Volunteer::select(
@@ -833,46 +879,188 @@ class ReportsController extends BaseController
             'projects.ProjectDescription as Project Description',
             'project_volunteers.created_at',
             'volunteers.TeamLeaderWilling'
-        )->join(
-            'project_volunteers',
-            'project_volunteers.VolunteerID',
-            '=',
-            'volunteers.VolunteerID'
-        )->join(
-            'projects',
-            'projects.ProjectID',
-            '=',
-            'project_volunteers.ProjectID'
-        )->join(
-            'project_volunteer_role',
-            function ($join) {
-                $join->on(
-                    "project_volunteer_role.ProjectID", "=", "project_volunteers.ProjectID")->whereRaw("project_volunteer_role.VolunteerID = project_volunteers.VolunteerID and project_volunteer_role.Status = 5");
-            }
-        )->join(
-            'site_status',
-            'projects.SiteStatusID',
-            '=',
-            'site_status.SiteStatusID'
-        )->join(
-            'sites',
-            'sites.SiteID',
-            '=',
-            'site_status.SiteID'
-        )->whereNull('volunteers.deleted_at')
-         ->whereNull('project_volunteers.deleted_at')
-         ->whereNull('project_volunteer_role.deleted_at')
-         ->whereNull('projects.deleted_at')
-         ->whereNull('site_status.deleted_at')
-         ->whereNull('sites.deleted_at')
-         ->where('site_status.Year', $Year)->orderBy('sites.SiteName', 'asc')->orderBy('projects.SequenceNumber', 'asc')
-         ->orderBy('project_volunteers.created_at', 'asc')->get()->toArray();
+        )
+                                ->join(
+                                    'project_volunteers',
+                                    'project_volunteers.VolunteerID',
+                                    '=',
+                                    'volunteers.VolunteerID'
+                                )
+                                ->join(
+                                    'projects',
+                                    'projects.ProjectID',
+                                    '=',
+                                    'project_volunteers.ProjectID'
+                                )
+                                ->join(
+                                    'project_volunteer_role',
+                                    function ($join) {
+                                        $join->on(
+                                            "project_volunteer_role.ProjectID",
+                                            "=",
+                                            "project_volunteers.ProjectID"
+                                        )->whereRaw(
+                                            "project_volunteer_role.VolunteerID = project_volunteers.VolunteerID and project_volunteer_role.Status = 5"
+                                        );
+                                    }
+                                )
+                                ->join(
+                                    'site_status',
+                                    'projects.SiteStatusID',
+                                    '=',
+                                    'site_status.SiteStatusID'
+                                )
+                                ->join(
+                                    'sites',
+                                    'sites.SiteID',
+                                    '=',
+                                    'site_status.SiteID'
+                                )
+                                ->whereNull('volunteers.deleted_at')
+                                ->whereNull('project_volunteers.deleted_at')
+                                ->whereNull(
+                                    'project_volunteer_role.deleted_at'
+                                )
+                                ->whereNull('projects.deleted_at')
+                                ->whereNull('site_status.deleted_at')
+                                ->whereNull('sites.deleted_at')
+                                ->where('site_status.Year', $Year)
+                                ->orderBy('sites.SiteName', 'asc')
+                                ->orderBy('projects.SequenceNumber', 'asc')
+                                ->orderBy('project_volunteers.created_at', 'asc')
+                                ->get()
+                                ->toArray();
 
         if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
             return "This report is too big to download as a PDF. Please choose a different download type.";
         }
 
         return $bReturnArray ? $aVolunteers : $this->getResultsHtmlTable($aVolunteers);
+    }
+
+    public function getRegisteredTeamLeaderEmailsReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
+    {
+        $aVolunteers = Volunteer::select(
+            'volunteers.Email',
+            'volunteers.FirstName as First Name',
+            'volunteers.LastName as Last Name',
+            'sites.SiteName as Site Name',
+            'projects.SequenceNumber as Proj Num',
+            'projects.ProjectDescription as Project Description',
+            'project_volunteers.created_at',
+            'volunteers.TeamLeaderWilling'
+        )
+                                ->join(
+                                    'project_volunteers',
+                                    'project_volunteers.VolunteerID',
+                                    '=',
+                                    'volunteers.VolunteerID'
+                                )
+                                ->join(
+                                    'projects',
+                                    'projects.ProjectID',
+                                    '=',
+                                    'project_volunteers.ProjectID'
+                                )
+                                ->join(
+                                    'project_volunteer_role',
+                                    function ($join) {
+                                        $join->on(
+                                            "project_volunteer_role.ProjectID",
+                                            "=",
+                                            "project_volunteers.ProjectID"
+                                        )->whereRaw(
+                                            "project_volunteer_role.VolunteerID = project_volunteers.VolunteerID and project_volunteer_role.Status = 5 and and project_volunteer_role.ProjectRoleID = 5"
+                                        );
+                                    }
+                                )
+                                ->join(
+                                    'site_status',
+                                    'projects.SiteStatusID',
+                                    '=',
+                                    'site_status.SiteStatusID'
+                                )
+                                ->join(
+                                    'sites',
+                                    'sites.SiteID',
+                                    '=',
+                                    'site_status.SiteID'
+                                )
+                                ->whereNull('volunteers.deleted_at')
+                                ->whereNull('project_volunteers.deleted_at')
+                                ->whereNull(
+                                    'project_volunteer_role.deleted_at'
+                                )
+                                ->whereNull('projects.deleted_at')
+                                ->whereNull('site_status.deleted_at')
+                                ->whereNull('sites.deleted_at')
+                                ->where('site_status.Year', $Year)
+                                ->orderBy('sites.SiteName', 'asc')
+                                ->orderBy('projects.SequenceNumber', 'asc')
+                                ->orderBy('project_volunteers.created_at', 'asc')
+                                ->get()
+                                ->toArray();
+
+        if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
+            return "This report is too big to download as a PDF. Please choose a different download type.";
+        }
+
+        return $bReturnArray ? $aVolunteers : $this->getResultsHtmlTable($aVolunteers);
+    }
+
+    public function getRegisteredProjectManagerEmailsReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
+    {
+        $aSites = Site::select(
+            'volunteers.Email',
+            'volunteers.FirstName as First Name',
+            'volunteers.LastName as Last Name',
+            'sites.SiteName as Site Name',
+            'site_volunteers.created_at'
+        )
+                      ->join(
+                          'site_status',
+                          'sites.SiteID',
+                          '=',
+                          'site_status.SiteID'
+                      )
+                      ->leftJoin(
+                          'site_volunteers',
+                          'site_volunteers.SiteStatusID',
+                          '=',
+                          'site_status.SiteStatusID'
+                      )
+                      ->leftJoin(
+                          'site_volunteer_role',
+                          function ($join) {
+                              $join->on(
+                                  'site_volunteer_role.SiteVolunteerID',
+                                  '=',
+                                  'site_volunteers.SiteVolunteerID'
+                              )->where(
+                                  'site_volunteer_role.SiteRoleID',
+                                  '=',
+                                  2
+                              );
+                          }
+                      )
+                      ->leftJoin(
+                          'volunteers',
+                          'volunteers.VolunteerID',
+                          '=',
+                          'site_volunteers.VolunteerID'
+                      )
+                      ->where(
+                          'site_status.Year',
+                          $Year
+                      )
+                      ->whereNull('volunteers.deleted_at')
+                      ->whereNull('site_status.deleted_at')
+                      ->whereNull('sites.deleted_at')
+                      ->orderBy('sites.SiteName', 'asc')
+                      ->get()
+                      ->toArray();
+
+        return $bReturnArray ? $aSites : $this->getResultsHtmlTable($aSites);
     }
 
     public function getVolunteerAssignmentForMailMergeReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
@@ -945,7 +1133,10 @@ class ReportsController extends BaseController
                     'project_roles.ProjectRoleID',
                     '=',
                     'project_volunteer_role.ProjectRoleID'
-                )->whereNull('volunteers.deleted_at')->where('project_volunteers.ProjectID', '=', $ProjectID)->orderBy('volunteers.LastName', 'desc');
+                )->whereNull('volunteers.deleted_at')->where('project_volunteers.ProjectID', '=', $ProjectID)->orderBy(
+                    'volunteers.LastName',
+                    'desc'
+                );
                 $aVolunteers = $Volunteers->get()->toArray();
 
                 foreach ($aVolunteers as $key => $aVolunteer) {
