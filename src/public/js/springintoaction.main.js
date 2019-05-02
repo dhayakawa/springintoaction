@@ -220,6 +220,16 @@
                                             'route': 'view/reports/management/registered_volunteer_emails'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Registered Team Leader Emails',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/registered_team_leader_emails'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Registered Project Manager Emails',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/registered_project_manager_emails'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
                                             'linkText': 'Volunteer Assignment',
                                             'badgeCount': '',
                                             'route': 'view/reports/management/volunteer_assignment'
