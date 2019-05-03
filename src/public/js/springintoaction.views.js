@@ -311,6 +311,8 @@
                 this.collection.bind('reset', this.addAll);
             }
             this.aSiteTotals = [];
+            this.BudgetSourceOptions = _.omit(App.Vars.selectOptions['BudgetSourceOptions'],'');
+
             _log(this.viewName + '.initialize', options, this);
         },
         events: {
@@ -323,56 +325,121 @@
         },
         addOne: function (sSiteName, key, data) {
             let self = this;
-            let budgetSourcesTotal = 0.00;
-            let sBudgetSources = '';
+            let budgetSourcesAmt = {};
+            let budgetSourcesTotal = {};
+            //console.log(sSiteName, key, data)
             if (_.isEmpty(this.lastSiteProccessed)) {
                 this.lastSiteProccessed = sSiteName;
             }
-
-            _.each(data['Budget Source'], function (bs, key) {
-                if (!_.isEmpty(bs[0])) {
-                    sBudgetSources += bs[0] + ', ';
-                    budgetSourcesTotal += parseFloat(bs[1]);
-                }
-            });
+            /**
+             * Init Site Totals data
+             */
             if (_.isUndefined(self.aSiteTotals[sSiteName])) {
-                self.aSiteTotals[sSiteName]=[];
-                self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] = 0;
+                self.aSiteTotals[sSiteName] = [];
+                self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] = {};
+                _.each(self.BudgetSourceOptions, function (val, key) {
+                    self.aSiteTotals[sSiteName]['BudgetSourcesTotal'][key] = 0.00;
+                });
                 self.aSiteTotals[sSiteName]['EstCostTotal'] = 0;
             }
+
+            let budgetSources = {};
+            /**
+             * Init budget source values into object for easier retrieval
+             */
+            _.each(data['Budget Source'], function (bs, key) {
+                if (!_.isEmpty(bs[0])) {
+                    budgetSources[`${bs[0]}`] = parseFloat(bs[1]);
+                }
+            });
+
+            let tableColumnsCnt = 2 + _.keys(this.BudgetSourceOptions).length;
+
+            /**
+             * Init all budget source options amount to zero
+             */
+            _.each(self.BudgetSourceOptions, function (val, key) {
+                budgetSourcesAmt[key] = 0.00;
+            });
+
+            /**
+             * Set the budget source option value for this project and increment site budget source total
+             */
+            _.each(self.BudgetSourceOptions, function (val, key) {
+                //console.log('set BudgetSourcesTotal All',sSiteName, key, budgetSources[key])
+                if (!_.isUndefined(budgetSources[key])) {
+                    budgetSourcesAmt[key] = parseFloat(budgetSources[key]).toFixed(2);
+                    self.aSiteTotals[sSiteName]['BudgetSourcesTotal'][key] += parseFloat(budgetSources[key]);
+                    //console.log('set BudgetSourcesTotal',sSiteName,key, self.aSiteTotals[sSiteName]['BudgetSourcesTotal'][key])
+                }
+            });
+
+
             let iEstCost = _.isNull(data['Est Cost']) ? 0 : data['Est Cost'];
             let sEstCost = _.isNull(data['Est Cost']) ? '' : parseFloat(data['Est Cost']).toFixed(2);
 
-            self.aSiteTotals[sSiteName]['BudgetSourcesTotal'] += budgetSourcesTotal;
             self.aSiteTotals[sSiteName]['EstCostTotal'] += parseFloat(iEstCost);
-            sBudgetSources = sBudgetSources.replace(/, $/,'');
 
             // Add totals to table before the next site
             if (sSiteName !== self.lastSiteProccessed){
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['EstCostTotal'].toFixed(2) + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['BudgetSourcesTotal'].toFixed(2) + '</td></tr>');
+                let siteTotalRowCells = '<td data-site="' + self.lastSiteProccessed + '">Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['EstCostTotal'].toFixed(2) + '</td>';
+                _.each(budgetSourcesAmt, function (val, key) {
+                    siteTotalRowCells += '<td data-source="'+ key+'"  title="' + key + '">' + self.aSiteTotals[self.lastSiteProccessed]['BudgetSourcesTotal'][key].toFixed(2) + '</td>';
+                });
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals">' + siteTotalRowCells + '</tr>');
+                //self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['EstCostTotal'].toFixed(2) + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[self.lastSiteProccessed]['BudgetSourcesTotal'].toFixed(2) + '</td></tr>');
                 // add an empty borderless row
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="'+ tableColumnsCnt+'">&nbsp;</td></tr>');
                 self.lastSiteProccessed = sSiteName;
             }
-
+            let siteBudgetRowCells = '<td>' + sSiteName + '</td><td>' + key + '</td><td>' + sEstCost + '</td>';
+            _.each(self.BudgetSourceOptions, function (val, key) {
+                let amt = !_.isUndefined(budgetSources[key]) ? parseFloat(budgetSources[key]).toFixed(2) : '&nbsp;';
+                siteBudgetRowCells += '<td  title="' + key + '">' + amt + '</td>';
+            });
             // Add site budget row
-            self.$el.find('.site-budgets-table tbody').append('<tr><td>' + sSiteName + '</td><td>' + key + '</td><td>' + sEstCost + '</td><td>' + sBudgetSources + '</td><td>' + parseFloat(budgetSourcesTotal).toFixed(2) + '</td></tr>');
+            self.$el.find('.site-budgets-table tbody').append('<tr>' + siteBudgetRowCells + '</tr>');
 
             // Add totals to table after the last site
             if (this.bIsLast){
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['EstCostTotal'].toFixed(2) + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['BudgetSourcesTotal'].toFixed(2) + '</td></tr>');
+                let siteTotalRowCells = '<td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['EstCostTotal'].toFixed(2) + '</td>';
+                _.each(budgetSourcesAmt, function (val, key) {
+                    siteTotalRowCells += '<td  title="' + key + '">' + parseFloat(val).toFixed(2) + '</td>';
+                });
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals">'+ siteTotalRowCells+'</tr>');
+                //self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td>Totals</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['EstCostTotal'].toFixed(2) + '</td><td>&nbsp;</td><td>' + self.aSiteTotals[sSiteName]['BudgetSourcesTotal'].toFixed(2) + '</td></tr>');
                 // add a couple empty borderless rows
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="5">&nbsp;</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="'+ tableColumnsCnt+'">&nbsp;</td></tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="'+ tableColumnsCnt+'">&nbsp;</td></tr>');
                 let estTotal = 0;
+                let sourceTotals = {};
                 let sourceTotal = 0;
+                console.log('sites BudgetSourcesTotal',self.aSiteTotals)
                 _.each(_.keys(self.aSiteTotals), function (site, key) {
                     estTotal += parseFloat(self.aSiteTotals[site]['EstCostTotal']);
-                    sourceTotal += parseFloat(self.aSiteTotals[site]['BudgetSourcesTotal']);
+
+                    _.each(self.BudgetSourceOptions, function (val, key) {
+                        //console.log(val, key, self.aSiteTotals[site]['BudgetSourcesTotal'][key])
+                        if (_.isUndefined(sourceTotals[key])) {
+                            sourceTotals[key] = 0;
+                        }
+                        sourceTotals[key] += parseFloat(self.aSiteTotals[site]['BudgetSourcesTotal'][key]);
+                        sourceTotal += parseFloat(self.aSiteTotals[site]['BudgetSourcesTotal'][key]);
+                    });
                 });
                 // add all totals
-                self.$el.find('.site-budgets-table tbody').append('<tr class="totals"><td colspan="2" class="text-right estimated-cost-total">Estimated Cost Total:</td><td>' + estTotal.toFixed(2) + '</td><td class="text-right budget-sources-total">Budget Sources Total:</td><td>' + sourceTotal.toFixed(2) + '</td></tr>');
-
+                let siteTotalsRowCells = '<td colspan="2" class="text-right estimated-cost-total">Estimated Cost Total:</td><td>' + estTotal.toFixed(2) + '</td>';
+                _.each(sourceTotals, function (val, key) {
+                    if (!_.isEmpty(key)) {
+                        siteTotalsRowCells += '<td data-source="' + key + '" title="' + key + '">' + parseFloat(val).toFixed(2) + '</td>';
+                    }
+                });
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals">'+ siteTotalsRowCells +'</tr>');
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals-margin"><td colspan="' + tableColumnsCnt + '">&nbsp;</td></tr>');
+                let fundsNeeded = parseFloat(estTotal - sourceTotal);
+                console.log(fundsNeeded,estTotal,sourceTotal)
+                siteTotalsRowCells = '<td colspan="2" class="text-right estimated-cost-total">Funds Needed:</td><td colspan="' + (tableColumnsCnt) + '">' + fundsNeeded.toFixed(2) + '</td>';
+                self.$el.find('.site-budgets-table tbody').append('<tr class="totals">' + siteTotalsRowCells + '</tr>');
             }
         },
         addAll: function () {
@@ -401,17 +468,25 @@
                 });
 
                 let estTotal = 0;
-                let sourceTotal = 0;
+                let sourceTotals = {};
+
                 _.each(_.keys(self.aSiteTotals), function (site, key) {
                     estTotal += parseFloat(self.aSiteTotals[site]['EstCostTotal']);
-                    sourceTotal += parseFloat(self.aSiteTotals[site]['BudgetSourcesTotal']);
+
+                    _.each(self.BudgetSourceOptions, function (val, key) {
+                        //console.log(val, key, self.aSiteTotals[site]['BudgetSourcesTotal'][key])
+                        if (_.isUndefined(sourceTotals[key])) {
+                            sourceTotals[key] = 0;
+                        }
+                        sourceTotals[key] += parseFloat(self.aSiteTotals[site]['BudgetSourcesTotal'][key]);
+                    });
                 });
                 let annualBudgetAmount = self.model.get('BudgetAmount');
-                let totalWoodlandsAmt = annualBudgetAmount - estTotal;
+                let totalWoodlandsAmt = annualBudgetAmount - sourceTotals['Woodlands'];
                 // make the color red if over budget
                 let sDanger = totalWoodlandsAmt < 0 ? 'text-danger' : '';
-                this.$el.find('.box-footer').empty();
-                this.$el.find('.box-footer').append('<div class="annual-budget-woodlands-total-wrapper '+ sDanger +'"><strong>Woodlands Budget Remaining:</strong>' + parseFloat(totalWoodlandsAmt).toFixed(2) + '</div>');
+                this.$el.find('.woodlands-remaining-budget').empty();
+                this.$el.find('.woodlands-remaining-budget').append('<div class="annual-budget-woodlands-total-wrapper '+ sDanger +'"><strong>Woodlands Budget Remaining:</strong>' + parseFloat(totalWoodlandsAmt).toFixed(2) + '</div>');
             }
 
         },
@@ -428,7 +503,13 @@
                 model: self.model
             });
             this.$el.find('.box-title').after(this.annualBudgetView.render().el);
-            this.$el.find(this.backgridWrapperClassSelector).append('<table class="table site-budgets-table"><thead><tr><th width="200">Site</th><th width="20">ProjNum</th><th width="80">Est Cost</th><th width="200">Budget Sources</th><th>Budget Sources Totals</th></tr></thead><tbody></tbody></table>');
+
+            this.$el.find(this.backgridWrapperClassSelector).append('<table class="table site-budgets-table"><thead><tr><th width="200">Site</th><th width="20">ProjNum</th><th width="80">Est Cost</th></tr></thead><tbody></tbody></table>');
+
+            let $tHeadRow = this.$el.find('.site-budgets-table thead tr');
+            _.each(self.BudgetSourceOptions, function (val, key) {
+                $tHeadRow.append('<th width="200" data-source-option="'+key+'">' + key + '</th>');
+            });
 
             this.addAll();
 

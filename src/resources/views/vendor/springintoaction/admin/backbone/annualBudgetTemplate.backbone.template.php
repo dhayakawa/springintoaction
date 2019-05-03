@@ -5,4 +5,5 @@
     <input type="hidden" name="Year" value="<%= year %>"/>
     <button type="button" class="btnUpdate btn btn-xs btn-primary">Update</button>
     <button type="button" class="btnRefreshTotals btn btn-xs btn-secondary">Refresh Totals</button>
+    <span class="woodlands-remaining-budget"></span>
 </form>
