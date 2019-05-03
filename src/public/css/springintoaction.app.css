@@ -555,6 +555,7 @@
 .annualbudgets-management-view .annual-budget-woodlands-total-wrapper {
   width: 327px;
   text-align: right;
+  display: inline-block;
 }
 .annualbudgets-management-view .annual-budget-woodlands-total-wrapper strong {
   padding-right: 15px;

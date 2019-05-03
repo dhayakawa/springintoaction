@@ -92,7 +92,7 @@
             )->where(
                 'site_status.Year',
                 $Year
-            )->orderBy('SiteName', 'asc');
+            )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->orderBy('SiteName', 'asc');
 
             $aSites = $site->get()->toArray();
             foreach ($aSites as $site) {
@@ -114,14 +114,14 @@
                 )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
                     'projects.SequenceNumber',
                     'asc'
-                )->get()->toArray();
+                )->whereNull('projects.deleted_at')->get()->toArray();
 
                 foreach ($aProjects as $key => $aaProject) {
-                    //\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$key,$aaProject]);
+
                     $aSiteBudgets['Sites'][$site['SiteName']]['Projects'][$aaProject['Proj Num']]['Budget Source'] = [];
                     $aBudgets =
                         Budget::join('budget_source_options', 'budget_source_options.id', '=', 'budgets.BudgetSource')
-                              ->where('ProjectID', $aaProject['ProjectID'])
+                              ->where('ProjectID', $aaProject['ProjectID'])->whereNull('budgets.deleted_at')
                               ->get()
                               ->toArray();
                     if (!empty($aBudgets)) {
@@ -137,11 +137,32 @@
                     }
 
                     $aSiteBudgets['Sites'][$site['SiteName']]['Projects'][$aaProject['Proj Num']]['Est Cost'] = $aaProject['Est Cost'];
+                    if ($site['SiteName'] == 'Ben Franklin Junior High') {
+                        \Illuminate\Support\Facades\Log::debug(
+                            '',
+                            [
+                                'File:' . __FILE__,
+                                'Method:' . __METHOD__,
+                                'Line:' . __LINE__,
+                                $key,
+                                ['$aaProject'=>$aaProject,
+                                '$aSiteBudgets'=>$aSiteBudgets['Sites'][$site['SiteName']]['Projects']]
+                            ]
+                        );
+                    }
                 }
             }
             // \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
             //     $aSiteBudgets]);
-
+            \Illuminate\Support\Facades\Log::debug(
+                '',
+                [
+                    'File:' . __FILE__,
+                    'Method:' . __METHOD__,
+                    'Line:' . __LINE__,
+                    $aSiteBudgets['Sites']['Ben Franklin Junior High'],
+                ]
+            );
             return $aSiteBudgets;
         }
 
