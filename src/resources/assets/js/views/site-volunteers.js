@@ -3,6 +3,7 @@
         template: template('siteVolunteersGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
+            this.$currentRow = null;
             _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
             this.listenTo(App.Views.siteVolunteersView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
@@ -83,7 +84,7 @@
         }
 
     });
-    App.Views.SiteVolunteer = Backbone.View.extend({
+    App.Views.SiteVolunteer = App.Views.ManagedGrid.fullExtend({
         initialize: function (options) {
             let self = this;
             this.options = options;
@@ -97,14 +98,15 @@
             this.modelNameLabel = this.options.modelNameLabel;
             this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
             this.routeName = 'site_volunteer_role';
-
+            this.$currentRow = null;
             _log('App.Views.SiteVolunteer.initialize', options);
         },
         events: {
             'focusin tbody tr': 'updateSiteVolunteerView',
             'mouseenter thead th button': 'showColumnHeaderLabel',
             'mouseenter tbody td': 'showTruncatedCellContentPopup',
-            'mouseleave tbody td': 'hideTruncatedCellContentPopup'
+            'mouseleave tbody td': 'hideTruncatedCellContentPopup',
+            'click .overlay-top,.overlay-bottom': 'showRadioBtnEditHelpMsg'
         },
         render: function (e) {
             let self = this;
@@ -122,7 +124,9 @@
                 columns: this.columnCollection,
                 collection: this.collection
             });
-
+            this.listenTo(this.backgrid, 'backgrid:rendered', function (e) {
+                self.positionOverlays(e);
+            });
             if (App.Vars.bAllowManagedGridColumns) {
                 let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
                 let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
@@ -143,7 +147,7 @@
             _log('App.Views.SiteVolunteer.render', this.routeName, self.parentView.el, _.isUndefined(e) ? 'no event passed in for this call.' : e, self.parentView.$('.site-volunteers-grid-manager-container').find('.tab-pagination-controls'));
 
             let $gridContainer = this.$el.html(this.backgrid.render().el);
-
+            this.$gridContainer = $gridContainer;
             this.gridManagerContainerToolbar = new App.Views.SiteVolunteerGridManagerContainerToolbar({
                 el: this.parentView.$('.site-volunteers-grid-manager-container')
             });
@@ -217,7 +221,7 @@
                     $gridContainer.find('td.renderable').popover('hide')
                 }
             });
-            this.$gridContainer = $gridContainer;
+
             return this;
         },
         getModalForm: function () {
@@ -255,7 +259,18 @@
             } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
                 $TableRowElement = $(e.currentTarget);
                 $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
+            } else if (typeof e === 'object' && !_.isUndefined(e.data)) {
+                if (self.$gridContainer.find('[type="radio"][name="' + this.model.idAttribute + '"]:checked').length === 0) {
+                    $TableRowElement = self.$gridContainer.find('tbody tr:first-child');
+                    $RadioElement = $TableRowElement.find('input[type="radio"]');
+                } else {
+                    $RadioElement = self.$gridContainer.find('[type="radio"][name="' + this.model.idAttribute + '"]:checked');
+                    $TableRowElement = $RadioElement.parents('tr');
+                }
+
             }
+            self.$currentRow = $TableRowElement;
+
             if ($RadioElement !== null) {
                 // click is only a visual indication that the row is selected. nothing should be listening for this click
                 $RadioElement.trigger('click');
@@ -272,7 +287,7 @@
                 this.model.url = '/admin/' + self.routeName + '/' + currentModelID;
                 this.model.fetch({reset: true});
             }
-
+            self.positionOverlays(self.backgrid);
         },
         update: function (e) {
             let self = this;
@@ -359,48 +374,6 @@
                 }
             })
         },
-        showColumnHeaderLabel: function (e) {
-            var self = this;
-            let $element = $(e.currentTarget).parents('th');
-            let element = $element[0];
 
-            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            if (bOverflown) {
-                $element.attr('title', $element.find('button').text());
-            }
-            //_log('App.Views.Projects.showColumnHeaderLabel.event', e);
-        },
-        showTruncatedCellContentPopup: function (e) {
-            var self = this;
-
-            let $element = $(e.currentTarget);
-            let element = e.currentTarget;
-
-            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            if (bOverflown) {
-                $element.popover({
-                    placement: 'auto auto',
-                    padding: 0,
-                    container: 'body',
-                    content: function () {
-                        return $(this).text()
-                    }
-                });
-                $element.popover('show');
-            }
-            //_log('App.Views.SiteVolunteer.showTruncatedCellContent.event', e, element, bOverflown);
-        },
-        hideTruncatedCellContentPopup: function (e) {
-            var self = this;
-
-            let $element = $(e.currentTarget);
-            let element = e.currentTarget;
-
-            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            if (bOverflown) {
-                $element.popover('hide');
-            }
-            //_log('App.Views.SiteVolunteer.hideTruncatedCellContent.event', e, element, bOverflown);
-        }
     });
 })(window.App);

@@ -6,7 +6,7 @@
     App.PageableCollections.Volunteer = Backbone.PageableCollection.extend({
         model: App.Models.Volunteer,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });

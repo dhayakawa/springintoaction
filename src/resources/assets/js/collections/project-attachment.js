@@ -6,7 +6,7 @@
     App.PageableCollections.ProjectAttachment            = Backbone.PageableCollection.extend({
         model: App.Models.ProjectAttachment,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
