@@ -217,6 +217,27 @@
   background-color: white;
   padding: 0;
 }
+.backgrid-wrapper .overlay-top,
+.backgrid-wrapper .overlay-bottom {
+  position: absolute;
+  z-index: 99;
+  opacity: .6;
+  width: 100%;
+  height: 279px;
+}
+.backgrid-wrapper .overlay-top {
+  top: 0;
+  left: 60px;
+  right: 0;
+  display: none;
+  background: #fff;
+}
+.backgrid-wrapper .overlay-bottom {
+  top: 62px;
+  left: 60px;
+  right: 0;
+  background: #fff;
+}
 .backgrid-wrapper .backgrid {
   table-layout: fixed;
 }

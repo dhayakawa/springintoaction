@@ -142,6 +142,7 @@ mix.scripts([
 ], 'public/js/springintoaction.views.js');
 mix.scripts([
     'resources/assets/js/init.js',
+    'resources/assets/js/views/extended_base_views.js',
     'resources/assets/js/views/select.js'
 ], 'public/js/springintoaction.init.js');
 mix.scripts([

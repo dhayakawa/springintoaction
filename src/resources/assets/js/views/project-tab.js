@@ -1,10 +1,11 @@
 (function (App) {
-    App.Views.ProjectTab = Backbone.View.extend({
+    App.Views.ProjectTab = App.Views.ManagedGrid.fullExtend({
         initialize: function (options) {
             let self = this;
             this.options = options;
             this.childViews = [];
             this.currentModelID = null;
+            this.$currentRow = null;
             _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
             self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
@@ -13,25 +14,10 @@
             'focusin tbody tr': 'updateProjectTabView',
             'mouseenter thead th button': 'showColumnHeaderLabel',
             'mouseenter tbody td': 'showTruncatedCellContentPopup',
-            'mouseleave tbody td': 'hideTruncatedCellContentPopup'
+            'mouseleave tbody td': 'hideTruncatedCellContentPopup',
+            'click .overlay-top,.overlay-bottom': 'showRadioBtnEditHelpMsg'
         },
-        close: function () {
-            this.remove();
-            // handle other unbinding needs, here
-            _.each(this.childViews, function (childView) {
-                if (childView.close) {
-                    try {
-                        childView.close();
-                    } catch (e) {
-                    }
-                } else if (childView.remove) {
-                    try {
-                        childView.remove();
-                    } catch (e) {
-                    }
-                }
-            })
-        },
+
         render: function (e) {
             let self = this;
             this.$el.empty();
@@ -70,12 +56,15 @@
                 columns: this.columnCollection,
                 collection: this.collection
             });
-
+            this.listenTo(this.backgrid, 'backgrid:rendered', function (e) {
+                self.positionOverlays(e);
+            });
 
             _log('App.Views.ProjectTab.render', this.options.tab, $(this.options.parentViewEl), this.$tabBtnPane, _.isUndefined(e) ? 'no event passed in for this call.' : e);
 
             let $gridContainer = this.$el.html(this.backgrid.render().el);
-
+            this.$gridContainer = $gridContainer;
+            this.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
             let paginator = new Backgrid.Extension.Paginator({
                 collection: this.collection
             });
@@ -152,7 +141,7 @@
             // $gridContainer.find('td').on('click', function () {
             //     $gridContainer.find('td.renderable').popover('hide')
             // });
-            this.$gridContainer = $gridContainer;
+
 
             this.childViews.push(this.backgrid);
             this.childViews.push(this.projectGridManagerContainerToolbar);
@@ -166,6 +155,7 @@
 
             return this;
         },
+
         /**
          * ProjectIDParam can also be an event
          * @param e
@@ -177,13 +167,24 @@
             let $TableRowElement = null;
             _log('App.Views.ProjectTab.updateProjectTabView.event', 'event triggered:', e);
             if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
-                $RadioElement = this.$gridContainer.find('input[type="radio"][name="' + this.model.idAttribute + '"][value="' + e.id + '"]');
+                $RadioElement = self.$gridContainer.find('input[type="radio"][name="' + this.model.idAttribute + '"][value="' + e.id + '"]');
                 $TableRowElement = $RadioElement.parents('tr');
             } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
                 $TableRowElement = $(e.currentTarget);
                 $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
+            } else if (typeof e === 'object' && !_.isUndefined(e.data)) {
+                if (self.$gridContainer.find('[type="radio"][name="ProjectID"]:checked').length === 0){
+                    $TableRowElement = self.$gridContainer.find('tbody tr:first-child');
+                    $RadioElement = $TableRowElement.find('input[type="radio"]');
+                } else {
+                    $RadioElement = self.$gridContainer.find('[type="radio"][name="ProjectID"]:checked');
+                    $TableRowElement = $RadioElement.parents('tr');
+                }
+
             }
-            if ($RadioElement !== null) {
+            self.$currentRow = $TableRowElement;
+
+            if ($RadioElement !== null && $TableRowElement !== null) {
                 // click is only a visual indication that the row is selected. nothing should be listening for this click
                 $RadioElement.trigger('click');
                 currentModelID = $RadioElement.val();
@@ -193,8 +194,9 @@
                 $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
 
             }
-
+            self.positionOverlays(self.backgrid);
             if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
+                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
                 // Refresh tabs on new row select
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.fetch({
@@ -203,6 +205,11 @@
                         self.currentModelID = self.model.get(self.model.idAttribute);
                         $('#' + self.options.tab).data('current-model-id', self.currentModelID);
                         //console.log('tab model fetch', self.options.tab, currentModelID, self.model)
+                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                    },
+                    error: function (model, response, options) {
+                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                        growl(response.msg, 'error')
                     }
                 });
 
@@ -217,16 +224,19 @@
                 if (attributes['ProjectID'] === '') {
                     attributes['ProjectID'] = App.Vars.currentProjectID;
                 }
+                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
                 console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged: e.changed, saveAttributes: attributes, tModel: this.model});
                 this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
                 this.model.save(attributes,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
+                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
                             growl(response.msg, response.success ? 'success' : 'error');
                         },
                         error: function (model, response, options) {
                             console.error('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
+                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
                             growl(response.msg, 'error')
                         }
                     });
@@ -257,9 +267,6 @@
                         window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
                     }
                 });
-        },
-        getModalForm: function () {
-            return '';
         },
         toggleDeleteBtn: function (e) {
             let self = this;
@@ -311,48 +318,6 @@
             });
 
         },
-        showColumnHeaderLabel: function (e) {
-            let self = this;
-            let $element = $(e.currentTarget).parents('th');
-            let element = $element[0];
 
-            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            if (bOverflown) {
-                $element.attr('title', $element.find('button').text());
-            }
-            //_log('App.Views.Projects.showColumnHeaderLabel.event', e);
-        },
-        showTruncatedCellContentPopup: function (e) {
-            let self = this;
-
-            let $element = $(e.currentTarget);
-            let element = e.currentTarget;
-
-            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            if (bOverflown) {
-                $element.popover({
-                    placement: 'auto auto',
-                    padding: 0,
-                    container: 'body',
-                    content: function () {
-                        return $(this).text()
-                    }
-                });
-                $element.popover('show');
-            }
-            //_log('App.Views.ProjectTab.showTruncatedCellContent.event', e, element, bOverflown);
-        },
-        hideTruncatedCellContentPopup: function (e) {
-            let self = this;
-
-            let $element = $(e.currentTarget);
-            let element = e.currentTarget;
-
-            let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-            if (bOverflown) {
-                $element.popover('hide');
-            }
-            //_log('App.Views.ProjectTab.hideTruncatedCellContent.event', e, element, bOverflown);
-        }
     });
 })(window.App);

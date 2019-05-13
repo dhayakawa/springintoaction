@@ -2,7 +2,7 @@
     App.PageableCollections.SiteVolunteerRoles = Backbone.PageableCollection.extend({
         model: App.Models.SiteVolunteerRole,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });

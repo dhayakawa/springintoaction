@@ -21,7 +21,7 @@
     App.PageableCollections.ProjectAttachment            = Backbone.PageableCollection.extend({
         model: App.Models.ProjectAttachment,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
@@ -78,7 +78,7 @@
         },
         model: App.Models.Budget,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
@@ -243,7 +243,7 @@
     App.PageableCollections.Project = Backbone.PageableCollection.extend({
         model: App.Models.Project,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
@@ -729,7 +729,7 @@
     App.PageableCollections.Contact = Backbone.PageableCollection.extend({
         model: App.Models.Contact,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
@@ -900,7 +900,7 @@
     App.PageableCollections.Volunteer = Backbone.PageableCollection.extend({
         model: App.Models.Volunteer,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
@@ -1303,14 +1303,14 @@
     App.PageableCollections.ProjectVolunteer = Backbone.PageableCollection.extend({
         model: App.Models.ProjectVolunteer,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
     App.PageableCollections.ProjectLead = Backbone.PageableCollection.extend({
         model: App.Models.ProjectVolunteerRole,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
@@ -1905,7 +1905,7 @@
     App.PageableCollections.SiteVolunteerRoles = Backbone.PageableCollection.extend({
         model: App.Models.SiteVolunteerRole,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });

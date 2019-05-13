@@ -61,23 +61,32 @@
             return self;
         },
         toggleProjectTabToolbars: function (e) {
+            let self = this;
             let clickedTab = e.data;
             //App.Vars.currentTabModels[clickedTab]
             this.$el.find('.tabButtonPane').hide();
             this.$el.find('.' + clickedTab + '.tabButtonPane').show();
             // Hack to force grid columns to work
             $('body').trigger('resize');
-            let tabView = _.find(this.parentChildViews, function (val) {
-                return _.has(val, clickedTab)
+            //$(e.target).parents('.tabButtonPane').data('tab-name')
+
+            try {
+                self.getTabView(clickedTab)[clickedTab].updateProjectTabView(e);
+            } catch (e) {
+                console.log(e)
+            }
+        },
+        getTabView: function (tabName) {
+            let self = this;
+            return _.find(self.parentChildViews, function (val) {
+                return _.has(val, tabName)
             });
 
         },
         addGridRow: function (e) {
             let self = this;
             let tabName = $(e.target).parents('.tabButtonPane').data('tab-name');
-            let tabView = _.find(this.parentChildViews, function (val) {
-                return _.has(val, tabName)
-            });
+            let tabView = self.getTabView(tabName);
 
             _log('App.Views.ProjectTabsGridManagerContainerToolbar.addGridRow', e, tabName, tabView);
 
