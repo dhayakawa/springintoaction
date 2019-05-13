@@ -5,7 +5,7 @@
     App.PageableCollections.Contact = Backbone.PageableCollection.extend({
         model: App.Models.Contact,
         state: {
-            pageSize: 10
+            pageSize: 5000
         },
         mode: "client" // page entirely on the client side
     });
