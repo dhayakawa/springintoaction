@@ -12,7 +12,7 @@
                 optionLabelModelAttrName: ['LastName', 'FirstName']
             });
             let tplVars = {
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
+                ProjectID: localStorage.getItem('projects-view.project-model.current-id'),
                 volunteerSelect: volunteerSelect.getHtml(),
                 projectRoleOptions: App.Models.volunteerModel.getRoleOptions(true),
                 statusOptions: App.Models.volunteerModel.getStatusOptions(true)
@@ -22,8 +22,9 @@
     });
     App.Views.ProjectVolunteer = App.Views.ProjectTab.fullExtend({
         getModalForm: function () {
+            let self = this;
             let template = window.template('addProjectVolunteerTemplate');
-            let form = template({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)});
+            let form = template({ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute)});
             let $gridContainer = $(form);
             $gridContainer.find('.form-group').append($('<div><div class="backgrid-wrapper"></div><div class="modal-grid-manager-container"><div class="modal-pagination-controls"></div></div></div>'));
             let gridCollection = App.PageableCollections.unassignedProjectVolunteersCollection;
@@ -103,25 +104,25 @@
         },
         create: function (attributes) {
             let self = this;
-            window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             let model = App.Models.projectVolunteerModel.clone().clear({silent: true});
-            model.url = '/admin/project_volunteer/batch/store';
+            model.url = self.getModelRoute() + '/batch/store';
             _log('App.Views.ProjectVolunteer.create', attributes, model);
             model.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project_volunteer/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        self.collection.url = self.getModelRoute() + '/all/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
                             _log('App.Views.ProjectVolunteer.create.event', 'project_volunteers collection fetch promise done');
-                            window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     }
                 });
         }

@@ -1,9 +1,10 @@
 (function (App) {
-    App.Views.AnnualBudgetsManagement = Backbone.View.extend({
+    App.Views.AnnualBudgetsManagement = App.Views.Backend.fullExtend({
         template: template('managementTemplate'),
         initialize: function (options) {
-            _.bindAll(this, 'render', 'update', 'refresh','addAll','addOne');
-            this.model.on('change', this.render, this);
+            _.bindAll(this, '_initialize','render', 'update', 'refresh','addAll','addOne');
+            this._initialize(options);
+            this.listenTo(this.model, 'change', this.render);
             this.listenTo(this.annualBudgetView, 'updated', this.refresh);
             this.options = options;
             this.rowBgColor = 'lightYellow';
@@ -25,16 +26,16 @@
             }
             this.aSiteTotals = [];
             this.BudgetSourceOptions = _.omit(App.Vars.selectOptions['BudgetSourceOptions'],'');
+            // $(".site-budgets-table thead").sticky({
+            //     topSpacing: 0, className: 'site-budgets-table-thead-sticked',
+            //     originalPosition: 'relative', allowResetLeft: false
+            // });
 
             _log(this.viewName + '.initialize', options, this);
         },
         events: {
             'click .btnRefreshTotals': 'refresh',
             'click .box-header .btn.btn-box-tool': 'close'
-        },
-        close: function (e) {
-            e.stopPropagation();
-            this.$el.hide()
         },
         addOne: function (sSiteName, key, data) {
             let self = this;

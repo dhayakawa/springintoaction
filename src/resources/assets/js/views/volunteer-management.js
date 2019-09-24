@@ -1,8 +1,9 @@
 (function (App) {
-    App.Views.VolunteersManagement = Backbone.View.extend({
+    App.Views.VolunteersManagement = App.Views.Backend.fullExtend({
         template: template('managementTemplate'),
         initialize: function (options) {
-            _.bindAll(this, 'render', 'update', 'toggleDeleteBtn', 'getModalForm', 'create', 'highLightRow', 'batchDestroy');
+            _.bindAll(this, '_initialize','render', 'update', 'toggleDeleteBtn', 'getModalForm', 'create', 'highLightRow', 'batchDestroy');
+            this._initialize(options);
             this.options = options;
             this.viewClassName = this.options.viewClassName;
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;

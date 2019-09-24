@@ -9,7 +9,8 @@
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;
             App.Vars.currentSiteID      = App.Vars.appInitialData.site.SiteID;
-            App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
+            //App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
+            localStorage.setItem('projects-view.project-model.current-id', App.Vars.appInitialData.project.ProjectID);
             App.Vars.currentSiteVolunteerRoleID   = App.Vars.appInitialData.site_volunteer.SiteVolunteerRoleID;
             App.Vars.mainAppDoneLoading = false;
             self.listenTo(App.Models.projectModel, 'sync', function (e) {
@@ -88,12 +89,13 @@
             }
 
             _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), this.$el);
-            if (App.Vars.mainAppDoneLoading === false) {
+            if (self.preRenderedView === false && App.Vars.mainAppDoneLoading === false) {
                 App.Vars.mainAppDoneLoading = true;
                 _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
+                // Hack to force grid columns to work
+                $('body').trigger('resize');
             }
-            // Hack to force grid columns to work
-            $('body').trigger('resize');
+
             return this;
         }
     });

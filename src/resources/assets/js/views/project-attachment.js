@@ -4,7 +4,7 @@
             let template = window.template('newProjectAttachmentTemplate');
 
             let tplVars = {
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)
+                ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute)
             };
 
             return template(tplVars);
@@ -13,13 +13,13 @@
             let self = this;
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
             let newModel = new App.Models.ProjectAttachment();
-            newModel.url = '/admin/' + this.options.tab;
+            newModel.url = self.getModelRoute();
             _log('App.Views.ProjectAttachment.create', newModel.url, attributes);
             newModel.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project_attachment/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        self.collection.url = '/admin/project_attachment/all/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {

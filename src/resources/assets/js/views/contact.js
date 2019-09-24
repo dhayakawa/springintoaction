@@ -5,13 +5,14 @@
 
             let tplVars = {
                 SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)
+                ProjectID: localStorage.getItem('projects-view.project-model.current-id')
             };
             return template(tplVars);
         }
     });
     App.Views.ProjectContact = App.Views.ProjectTab.fullExtend({
         getModalForm: function () {
+            let self = this;
             let template = window.template('newProjectContactTemplate');
 
             let siteContacts = App.Collections.contactsManagementCollection.where({SiteID: App.Vars.currentSiteID});
@@ -26,7 +27,7 @@
             });
             let tplVars = {
                 SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
+                ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute),
                 contactsSelect: contactsSelect.getHtml()
             };
             return template(tplVars);

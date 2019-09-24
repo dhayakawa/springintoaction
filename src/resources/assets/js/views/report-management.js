@@ -80,7 +80,7 @@
                 modelNameLabel: self.modelNameLabel,
                 modelNameLabelLowerCase: self.modelNameLabelLowerCase
             }));
-            App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
+            this.sitesDropDownView = new this.sitesViewClass({
                 el: this.$('select#sites'),
                 parentView: this,
                 collection: App.Collections.sitesDropDownCollection
@@ -88,24 +88,24 @@
             this.sitesDropDownView.render();
 
 
-            App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
+            this.siteYearsDropDownView = new this.siteYearsViewClass({
                 el: this.$('select#site_years'),
                 parentView: this,
                 collection: App.Collections.siteYearsDropDownCollection
             });
             this.siteYearsDropDownView.render();
 
-            App.Views.projectsDropDownView = this.projectsDropDownView = new this.projectsDropDownViewClass({
+            this.projectsDropDownView = new this.projectsDropDownViewClass({
                 el: this.$('select#projects'),
                 parentView: this,
                 collection: App.Collections.projectsDropDownCollection
             });
             this.projectsDropDownView.render();
 
-            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e) {
+            this.listenTo(this.siteYearsDropDownView, 'site-status-id-change', function (e) {
                 self.handleSiteStatusIDChange(e);
             });
-            this.listenTo(App.Views.sitesDropDownView, 'site-id-change', function (e) {
+            this.listenTo(this.sitesDropDownView, 'site-id-change', function (e) {
                 self.handleSiteStatusIDChange(e);
             });
 

@@ -70,7 +70,7 @@
                         //     App.Views.volunteersManagementView = self.volunteersManagementView = new self.volunteersManagementViewClass({
                         //         className: 'box box-primary volunteers-management-view',
                         //         viewClassName: 'volunteers-management-view',
-                        //         mainAppEl: self.mainApp.el,
+                        //
                         //         mainApp: self.mainApp,
                         //         modelNameLabel: 'Volunteer',
                         //         collection: App.PageableCollections.volunteersManagementCollection,

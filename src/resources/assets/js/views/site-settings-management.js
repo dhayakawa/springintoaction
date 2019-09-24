@@ -1,12 +1,12 @@
 (function (App) {
-    App.Views.SiteSetting = Backbone.View.extend({
+    App.Views.SiteSetting = App.Views.Backend.fullExtend({
         tagName: 'li',
         template: template('siteSettingTemplate'),
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            _.bindAll(this, '_initialize','render');
+            this._initialize(options);
 
-            _.bindAll(this, 'render');
         },
         events: {
             'click button': 'update',

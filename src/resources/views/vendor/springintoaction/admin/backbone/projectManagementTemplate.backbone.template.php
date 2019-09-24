@@ -18,7 +18,7 @@
             <div class="projects-grid-manager-container grid-manager-container col-xs-12 col-sm-12 col-md-12 col-lg-12"></div>
         </div>
         <div class="row">
-            <div class="nested-box site-projects-tabs collapsed-box">
+            <div class="nested-box site-projects-tabs-view collapsed-box">
                 <div class="box-header with-border">
                     <h3 class="box-title">Project Details:
                         <small></small>
@@ -27,10 +27,7 @@
                 <div class="box-body">
                     <!-- Nav tabs -->
                     <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="active"><a href="#project_lead"
-                                                                  aria-controls="project_lead" role="tab"
-                                                                  data-toggle="tab">Project Team
-                                Leaders</a></li>
+                        <li role="presentation" class="active"><a href="#project_lead" aria-controls="project_lead" role="tab" data-toggle="tab">Project Team Leaders</a></li>
                         <li role="presentation"><a href="#project_budget" aria-controls="project_budget" role="tab" data-toggle="tab">Budget Allocation</a></li>
                         <li role="presentation"><a href="#project_contact" aria-controls="project_contact" role="tab" data-toggle="tab">Project Site Contacts</a></li>
                         <li role="presentation"><a href="#project_volunteer" aria-controls="project_volunteer" role="tab" data-toggle="tab">Volunteers</a></li>
@@ -38,21 +35,23 @@
                     </ul>
 
                     <!-- Tab panes -->
-                    <div class="tab-content backgrid-wrapper">
-                        <div role="tabpanel" class="tab-pane active" id="project_lead">
-                            <div class="project-leads-backgrid-wrapper"></div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="project_budget">
-                            <div class="project-budget-backgrid-wrapper"></div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="project_contact">
-                            <div class="project-contacts-backgrid-wrapper"></div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="project_volunteer">
-                            <div class="project-volunteers-backgrid-wrapper"></div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="project_attachment">
-                            <div class="project-attachments-backgrid-wrapper"></div>
+                    <div class="tabs-content-container">
+                        <div class="tab-content backgrid-wrapper">
+                            <div role="tabpanel" class="tab-pane active" id="project_lead">
+                                <div class="project-leads-backgrid-wrapper"></div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="project_budget">
+                                <div class="project-budgets-backgrid-wrapper"></div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="project_contact">
+                                <div class="project-contacts-backgrid-wrapper"></div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="project_volunteer">
+                                <div class="project-volunteers-backgrid-wrapper"></div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="project_attachment">
+                                <div class="project-attachments-backgrid-wrapper"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -12,7 +12,7 @@ window.App = {
         volunteerModel: null,
         projectContactModel: null,
         projectLeadModel: null,
-        projectBudgetModel: new Backbone.Model(),
+        projectBudgetModel: null,
         projectVolunteerModel: null,
         projectVolunteerRoleModel: null,
         annualBudgetModel: null,
@@ -45,20 +45,7 @@ window.App = {
         projectsDropDownCollection:null,
         statusManagementCollection:null
     },
-    Views: {
-        dashboardView: {},
-        settingsManagementView: {},
-        siteManagementView: {},
-        siteYearsDropDownView: {},
-        projectManagementView: {},
-        siteProjectTabsView: {},
-        projectsView: {},
-        contactsManagementView: {},
-        volunteersManagementView: {},
-        budgetManagementView: {},
-        reportsManagementView: [],
-        statusManagementView: {}
-    },
+    Views: {},
     Templates: {},
     Router: {},
     Vars: {
