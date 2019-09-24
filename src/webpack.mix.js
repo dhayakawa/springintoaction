@@ -48,7 +48,8 @@ mix.scripts([
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
     'resources/assets/js/frontend/registration/confirm.jquery.js',
     'resources/assets/js/frontend/registration/siaModal.jquery.js',
-    'resources/assets/js/frontend/registration/carasel.bootstrap.js'
+    'resources/assets/js/frontend/registration/carasel.bootstrap.js',
+    'resources/assets/js/jquery.sticky.js',
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
     'resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.min.js',
@@ -77,7 +78,8 @@ mix.scripts([
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
     'resources/assets/js/frontend/registration/confirm.jquery.js',
     'resources/assets/js/frontend/registration/siaModal.jquery.js',
-    'resources/assets/js/frontend/registration/carasel.bootstrap.js'
+    'resources/assets/js/frontend/registration/carasel.bootstrap.js',
+    'resources/assets/js/jquery.sticky.js',
 ], 'public/js/springintoaction.packages.min.js');
 mix.scripts([
     'resources/assets/js/models/dashboard.js',
@@ -119,7 +121,7 @@ mix.scripts([
     'resources/assets/js/views/dashboard.js',
     'resources/assets/js/views/site-settings-management.js',
     'resources/assets/js/views/annual-budget.js',
-    'resources/assets/js/views/annual-budgets.js',
+    'resources/assets/js/views/annual-budgets-management.js',
     'resources/assets/js/views/grid-manager-container-toolbar.js',
     'resources/assets/js/views/project-tab.js',
     'resources/assets/js/views/project-attachment.js',

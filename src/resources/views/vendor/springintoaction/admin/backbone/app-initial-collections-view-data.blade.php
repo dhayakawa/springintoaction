@@ -29,18 +29,5 @@
     App.PageableCollections.unassignedProjectVolunteersCollection = new App.PageableCollections.ProjectVolunteer();
     App.PageableCollections.unassignedProjectVolunteersCollection.url = '/admin/project_volunteer/unassigned/' + App.Models.siteStatusModel.get('SiteID') + '/' + App.Models.siteStatusModel.get('Year');
     App.PageableCollections.unassignedProjectVolunteersCollection.fetch({reset: true});
-    // Predefining the view so they exist on load
-    App.Views.dashboardView = {};
-    App.Views.settingsManagementView = {};
-    App.Views.siteManagementView = {};
-    App.Views.siteYearsDropDownView = {};
-    App.Views.projectManagementView = {};
-    App.Views.siteProjectTabsView = {};
-    App.Views.projectsView = {};
-    App.Views.contactsManagementView = {};
-    App.Views.volunteersManagementView = {};
-    App.Views.budgetManagementView = {};
-    App.Views.reportsManagementView = [];
-    App.Views.projectsDropDownView = {};
-    App.Views.statusManagementView = {};
+
 })(window.App);

@@ -101,14 +101,14 @@
 })(window.App);
 
 (function (App) {
-    App.Views.SiteSetting = Backbone.View.extend({
+    App.Views.SiteSetting = App.Views.Backend.fullExtend({
         tagName: 'li',
         template: template('siteSettingTemplate'),
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            _.bindAll(this, '_initialize','render');
+            this._initialize(options);
 
-            _.bindAll(this, 'render');
         },
         events: {
             'click button': 'update',
@@ -286,11 +286,12 @@
 })(window.App);
 
 (function (App) {
-    App.Views.AnnualBudgetsManagement = Backbone.View.extend({
+    App.Views.AnnualBudgetsManagement = App.Views.Backend.fullExtend({
         template: template('managementTemplate'),
         initialize: function (options) {
-            _.bindAll(this, 'render', 'update', 'refresh','addAll','addOne');
-            this.model.on('change', this.render, this);
+            _.bindAll(this, '_initialize','render', 'update', 'refresh','addAll','addOne');
+            this._initialize(options);
+            this.listenTo(this.model, 'change', this.render);
             this.listenTo(this.annualBudgetView, 'updated', this.refresh);
             this.options = options;
             this.rowBgColor = 'lightYellow';
@@ -312,16 +313,16 @@
             }
             this.aSiteTotals = [];
             this.BudgetSourceOptions = _.omit(App.Vars.selectOptions['BudgetSourceOptions'],'');
+            // $(".site-budgets-table thead").sticky({
+            //     topSpacing: 0, className: 'site-budgets-table-thead-sticked',
+            //     originalPosition: 'relative', allowResetLeft: false
+            // });
 
             _log(this.viewName + '.initialize', options, this);
         },
         events: {
             'click .btnRefreshTotals': 'refresh',
             'click .box-header .btn.btn-box-tool': 'close'
-        },
-        close: function (e) {
-            e.stopPropagation();
-            this.$el.hide()
         },
         addOne: function (sSiteName, key, data) {
             let self = this;
@@ -557,7 +558,6 @@
         template: template('gridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
-
             _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
             this.options = options;
             this.localStorageKey = this.options.localStorageKey;
@@ -719,231 +719,56 @@
     App.Views.ProjectTab = App.Views.ManagedGrid.fullExtend({
         initialize: function (options) {
             let self = this;
-            this.options = options;
-            this.childViews = [];
-            this.currentModelID = null;
-            this.$currentRow = null;
-            _.bindAll(this, 'render', 'update', 'updateProjectTabView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
-            self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
+
+            _.bindAll(this, '_initialize','render', 'update', 'refreshView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+            self._initialize(options);
+            self.projectsView = self.options.parentView.projectsView;
+            //self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
             _log('App.Views.ProjectTab.initialize', options);
         },
         events: {
-            'focusin tbody tr': 'updateProjectTabView',
-            'mouseenter thead th button': 'showColumnHeaderLabel',
-            'mouseenter tbody td': 'showTruncatedCellContentPopup',
-            'mouseleave tbody td': 'hideTruncatedCellContentPopup',
-            'click .overlay-top,.overlay-bottom': 'showRadioBtnEditHelpMsg'
+
         },
 
         render: function (e) {
             let self = this;
-            this.$el.empty();
-            this.hideCellCnt = this.options.hideCellCnt;
-            this.$tabBtnPane = $(this.options.parentViewEl).find('.' + this.options.tab + '.tabButtonPane');
-            this.$tabBtnPanePaginationContainer = this.$tabBtnPane.find('.tab-pagination-controls');
-            this.model = App.Vars.currentTabModels[this.options.tab];
-            this.currentModelID = this.model.get(this.model.idAttribute);
-            // Set the current model id on the tab so we can reference it in other views
-            $('#' + this.options.tab).data('current-model-id', this.currentModelID);
-            this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
-            this.columnCollection = this.columnCollectionDefinitions;
-
-            if (App.Vars.bAllowManagedGridColumns) {
-                this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
-                this.columnCollection.setPositions().sort();
-                let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
-                let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
-                    initialColumnsVisible: initialColumnsVisible,
-                    trackSize: true,
-                    trackOrder: true,
-                    trackVisibility: true,
-                    saveState: App.Vars.bBackgridColumnManagerSaveState,
-                    saveStateKey: 'site-project-tab-' + this.options.tab,
-                    loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit,
-                    stateChecking: "strict"
-                });
-
-                let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
-                    columnManager: colManager
-                });
+            if (self.viewName === 'project-leads') {
+                let cmi = self.getViewDataStore('current-model-id');
+                console.log('render', self.viewName,  _.isEmpty(cmi),self.getViewDataStore('current-model-id'))
             }
-            let Header = Backgrid.Header;
-            this.backgrid = new Backgrid.Grid({
-                header: Header,
-                columns: this.columnCollection,
-                collection: this.collection
-            });
-            this.listenTo(this.backgrid, 'backgrid:rendered', function (e) {
-                self.positionOverlays(e);
-            });
-
-            _log('App.Views.ProjectTab.render', this.options.tab, $(this.options.parentViewEl), this.$tabBtnPane, _.isUndefined(e) ? 'no event passed in for this call.' : e);
-
-            let $gridContainer = this.$el.html(this.backgrid.render().el);
-            this.$gridContainer = $gridContainer;
-            this.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
-            let paginator = new Backgrid.Extension.Paginator({
-                collection: this.collection
-            });
-
-            // Render the paginator
-            this.$tabBtnPanePaginationContainer.html(paginator.render().el);
-
-            if (App.Vars.bAllowManagedGridColumns) {
-                // Add sizeable columns
-                let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
-                    collection: this.collection,
-                    columns: this.columnCollection,
-                    grid: this.backgrid
-                });
-                $gridContainer.find('thead').before(sizeAbleCol.render().el);
-                // Add resize handlers
-                let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
-                    sizeAbleColumns: sizeAbleCol,
-                    saveColumnWidth: true
-                });
-                $gridContainer.find('thead').before(sizeHandler.render().el);
-
-                // Make columns reorderable
-                let orderHandler = new Backgrid.Extension.OrderableColumns({
-                    grid: this.backgrid,
-                    sizeAbleColumns: sizeAbleCol
-                });
-                $gridContainer.find('thead').before(orderHandler.render().el);
-
-                this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
-            }
-
-            // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
-            this.listenTo(this.backgrid.collection, 'backgrid:editing', function (e) {
-                _log('App.Views.ProjectTab.render', self.options.tab, 'backgrid.collection.on backgrid:editing', e);
-                self.updateProjectTabView(e);
-            });
-
-            this.listenTo(this.backgrid.collection, 'backgrid:edited', function (e) {
-                self.update(e);
-            });
-
-            this.listenTo(this.backgrid.collection, 'backgrid:selected', function (e) {
-                self.toggleDeleteBtn(e);
-            });
-
-            window.ajaxWaiting('remove', self.ajaxWaitingSelector);
-            _log('App.Views.ProjectTab.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
-
-            // Show a popup of the text that has been truncated
-            $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
-                placement: 'auto right',
-                padding: 0,
-                container: 'body',
-                content: function () {
-                    return $(this).text()
+            if (!_.isNumber(self.getViewDataStore('current-model-id'))) {
+                self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
+                if (self.viewName === 'project-leads') {
+                    console.log('render setting current model id', self.viewName, self.getViewDataStore('current-model-id'))
                 }
-            });
-            // hide popover if it is not overflown
-            let $cells = $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]');
-            this.listenTo($cells, 'show.bs.popover', function (e) {
-                let element = this;
-
-                let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-                if (!bOverflown) {
-                    $gridContainer.find('td.renderable').popover('hide')
-                }
-            });
-
-            let $cell = $gridContainer.find('td');
-            this.listenTo($cell, 'click', function (e) {
-                $gridContainer.find('td.renderable').popover('hide')
-            });
-            // $gridContainer.find('td').on('click', function () {
-            //     $gridContainer.find('td.renderable').popover('hide')
-            // });
-
-
-            this.childViews.push(this.backgrid);
-            this.childViews.push(this.projectGridManagerContainerToolbar);
-            this.childViews.push(this.paginator);
-            if (App.Vars.bAllowManagedGridColumns) {
-                this.childViews.push(colVisibilityControl);
-                this.childViews.push(sizeAbleCol);
-                this.childViews.push(sizeHandler);
-                this.childViews.push(orderHandler);
             }
+            self.renderGrid(e, 'site-project-tab-' + self.options.tab);
 
-            return this;
+
+            return self;
         },
 
         /**
          * ProjectIDParam can also be an event
          * @param e
          */
-        updateProjectTabView: function (e) {
+        refreshView: function (e) {
             let self = this;
-            let currentModelID = 0;
-            let $RadioElement = null;
-            let $TableRowElement = null;
-            _log('App.Views.ProjectTab.updateProjectTabView.event', 'event triggered:', e);
-            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
-                $RadioElement = self.$gridContainer.find('input[type="radio"][name="' + this.model.idAttribute + '"][value="' + e.id + '"]');
-                $TableRowElement = $RadioElement.parents('tr');
-            } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
-                $TableRowElement = $(e.currentTarget);
-                $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
-            } else if (typeof e === 'object' && !_.isUndefined(e.data)) {
-                if (self.$gridContainer.find('[type="radio"][name="ProjectID"]:checked').length === 0){
-                    $TableRowElement = self.$gridContainer.find('tbody tr:first-child');
-                    $RadioElement = $TableRowElement.find('input[type="radio"]');
-                } else {
-                    $RadioElement = self.$gridContainer.find('[type="radio"][name="ProjectID"]:checked');
-                    $TableRowElement = $RadioElement.parents('tr');
-                }
 
-            }
-            self.$currentRow = $TableRowElement;
-
-            if ($RadioElement !== null && $TableRowElement !== null) {
-                // click is only a visual indication that the row is selected. nothing should be listening for this click
-                $RadioElement.trigger('click');
-                currentModelID = $RadioElement.val();
-
-                // Highlight row
-                $TableRowElement.siblings().removeAttr('style');
-                $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
-
-            }
-            self.positionOverlays(self.backgrid);
-            if (App.Vars.mainAppDoneLoading && currentModelID && $('#' + this.options.tab).data('current-model-id') !== currentModelID) {
-                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
-                // Refresh tabs on new row select
-                this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
-                this.model.fetch({
-                    reset: true,
-                    success: function (model, response, options) {
-                        self.currentModelID = self.model.get(self.model.idAttribute);
-                        $('#' + self.options.tab).data('current-model-id', self.currentModelID);
-                        //console.log('tab model fetch', self.options.tab, currentModelID, self.model)
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                    },
-                    error: function (model, response, options) {
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                        growl(response.msg, 'error')
-                    }
-                });
-
-            }
-
+            //console.trace(e)
+            self._refreshView(e);
         },
         update: function (e) {
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
-                if (attributes['ProjectID'] === '') {
-                    attributes['ProjectID'] = App.Vars.currentProjectID;
+                if (attributes[self.projectsView.model.idAttribute] === '') {
+                    attributes[self.projectsView.model.idAttribute] = self.projectsView.getViewDataStore('current-model-id');
                 }
                 window.ajaxWaiting('show', self.backgridWrapperClassSelector);
                 console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged: e.changed, saveAttributes: attributes, tModel: this.model});
-                this.model.url = '/admin/' + self.options.tab + '/' + currentModelID;
+                this.model.url = self.getModelRoute() + '/' + currentModelID;
                 this.model.save(attributes,
                     {
                         success: function (model, response, options) {
@@ -966,12 +791,12 @@
 
             let model = this.model.clone().clear({silent: true});
             console.log('App.Views.ProjectTab.create', self.options.tab, {attributes: attributes, model: model, thisModel: this.model});
-            model.url = '/admin/' + self.options.tab;
+            model.url = self.getModelRoute();
             model.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/' + self.options.tab + '/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        self.collection.url = self.getModelRoute() + '/all/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
@@ -990,7 +815,7 @@
             let selectedModels = self.backgrid.getSelectedModels();
             _log('App.Views.ProjectTab.toggleDeleteBtn.event', self.options.tab, 'selectedModels.length:' + selectedModels.length, e);
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
-            App.Views.siteProjectTabsView.trigger('toggle-delete-btn', {toggle: toggleState, tab: self.options.tab});
+            self.parentView.trigger('toggle-delete-btn', {toggle: toggleState, tab: self.options.tab});
         },
         destroy: function (attributes) {
             let self = this;
@@ -1006,7 +831,7 @@
                     window.ajaxWaiting('show', self.backgridWrapperClassSelector);
 
                     attributes = _.extend(attributes, {
-                        ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
+                        ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute),
                         ProjectRoleID: self.model.get('ProjectRoleID')
                     });
                     // console.log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:' + deleteCnt, 'self.collection.fullCollection.length:' +
@@ -1014,11 +839,11 @@
                     $.ajax({
                         type: "POST",
                         dataType: "json",
-                        url: '/admin/' + self.options.tab + '/batch/destroy',
+                        url: self.getModelRoute() + '/batch/destroy',
                         data: attributes,
                         success: function (response) {
                             window.growl(response.msg, response.success ? 'success' : 'error');
-                            self.collection.url = '/admin/' + self.options.tab + '/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                            self.collection.url = self.getModelRoute() + '/all/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
                             $.when(
                                 self.collection.fetch({reset: true})
                             ).then(function () {
@@ -1045,7 +870,7 @@
             let template = window.template('newProjectAttachmentTemplate');
 
             let tplVars = {
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)
+                ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute)
             };
 
             return template(tplVars);
@@ -1054,13 +879,13 @@
             let self = this;
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
             let newModel = new App.Models.ProjectAttachment();
-            newModel.url = '/admin/' + this.options.tab;
+            newModel.url = self.getModelRoute();
             _log('App.Views.ProjectAttachment.create', newModel.url, attributes);
             newModel.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project_attachment/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        self.collection.url = '/admin/project_attachment/all/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
@@ -1079,10 +904,11 @@
 (function (App) {
     App.Views.Budget = App.Views.ProjectTab.fullExtend({
         getModalForm: function () {
+            let self = this;
             let template = window.template('newBudgetTemplate');
 
             let tplVars = {
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
+                ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute),
                 budgetSourceOptions: App.Models.projectBudgetModel.getSourceOptions(true),
                 statusOptions: App.Models.projectBudgetModel.getStatusOptions(true)
             };
@@ -1091,13 +917,13 @@
         create: function (attributes) {
             let self = this;
             let newModel = new App.Models.Budget();
-            newModel.url = '/admin/' + this.options.tab;
+            newModel.url = self.getModelRoute();
             _log('App.Views.Budget.create', newModel.url, attributes);
             newModel.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project/budgets/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        self.collection.url = '/admin/project/budgets/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
                         self.collection.fetch({reset:true});
                     },
                     error: function (model, response, options) {
@@ -1115,13 +941,14 @@
 
             let tplVars = {
                 SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)
+                ProjectID: localStorage.getItem('projects-view.project-model.current-id')
             };
             return template(tplVars);
         }
     });
     App.Views.ProjectContact = App.Views.ProjectTab.fullExtend({
         getModalForm: function () {
+            let self = this;
             let template = window.template('newProjectContactTemplate');
 
             let siteContacts = App.Collections.contactsManagementCollection.where({SiteID: App.Vars.currentSiteID});
@@ -1136,7 +963,7 @@
             });
             let tplVars = {
                 SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
+                ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute),
                 contactsSelect: contactsSelect.getHtml()
             };
             return template(tplVars);
@@ -1158,7 +985,7 @@
                 optionLabelModelAttrName: ['LastName', 'FirstName']
             });
             let tplVars = {
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
+                ProjectID: localStorage.getItem('projects-view.project-model.current-id'),
                 volunteerSelect: volunteerSelect.getHtml(),
                 projectRoleOptions: App.Models.volunteerModel.getRoleOptions(true),
                 statusOptions: App.Models.volunteerModel.getStatusOptions(true)
@@ -1168,8 +995,9 @@
     });
     App.Views.ProjectVolunteer = App.Views.ProjectTab.fullExtend({
         getModalForm: function () {
+            let self = this;
             let template = window.template('addProjectVolunteerTemplate');
-            let form = template({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)});
+            let form = template({ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute)});
             let $gridContainer = $(form);
             $gridContainer.find('.form-group').append($('<div><div class="backgrid-wrapper"></div><div class="modal-grid-manager-container"><div class="modal-pagination-controls"></div></div></div>'));
             let gridCollection = App.PageableCollections.unassignedProjectVolunteersCollection;
@@ -1249,25 +1077,25 @@
         },
         create: function (attributes) {
             let self = this;
-            window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             let model = App.Models.projectVolunteerModel.clone().clear({silent: true});
-            model.url = '/admin/project_volunteer/batch/store';
+            model.url = self.getModelRoute() + '/batch/store';
             _log('App.Views.ProjectVolunteer.create', attributes, model);
             model.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = '/admin/project_volunteer/all/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
+                        self.collection.url = self.getModelRoute() + '/all/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
                             _log('App.Views.ProjectVolunteer.create.event', 'project_volunteers collection fetch promise done');
-                            window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     }
                 });
         }
@@ -1279,11 +1107,13 @@
         template: template('projectsGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
-            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn', 'setStickyColumns');
-            this.listenTo(App.Views.siteManagementView, 'toggle-delete-btn', function (e) {
+            this.options = options;
+            self.parentView = this.options.parentView;
+            self.projectsView = this.options.projectsView;
+            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'editGridRow','deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn', 'setStickyColumns');
+            this.listenTo(self.parentView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
             });
-
         },
         events: {
             'click #btnAddProject': 'addGridRow',
@@ -1339,28 +1169,28 @@
         addGridRow: function (e) {
             let self = this;
             e.preventDefault();
-            $('#sia-modal').off().one('show.bs.modal', function (event) {
+            self.getModalElement().off().one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('New Project');
-                modal.find('.modal-body').html(App.Views.projectsView.getModalForm());
+                modal.find('.modal-body').html(self.projectsView.getModalForm());
 
                 modal.find('.save.btn').off().one('click', function (e) {
                     e.preventDefault();
-                    App.Views.projectsView.create($.unserialize(modal.find('form').serialize()));
-                    $('#sia-modal').modal('hide');
+                    self.projectsView.create($.unserialize(modal.find('form').serialize()));
+                    self.getModalElement().modal('hide');
                 });
 
             });
-            $('#sia-modal').modal('show');
+            self.getModalElement().modal('show');
 
         },
         editGridRow: function (e) {
             let self = this;
             e.preventDefault();
-            $('#sia-modal').off().one('show.bs.modal', function (event) {
+            self.getModalElement().off().one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('Edit Project');
-                modal.find('.modal-body').html(App.Views.projectsView.getEditForm());
+                modal.find('.modal-body').html(self.projectsView.getEditForm());
 
                 modal.find('.save.btn').off().one('click', function (e) {
                     e.preventDefault();
@@ -1369,15 +1199,16 @@
                     // fix multi valued select values
                     data.PrimarySkillNeeded = modal.find('form').find('[name="PrimarySkillNeeded"]').val().join();
 
-                    App.Views.projectsView.saveEditForm(data);
-                    $('#sia-modal').modal('hide');
+                    self.projectsView.saveEditForm(data);
+                    self.getModalElement().modal('hide');
                 });
 
             });
-            $('#sia-modal').modal('show');
+            self.getModalElement().modal('show');
 
         },
         deleteCheckedRows: function (e) {
+            let self = this;
             e.preventDefault();
             if ($(e.target).hasClass('disabled')) {
                 growl('Please check a box to delete a project.');
@@ -1385,10 +1216,10 @@
             }
             bootbox.confirm("Do you really want to delete the checked projects?", function (bConfirmed) {
                 if (bConfirmed) {
-                    let selectedModels = App.Views.projectsView.backgrid.getSelectedModels();
+                    let selectedModels = self.projectsView.backgrid.getSelectedModels();
                     // clear or else the previously selected models remain as undefined
                     try {
-                        App.Views.projectsView.backgrid.clearSelectedModels();
+                        self.projectsView.backgrid.clearSelectedModels();
                     } catch (e) {
                     }
                     _log('App.Views.ProjectGridManagerContainerToolbar.deleteCheckedRows', 'selectedModels', selectedModels);
@@ -1396,7 +1227,7 @@
                         return model.get(model.idAttribute);
                     });
 
-                    App.Views.projectsView.destroy({deleteModelIDs: modelIDs});
+                    self.projectsView.destroy({deleteModelIDs: modelIDs});
                 }
             });
         },
@@ -1455,142 +1286,41 @@
     App.Views.Projects = App.Views.ManagedGrid.fullExtend({
         initialize: function (options) {
             let self = this;
-            this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateProjectDataViews', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup', 'handleSiteStatusIDChange');
-            this.rowBgColor = 'lightYellow';
-            this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
-            this.parentView = this.options.parentView;
-            this.childViews = [];
-            this.$currentRow = null;
-            self.backgridWrapperClassSelector = '.projects-backgrid-wrapper';
-            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e) {
+
+            _.bindAll(self,
+                '_initialize',
+                'close',
+                'removeChildViews',
+                'getViewClassName',
+                'setModelRoute',
+                'getModelRoute',
+                'refreshView',
+                'getModalForm',
+                'destroy',
+                'toggleDeleteBtn',
+                'showColumnHeaderLabel',
+                'showTruncatedCellContentPopup',
+                'hideTruncatedCellContentPopup',
+                'handleSiteStatusIDChange');
+
+            self._initialize(options);
+
+            this.listenTo(self.options.siteYearsDropDownView, 'site-status-id-change', function (e) {
                 self.handleSiteStatusIDChange(e);
             });
             _log('App.Views.Projects.initialize', options);
         },
         events: {
-            'focusin tbody tr': 'updateProjectDataViews',
-            'mouseenter thead th button': 'showColumnHeaderLabel',
-            'mouseenter tbody td': 'showTruncatedCellContentPopup',
-            'click tbody td': 'hideTruncatedCellContentPopup',
-            'mouseleave tbody td': 'hideTruncatedCellContentPopup',
-            'click .overlay-top,.overlay-bottom': 'showRadioBtnEditHelpMsg'
+
         },
         render: function (e) {
             let self = this;
-            let colVisibilityControl, backgridOrderableColumnCollection, sizeAbleCol, sizeHandler, orderHandler, paginator, Header, hideCellCnt, initialColumnsVisible, $backgridWrapper;
-            let columns = this.columnCollectionDefinitions;
-            if (App.Vars.bAllowManagedGridColumns) {
-                // I believe we have to re-build this collection every time the view is created or else a js error is thrown when looping through the column elements
-                backgridOrderableColumnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(self.columnCollectionDefinitions);
-                backgridOrderableColumnCollection.setPositions().sort();
-                columns = backgridOrderableColumnCollection;
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            if (!_.isNumber(self.getViewDataStore('current-model-id'))) {
+                self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
             }
-            Header = Backgrid.Header;//Backgrid.Extension.GroupedHeader;
-            self.backgrid = new Backgrid.Grid({
-                header: Header,
-                columns: columns,
-                collection: self.collection
-            });
+            self.renderGrid(e, 'site-projects');
 
-            self.listenTo(self.backgrid, 'backgrid:rendered', function (e) {
-                self.positionOverlays(e);
-            });
-            if (App.Vars.bAllowManagedGridColumns) {
-                // Hide db record foreign key ids
-                hideCellCnt = 0;//9 + 25;
-                initialColumnsVisible = App.Vars.projectsBackgridColumnDefinitions.length - hideCellCnt;
-                self.colManager = new Backgrid.Extension.ColumnManager(backgridOrderableColumnCollection, {
-                    initialColumnsVisible: initialColumnsVisible,
-                    trackSize: true,
-                    trackOrder: true,
-                    trackVisibility: true,
-                    saveState: App.Vars.bBackgridColumnManagerSaveState,
-                    saveStateKey: 'site-projects',
-                    //saveStateKey: 'site-projects-' + App.Models.siteModel.get(App.Models.siteModel.idAttribute) + '-' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute) + '-' + _.uniqueId('-'),
-                    loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit,
-                    stateChecking: "strict"
-                });
-
-                colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
-                    columnManager: self.colManager
-                });
-            }
-            // This is the current View
-            $backgridWrapper = self.$el.html(self.backgrid.render().el);
-
-            self.$gridContainer = $backgridWrapper;
-            self.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
-            self.projectGridManagerContainerToolbar = new App.Views.ProjectGridManagerContainerToolbar({
-                el: self.parentView.$('.projects-grid-manager-container')
-            });
-            self.projectGridManagerContainerToolbar.render();
-
-            paginator = new Backgrid.Extension.Paginator({
-                collection: self.collection
-            });
-            self.paginator = paginator;
-            // Render the paginator
-            self.projectGridManagerContainerToolbar.$('.projects-pagination-controls').html(paginator.render().el);
-            _log('App.Views.Projects.render', '$backgridWrapper', $backgridWrapper, '$backgridWrapper.find(\'thead\')', $backgridWrapper.find('thead'));
-
-            if (App.Vars.bAllowManagedGridColumns) {
-                //Add sizeable columns
-                sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
-                    collection: self.collection,
-                    columns: columns,
-                    grid: self.backgrid
-                });
-                $backgridWrapper.find('thead').before(sizeAbleCol.render().el);
-                _log('App.Views.Projects.render', 'after sizeAbleCol.render()');
-
-                //Add resize handlers
-                sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
-                    sizeAbleColumns: sizeAbleCol,
-                    saveColumnWidth: true
-                });
-                $backgridWrapper.find('thead').before(sizeHandler.render().el);
-                _log('App.Views.Projects.render', 'after sizeHandler.render()');
-
-                //Make columns reorderable
-                orderHandler = new Backgrid.Extension.OrderableColumns({
-                    grid: self.backgrid,
-                    sizeAbleColumns: sizeAbleCol
-                });
-                $backgridWrapper.find('thead').before(orderHandler.render().el);
-                _log('App.Views.Projects.render', 'after orderHandler.render()');
-                //this.options.mainAppEl is passed in through constructor
-                self.projectGridManagerContainerToolbar.$('.file-upload-container').before(colVisibilityControl.render().el);
-            }
-
-            // Always assumes the first row of the backgrid/collection is the current model
-            App.Vars.currentProjectID = self.collection.length ? self.collection.at(0).get('ProjectID') : null;
-
-            // Set the "current project to load the tabbed project data"
-            $backgridWrapper.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
-
-            // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
-            self.listenTo(self.backgrid.collection, 'backgrid:editing', function (e) {
-                _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:editing', e);
-                self.updateProjectDataViews(e);
-            });
-            self.listenTo(self.backgrid.collection, 'backgrid:edited', function (e) {
-                _log('App.Views.Projects.render', 'projects backgrid.collection.on backgrid:edited', e);
-                self.update(e);
-            });
-            self.listenTo(self.backgrid.collection, 'backgrid:selected', function (e) {
-                self.toggleDeleteBtn(e);
-            });
-            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-            self.childViews.push(self.backgrid);
-            self.childViews.push(self.projectGridManagerContainerToolbar);
-            if (App.Vars.bAllowManagedGridColumns) {
-                self.childViews.push(colVisibilityControl);
-                self.childViews.push(paginator);
-                self.childViews.push(sizeAbleCol);
-                self.childViews.push(sizeHandler);
-                self.childViews.push(orderHandler);
-            }
 
             return self;
 
@@ -1599,27 +1329,29 @@
             let self = this;
 
             let SiteStatusID = e.SiteStatusID;
-            window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             //window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
             // fetch new product collection
-            App.PageableCollections.projectCollection.url = '/admin/project/list/all/' + SiteStatusID;
+            App.PageableCollections.projectCollection.url = self.getModelRoute() + '/list/all/' + SiteStatusID;
             App.PageableCollections.projectCollection.fetch({
                 reset: true,
                 success: function (model, response, options) {
                     //console.log('handleSiteStatusIDChange project collection fetch success', {model: model, response: response, response_0: response[0], options: options})
                     if (!_.isUndefined(response[0])) {
-                        App.Vars.currentProjectID = response[0]['ProjectID'];
-                        App.Models.projectModel.set(response[0]);
-                        self.refocusProjectRecord();
+                        //App.Vars.currentProjectID = response[0]['ProjectID'];
+                        self.setViewDataStoreValue('current-model-id', response[0][self.model.idAttribute]);
+                        self.model.set(response[0]);
+                        //App.Models.projectModel.set(response[0]);
+                        self.refocusGridRecord();
                     } else {
                         window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     }
-                    window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     self.trigger('toggle-project-tabs-box');
                 },
                 error: function (model, response, options) {
                     growl(response.msg, 'error');
-                    window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
                     self.trigger('toggle-project-tabs-box');
                 }
@@ -1629,75 +1361,11 @@
          * ProjectIDParam can also be an event
          * @param e
          */
-        updateProjectDataViews: function (e) {
+        refreshView: function (e) {
             let self = this;
-            let ProjectID = 0;
-            let $RadioElement = null;
-            let $TableRowElement = null;
-            _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:', e);
-            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
-                $RadioElement = this.$gridContainer.find('input[type="radio"][name="ProjectID"][value="' + e.id + '"]');
-                $TableRowElement = $RadioElement.parents('tr');
-            } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
-                $TableRowElement = $(e.currentTarget);
-                $RadioElement = $TableRowElement.find('input[type="radio"][name="ProjectID"]');
-            }
-            self.$currentRow = $TableRowElement;
-            if ($RadioElement !== null) {
-                // click is only a visual indication that the row is selected. nothing should be listening for this click
-                $RadioElement.trigger('click');
-                ProjectID = $RadioElement.val();
 
-                // Highlight row
-                $TableRowElement.siblings().removeAttr('style');
-                $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
-            }
-            if (App.Vars.mainAppDoneLoading && ProjectID && $('.site-projects-tabs').data('project-id') != ProjectID) {
-                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
-                window.ajaxWaiting('show', '.tab-content.backgrid-wrapper');
-                _log('App.Views.Projects.updateProjectDataViews.event', 'event triggered:', e, 'last chosen' +
-                                                                                               ' ProjectID:' + $('.site-projects-tabs').data('project-id'), 'fetching new chosen project model:' + ProjectID);
-                // Refresh tabs on new row select
-                App.Models.projectModel.url = '/admin/project/' + ProjectID;
-                App.Vars.currentProjectID = ProjectID;
-                App.Models.projectModel.fetch({
-                    reset: true,
-                    success: function (model, response, options) {
-                        //console.log('project model fetch', self.options.tab, currentModelID, self.model)
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                    },
-                    error: function (model, response, options) {
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                        growl(response.msg, 'error')
-                    }
-                });
+            self._refreshView(e);
 
-                //this.collection.length ? this.collection.at(0).get('ProjectID') : null;
-                //console.log('updateProjectDataViews projectModel fetch', {ProjectID: ProjectID, projectModel: App.Models.projectModel, currentProjectID:App.Vars.currentProjectID})
-            }
-            self.positionOverlays(self.backgrid);
-        },
-        refocusProjectRecord: function () {
-            let self = this;
-            let recordIdx = 1;
-            this.paginator.collection.fullCollection.each(function (model, idx) {
-
-                if (model.get(App.Models.projectModel.idAttribute) == App.Vars.currentProjectID) {
-                    recordIdx = idx;
-                }
-            });
-            recordIdx = recordIdx === 0 ? 1 : recordIdx;
-            let page = Math.ceil(recordIdx / this.paginator.collection.state.pageSize)
-            if (page > 1) {
-                _.each(this.paginator.handles, function (handle, idx) {
-                    if (handle.pageIndex == page && handle.label == page) {
-                        //console.log(handle, handle.pageIndex, handle.el)
-                        $(handle.el).find('a').trigger('click')
-                    }
-                })
-            }
-            //console.log(recordIdx, this.paginator.collection.state.pageSize, page, this.backgrid, this.paginator, this.backgrid.collection)
-            self.$el.find('input[type="radio"][name="ProjectID"][value="' + App.Vars.currentProjectID + '"]').parents('tr').trigger('focusin');
         },
         update: function (e) {
             let self = this;
@@ -1706,18 +1374,18 @@
                 if (_.findKey(e.changed, 'SequenceNumber') !== 'undefined') {
                     // Fetch reordered list
                     bFetchCollection = true;
-                    window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+                    window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
                 }
                 //'event triggered:' + e.handleObj.type + ' ' + e.handleObj.selector
                 _log('App.Views.Projects.update.event', e, 'updating project model id:' + e.attributes.ProjectID);
-                if (e.attributes.ProjectID !== App.Models.projectModel.get(App.Models.projectModel.idAttribute)) {
+                if (e.attributes.ProjectID !== self.model.get(self.model.idAttribute)) {
                     growl('I just caught the disappearing project bug scenario and have cancelled the update so it does not disappear.', 'error');
                 }
-                App.Models.projectModel.url = '/admin/project/' + e.attributes.ProjectID;
+                self.model.url = self.getModelRoute() + '/' + e.attributes.ProjectID;
                 let projectData = _.extend({ProjectID: e.attributes.ProjectID}, e.changed);
                 //console.log('projectView update', {currentProjectID: App.Vars.currentProjectID,e_changed: e.changed, e_attributes: e.attributes, projectData: projectData, projectModel: App.Models.projectModel, url: App.Models.projectModel.url});
 
-                App.Models.projectModel.save(projectData,
+                self.model.save(projectData,
                     {
                         success: function (model, response, options) {
                             if (bFetchCollection) {
@@ -1726,21 +1394,21 @@
                             growl(response.msg, response.success ? 'success' : 'error');
                             if (bFetchCollection) {
 
-                                self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
+                                self.collection.url = self.getModelRoute() + '/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                                 $.when(
                                     self.collection.fetch({reset: true})
                                 ).then(function () {
                                     //initialize your views here
-                                    self.refocusProjectRecord();
+                                    self.refocusGridRecord();
                                     _log('App.Views.Project.update.event', 'SequenceNumber updated. project collection fetch promise done');
-                                    window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
 
                                 });
                             }
                         },
                         error: function (model, response, options) {
                             growl(response.msg, 'error');
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                         }
                     });
             }
@@ -1750,11 +1418,11 @@
             let bSave = true;
             if (bSave) {
                 let bFetchCollection = true;
-                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
-                App.Models.projectModel.url = '/admin/project/' + App.Models.projectModel.get(App.Models.projectModel.idAttribute);
-                let projectData = _.extend({ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)}, data);
+                window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+                self.model.url = '/admin/project/' + self.model.get(self.model.idAttribute);
+                let projectData = _.extend({ProjectID: self.model.get(self.model.idAttribute)}, data);
                 //console.log('projectView saveEditForm',{data:data, projectData:projectData,projectModel: App.Models.projectModel, url: App.Models.projectModel.url});
-                App.Models.projectModel.save(projectData,
+                self.model.save(projectData,
                     {
                         success: function (model, response, options) {
                             if (bFetchCollection) {
@@ -1763,20 +1431,20 @@
                             growl(response.msg, response.success ? 'success' : 'error');
                             if (bFetchCollection) {
 
-                                self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
+                                self.collection.url = self.getModelRoute() + '/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                                 $.when(
                                     self.collection.fetch({reset: true})
                                 ).then(function () {
                                     //initialize your views here
-                                    self.refocusProjectRecord();
+                                    self.refocusGridRecord();
                                     _log('App.Views.Project.update.event', 'project updated. project collection fetch promise done');
-                                    window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                                 });
                             }
                         },
                         error: function (model, response, options) {
                             growl(response.msg, 'error');
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                         }
                     });
             }
@@ -1845,6 +1513,7 @@
             return template(tplVars);
         },
         getEditForm: function () {
+            let self = this;
             let template = window.template('newProjectTemplate');
             let contactSelect = new App.Views.Select({
                 el: '',
@@ -1858,54 +1527,54 @@
             let tplVars = {
                 SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
                 SiteStatusID: App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute),
-                yesNoIsActiveOptions: App.Models.projectModel.getYesNoOptions(true, 'Yes'),
-                yesNoOptions: App.Models.projectModel.getYesNoOptions(true),
+                yesNoIsActiveOptions: self.model.getYesNoOptions(true, 'Yes'),
+                yesNoOptions: self.model.getYesNoOptions(true),
                 contactSelect: contactSelect.getHtml(),
-                primarySkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
-                statusOptions: App.Models.projectModel.getStatusOptions(true, 'Pending'),
-                projectSendOptions: App.Models.projectModel.getSendOptions(true),
-                SequenceNumber: App.Models.projectModel.get("SequenceNumber"),
-                OriginalRequest: App.Models.projectModel.get("OriginalRequest"),
-                ProjectDescription: App.Models.projectModel.get("ProjectDescription"),
-                Comments: App.Models.projectModel.get("Comments"),
-                VolunteersNeededEst: App.Models.projectModel.get("VolunteersNeededEst"),
-                StatusReason: App.Models.projectModel.get("StatusReason"),
-                MaterialsNeeded: App.Models.projectModel.get("MaterialsNeeded"),
-                EstimatedCost: App.Models.projectModel.get("EstimatedCost"),
-                ActualCost: App.Models.projectModel.get("ActualCost"),
-                BudgetAvailableForPC: App.Models.projectModel.get("BudgetAvailableForPC"),
-                SpecialEquipmentNeeded: App.Models.projectModel.get("SpecialEquipmentNeeded"),
-                PermitsOrApprovalsNeeded: App.Models.projectModel.get("PermitsOrApprovalsNeeded"),
-                PrepWorkRequiredBeforeSIA: App.Models.projectModel.get("PrepWorkRequiredBeforeSIA"),
-                SetupDayInstructions: App.Models.projectModel.get("SetupDayInstructions"),
-                SIADayInstructions: App.Models.projectModel.get("SIADayInstructions"),
-                Area: App.Models.projectModel.get("Area"),
-                PaintOrBarkEstimate: App.Models.projectModel.get("PaintOrBarkEstimate"),
-                PaintAlreadyOnHand: App.Models.projectModel.get("PaintAlreadyOnHand"),
-                PaintOrdered: App.Models.projectModel.get("PaintOrdered"),
-                FinalCompletionAssessment: App.Models.projectModel.get("FinalCompletionAssessment"),
+                primarySkillNeededOptions: self.model.getSkillsNeededOptions(true),
+                statusOptions: self.model.getStatusOptions(true, 'Pending'),
+                projectSendOptions: self.model.getSendOptions(true),
+                SequenceNumber: self.model.get("SequenceNumber"),
+                OriginalRequest: self.model.get("OriginalRequest"),
+                ProjectDescription: self.model.get("ProjectDescription"),
+                Comments: self.model.get("Comments"),
+                VolunteersNeededEst: self.model.get("VolunteersNeededEst"),
+                StatusReason: self.model.get("StatusReason"),
+                MaterialsNeeded: self.model.get("MaterialsNeeded"),
+                EstimatedCost: self.model.get("EstimatedCost"),
+                ActualCost: self.model.get("ActualCost"),
+                BudgetAvailableForPC: self.model.get("BudgetAvailableForPC"),
+                SpecialEquipmentNeeded: self.model.get("SpecialEquipmentNeeded"),
+                PermitsOrApprovalsNeeded: self.model.get("PermitsOrApprovalsNeeded"),
+                PrepWorkRequiredBeforeSIA: self.model.get("PrepWorkRequiredBeforeSIA"),
+                SetupDayInstructions: self.model.get("SetupDayInstructions"),
+                SIADayInstructions: self.model.get("SIADayInstructions"),
+                Area: self.model.get("Area"),
+                PaintOrBarkEstimate: self.model.get("PaintOrBarkEstimate"),
+                PaintAlreadyOnHand: self.model.get("PaintAlreadyOnHand"),
+                PaintOrdered: self.model.get("PaintOrdered"),
+                FinalCompletionAssessment: self.model.get("FinalCompletionAssessment"),
                 bSetValues: true,
                 data: {
-                    Active: App.Models.projectModel.get("Active"),
-                    ChildFriendly: App.Models.projectModel.get("ChildFriendly"),
-                    PrimarySkillNeeded: App.Models.projectModel.get("PrimarySkillNeeded"),
-                    Status: App.Models.projectModel.get("Status"),
-                    NeedsToBeStartedEarly: App.Models.projectModel.get("NeedsToBeStartedEarly"),
-                    CostEstimateDone: App.Models.projectModel.get("CostEstimateDone"),
-                    MaterialListDone: App.Models.projectModel.get("MaterialListDone"),
-                    BudgetAllocationDone: App.Models.projectModel.get("BudgetAllocationDone"),
-                    VolunteerAllocationDone: App.Models.projectModel.get("VolunteerAllocationDone"),
-                    NeedSIATShirtsForPC: App.Models.projectModel.get("NeedSIATShirtsForPC"),
-                    ProjectSend: App.Models.projectModel.get("ProjectSend"),
-                    FinalCompletionStatus: App.Models.projectModel.get("FinalCompletionStatus"),
-                    PCSeeBeforeSIA: App.Models.projectModel.get("PCSeeBeforeSIA")
+                    Active: self.model.get("Active"),
+                    ChildFriendly: self.model.get("ChildFriendly"),
+                    PrimarySkillNeeded: self.model.get("PrimarySkillNeeded"),
+                    Status: self.model.get("Status"),
+                    NeedsToBeStartedEarly: self.model.get("NeedsToBeStartedEarly"),
+                    CostEstimateDone: self.model.get("CostEstimateDone"),
+                    MaterialListDone: self.model.get("MaterialListDone"),
+                    BudgetAllocationDone: self.model.get("BudgetAllocationDone"),
+                    VolunteerAllocationDone: self.model.get("VolunteerAllocationDone"),
+                    NeedSIATShirtsForPC: self.model.get("NeedSIATShirtsForPC"),
+                    ProjectSend: self.model.get("ProjectSend"),
+                    FinalCompletionStatus: self.model.get("FinalCompletionStatus"),
+                    PCSeeBeforeSIA: self.model.get("PCSeeBeforeSIA")
                 }
             };
             return template(tplVars);
         },
         create: function (attributes) {
             let self = this;
-            window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             // Set the sequence to the end if it was left empty
             if (_.isEmpty(attributes['SequenceNumber'])) {
                 attributes['SequenceNumber'] = App.PageableCollections.projectCollection.fullCollection.length;
@@ -1914,78 +1583,68 @@
             attributes['Attachments'] = '';
             _log('App.Views.Project.create', attributes, this.model, App.PageableCollections.projectCollection);
             let newModel = new App.Models.Project();
-            newModel.url = '/admin/project';
+            newModel.url = self.getModelRoute();
             newModel.save(attributes,
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        App.Vars.currentProjectID = !_.isUndefined(response.ProjectID) ? response.ProjectID : null;
-                        self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
+                        //App.Vars.currentProjectID = !_.isUndefined(response.ProjectID) ? response.ProjectID : null;
+                        self.setViewDataStoreValue('current-model-id', !_.isUndefined(response[App.Models.Project.idAttribute]) ? response[App.Models.Project.idAttribute] : null);
+                        self.collection.url = self.getModelRoute() + '/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                         $.when(
                             self.collection.fetch({reset: true})
                         ).then(function () {
                             //initialize your views here
-                            self.refocusProjectRecord();
+                            self.refocusGridRecord();
                             _log('App.Views.Project.create.event', 'project collection fetch promise done');
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                             self.trigger('toggle-project-tabs-box');
                             self.$el.find('tbody tr:first-child').trigger('focusin');
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                         self.trigger('toggle-project-tabs-box');
                     }
                 });
         },
         destroy: function (attributes) {
             let self = this;
-            window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             attributes = _.extend(attributes, {
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
-                ProjectRoleID: this.model.get('ProjectRoleID')
+                ProjectID: self.model.get(self.model.idAttribute),
+                ProjectRoleID: self.model.get('ProjectRoleID')
             });
             _log('App.Views.Project.destroy', attributes);
             $.ajax({
                 type: "POST",
                 dataType: "json",
-                url: '/admin/project/batch/destroy',
+                url: self.getModelRoute() + '/batch/destroy',
                 data: attributes,
                 success: function (response) {
                     window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.collection.url = '/admin/project/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
+                    self.collection.url = self.getModelRoute() + '/list/all/' + App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute);
                     $.when(
                         self.collection.fetch({reset: true})
                     ).then(function () {
-                        App.Vars.currentProjectID = self.collection.length ? self.collection.at(0).get('ProjectID') : null;
-                        self.refocusProjectRecord();
+                        //App.Vars.currentProjectID = self.collection.length ? self.collection.at(0).get('ProjectID') : null;
+                        self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
+                        self.refocusGridRecord();
                         //initialize your views here
                         _log('App.Views.Project.destroy.event', 'project collection fetch promise done');
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                         self.trigger('toggle-project-tabs-box');
                     });
                 },
                 fail: function (response) {
                     window.growl(response.msg, 'error');
-                    window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     self.trigger('toggle-project-tabs-box');
                 }
             })
         },
-        toggleDeleteBtn: function (e) {
-            let self = this;
-            let selectedModels = self.backgrid.getSelectedModels();
-            _log('App.Views.Projects.toggleDeleteBtn.event', selectedModels.length, e);
-            let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
-            //App.Views.siteManagementView.trigger('toggle-delete-btn', {toggle: toggleState});
-            _log('App.Views.Projects.toggleDeleteBtn.event', 'toggleState:' + toggleState, self.parentView.el);
-            if (toggleState === 'disable') {
-                self.parentView.$('#btnDeleteCheckedProjects').addClass('disabled');
-            } else {
-                self.parentView.$('#btnDeleteCheckedProjects').removeClass('disabled');
-            }
-        },
+
 
     });
 })(window.App);
@@ -2005,9 +1664,13 @@
     });
 
     App.Views.Sites = Backbone.View.extend({
-        initialize: function () {
-            _.bindAll(this, 'addOne', 'addAll', 'render','changeSelected','setSelectedId');
-            this.collection.bind('reset', this.addAll);
+        initialize: function (options) {
+            let self = this;
+            self.options = options;
+            _.bindAll(this, 'addOne', 'addAll', 'render', 'changeSelected', 'setSelectedId');
+            self.collection.bind('reset', this.addAll);
+            self.parentView = self.options.parentView;
+            self.siteYearsDropDownView = self.options.siteYearsDropDownView;
         },
         events: {
             "change": "changeSelected"
@@ -2032,17 +1695,21 @@
         },
         setSelectedId: function (SiteID) {
             let self = this;
-            _log('App.Views.Sites.setSelectedId.event', 'new site selected', SiteID);
+            _log('App.Views.Sites.setSelectedId.event', 'new site selected', SiteID, 'parentView', self.parentView);
             // fetch new site model
             App.Models.siteModel.url = '/admin/site/' + SiteID;
             App.Models.siteModel.fetch();
-            App.Collections.siteYearsDropDownCollection.url = '/admin/sitestatus/all/site/years/' + SiteID;
-            App.Collections.siteYearsDropDownCollection.fetch({reset: true});
-
-            if (typeof self.parentView !== 'undefined' ) {
-                self.trigger('site-id-change', {SiteID: SiteID});
-                console.log('trigger site-id-change', self.parentView.$el.hasClass('reports-management-view'))
-            }
+            self.siteYearsDropDownView.collection.url = '/admin/sitestatus/all/site/years/' + SiteID;
+            self.siteYearsDropDownView.collection.fetch({reset: true});
+            self.trigger('site-id-change', {SiteID: SiteID});
+            // if (typeof self.parentView !== 'undefined') {
+            //     if (App.Vars.mainAppDoneLoading) {
+            //         self.trigger('site-id-change', {SiteID: SiteID});
+            //         console.log('trigger site-id-change after mainAppDoneLoading', self.parentView)
+            //     } else {
+            //         console.log('trigger site-id-change before mainAppDoneLoading', self.parentView)
+            //     }
+            // }
         }
     });
     App.Views.SiteYearsOption = Backbone.View.extend({
@@ -2063,7 +1730,8 @@
             this.options = options;
             this.optionsView = [];
             this.parentView = this.options.parentView;
-            _.bindAll(this, 'addOne', 'addAll', 'changeSelected','setSelectedId','refocusSiteVolunteerRecord');
+            this.siteVolunteersView = this.options.siteVolunteersView;
+            _.bindAll(this, 'render', 'addOne', 'addAll', 'changeSelected', 'setSelectedId', 'refocusSiteVolunteerRecord');
             this.collection.bind('reset', this.addAll, this);
         },
         events: {
@@ -2093,51 +1761,51 @@
         },
         setSelectedId: function (SiteID, SiteStatusID, Year) {
             let self = this;
-            if (App.Vars.mainAppDoneLoading) {
-                _log('App.Views.SiteYears.setSelectedId.event', 'new year selected', SiteID, SiteStatusID, Year);
+
+            _log('App.Views.SiteYears.setSelectedId.event', 'new year selected', SiteID, SiteStatusID, Year, 'parentView', self.parentView);
+
+            if (self.parentView.$el.hasClass('site-management-view')) {
+                window.ajaxWaiting('show', '#site-well');
+                window.ajaxWaiting('show', '#site-status-well');
+                window.ajaxWaiting('show', '#site-volunteers-well');
+            }
+            // fetch new sitestatus
+            App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
+            App.PageableCollections.siteVolunteersRoleCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
+            $.when(
+                App.Models.siteStatusModel.fetch({reset: true}),
+                App.PageableCollections.siteVolunteersRoleCollection.fetch({reset: true})
+            ).then(function () {
+                //initialize your views here
+                _log('App.Views.Site.create.event', 'site collection fetch promise done');
 
                 if (self.parentView.$el.hasClass('site-management-view')) {
-                    window.ajaxWaiting('show', '#site-well');
-                    window.ajaxWaiting('show', '#site-status-well');
-                    window.ajaxWaiting('show', '#site-volunteers-well');
+                    window.ajaxWaiting('remove', '#site-well');
+                    window.ajaxWaiting('remove', '#site-status-well');
+                    window.ajaxWaiting('remove', '#site-volunteers-well');
+                    if (App.PageableCollections.siteVolunteersRoleCollection.length) {
+                        App.Vars.currentSiteVolunteerRoleID = App.PageableCollections.siteVolunteersRoleCollection.at(0).get('SiteVolunteerRoleID');
+                        App.Models.siteVolunteerRoleModel.set(App.PageableCollections.siteVolunteersRoleCollection.at(0));
+                        self.refocusSiteVolunteerRecord();
+                    }
                 }
-                // fetch new sitestatus
-                App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
-                App.PageableCollections.siteVolunteersRoleCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
-                $.when(
-                    App.Models.siteStatusModel.fetch({reset: true}),
-                    App.PageableCollections.siteVolunteersRoleCollection.fetch({reset: true})
-                ).then(function () {
-                    //initialize your views here
-                    _log('App.Views.Site.create.event', 'site collection fetch promise done');
+                if (!self.parentView.$el.hasClass('site-management-view')) {
+                    self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
+                }
+            });
 
-                    if (self.parentView.$el.hasClass('site-management-view')) {
-                        window.ajaxWaiting('remove', '#site-well');
-                        window.ajaxWaiting('remove', '#site-status-well');
-                        window.ajaxWaiting('remove', '#site-volunteers-well');
-                        if (App.PageableCollections.siteVolunteersRoleCollection.length) {
-                            App.Vars.currentSiteVolunteerRoleID = App.PageableCollections.siteVolunteersRoleCollection.at(0).get('SiteVolunteerRoleID');
-                            App.Models.siteVolunteerRoleModel.set(App.PageableCollections.siteVolunteersRoleCollection.at(0));
-                            self.refocusSiteVolunteerRecord();
-                        }
-                    }
-                    if (!self.parentView.$el.hasClass('site-management-view')) {
-                        self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
-                    }
-                });
-            }
         },
         refocusSiteVolunteerRecord: function () {
             let self = this;
             let recordIdx = 1;
-            App.Views.siteVolunteersView.paginator.collection.fullCollection.each(function (model, idx) {
+            this.siteVolunteersView.paginator.collection.fullCollection.each(function (model, idx) {
 
                 if (model.get(App.Models.siteVolunteerRoleModel.idAttribute) === App.Vars.currentSiteVolunteerRoleID) {
                     recordIdx = idx;
                 }
             });
             recordIdx = recordIdx === 0 ? 1 : recordIdx;
-            let page = Math.ceil(recordIdx / App.Views.siteVolunteersView.paginator.collection.state.pageSize)
+            let page = Math.ceil(recordIdx / this.siteVolunteersView.paginator.collection.state.pageSize)
             if (page > 1) {
                 _.each(this.paginator.handles, function (handle, idx) {
                     if (handle.pageIndex === page && handle.label === page) {
@@ -2159,6 +1827,7 @@
         template: template('siteTemplate'),
         initialize: function (options) {
             let self = this;
+            self.sitesDropDownView = options.sitesDropDownView;
             _.bindAll(this, 'update');
             this.listenTo(this.model, 'change', function (e) {
                 self.render();
@@ -2221,8 +1890,8 @@
                             //initialize your views here
                             _log('App.Views.Site.create.event', 'site collection fetch promise done');
                             window.ajaxWaiting('remove', '#site-well');
-                            App.Views.sitesDropDownView.$el.val(response.new_site_id)
-                            App.Views.sitesDropDownView.$el.trigger('change')
+                            self.sitesDropDownView.$el.val(response.new_site_id)
+                            self.sitesDropDownView.$el.trigger('change')
                         });
                     },
                     error: function (model, response, options) {
@@ -2244,7 +1913,7 @@
                         //initialize your views here
                         _log('App.Views.Site.destroy.event', 'site collection fetch promise done');
                         window.ajaxWaiting('remove', '#site-well');
-                        App.Views.sitesDropDownView.$el.trigger('change')
+                        self.sitesDropDownView.$el.trigger('change')
                     });
                 },
                 error: function (model, response, options) {
@@ -2324,9 +1993,9 @@
         template: template('siteVolunteersGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
-            this.$currentRow = null;
-            _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
-            this.listenTo(App.Views.siteVolunteersView, 'toggle-delete-btn', function (e) {
+            self.options = this;
+            _.bindAll(self, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
+            self.listenTo(self.options.siteVolunteersView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
             });
 
@@ -2348,22 +2017,23 @@
         addGridRow: function (e) {
             var self = this;
             e.preventDefault();
-            $('#sia-modal').one('show.bs.modal', function (event) {
+            self.getModalElement().one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('New Site Volunteer');
-                modal.find('.modal-body').html(App.Views.siteVolunteersView.getModalForm());
+                modal.find('.modal-body').html(self.options.siteVolunteersView.getModalForm());
 
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
-                    App.Views.siteVolunteersView.create($.unserialize(modal.find('form').serialize()));
-                    $('#sia-modal').modal('hide');
+                    self.options.siteVolunteersView.create($.unserialize(modal.find('form').serialize()));
+                    self.getModalElement().modal('hide');
                 });
 
             });
-            $('#sia-modal').modal('show');
+            self.getModalElement().modal('show');
 
         },
         deleteCheckedRows: function (e) {
+            let self = this;
             e.preventDefault();
             if ($(e.target).hasClass('disabled')) {
                 growl('Please check a box to delete a site volunteer.');
@@ -2371,10 +2041,10 @@
             }
             bootbox.confirm("Do you really want to delete the checked site volunteers?", function (bConfirmed) {
                 if (bConfirmed) {
-                    let selectedModels = App.Views.siteVolunteersView.backgrid.getSelectedModels();
+                    let selectedModels = self.options.siteVolunteersView.backgrid.getSelectedModels();
                     // clear or else the previously selected models remain as undefined
                     try {
-                        App.Views.siteVolunteersView.backgrid.clearSelectedModels();
+                        self.options.siteVolunteersView.backgrid.clearSelectedModels();
                     } catch (e) {
                     }
                     _log('App.Views.SiteVolunteerGridManagerContainerToolbar.deleteCheckedRows', 'selectedModels', selectedModels);
@@ -2382,7 +2052,7 @@
                         return model.get('SiteVolunteerRoleID');
                     });
 
-                    App.Views.siteVolunteersView.destroy({deleteModelIDs: modelIDs});
+                    self.options.siteVolunteersView.destroy({deleteModelIDs: modelIDs});
                 }
             });
         },
@@ -2405,144 +2075,138 @@
         }
 
     });
+
     App.Views.SiteVolunteer = App.Views.ManagedGrid.fullExtend({
         initialize: function (options) {
             let self = this;
-            this.options = options;
-            _.bindAll(this, 'render', 'update', 'updateSiteVolunteerView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
-            this.parentView = this.options.parentView;
-            self.backgridWrapperClassSelector = '.site-volunteers-backgrid-wrapper';
-            this.gridManagerContainerToolbarClassName = 'site-volunteers-grid-manager-container';
-            this.gridManagerContainerToolbarSelector = '.' + this.gridManagerContainerToolbarClassName;
-            this.$siteVolunteersGridManagerContainer = this.parentView.$('.site-volunteers-grid-manager-container');
-            this.ajaxWaitingSelector = this.backgridWrapperClassSelector;
-            this.modelNameLabel = this.options.modelNameLabel;
-            this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
-            this.routeName = 'site_volunteer_role';
-            this.$currentRow = null;
+            _.bindAll(this, '_initialize','render', 'update', 'refreshView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+
+            self._initialize(options);
             _log('App.Views.SiteVolunteer.initialize', options);
         },
         events: {
-            'focusin tbody tr': 'updateSiteVolunteerView',
-            'mouseenter thead th button': 'showColumnHeaderLabel',
-            'mouseenter tbody td': 'showTruncatedCellContentPopup',
-            'mouseleave tbody td': 'hideTruncatedCellContentPopup',
-            'click .overlay-top,.overlay-bottom': 'showRadioBtnEditHelpMsg'
+
         },
         render: function (e) {
             let self = this;
 
-            this.hideCellCnt = this.options.hideCellCnt;
-            this.$tabBtnPanePaginationContainer = $(this.gridManagerContainerToolbarSelector).find('.pagination-controls');
-            this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
+            // this.hideCellCnt = this.options.hideCellCnt;
+            // this.$tabBtnPanePaginationContainer = $(this.gridManagerContainerToolbarSelector).find('.pagination-controls');
+            // this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
+            //
+            // this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
+            // this.columnCollection.setPositions().sort();
+            //
+            // let Header = Backgrid.Extension.GroupedHeader;
+            // this.backgrid = new Backgrid.Grid({
+            //     header: Header,
+            //     columns: this.columnCollection,
+            //     collection: this.collection
+            // });
+            // this.listenTo(this.backgrid, 'backgrid:rendered', function (e) {
+            //     self.positionOverlays(e);
+            // });
+            // if (App.Vars.bAllowManagedGridColumns) {
+            //     let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
+            //     let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
+            //         initialColumnsVisible: initialColumnsVisible,
+            //         trackSize: true,
+            //         trackOrder: true,
+            //         trackVisibility: true,
+            //         saveState: App.Vars.bBackgridColumnManagerSaveState,
+            //         saveStateKey: 'site-volunteers',
+            //         loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit,
+            //         stateChecking: "strict"
+            //     });
+            //
+            //     let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
+            //         columnManager: colManager
+            //     });
+            // }
+            // _log('App.Views.SiteVolunteer.render', this.routeName, self.parentView.el, _.isUndefined(e) ? 'no event passed in for this call.' : e, self.parentView.$('.site-volunteers-grid-manager-container').find('.tab-pagination-controls'));
+            //
+            // let $gridContainer = this.$el.html(this.backgrid.render().el);
+            // this.$gridContainer = $gridContainer;
+            // this.gridManagerContainerToolbar = new App.Views.SiteVolunteerGridManagerContainerToolbar({
+            //     el: this.parentView.$('.site-volunteers-grid-manager-container'),
+            //     siteVolunteersView: self
+            // });
+            //
+            // this.$siteVolunteersGridManagerContainer.append(this.gridManagerContainerToolbar.render().el);
+            // this.$siteVolunteersGridManagerContainer.find('.file-upload-container').hide();
+            // let paginator = new Backgrid.Extension.Paginator({
+            //     collection: this.collection
+            // });
+            // this.paginator = paginator;
+            // // Render the paginator
+            // this.$siteVolunteersGridManagerContainer.find('.site-volunteers-pagination-controls').html(paginator.render().el);
+            //
+            // // Add sizeable columns
+            // let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
+            //     collection: this.collection,
+            //     columns: this.columnCollection,
+            //     grid: this.backgrid
+            // });
+            // $gridContainer.find('thead').before(sizeAbleCol.render().el);
+            //
+            // if (App.Vars.bAllowManagedGridColumns) {
+            //     // Add resize handlers
+            //     let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
+            //         sizeAbleColumns: sizeAbleCol,
+            //         saveColumnWidth: true
+            //     });
+            //     $gridContainer.find('thead').before(sizeHandler.render().el);
+            //
+            //     // Make columns reorderable
+            //     let orderHandler = new Backgrid.Extension.OrderableColumns({
+            //         grid: this.backgrid,
+            //         sizeAbleColumns: sizeAbleCol
+            //     });
+            //     $gridContainer.find('thead').before(orderHandler.render().el);
+            //
+            //     //this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
+            // }
+            //
+            // // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
+            // this.backgrid.collection.on('backgrid:editing', function (e) {
+            //     _log('App.Views.SiteVolunteer.render', self.routeName, 'backgrid.collection.on backgrid:editing', e);
+            //     self.updateSiteVolunteerView(e);
+            // });
+            // this.backgrid.collection.on('backgrid:edited', function (e) {
+            //     self.update(e);
+            // });
+            // this.backgrid.collection.on('backgrid:selected', function (e) {
+            //     self.toggleDeleteBtn(e);
+            // });
+            // window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            // _log('App.Views.SiteVolunteer.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
+            // // Set the current model id on the tab so we can reference it in other views
+            // $('#' + this.options.tab).data('current-model-id', this.model.get(this.model.idAttribute));
+            //
+            // // Show a popup of the text that has been truncated
+            // $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
+            //     placement: 'auto right',
+            //     padding: 0,
+            //     container: 'body',
+            //     content: function () {
+            //         return $(this).text()
+            //     }
+            // });
+            // // hide popover if it is not overflown
+            // $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
+            //     let element = this;
+            //
+            //     let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+            //     if (!bOverflown) {
+            //         $gridContainer.find('td.renderable').popover('hide')
+            //     }
+            // });
 
-            this.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(this.columnCollectionDefinitions);
-            this.columnCollection.setPositions().sort();
-
-            let Header = Backgrid.Extension.GroupedHeader;
-            this.backgrid = new Backgrid.Grid({
-                header: Header,
-                columns: this.columnCollection,
-                collection: this.collection
-            });
-            this.listenTo(this.backgrid, 'backgrid:rendered', function (e) {
-                self.positionOverlays(e);
-            });
-            if (App.Vars.bAllowManagedGridColumns) {
-                let initialColumnsVisible = this.columnCollectionDefinitions.length - this.hideCellCnt;
-                let colManager = new Backgrid.Extension.ColumnManager(this.columnCollection, {
-                    initialColumnsVisible: initialColumnsVisible,
-                    trackSize: true,
-                    trackOrder: true,
-                    trackVisibility: true,
-                    saveState: App.Vars.bBackgridColumnManagerSaveState,
-                    saveStateKey: 'site-volunteers',
-                    loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit,
-                    stateChecking: "strict"
-                });
-
-                let colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl({
-                    columnManager: colManager
-                });
-            }
-            _log('App.Views.SiteVolunteer.render', this.routeName, self.parentView.el, _.isUndefined(e) ? 'no event passed in for this call.' : e, self.parentView.$('.site-volunteers-grid-manager-container').find('.tab-pagination-controls'));
-
-            let $gridContainer = this.$el.html(this.backgrid.render().el);
-            this.$gridContainer = $gridContainer;
-            this.gridManagerContainerToolbar = new App.Views.SiteVolunteerGridManagerContainerToolbar({
-                el: this.parentView.$('.site-volunteers-grid-manager-container')
-            });
-
-            this.$siteVolunteersGridManagerContainer.append(this.gridManagerContainerToolbar.render().el);
-            this.$siteVolunteersGridManagerContainer.find('.file-upload-container').hide();
-            let paginator = new Backgrid.Extension.Paginator({
-                collection: this.collection
-            });
-            this.paginator = paginator;
-            // Render the paginator
-            this.$siteVolunteersGridManagerContainer.find('.site-volunteers-pagination-controls').html(paginator.render().el);
-
-            // Add sizeable columns
-            let sizeAbleCol = new Backgrid.Extension.SizeAbleColumns({
-                collection: this.collection,
-                columns: this.columnCollection,
-                grid: this.backgrid
-            });
-            $gridContainer.find('thead').before(sizeAbleCol.render().el);
-
-            if (App.Vars.bAllowManagedGridColumns) {
-                // Add resize handlers
-                let sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
-                    sizeAbleColumns: sizeAbleCol,
-                    saveColumnWidth: true
-                });
-                $gridContainer.find('thead').before(sizeHandler.render().el);
-
-                // Make columns reorderable
-                let orderHandler = new Backgrid.Extension.OrderableColumns({
-                    grid: this.backgrid,
-                    sizeAbleColumns: sizeAbleCol
-                });
-                $gridContainer.find('thead').before(orderHandler.render().el);
-
-                //this.$tabBtnPane.find('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
-            }
-
-            // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
-            this.backgrid.collection.on('backgrid:editing', function (e) {
-                _log('App.Views.SiteVolunteer.render', self.routeName, 'backgrid.collection.on backgrid:editing', e);
-                self.updateSiteVolunteerView(e);
-            });
-            this.backgrid.collection.on('backgrid:edited', function (e) {
-                self.update(e);
-            });
-            this.backgrid.collection.on('backgrid:selected', function (e) {
-                self.toggleDeleteBtn(e);
-            });
-            window.ajaxWaiting('remove', self.ajaxWaitingSelector);
-            _log('App.Views.SiteVolunteer.render', this.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', this.model);
-            // Set the current model id on the tab so we can reference it in other views
-            $('#' + this.options.tab).data('current-model-id', this.model.get(this.model.idAttribute));
-
-            // Show a popup of the text that has been truncated
-            $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
-                placement: 'auto right',
-                padding: 0,
-                container: 'body',
-                content: function () {
-                    return $(this).text()
-                }
-            });
-            // hide popover if it is not overflown
-            $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]').on('show.bs.popover', function () {
-                let element = this;
-
-                let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-                if (!bOverflown) {
-                    $gridContainer.find('td.renderable').popover('hide')
-                }
-            });
-
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            self.renderGrid(e, 'site-projects');
+            // Always assumes the first row of the backgrid/collection is the current model
+            //App.Vars.currentProjectID = self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null;
+            self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
             return this;
         },
         getModalForm: function () {
@@ -2568,47 +2232,48 @@
          * ProjectIDParam can also be an event
          * @param e
          */
-        updateSiteVolunteerView: function (e) {
+        refreshView: function (e) {
             let self = this;
-            let currentModelID = 0;
-            let $RadioElement = null;
-            let $TableRowElement = null;
-            _log('App.Views.SiteVolunteer.updateSiteVolunteerView.event', 'event triggered:', e);
-            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
-                $RadioElement = this.$gridContainer.find('input[type="radio"][name="' + this.model.idAttribute + '"][value="' + e.id + '"]');
-                $TableRowElement = $RadioElement.parents('tr');
-            } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
-                $TableRowElement = $(e.currentTarget);
-                $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
-            } else if (typeof e === 'object' && !_.isUndefined(e.data)) {
-                if (self.$gridContainer.find('[type="radio"][name="' + this.model.idAttribute + '"]:checked').length === 0) {
-                    $TableRowElement = self.$gridContainer.find('tbody tr:first-child');
-                    $RadioElement = $TableRowElement.find('input[type="radio"]');
-                } else {
-                    $RadioElement = self.$gridContainer.find('[type="radio"][name="' + this.model.idAttribute + '"]:checked');
-                    $TableRowElement = $RadioElement.parents('tr');
-                }
-
-            }
-            self.$currentRow = $TableRowElement;
-
-            if ($RadioElement !== null) {
-                // click is only a visual indication that the row is selected. nothing should be listening for this click
-                $RadioElement.trigger('click');
-                currentModelID = $RadioElement.val();
-
-                // Highlight row
-                $TableRowElement.siblings().removeAttr('style');
-                $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
-
-            }
-
-            if (App.Vars.mainAppDoneLoading && currentModelID && App.Vars.currentSiteVolunteerRoleID !== currentModelID) {
-                // Refresh tabs on new row select
-                this.model.url = '/admin/' + self.routeName + '/' + currentModelID;
-                this.model.fetch({reset: true});
-            }
-            self.positionOverlays(self.backgrid);
+            // let currentModelID = 0;
+            // let $RadioElement = null;
+            // let $TableRowElement = null;
+            // _log('App.Views.SiteVolunteer.updateSiteVolunteerView.event', 'event triggered:', e);
+            // if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
+            //     $RadioElement = this.$gridContainer.find('input[type="radio"][name="' + this.model.idAttribute + '"][value="' + e.id + '"]');
+            //     $TableRowElement = $RadioElement.parents('tr');
+            // } else if (typeof e === 'object' && !_.isUndefined(e.target)) {
+            //     $TableRowElement = $(e.currentTarget);
+            //     $RadioElement = $TableRowElement.find('input[type="radio"][name="' + this.model.idAttribute + '"]');
+            // } else if (typeof e === 'object' && !_.isUndefined(e.data)) {
+            //     if (self.$gridContainer.find('[type="radio"][name="' + this.model.idAttribute + '"]:checked').length === 0) {
+            //         $TableRowElement = self.$gridContainer.find('tbody tr:first-child');
+            //         $RadioElement = $TableRowElement.find('input[type="radio"]');
+            //     } else {
+            //         $RadioElement = self.$gridContainer.find('[type="radio"][name="' + this.model.idAttribute + '"]:checked');
+            //         $TableRowElement = $RadioElement.parents('tr');
+            //     }
+            //
+            // }
+            // self.$currentRow = $TableRowElement;
+            //
+            // if ($RadioElement !== null) {
+            //     // click is only a visual indication that the row is selected. nothing should be listening for this click
+            //     $RadioElement.trigger('click');
+            //     currentModelID = $RadioElement.val();
+            //
+            //     // Highlight row
+            //     $TableRowElement.siblings().removeAttr('style');
+            //     $TableRowElement.css('background-color', App.Vars.rowBgColorSelected);
+            //
+            // }
+            //
+            // if (App.Vars.mainAppDoneLoading && currentModelID && App.Vars.currentSiteVolunteerRoleID !== currentModelID) {
+            //     // Refresh tabs on new row select
+            //     this.model.url = '/admin/' + self.routeName + '/' + currentModelID;
+            //     this.model.fetch({reset: true});
+            // }
+            // self.positionOverlays(self.backgrid);
+            self._refreshView(e);
         },
         update: function (e) {
             let self = this;
@@ -2638,7 +2303,7 @@
         },
         create: function (attributes) {
             var self = this;
-            window.ajaxWaiting('show', self.ajaxWaitingSelector);
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             let model = this.model.clone().clear({silent: true});
             _log('App.Views.SiteVolunteer.create', self.routeName, attributes, model, self.ajaxWaitingSelector);
             model.url = '/admin/' + self.routeName;
@@ -2652,12 +2317,12 @@
                             self.collection.fetch({reset: true})
                         ).then(function () {
                             _log('App.Views.SiteVolunteer.create.event', self.routeName + ' collection fetch promise done');
-                            window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                         });
                     },
                     error: function (model, response, options) {
                         window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     }
                 });
         },
@@ -2686,12 +2351,12 @@
                     ).then(function () {
                         //initialize your views here
                         _log(self.viewName + '.destroy.event', self.routeName + ' collection fetch promise done');
-                        window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     });
                 },
                 fail: function (response) {
                     window.growl(response.msg, 'error');
-                    window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                 }
             })
         },
@@ -2700,7 +2365,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.SiteManagement = Backbone.View.extend({
+    App.Views.SiteManagement = App.Views.Backend.fullExtend({
         sitesViewClass: App.Views.Sites,
         siteYearsViewClass: App.Views.SiteYears,
         siteViewClass: App.Views.Site,
@@ -2711,10 +2376,8 @@
         },
         template: template('siteManagementTemplate'),
         initialize: function (options) {
-            this.options = options;
-            this.childViews = [];
-            this.mainApp = this.options.mainApp;
-            _.bindAll(this, 'render', 'addSite', 'deleteSite');
+            _.bindAll(this, '_initialize','render', 'addSite', 'deleteSite');
+            this._initialize(options);
         },
         events: {
             'click #btnAddSite': 'addSite',
@@ -2730,54 +2393,76 @@
             if (!App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager) {
                 self.$el.find('#btnDeleteSite').hide();
             }
-            App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
-                el: this.$('select#sites'),
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.sitesDropDownView.render();
 
-            App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
-                el: this.$('select#site_years'),
-                parentView: this,
-                collection: App.Collections.siteYearsDropDownCollection
-            });
-            this.siteYearsDropDownView.render();
-
-            App.Views.siteView = this.siteView = new this.siteViewClass({
-                el: this.$('.site-view'),
-                model: App.Models.siteModel,
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.siteView.render();
-
-            App.Views.siteStatusView = this.siteStatusView = new this.siteStatusViewClass({
-                el: this.$('.site-status-view'),
-                model: App.Models.siteStatusModel
-            });
-            this.siteStatusView.render();
-
-            App.Views.siteVolunteersView = this.siteVolunteersView = new this.siteVolunteersViewClass({
+            this.siteVolunteersView = new this.siteVolunteersViewClass({
                 el: this.$('.site-volunteers-backgrid-wrapper'),
+                viewName: 'site-volunteers',
                 parentView: this,
                 model: App.Models.siteVolunteerRoleModel,
                 modelNameLabel: 'SiteVolunteerRole',
                 collection: App.PageableCollections.siteVolunteersRoleCollection,
                 columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
-                hideCellCnt: 0//2
+                hideCellCnt: 0,
+                currentModelIDDataStoreSelector: 'body',
+                ajaxWaitingTargetClassSelector: '.site-volunteers-view',
+                backgridWrapperClassSelector: '.site-volunteers-backgrid-wrapper',
+                gridManagerContainerToolbarClassName: 'site-volunteers-grid-manager-container',
+                mainApp: self.mainApp
+
             });
+            this.siteYearsDropDownView = new this.siteYearsViewClass({
+                el: this.$('select#site_years'),
+                parentView: this,
+                collection: new App.Collections.SiteYear(App.Vars.appInitialData.site_years),
+                siteVolunteersView: this.siteVolunteersView
+            });
+
+            this.sitesDropDownView = new this.sitesViewClass({
+                el: this.$('select#sites'),
+                collection: new App.Collections.Site(App.Vars.appInitialData.sites),
+                parentView: this,
+                siteYearsDropDownView: this.siteYearsDropDownView
+            });
+            this.sitesDropDownView.render();
+
+
+            this.siteYearsDropDownView.render();
+
+            this.siteView = new this.siteViewClass({
+                el: this.$('.site-view'),
+                model: App.Models.siteModel,
+                collection: App.Collections.sitesDropDownCollection,
+                sitesDropDownView: this.sitesDropDownView
+            });
+            this.siteView.render();
+
+            this.siteStatusView = new this.siteStatusViewClass({
+                el: this.$('.site-status-view'),
+                model: App.Models.siteStatusModel
+            });
+            this.siteStatusView.render();
+
+
             this.siteVolunteersView.render();
 
-            return this;
+            self.childViews.push(this.sitesDropDownView);
+            self.childViews.push(this.siteYearsDropDownView);
+            self.childViews.push(this.siteView);
+            self.childViews.push(this.siteStatusView);
+            self.childViews.push(this.siteVolunteersView);
+
+            return self;
         },
         addSite: function () {
+            let self = this;
             $('#sia-modal').one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('New Site');
-                modal.find('.modal-body').html(App.Views.siteView.getModalForm());
+                modal.find('.modal-body').html(self.siteView.getModalForm());
 
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
-                    App.Views.siteView.create($.unserialize(modal.find('form').serialize()));
+                    self.siteView.create($.unserialize(modal.find('form').serialize()));
 
 
                     $('#sia-modal').modal('hide');
@@ -2787,9 +2472,10 @@
             $('#sia-modal').modal('show');
         },
         deleteSite: function () {
+            let self = this;
             bootbox.confirm("Do you really want to delete the "+ App.Models.siteModel.get('SiteName') +" site and all of its projects?", function (bConfirmed) {
                 if (bConfirmed) {
-                    App.Views.siteView.destroy();
+                    self.siteView.destroy();
                 }
             });
         }
@@ -2801,19 +2487,20 @@
         template: template('projectTabsGridManagerContainerToolbarsTemplate'),
         initialize: function (options) {
             let self = this;
-            this.parentChildViews = options.parentChildViews;
-            _.bindAll(this, 'toggleProjectTabToolbars', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
-            this.options = options;
-            this.parentView = this.options.parentView;
-            this.tabs = this.parentView.$('.nav-tabs [role="tab"]');
-            this.childViews = [];
-            this.listenTo(App.Views.siteProjectTabsView, 'cleared-child-views', function () {
+            _.bindAll(self, 'toggleProjectTabToolbars', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
+            self.options = options;
+            self.parentChildViews = self.options.parentChildViews;
+            self.parentView = self.options.parentView;
+            self.projectsView = self.options.parentView.projectsView;
+            self.tabs = this.parentView.$('.nav-tabs [role="tab"]');
+            self.childViews = [];
+            self.listenTo(self.parentView, 'cleared-child-views', function () {
                 self.remove();
             });
-            this.listenTo(App.Views.siteProjectTabsView, 'toggle-delete-btn', function (e) {
+            self.listenTo(self.parentView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
             });
-            this.listenTo(App.Views.siteProjectTabsView, 'tab-toggled', this.toggleProjectTabToolbars);
+            self.listenTo(self.parentView, 'tab-toggled', this.toggleProjectTabToolbars);
 
         },
         events: {
@@ -2869,9 +2556,9 @@
             //$(e.target).parents('.tabButtonPane').data('tab-name')
 
             try {
-                self.getTabView(clickedTab)[clickedTab].updateProjectTabView(e);
+                self.projectsView.setViewDataStoreValue('current-tab',clickedTab);
             } catch (e) {
-                console.log(e)
+                console.error(e)
             }
         },
         getTabView: function (tabName) {
@@ -2879,7 +2566,6 @@
             return _.find(self.parentChildViews, function (val) {
                 return _.has(val, tabName)
             });
-
         },
         addGridRow: function (e) {
             let self = this;
@@ -3013,103 +2699,127 @@
         projectBudgetViewClass: App.Views.Budget,
         projectAttachmentsViewClass: App.Views.ProjectAttachment,
         initialize: function (options) {
-            this.options = options;
-            this.mainApp = this.options.mainApp;
-            this.parentView = this.options.parentView;
-            this.options.mainAppEl = this.mainApp.el;
-            this.childTabViews = [];
-            this.childViews = [];
-            _.bindAll(this, 'render', 'removeChildViews', 'updateProjectTabViewTitle', 'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID', 'toggleProductTabsBox');
+            let self = this;
+            self.options = options;
+            self.mainApp = self.options.mainApp;
+            self.parentView = self.options.parentView;
+            self.projectsView = self.options.projectsView;
+            self.childTabViews = [];
+            self.childViews = [];
+            self.ajaxWaitingTargetClassSelector = '.tabs-content-container';
+            _.bindAll(self, 'render', 'removeChildViews',  'remove', 'notifyProjectTabToolbar', 'fetchIfNewProjectID', 'toggleProductTabsBox');
             // this.model is App.Models.projectModel
-            this.listenTo(this.model, "change", this.fetchIfNewProjectID);
-            this.listenTo(App.Views.projectsView, 'toggle-project-tabs-box', this.toggleProductTabsBox);
+            this.listenTo(self.model, "change", self.fetchIfNewProjectID);
+            this.listenTo(self.projectsView, 'toggle-project-tabs-box', self.toggleProductTabsBox);
         },
         events: {
             'shown.bs.tab a[data-toggle="tab"]': 'notifyProjectTabToolbar',
             'clear-child-views': 'removeChildViews'
         },
-        close: function () {
-            this.remove();
-            // handle other unbinding needs, here
-            _.each(this.childViews, function (childView) {
-                if (childView.close) {
-                    try {
-                        childView.close();
-                    } catch (e) {
-                    }
-                } else if (childView.remove) {
-                    try {
-                        childView.remove();
-                    } catch (e) {
-                    }
-                }
-            })
-        },
+
         render: function () {
             let self = this;
-            App.Views.projectLeadsView = this.projectLeadsView = new this.projectLeadsViewClass({
-                el: this.$('.project-leads-backgrid-wrapper'),
-                mainAppEl: this.mainApp.el,
-                tab: 'project_lead',
-                parentViewEl: this.el,
-                collection: App.PageableCollections.projectLeadsCollection,
-                columnCollectionDefinitions: App.Vars.volunteerLeadsBackgridColumnDefinitions,
-                hideCellCnt: 0//8
-            });
-            this.childTabViews.push({project_lead: this.projectLeadsView});
-
-            App.Views.projectBudgetView = this.projectBudgetView = new this.projectBudgetViewClass({
-                el: this.$('.project-budget-backgrid-wrapper'),
-                mainAppEl: this.mainApp.el,
-                tab: 'project_budget',
-                parentViewEl: this.el,
-                collection: App.PageableCollections.projectBudgetsCollection,
-                columnCollectionDefinitions: App.Vars.BudgetsBackgridColumnDefinitions,
-                hideCellCnt: 0//1
-            });
-            this.childTabViews.push({project_budget: this.projectBudgetView});
-
-            App.Views.projectContactsView = this.projectContactsView = new this.projectContactsViewClass({
-                el: this.$('.project-contacts-backgrid-wrapper'),
-                tab: 'project_contact',
-                mainAppEl: this.mainApp.el,
-                parentViewEl: this.el,
-                collection: App.PageableCollections.projectContactsCollection,
-                columnCollectionDefinitions: App.Vars.projectContactsBackgridColumnDefinitions,
-                hideCellCnt: 0//2
-            });
-            this.childTabViews.push({project_contact: this.projectContactsView});
-
-            App.Views.projectVolunteersView = this.projectVolunteersView = new this.projectVolunteersViewClass({
-                el: this.$('.project-volunteers-backgrid-wrapper'),
-                tab: 'project_volunteer',
-                parentViewEl: this.el,
-                mainAppEl: this.mainApp.el,
-                collection: App.PageableCollections.projectVolunteersCollection,
-                columnCollectionDefinitions: App.Vars.projectVolunteersBackgridColumnDefinitions,
-                hideCellCnt: 0//8
-            });
-            this.childTabViews.push({project_volunteer: this.projectVolunteersView});
-
-            App.Views.projectAttachmentsView = this.projectAttachmentsView = new this.projectAttachmentsViewClass({
-                el: this.$('.project-attachments-backgrid-wrapper'),
-                tab: 'project_attachment',
-                parentViewEl: this.el,
-                mainAppEl: this.mainApp.el,
-                collection: App.PageableCollections.projectAttachmentsCollection,
-                columnCollectionDefinitions: App.Vars.ProjectAttachmentsBackgridColumnDefinitions,
-                hideCellCnt: 0//8
-            });
-            this.childTabViews.push({project_attachment: this.projectAttachmentsView});
 
             /**
              * Handles the buttons below the tabbed grids
              */
-            App.Views.projectTabsGridManagerContainerToolbarView = this.projectTabsGridManagerContainerToolbarView = new App.Views.ProjectTabsGridManagerContainerToolbar({
+            this.projectTabsGridManagerContainerToolbarView = new App.Views.ProjectTabsGridManagerContainerToolbar({
                 parentView: this,
                 el: this.parentView.$('.project-tabs-grid-manager-container'),
                 parentChildViews: this.childTabViews
             });
+
+            this.projectLeadsView = new this.projectLeadsViewClass({
+                el: this.$('.project-leads-backgrid-wrapper'),
+                viewName: 'project-leads',
+                tab: 'project_lead',
+                collection: App.PageableCollections.projectLeadsCollection,
+                model: App.Vars.currentTabModels['project_lead'],
+                columnCollectionDefinitions: App.Vars.volunteerLeadsBackgridColumnDefinitions,
+                hideCellCnt: 0,//8,
+                currentModelIDDataStoreSelector: '#project_lead',
+                parentView: this,
+                ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                backgridWrapperClassSelector: '.project-leads-backgrid-wrapper',
+                gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
+                modelNameLabel: 'Project Leads',
+                mainApp: self.mainApp
+
+            });
+            this.childTabViews.push({project_lead: this.projectLeadsView});
+
+            this.projectBudgetView = new this.projectBudgetViewClass({
+                el: this.$('.project-budgets-backgrid-wrapper'),
+                viewName: 'project-budgets',
+                tab: 'project_budget',
+                collection: App.PageableCollections.projectBudgetsCollection,
+                model: App.Vars.currentTabModels['project_budget'],
+                columnCollectionDefinitions: App.Vars.BudgetsBackgridColumnDefinitions,
+                hideCellCnt: 0,
+                currentModelIDDataStoreSelector: '#project_budget',
+                parentView: self,
+                ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                backgridWrapperClassSelector: '.project-budgets-backgrid-wrapper',
+                gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
+                modelNameLabel: 'Project Budget',
+                mainApp: self.mainApp
+            });
+            this.childTabViews.push({project_budget: this.projectBudgetView});
+
+            this.projectContactsView = new this.projectContactsViewClass({
+                el: this.$('.project-contacts-backgrid-wrapper'),
+                viewName: 'project-contacts',
+                tab: 'project_contact',
+                collection: App.PageableCollections.projectContactsCollection,
+                model: App.Vars.currentTabModels['project_contact'],
+                columnCollectionDefinitions: App.Vars.projectContactsBackgridColumnDefinitions,
+                hideCellCnt: 0,
+                currentModelIDDataStoreSelector: '#project_contact',
+                parentView: self,
+                ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                backgridWrapperClassSelector: '.project-contacts-backgrid-wrapper',
+                gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
+                modelNameLabel: 'Project Contact',
+                mainApp: self.mainApp
+            });
+            this.childTabViews.push({project_contact: this.projectContactsView});
+
+            this.projectVolunteersView = new this.projectVolunteersViewClass({
+                el: this.$('.project-volunteers-backgrid-wrapper'),
+                viewName: 'project-volunteers',
+                tab: 'project_volunteer',
+                collection: App.PageableCollections.projectVolunteersCollection,
+                model: App.Vars.currentTabModels['project_volunteer'],
+                columnCollectionDefinitions: App.Vars.projectVolunteersBackgridColumnDefinitions,
+                hideCellCnt: 0,
+                currentModelIDDataStoreSelector: '#project_volunteer',
+                parentView: self,
+                ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                backgridWrapperClassSelector: '.project-volunteers-backgrid-wrapper',
+                gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
+                modelNameLabel: 'Project Volunteer',
+                mainApp: self.mainApp
+            });
+            this.childTabViews.push({project_volunteer: this.projectVolunteersView});
+
+            this.projectAttachmentsView = new this.projectAttachmentsViewClass({
+                el: this.$('.project-attachments-backgrid-wrapper'),
+                tab: 'project_attachment',
+                viewName: 'project-attachments',
+                collection: App.PageableCollections.projectAttachmentsCollection,
+                model: App.Vars.currentTabModels['project_attachment'],
+                columnCollectionDefinitions: App.Vars.ProjectAttachmentsBackgridColumnDefinitions,
+                hideCellCnt: 0,
+                currentModelIDDataStoreSelector: '#project_attachment',
+                parentView: self,
+                ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                backgridWrapperClassSelector: '.project-attachments-backgrid-wrapper',
+                gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
+                modelNameLabel: 'Project Attachment',
+                mainApp: self.mainApp
+            });
+            this.childTabViews.push({project_attachment: this.projectAttachmentsView});
+
             this.childViews = _.values(this.childTabViews);
             this.childViews.push(this.projectTabsGridManagerContainerToolbarView);
             this.projectTabsGridManagerContainerToolbarView.render();
@@ -3118,19 +2828,19 @@
             this.projectContactsView.render();
             this.projectVolunteersView.render();
             this.projectAttachmentsView.render();
-            let titleDescription = App.Views.projectsView.collection.length === 0 ? 'No projects created yet.' : this.model.get('ProjectDescription');
+            let titleDescription = self.projectsView.collection.length === 0 ? 'No projects created yet.' : this.model.get('ProjectDescription');
             self.mainApp.$('h3.box-title small').html(titleDescription);
             _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + titleDescription, 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
             this.$el.data('project-id', this.model.get('ProjectID'));
-            window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             self.toggleProductTabsBox();
 
             return this;
         },
         toggleProductTabsBox: function () {
             let self = this;
-            _log('App.Views.SiteProjectTabs.toggleProductTabsBox', 'App.Views.projectsView.collection.length:' + App.Views.projectsView.collection.length);
-            if (App.Views.projectsView.collection.length === 0) {
+            _log('App.Views.SiteProjectTabs.toggleProductTabsBox', 'App.Views.projectsView.collection.length:' + self.projectsView.collection.length);
+            if (self.projectsView.collection.length === 0) {
                 if (!self.$el.hasClass('collapsed-box')) {
                     self.$el.find('.btn-box-tool').trigger('click');
                 }
@@ -3152,6 +2862,7 @@
         fetchIfNewProjectID: function () {
             var self = this;
             if (this.model.hasChanged('ProjectID')) {
+                window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
                 _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'ProjectID has changed. Fetching new data for tab collections.', this.model.get('ProjectID'));
                 let ProjectID = this.model.get('ProjectID');
                 App.PageableCollections.projectLeadsCollection.url = '/admin/project/project_leads/' + ProjectID;
@@ -3159,7 +2870,7 @@
                 App.PageableCollections.projectContactsCollection.url = '/admin/project/contacts/' + ProjectID;
                 App.PageableCollections.projectVolunteersCollection.url = '/admin/project/volunteers/' + ProjectID;
                 App.PageableCollections.projectAttachmentsCollection.url = '/admin/project/project_attachment/' + ProjectID;
-
+                self.mainApp.$('h3.box-title small').html('Updating Tabs. Please wait...');
                 $.when(
                     App.PageableCollections.projectLeadsCollection.fetch({reset: true, success: self.tabFetchSuccess}),
                     App.PageableCollections.projectBudgetsCollection.fetch({reset: true, success: self.tabFetchSuccess}),
@@ -3176,7 +2887,7 @@
                     // self.projectContactsView.render();
                     // self.projectVolunteersView.render();
                     // self.projectAttachmentsView.render();
-                    window.ajaxWaiting('remove', '.tab-content.backgrid-wrapper');
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                 });
                 _log('App.Views.SiteProjectTabs.fetchIfNewProjectID.event', 'setting data-project-id to ' + this.model.get('ProjectID') + ' on', this.$el);
                 this.$el.data('project-id', this.model.get('ProjectID'));
@@ -3187,18 +2898,6 @@
         },
         tabFetchSuccess: function (model, response, options) {
             //console.log('tabFetchSuccess',model, response, options)
-        },
-        /**
-         * Not called anywhere anymore...
-         * @param ProjectID
-         */
-        updateProjectTabViewTitle: function (ProjectID) {
-            let self = this;
-            _log('App.Views.SiteProjectTabs.updateProjectTabViewTitle', 'update project tabs title', ProjectID);
-            if (typeof ProjectID === 'string') {
-                let currentProjectModel = self.collection.findWhere({ProjectID: parseInt(ProjectID)});
-                self.mainApp.$('.site-projects-tabs .box-title small').html(currentProjectModel.get('ProjectDescription'))
-            }
         },
         removeChildViews: function () {
             //console.log('App.Views.SiteProjectTabs removeChildViews ');
@@ -3217,7 +2916,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectManagement = Backbone.View.extend({
+    App.Views.ProjectManagement = App.Views.Backend.fullExtend({
         sitesViewClass: App.Views.Sites,
         siteYearsViewClass: App.Views.SiteYears,
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
@@ -3227,51 +2926,83 @@
         },
         template: template('projectManagementTemplate'),
         initialize: function (options) {
-            this.options    = options;
-            this.childViews = [];
-            this.mainApp    = this.options.mainApp;
-            _.bindAll(this, 'render', 'updateProjectDataViews', 'updateProjectDataTabButtons');
+            _.bindAll(this, '_initialize','render', 'updateProjectDataViews', 'updateProjectDataTabButtons');
+            this._initialize(options);
         },
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
             self.$el.html(this.template());
-
-            App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
-                el: this.$('select#sites'),
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.sitesDropDownView.render();
-            this.childViews.push(this.sitesDropDownView);
-
-            App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
-                el: this.$('select#site_years'),
+            self.siteYearsDropDownView = new self.siteYearsViewClass({
+                el: self.$('select#site_years'),
                 parentView: this,
-                collection: App.Collections.siteYearsDropDownCollection
+                collection: new App.Collections.SiteYear(App.Vars.appInitialData.site_years)
             });
-            this.siteYearsDropDownView.render();
-            this.childViews.push(this.siteYearsDropDownView);
+            // App.Vars.appInitialData.sites
+            self.sitesDropDownView = new self.sitesViewClass({
+                el: self.$('select#sites'),
+                collection: new App.Collections.Site(App.Vars.appInitialData.sites),
+                parentView: self,
+                siteYearsDropDownView: self.siteYearsDropDownView
+            });
+            self.sitesDropDownView.render();
+            self.childViews.push(self.sitesDropDownView);
 
-            App.Views.projectsView = this.projectsView = new this.projectsViewClass({
-                el: this.$('.projects-backgrid-wrapper'),
-                parentView: this,
+
+            self.siteYearsDropDownView.render();
+            self.childViews.push(self.siteYearsDropDownView);
+
+            self.projectsView = new self.projectsViewClass({
+                ajaxWaitingTargetClassSelector: '.projects-view',
+                backgridWrapperClassSelector: '.projects-backgrid-wrapper',
                 collection: App.PageableCollections.projectCollection,
                 columnCollectionDefinitions: App.Vars.projectsBackgridColumnDefinitions,
-                model: App.Models.projectModel
-            });
-            this.projectsView.render();
-            this.childViews.push(this.projectsView);
-
-            App.Views.siteProjectTabsView = this.siteProjectTabsView = new this.siteProjectTabsViewClass({
-                el: this.$('.site-projects-tabs'),
+                currentModelIDDataStoreSelector: '.site-projects-tabs-view',
+                el: self.$('.projects-backgrid-wrapper'),
+                gridManagerContainerToolbarClassName: 'projects-grid-manager-container',
                 mainApp: self.mainApp,
-                parentView: this,
-                model: App.Models.projectModel
+                model: App.Models.projectModel,
+                modelNameLabel: 'Project',
+                parentView: self,
+                siteYearsDropDownView: self.siteYearsDropDownView,
+                viewName: 'projects'
             });
-            this.siteProjectTabsView.render();
-            this.childViews.push(this.siteProjectTabsView);
 
-            return this;
+            self.projectGridManagerContainerToolbar = new App.Views.ProjectGridManagerContainerToolbar({
+                el: self.$('.projects-grid-manager-container'),
+                parentView: self,
+                projectsView: self.projectsView
+            });
+            self.projectGridManagerContainerToolbar.render();
+            self.childViews.push(self.projectGridManagerContainerToolbar);
+
+            self.projectsView.render();
+            self.childViews.push(self.projectsView);
+
+            self.siteProjectTabsView = new self.siteProjectTabsViewClass({
+                el: self.$('.site-projects-tabs-view'),
+                mainApp: self.mainApp,
+                parentView: self,
+                projectsView: self.projectsView,
+                model: self.projectsView.model
+            });
+            self.siteProjectTabsView.render();
+            self.childViews.push(self.siteProjectTabsView);
+
+            if (!_.isEmpty(self.projectsView.getViewDataStore('current-tab'))) {
+                try {
+                    self.$el.find('.nav-tabs [href="#' + self.projectsView.getViewDataStore('current-tab') + '"]').tab('show');
+                    self.$el.find('.tab-content .tab-pane').removeClass('active');
+                    self.$el.find('.tab-content .tab-pane#' + self.projectsView.getViewDataStore('current-tab')).addClass('active');
+                } catch (e) {
+                    console.log(e, self.projectsView.getViewDataStore('current-tab'))
+                }
+
+                //console.log('just set the tab', self.projectsView.getViewDataStore('current-tab'), self.$el.find('.nav-tabs [href="#' + self.projectsView.getViewDataStore('current-tab') + '"]'))
+            } else {
+                self.$el.find('.nav-tabs #project_lead').tab('show');
+            }
+            return self;
         },
         /**
          * ProjectID can also be an event
@@ -3282,7 +3013,7 @@
 
             if (typeof ProjectID === 'string') {
                 let currentProjectModel = self.collection.findWhere({ProjectID: parseInt(ProjectID)});
-                self.mainApp.$('.site-projects-tabs .box-title small').html(currentProjectModel.get('ProjectDescription'))
+                self.mainApp.$('.site-projects-tabs-view .box-title small').html(currentProjectModel.get('ProjectDescription'))
             }
         },
         updateProjectDataTabButtons: function (e) {
@@ -4208,10 +3939,11 @@
 })(window.App);
 
 (function (App) {
-    App.Views.VolunteersManagement = Backbone.View.extend({
+    App.Views.VolunteersManagement = App.Views.Backend.fullExtend({
         template: template('managementTemplate'),
         initialize: function (options) {
-            _.bindAll(this, 'render', 'update', 'toggleDeleteBtn', 'getModalForm', 'create', 'highLightRow', 'batchDestroy');
+            _.bindAll(this, '_initialize','render', 'update', 'toggleDeleteBtn', 'getModalForm', 'create', 'highLightRow', 'batchDestroy');
+            this._initialize(options);
             this.options = options;
             this.viewClassName = this.options.viewClassName;
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
@@ -4819,7 +4551,7 @@
                 modelNameLabel: self.modelNameLabel,
                 modelNameLabelLowerCase: self.modelNameLabelLowerCase
             }));
-            App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
+            this.sitesDropDownView = new this.sitesViewClass({
                 el: this.$('select#sites'),
                 parentView: this,
                 collection: App.Collections.sitesDropDownCollection
@@ -4827,24 +4559,24 @@
             this.sitesDropDownView.render();
 
 
-            App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
+            this.siteYearsDropDownView = new this.siteYearsViewClass({
                 el: this.$('select#site_years'),
                 parentView: this,
                 collection: App.Collections.siteYearsDropDownCollection
             });
             this.siteYearsDropDownView.render();
 
-            App.Views.projectsDropDownView = this.projectsDropDownView = new this.projectsDropDownViewClass({
+            this.projectsDropDownView = new this.projectsDropDownViewClass({
                 el: this.$('select#projects'),
                 parentView: this,
                 collection: App.Collections.projectsDropDownCollection
             });
             this.projectsDropDownView.render();
 
-            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e) {
+            this.listenTo(this.siteYearsDropDownView, 'site-status-id-change', function (e) {
                 self.handleSiteStatusIDChange(e);
             });
-            this.listenTo(App.Views.sitesDropDownView, 'site-id-change', function (e) {
+            this.listenTo(this.sitesDropDownView, 'site-id-change', function (e) {
                 self.handleSiteStatusIDChange(e);
             });
 
@@ -4921,6 +4653,7 @@
         template: template('statusManagementRecordTemplate'),
         initialize: function (options) {
             let self = this;
+            _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
             self.options = options;
             self.defaultStateIcon = 'fa fa-circle';
             self.doneIcon = self.defaultStateIcon + ' text-success';
@@ -4986,7 +4719,7 @@
                     }
                 }
             };
-            _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
+
         },
         events: {
             'click button': 'update',
@@ -5432,17 +5165,18 @@
         },
     });
 
-    App.Views.StatusManagement = Backbone.View.extend({
+    App.Views.StatusManagement = App.Views.Backend.fullExtend({
         attributes: {
             class: 'status-management-view route-view box box-primary'
         },
         template: template('statusManagementTemplate'),
         initialize: function (options) {
             let self = this;
-            self.options = options;
-
-            _.bindAll(self, 'render', 'addOne', 'addAll');
-            self.collection.bind('reset', self.addAll, self);
+            _.bindAll(self, '_initialize','render', 'addOne', 'addAll');
+            this._initialize(options);
+            self.listenTo(self.collection, 'reset', function (e) {
+                self.addAll();
+            });
         },
         events: {},
         render: function () {
@@ -5482,7 +5216,8 @@
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;
             App.Vars.currentSiteID      = App.Vars.appInitialData.site.SiteID;
-            App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
+            //App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
+            localStorage.setItem('projects-view.project-model.current-id', App.Vars.appInitialData.project.ProjectID);
             App.Vars.currentSiteVolunteerRoleID   = App.Vars.appInitialData.site_volunteer.SiteVolunteerRoleID;
             App.Vars.mainAppDoneLoading = false;
             self.listenTo(App.Models.projectModel, 'sync', function (e) {
@@ -5561,12 +5296,13 @@
             }
 
             _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), this.$el);
-            if (App.Vars.mainAppDoneLoading === false) {
+            if (self.preRenderedView === false && App.Vars.mainAppDoneLoading === false) {
                 App.Vars.mainAppDoneLoading = true;
                 _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
+                // Hack to force grid columns to work
+                $('body').trigger('resize');
             }
-            // Hack to force grid columns to work
-            $('body').trigger('resize');
+
             return this;
         }
     });

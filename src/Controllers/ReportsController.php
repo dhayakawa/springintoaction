@@ -191,7 +191,7 @@ class ReportsController extends BaseController
         )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
         $aSites = $site->get()->toArray();
         $projectModel = new Project();
-        $sSqlVoluneersAssigned = $projectModel->getVolunteersAssignedSql();
+        $sSqlVolunteersAssigned = $projectModel->getVolunteersAssignedSql();
         $sSqlPeopleNeeded = $projectModel->getPeopleNeededSql($Year);
         $aRegistered = $this->getRegisteredVolunteerEmailsReport(
             $Year,
@@ -204,8 +204,8 @@ class ReportsController extends BaseController
             $project = Project::select(
                 'projects.SequenceNumber as Proj Num',
                 'projects.VolunteersNeededEst',
-                DB::raw("{$sSqlVoluneersAssigned} as VolunteersAssigned"),
-                DB::raw("(projects.VolunteersNeededEst - {$sSqlVoluneersAssigned}) as VolunteersNeededActual"),
+                DB::raw("{$sSqlVolunteersAssigned} as VolunteersAssigned"),
+                DB::raw("(projects.VolunteersNeededEst - {$sSqlVolunteersAssigned}) as VolunteersNeededActual"),
                 DB::raw("{$sSqlPeopleNeeded} as PeopleNeededBasedOnPercentages")
             )->join(
                 'site_status',
@@ -970,7 +970,7 @@ class ReportsController extends BaseController
                                             "=",
                                             "project_volunteers.ProjectID"
                                         )->whereRaw(
-                                            "project_volunteer_role.VolunteerID = project_volunteers.VolunteerID and project_volunteer_role.Status = 5 and and project_volunteer_role.ProjectRoleID = 5"
+                                            "project_volunteer_role.VolunteerID = project_volunteers.VolunteerID and project_volunteer_role.Status = 5 and project_volunteer_role.ProjectRoleID = 5"
                                         );
                                     }
                                 )

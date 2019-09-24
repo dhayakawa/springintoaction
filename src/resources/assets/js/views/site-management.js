@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.SiteManagement = Backbone.View.extend({
+    App.Views.SiteManagement = App.Views.Backend.fullExtend({
         sitesViewClass: App.Views.Sites,
         siteYearsViewClass: App.Views.SiteYears,
         siteViewClass: App.Views.Site,
@@ -10,10 +10,8 @@
         },
         template: template('siteManagementTemplate'),
         initialize: function (options) {
-            this.options = options;
-            this.childViews = [];
-            this.mainApp = this.options.mainApp;
-            _.bindAll(this, 'render', 'addSite', 'deleteSite');
+            _.bindAll(this, '_initialize','render', 'addSite', 'deleteSite');
+            this._initialize(options);
         },
         events: {
             'click #btnAddSite': 'addSite',
@@ -29,54 +27,76 @@
             if (!App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager) {
                 self.$el.find('#btnDeleteSite').hide();
             }
-            App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
-                el: this.$('select#sites'),
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.sitesDropDownView.render();
 
-            App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
-                el: this.$('select#site_years'),
-                parentView: this,
-                collection: App.Collections.siteYearsDropDownCollection
-            });
-            this.siteYearsDropDownView.render();
-
-            App.Views.siteView = this.siteView = new this.siteViewClass({
-                el: this.$('.site-view'),
-                model: App.Models.siteModel,
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.siteView.render();
-
-            App.Views.siteStatusView = this.siteStatusView = new this.siteStatusViewClass({
-                el: this.$('.site-status-view'),
-                model: App.Models.siteStatusModel
-            });
-            this.siteStatusView.render();
-
-            App.Views.siteVolunteersView = this.siteVolunteersView = new this.siteVolunteersViewClass({
+            this.siteVolunteersView = new this.siteVolunteersViewClass({
                 el: this.$('.site-volunteers-backgrid-wrapper'),
+                viewName: 'site-volunteers',
                 parentView: this,
                 model: App.Models.siteVolunteerRoleModel,
                 modelNameLabel: 'SiteVolunteerRole',
                 collection: App.PageableCollections.siteVolunteersRoleCollection,
                 columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
-                hideCellCnt: 0//2
+                hideCellCnt: 0,
+                currentModelIDDataStoreSelector: 'body',
+                ajaxWaitingTargetClassSelector: '.site-volunteers-view',
+                backgridWrapperClassSelector: '.site-volunteers-backgrid-wrapper',
+                gridManagerContainerToolbarClassName: 'site-volunteers-grid-manager-container',
+                mainApp: self.mainApp
+
             });
+            this.siteYearsDropDownView = new this.siteYearsViewClass({
+                el: this.$('select#site_years'),
+                parentView: this,
+                collection: new App.Collections.SiteYear(App.Vars.appInitialData.site_years),
+                siteVolunteersView: this.siteVolunteersView
+            });
+
+            this.sitesDropDownView = new this.sitesViewClass({
+                el: this.$('select#sites'),
+                collection: new App.Collections.Site(App.Vars.appInitialData.sites),
+                parentView: this,
+                siteYearsDropDownView: this.siteYearsDropDownView
+            });
+            this.sitesDropDownView.render();
+
+
+            this.siteYearsDropDownView.render();
+
+            this.siteView = new this.siteViewClass({
+                el: this.$('.site-view'),
+                model: App.Models.siteModel,
+                collection: App.Collections.sitesDropDownCollection,
+                sitesDropDownView: this.sitesDropDownView
+            });
+            this.siteView.render();
+
+            this.siteStatusView = new this.siteStatusViewClass({
+                el: this.$('.site-status-view'),
+                model: App.Models.siteStatusModel
+            });
+            this.siteStatusView.render();
+
+
             this.siteVolunteersView.render();
 
-            return this;
+            self.childViews.push(this.sitesDropDownView);
+            self.childViews.push(this.siteYearsDropDownView);
+            self.childViews.push(this.siteView);
+            self.childViews.push(this.siteStatusView);
+            self.childViews.push(this.siteVolunteersView);
+
+            return self;
         },
         addSite: function () {
+            let self = this;
             $('#sia-modal').one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('New Site');
-                modal.find('.modal-body').html(App.Views.siteView.getModalForm());
+                modal.find('.modal-body').html(self.siteView.getModalForm());
 
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
-                    App.Views.siteView.create($.unserialize(modal.find('form').serialize()));
+                    self.siteView.create($.unserialize(modal.find('form').serialize()));
 
 
                     $('#sia-modal').modal('hide');
@@ -86,9 +106,10 @@
             $('#sia-modal').modal('show');
         },
         deleteSite: function () {
+            let self = this;
             bootbox.confirm("Do you really want to delete the "+ App.Models.siteModel.get('SiteName') +" site and all of its projects?", function (bConfirmed) {
                 if (bConfirmed) {
-                    App.Views.siteView.destroy();
+                    self.siteView.destroy();
                 }
             });
         }

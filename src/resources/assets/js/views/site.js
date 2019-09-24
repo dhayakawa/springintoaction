@@ -13,9 +13,13 @@
     });
 
     App.Views.Sites = Backbone.View.extend({
-        initialize: function () {
-            _.bindAll(this, 'addOne', 'addAll', 'render','changeSelected','setSelectedId');
-            this.collection.bind('reset', this.addAll);
+        initialize: function (options) {
+            let self = this;
+            self.options = options;
+            _.bindAll(this, 'addOne', 'addAll', 'render', 'changeSelected', 'setSelectedId');
+            self.collection.bind('reset', this.addAll);
+            self.parentView = self.options.parentView;
+            self.siteYearsDropDownView = self.options.siteYearsDropDownView;
         },
         events: {
             "change": "changeSelected"
@@ -40,17 +44,21 @@
         },
         setSelectedId: function (SiteID) {
             let self = this;
-            _log('App.Views.Sites.setSelectedId.event', 'new site selected', SiteID);
+            _log('App.Views.Sites.setSelectedId.event', 'new site selected', SiteID, 'parentView', self.parentView);
             // fetch new site model
             App.Models.siteModel.url = '/admin/site/' + SiteID;
             App.Models.siteModel.fetch();
-            App.Collections.siteYearsDropDownCollection.url = '/admin/sitestatus/all/site/years/' + SiteID;
-            App.Collections.siteYearsDropDownCollection.fetch({reset: true});
-
-            if (typeof self.parentView !== 'undefined' ) {
-                self.trigger('site-id-change', {SiteID: SiteID});
-                console.log('trigger site-id-change', self.parentView.$el.hasClass('reports-management-view'))
-            }
+            self.siteYearsDropDownView.collection.url = '/admin/sitestatus/all/site/years/' + SiteID;
+            self.siteYearsDropDownView.collection.fetch({reset: true});
+            self.trigger('site-id-change', {SiteID: SiteID});
+            // if (typeof self.parentView !== 'undefined') {
+            //     if (App.Vars.mainAppDoneLoading) {
+            //         self.trigger('site-id-change', {SiteID: SiteID});
+            //         console.log('trigger site-id-change after mainAppDoneLoading', self.parentView)
+            //     } else {
+            //         console.log('trigger site-id-change before mainAppDoneLoading', self.parentView)
+            //     }
+            // }
         }
     });
     App.Views.SiteYearsOption = Backbone.View.extend({
@@ -71,7 +79,8 @@
             this.options = options;
             this.optionsView = [];
             this.parentView = this.options.parentView;
-            _.bindAll(this, 'addOne', 'addAll', 'changeSelected','setSelectedId','refocusSiteVolunteerRecord');
+            this.siteVolunteersView = this.options.siteVolunteersView;
+            _.bindAll(this, 'render', 'addOne', 'addAll', 'changeSelected', 'setSelectedId', 'refocusSiteVolunteerRecord');
             this.collection.bind('reset', this.addAll, this);
         },
         events: {
@@ -101,51 +110,51 @@
         },
         setSelectedId: function (SiteID, SiteStatusID, Year) {
             let self = this;
-            if (App.Vars.mainAppDoneLoading) {
-                _log('App.Views.SiteYears.setSelectedId.event', 'new year selected', SiteID, SiteStatusID, Year);
+
+            _log('App.Views.SiteYears.setSelectedId.event', 'new year selected', SiteID, SiteStatusID, Year, 'parentView', self.parentView);
+
+            if (self.parentView.$el.hasClass('site-management-view')) {
+                window.ajaxWaiting('show', '#site-well');
+                window.ajaxWaiting('show', '#site-status-well');
+                window.ajaxWaiting('show', '#site-volunteers-well');
+            }
+            // fetch new sitestatus
+            App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
+            App.PageableCollections.siteVolunteersRoleCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
+            $.when(
+                App.Models.siteStatusModel.fetch({reset: true}),
+                App.PageableCollections.siteVolunteersRoleCollection.fetch({reset: true})
+            ).then(function () {
+                //initialize your views here
+                _log('App.Views.Site.create.event', 'site collection fetch promise done');
 
                 if (self.parentView.$el.hasClass('site-management-view')) {
-                    window.ajaxWaiting('show', '#site-well');
-                    window.ajaxWaiting('show', '#site-status-well');
-                    window.ajaxWaiting('show', '#site-volunteers-well');
+                    window.ajaxWaiting('remove', '#site-well');
+                    window.ajaxWaiting('remove', '#site-status-well');
+                    window.ajaxWaiting('remove', '#site-volunteers-well');
+                    if (App.PageableCollections.siteVolunteersRoleCollection.length) {
+                        App.Vars.currentSiteVolunteerRoleID = App.PageableCollections.siteVolunteersRoleCollection.at(0).get('SiteVolunteerRoleID');
+                        App.Models.siteVolunteerRoleModel.set(App.PageableCollections.siteVolunteersRoleCollection.at(0));
+                        self.refocusSiteVolunteerRecord();
+                    }
                 }
-                // fetch new sitestatus
-                App.Models.siteStatusModel.url = '/admin/sitestatus/' + SiteStatusID;
-                App.PageableCollections.siteVolunteersRoleCollection.url = '/admin/site_volunteer/all/' + SiteStatusID;
-                $.when(
-                    App.Models.siteStatusModel.fetch({reset: true}),
-                    App.PageableCollections.siteVolunteersRoleCollection.fetch({reset: true})
-                ).then(function () {
-                    //initialize your views here
-                    _log('App.Views.Site.create.event', 'site collection fetch promise done');
+                if (!self.parentView.$el.hasClass('site-management-view')) {
+                    self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
+                }
+            });
 
-                    if (self.parentView.$el.hasClass('site-management-view')) {
-                        window.ajaxWaiting('remove', '#site-well');
-                        window.ajaxWaiting('remove', '#site-status-well');
-                        window.ajaxWaiting('remove', '#site-volunteers-well');
-                        if (App.PageableCollections.siteVolunteersRoleCollection.length) {
-                            App.Vars.currentSiteVolunteerRoleID = App.PageableCollections.siteVolunteersRoleCollection.at(0).get('SiteVolunteerRoleID');
-                            App.Models.siteVolunteerRoleModel.set(App.PageableCollections.siteVolunteersRoleCollection.at(0));
-                            self.refocusSiteVolunteerRecord();
-                        }
-                    }
-                    if (!self.parentView.$el.hasClass('site-management-view')) {
-                        self.trigger('site-status-id-change', {SiteStatusID: SiteStatusID});
-                    }
-                });
-            }
         },
         refocusSiteVolunteerRecord: function () {
             let self = this;
             let recordIdx = 1;
-            App.Views.siteVolunteersView.paginator.collection.fullCollection.each(function (model, idx) {
+            this.siteVolunteersView.paginator.collection.fullCollection.each(function (model, idx) {
 
                 if (model.get(App.Models.siteVolunteerRoleModel.idAttribute) === App.Vars.currentSiteVolunteerRoleID) {
                     recordIdx = idx;
                 }
             });
             recordIdx = recordIdx === 0 ? 1 : recordIdx;
-            let page = Math.ceil(recordIdx / App.Views.siteVolunteersView.paginator.collection.state.pageSize)
+            let page = Math.ceil(recordIdx / this.siteVolunteersView.paginator.collection.state.pageSize)
             if (page > 1) {
                 _.each(this.paginator.handles, function (handle, idx) {
                     if (handle.pageIndex === page && handle.label === page) {
@@ -167,6 +176,7 @@
         template: template('siteTemplate'),
         initialize: function (options) {
             let self = this;
+            self.sitesDropDownView = options.sitesDropDownView;
             _.bindAll(this, 'update');
             this.listenTo(this.model, 'change', function (e) {
                 self.render();
@@ -229,8 +239,8 @@
                             //initialize your views here
                             _log('App.Views.Site.create.event', 'site collection fetch promise done');
                             window.ajaxWaiting('remove', '#site-well');
-                            App.Views.sitesDropDownView.$el.val(response.new_site_id)
-                            App.Views.sitesDropDownView.$el.trigger('change')
+                            self.sitesDropDownView.$el.val(response.new_site_id)
+                            self.sitesDropDownView.$el.trigger('change')
                         });
                     },
                     error: function (model, response, options) {
@@ -252,7 +262,7 @@
                         //initialize your views here
                         _log('App.Views.Site.destroy.event', 'site collection fetch promise done');
                         window.ajaxWaiting('remove', '#site-well');
-                        App.Views.sitesDropDownView.$el.trigger('change')
+                        self.sitesDropDownView.$el.trigger('change')
                     });
                 },
                 error: function (model, response, options) {

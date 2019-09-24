@@ -3,7 +3,6 @@
         template: template('gridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
-
             _.bindAll(this, 'render', 'initializeFileUploadObj', 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'toggleDeleteBtn');
             this.options = options;
             this.localStorageKey = this.options.localStorageKey;

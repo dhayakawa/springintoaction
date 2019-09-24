@@ -7,6 +7,7 @@
         template: template('statusManagementRecordTemplate'),
         initialize: function (options) {
             let self = this;
+            _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
             self.options = options;
             self.defaultStateIcon = 'fa fa-circle';
             self.doneIcon = self.defaultStateIcon + ' text-success';
@@ -72,7 +73,7 @@
                     }
                 }
             };
-            _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
+
         },
         events: {
             'click button': 'update',
@@ -518,17 +519,18 @@
         },
     });
 
-    App.Views.StatusManagement = Backbone.View.extend({
+    App.Views.StatusManagement = App.Views.Backend.fullExtend({
         attributes: {
             class: 'status-management-view route-view box box-primary'
         },
         template: template('statusManagementTemplate'),
         initialize: function (options) {
             let self = this;
-            self.options = options;
-
-            _.bindAll(self, 'render', 'addOne', 'addAll');
-            self.collection.bind('reset', self.addAll, self);
+            _.bindAll(self, '_initialize','render', 'addOne', 'addAll');
+            this._initialize(options);
+            self.listenTo(self.collection, 'reset', function (e) {
+                self.addAll();
+            });
         },
         events: {},
         render: function () {

@@ -155,6 +155,8 @@ class SpringIntoActionMainAppController extends BaseController
             $project = [];
             report($e);
         }
+        $projectModel = new Project();
+        $sSqlVolunteersAssigned = $projectModel->getVolunteersAssignedSql();
         try {
             $all_projects = Project::select(
                 'projects.*',
@@ -162,7 +164,7 @@ class SpringIntoActionMainAppController extends BaseController
                     '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
                 ),
                 DB::raw(
-                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID and pv.deleted_at is null) as VolunteersAssigned'
+                    "{$sSqlVolunteersAssigned} as VolunteersAssigned"
                 ),
                 DB::raw(
                     '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
@@ -176,7 +178,7 @@ class SpringIntoActionMainAppController extends BaseController
 
             report($e);
         }
-        $projectModel = new Project();
+
         $status_management_records = $projectModel->getStatusManagementRecords();
         try {
             $contacts = Site::find($site['SiteID'])->contacts;

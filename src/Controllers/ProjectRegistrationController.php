@@ -194,6 +194,7 @@ class ProjectRegistrationController extends BaseController
                                 'VolunteerID' => $volunteerID,
                                 'ProjectID' => $ProjectID,
                                 'ProjectRoleID' => $ProjectRoleID,
+                                'Status' => 5
                             ]
                         );
                         $pvrSuccess = $model->save();
