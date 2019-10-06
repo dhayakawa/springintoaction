@@ -44,6 +44,7 @@ mix.scripts([
     'node_modules/backgrid-select-all/backgrid-select-all.js',
     'resources/assets/js/BackgridHTMLCell.js',
     'resources/assets/js/jquery-file-upload/js/vendor/jquery.ui.widget.js',
+    'resources/assets/js/filestack.min.js',
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
     'resources/assets/js/frontend/registration/confirm.jquery.js',
@@ -74,6 +75,7 @@ mix.scripts([
     'node_modules/backgrid-select-all/backgrid-select-all.min.js',
     'resources/assets/js/BackgridHTMLCell.js',
     'resources/assets/js/jquery-file-upload/js/vendor/jquery.ui.widget.js',
+    'resources/assets/js/filestack.min.js',
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
     'resources/assets/js/frontend/registration/confirm.jquery.js',
@@ -120,6 +122,7 @@ mix.scripts([
 mix.scripts([
     'resources/assets/js/views/dashboard.js',
     'resources/assets/js/views/site-settings-management.js',
+    'resources/assets/js/views/site-dropdowns.js',
     'resources/assets/js/views/annual-budget.js',
     'resources/assets/js/views/annual-budgets-management.js',
     'resources/assets/js/views/grid-manager-container-toolbar.js',
