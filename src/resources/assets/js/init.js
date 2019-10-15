@@ -55,9 +55,9 @@ window.App = {
         bBackgridColumnManagerSaveState: false,
         bBackgridColumnManagerLoadStateOnInit: false,
         // Turn on the console logging
-        bAllowConsoleOutput: 1,
-        bAllowConsoleOutputHiLite: 1,
-        bAllowConsoleVarGroupsOutput: 1,
+        bAllowConsoleOutput: false,
+        bAllowConsoleOutputHiLite: false,
+        bAllowConsoleVarGroupsOutput: false,
         rowBgColorSelected: '#e3f6b1',
         workerRoleID: 4,
         appInitialData: {},
@@ -67,8 +67,9 @@ window.App = {
     },
     CellEditors: {}
 };
+
 const fileStackApiKey = 'Ana2T1xQQ76feCTmPqLlSz';
-let fileStackClient = filestack.init(fileStackApiKey);
+//let fileStackClient = filestack.init(fileStackApiKey);
 
 let fileStackCombOptions = {
     "displayMode": "inline",

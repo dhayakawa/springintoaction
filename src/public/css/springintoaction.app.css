@@ -18,47 +18,89 @@
 .sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-desc {
   display: none;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record {
+.sia-main-app .options-management-view .table.options {
+  table-layout: fixed;
+}
+.sia-main-app .options-management-view .table.options th.display-sequence-thead {
+  width: 70px;
+}
+.sia-main-app .options-management-view .table.options tbody tr {
+  cursor: move;
+  /* fallback if grab cursor is unsupported */
+  cursor: grab;
+  cursor: -webkit-grab;
+}
+.sia-main-app .options-management-view .table.options tbody tr:active,
+.sia-main-app .options-management-view .table.options tbody tr.ui-sortable-helper {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+.sia-main-app .options-management-view .table.options tbody tr td.display-sequence span.ui-icon {
+  cursor: move;
+  /* fallback if grab cursor is unsupported */
+  cursor: grab;
+  cursor: -webkit-grab;
+}
+.sia-main-app .options-management-view .table.options tbody tr td.display-sequence span.ui-icon:active,
+.sia-main-app .options-management-view .table.options tbody tr td.display-sequence span.ui-icon.ui-sortable-helper {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+.sia-main-app .options-management-view .table.options tbody tr td.display-sequence input {
+  margin-left: 5px;
+  width: 30px;
+  border: 0;
+}
+.sia-main-app .options-management-view .table.options tbody tr td.display-sequence input:focus {
+  outline: none;
+}
+.sia-main-app .options-management-view .table.options tbody tr td.option-label .ui-icon-trash {
+  cursor: pointer;
+}
+.sia-main-app .options-management-view .table.options tbody tr td.option-label .ui-icon-trash:hover {
+  color: red;
+}
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record {
   margin-bottom: 20px;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record h3.site-name {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record h3.site-name {
   margin-top: 0;
   margin-bottom: 0;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .status-legend-wrapper {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .status-legend-wrapper {
   position: relative;
   padding: 5px;
   background: whitesmoke;
   font-size: smaller;
   border: 1px solid #e4e4e4;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .status-legend-wrapper .status-legend {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .status-legend-wrapper .status-legend {
   margin-right: 8px;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table {
   table-layout: fixed;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table th,
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table td {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table th,
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td {
   text-align: center;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table td i:hover {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td i:hover {
   cursor: pointer;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table td .fa-info-circle {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-info-circle {
   position: relative;
   top: 3px;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table td .fa-info-circle:hover {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-info-circle:hover {
   cursor: default;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table.project-status td:nth-of-type(1) {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table.project-status td:nth-of-type(1) {
   width: 75px;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .table.project-status td:nth-of-type(2) {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table.project-status td:nth-of-type(2) {
   min-width: 130px;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-inner {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-inner {
   max-width: 400px;
   padding: 3px 8px;
   color: #fff;
@@ -66,18 +108,18 @@
   background-color: #000;
   border-radius: 4px;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table {
   table-layout: fixed;
   background: transparent;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table th,
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table td {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table th,
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table td {
   text-align: left;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table tr:last-child td {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table tr:last-child td {
   border: 0;
 }
-.sia-main-app .status-management-view .status-management-wrapper .status-management-record .tooltip-table td.hide-overflow {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table td.hide-overflow {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

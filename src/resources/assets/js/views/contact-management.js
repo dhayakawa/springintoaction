@@ -27,7 +27,6 @@
 
             self.contactsView = new self.contactsViewClass({
                 ajaxWaitingTargetClassSelector: '.contacts-view',
-                backgridWrapperClassSelector: '.backgrid-wrapper',
                 collection: App.PageableCollections.contactsManagementCollection,
                 columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
                 currentModelIDDataStoreSelector: '.contacts-view',
@@ -54,6 +53,14 @@
 
             self.contactsView.render();
             self.childViews.push(self.contactsView);
+
+            self.backGridFiltersPanel = new App.Views.BackGridContactsFiltersPanel({
+                collection: self.collection,
+                parentEl: self.contactsView.$gridContainer
+            });
+
+            self.contactsView.$gridContainer.prepend(self.backGridFiltersPanel.render().$el);
+            self.childViews.push(self.backGridFiltersPanel);
 
             return self;
 

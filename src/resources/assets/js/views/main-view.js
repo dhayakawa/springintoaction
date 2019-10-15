@@ -1,10 +1,13 @@
 (function (App) {
     App.Views.mainApp = App.Views.Backend.fullExtend({
         el: $(".sia-main-app"),
+        events: {
+            'click > .route-view .close-view' : 'hideRouteView'
+        },
         initialize: function (options) {
             let self = this;
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
-            _.bindAll(self, 'render', 'setRouteView');
+            _.bindAll(self, 'render', 'setRouteView', 'hideRouteView');
             self.preRenderedView = false;
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;
@@ -26,6 +29,10 @@
             });
             self.checkBrowser();
             self.checkMobileDevice();
+        },
+        hideRouteView: function(e) {
+            //console.log('hideRouteView',e,$(e.currentTarget).parents('.route-view'))
+            $(e.currentTarget).parents('.route-view').hide();
         },
         checkBrowser: function(){
             let bIsChrome = navigator.userAgent.indexOf('Chrome') > -1;

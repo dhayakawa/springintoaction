@@ -2198,6 +2198,13 @@
 })(window.App);
 
 (function (App) {
+    App.Collections.Option = Backbone.Collection.extend({
+        url: '/admin/option/list/all',
+        model: App.Models.Option
+    });
+})(window.App);
+
+(function (App) {
     App.Collections.sitesDropDownCollection = new App.Collections.Site();
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear();
     App.PageableCollections.projectCollection = new App.PageableCollections.Project();
@@ -2228,4 +2235,6 @@
     // @App.Collections.reportsManagementCollection- This is for the reports management
     App.Collections.reportsManagementCollection = new App.Collections.Report();
     App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown();
+
+    App.Collections.optionsManagementCollection = new App.Collections.Option();
 })(window.App);

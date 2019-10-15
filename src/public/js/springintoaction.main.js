@@ -2,6 +2,7 @@
     App.BackboneRouter = Backbone.Router.extend({
         dashboardViewClass: App.Views.Dashboard,
         dashboardView: null,
+        optionManagementViewClass: App.Views.OptionManagement,
         siteSettingsManagementViewClass: App.Views.SiteSettingsManagement,
         siteManagementViewClass: App.Views.SiteManagement,
         projectManagementViewClass: App.Views.ProjectManagement,
@@ -10,13 +11,13 @@
         volunteersManagementViewClass: App.Views.VolunteersManagement,
         annualBudgetsManagementViewClass: App.Views.AnnualBudgetsManagement,
         reportsManagementViewClass: App.Views.ReportsManagement,
-        statusManagementViewClass: App.Views.StatusManagement,
+        statusRecordManagementViewClass: App.Views.StatusRecordManagement,
         managementViews: {},
         bRouteViewRendered: false,
         routeRequested: '',
         initialize: function (options) {
             let self = this;
-            _.bindAll(self, 'dashboard', 'loadView','getShouldBuildView');
+            _.bindAll(self, 'dashboard', 'loadView', 'getShouldBuildView');
             self.mainApp = new App.Views.mainApp;
         },
         routes: {
@@ -26,8 +27,10 @@
         },
         preRouteViewRender: function () {
             let self = this;
-            self.mainApp.$el.find('> .route-view').hide();
-            console.log('preRouteViewRender',{'self.mainApp': self.mainApp,"self.mainApp.$el.find('> .route-view')": self.mainApp.$el.find('> .route-view')})
+
+            //self.mainApp.$el.find('> .route-view').filter(":visible").hide();
+            self.mainApp.$el.find('.route-view.dashboard').hide();
+            //console.trace('preRouteViewRender',{'self.mainApp': self.mainApp,"self.mainApp.$el.find('> .route-view')": self.mainApp.$el.find('> .route-view')})
             self.bRouteViewRendered = false;
         },
         postRouteViewRender: function () {
@@ -49,15 +52,17 @@
         },
         dashboard: function () {
             let self = this;
-            self.preRouteViewRender();
             self.routeRequested = 'dashboard';
-            //growl('SIA index route has been called');
+            growl('SIA dashboard/index route has been called');
+            self.preRouteViewRender();
+
+
             if (self.getShouldBuildView(self.routeRequested)) {
                 let aDashboardPanelViews = [];
                 /**
                  * Put new dashboard panel below.
                  */
-                /*if (App.Vars.Auth.bCanSiteManagement) {
+                if (App.Vars.Auth.bCanSiteManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
@@ -86,7 +91,7 @@
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
-                }*/
+                }/**/
                 if (App.Vars.Auth.bCanPeopleManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
@@ -112,7 +117,7 @@
                             })
                     }).render().$el.html());
                 }
-                /*
+
                 if (App.Vars.Auth.bCanBudgetManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
@@ -132,8 +137,8 @@
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
-                }*/
-                /*if (App.Vars.Auth.bCanSiteManagement) {
+                }/**/
+                if (App.Vars.Auth.bCanSiteManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
@@ -148,12 +153,17 @@
                                             'badgeCount': '',
                                             'route': 'view/settings/management'
                                         }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Budget Source Options',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/budget_source_options'
+                                        }),
                                     ])
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
-                }*/
-                /*if (App.Vars.Auth.bCanProjectManagement) {
+                }/**/
+                if (App.Vars.Auth.bCanProjectManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
@@ -242,7 +252,7 @@
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
-                }*/
+                }/**/
 
                 self.managementViews['dashboard'] = new self.dashboardViewClass({
                     dashboardPanelViews: aDashboardPanelViews
@@ -250,11 +260,11 @@
 
                 // pre-render core management views so triggers b/w views work
                 self.mainApp.preRenderedView = true;
-                // self.loadView('site','management','');
-                // self.loadView('project','management','');
-                // self.loadView('project', 'status', '');
-                self.loadView('site_contacts','management','');
-                // self.loadView('volunteers','management','');
+                self.loadView('site', 'management', '');
+                self.loadView('project', 'management', '');
+                self.loadView('project', 'status', '');
+                self.loadView('site_contacts', 'management', '');
+                self.loadView('volunteers', 'management', '');
                 self.mainApp.preRenderedView = false;
             }
             self.mainApp.setRouteView(self.managementViews['dashboard']).render();
@@ -263,14 +273,16 @@
         },
         loadView: function (route, action, type) {
             let self = this;
-            type     = typeof type !== 'undefined' ? type : '';
-
-            self.preRouteViewRender();
+            type = typeof type !== 'undefined' ? type : '';
+            self.routeRequested = route + '_' + action;
+            if (!self.mainApp.preRenderedView) {
+                self.preRouteViewRender();
+            }
 
             if (App.Vars.devMode && !self.mainApp.preRenderedView) {
                 growl('SIA loadView route has been called:' + route + '_' + action);
             }
-            self.routeRequested = route + '_' + action;
+
 
             // The backbone View to render
             let routeView = null;
@@ -316,7 +328,7 @@
                         break;
                     case 'project_status':
                         if (self.getShouldBuildView(self.routeRequested)) {
-                            self.managementViews[self.routeRequested] = new self.statusManagementViewClass({
+                            self.managementViews[self.routeRequested] = new self.statusRecordManagementViewClass({
                                 mainApp: self.mainApp,
                                 collection: App.Collections.statusManagementCollection,
                                 viewName: self.routeRequested
@@ -398,8 +410,24 @@
                         routeView = self.managementViews[self.routeRequested];
 
                         break;
+                    case 'options_management':
+                        if (self.getShouldBuildView(self.routeRequested + '-' + type)) {
+                            self.managementViews[self.routeRequested + '-' + type] = new self.optionManagementViewClass({
+                                model: App.Models.optionModel,
+                                viewName: self.routeRequested,
+                                mainApp: self.mainApp,
+                                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
+                                modelNameLabel: type.charAt(0).toUpperCase() + type.substr(1),
+                                optionType: type,
+                                collection: App.Collections.optionsManagementCollection,
+                                columnCollectionDefinitions: [],
+                            });
+                        }
+
+                        routeView = self.managementViews[self.routeRequested + '-' + type];
+                        break;
                     default:
-                        routeView               = null;
+                        routeView = null;
                         self.bRouteViewRendered = false;
                 }
             } catch (e) {
@@ -409,11 +437,11 @@
 
             if (routeView !== null) {
                 //try {
-                    self.mainApp.setRouteView(routeView).render();
-                    self.bRouteViewRendered = true;
+                self.mainApp.setRouteView(routeView).render();
+                self.bRouteViewRendered = true;
                 //} catch (e) {
-                    //console.error('self.mainApp.setRouteView render exception for routeRequested:' + self.routeRequested, 'Exception:' + e);
-                    //self.bRouteViewRendered = false;
+                //console.error('self.mainApp.setRouteView render exception for routeRequested:' + self.routeRequested, 'Exception:' + e);
+                // self.bRouteViewRendered = false;
                 //}
 
             }

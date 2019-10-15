@@ -5,7 +5,7 @@
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
         projectsViewClass: App.Views.Projects,
         attributes: {
-            class: 'project-management-view route-view box box-primary'
+            class: 'route-view box box-primary project-management-view'
         },
         template: template('projectTabbedManagementTemplate'),
         viewName: 'projects-management-view',
@@ -28,7 +28,6 @@
 
             self.projectsView = new self.projectsViewClass({
                 ajaxWaitingTargetClassSelector: '.projects-view',
-                backgridWrapperClassSelector: '.projects-backgrid-wrapper',
                 collection: App.PageableCollections.projectCollection,
                 columnCollectionDefinitions: App.Vars.projectsBackgridColumnDefinitions,
                 currentModelIDDataStoreSelector: '.site-projects-tabs-view',

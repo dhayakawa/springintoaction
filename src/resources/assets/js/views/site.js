@@ -23,34 +23,41 @@
             let self = this;
             let attrName = $(e.target).attr('name');
             let attrValue = $(e.target).val();
-            self.model.url = self.getModelUrl(self.model.get('SiteID'));
-            self.model.save({[attrName]: attrValue},
-                {
-                    success: function (model, response, options) {
-                        growl(response.msg, response.success ? 'success' : 'error');
-                    },
-                    error: function (model, response, options) {
-                        growl(response.msg, 'error')
-                    }
-                });
+            self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                self.model.save({[attrName]: attrValue},
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         fetchIfNewID: function (e) {
             let self = this;
-            window.ajaxWaiting('show', '#site-well');
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             self.model.url = self.getModelUrl(e[self.model.idAttribute]);
             $.when(
                 self.model.fetch({reset: true})
             ).then(function () {
-
-                window.ajaxWaiting('remove', '#site-well');
-
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
         },
         render: function () {
             let self = this;
             self.model.set('disabled', !App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager ? 'disabled' : '');
-            this.$el.html(this.template(self.model.toJSON()));
-            return this;
+            self.$el.html(self.template(self.model.toJSON()));
+            return self;
         },
         getModalForm: function () {
             let self = this;
@@ -58,9 +65,9 @@
 
             let tplVars = {
                 SiteID: '',
-                SiteName: 'test',
-                EquipmentLocation: 'test',
-                DebrisLocation: 'test'
+                SiteName: '',
+                EquipmentLocation: '',
+                DebrisLocation: ''
             };
             return template(tplVars);
         },
@@ -71,50 +78,66 @@
             _log('App.Views.Site.create', attributes, self.model);
             let newModel = new App.Models.Site();
             newModel.url = self.getModelUrl();
-            newModel.save(attributes,
-                {
-                    success: function (model, response, options) {
-                        window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
-                        $.when(
-                            self.sitesDropdownView.collection.fetch({reset: true})
-                        ).then(function () {
-                            //initialize your views here
-                            _log('App.Views.Site.create.event', 'site collection fetch promise done. new_site_id:' + response.new_site_id);
-                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                            self.options.parentView.sitesDropdownView.$el.val(response.new_site_id.toString());
-                            self.options.parentView.sitesDropdownView.$el.trigger('change');
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                newModel.save(attributes,
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                            self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
+                            $.when(
+                                self.sitesDropdownView.collection.fetch({reset: true})
+                            ).then(function () {
+                                //initialize your views here
+                                _log('App.Views.Site.create.event', 'site collection fetch promise done. new_site_id:' + response.new_site_id);
+                                self.options.parentView.sitesDropdownView.$el.val(response.new_site_id.toString());
+                                self.options.parentView.sitesDropdownView.$el.trigger('change');
 
-                        });
-                    },
-                    error: function (model, response, options) {
-                        window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                    }
-                });
+                            });
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         destroy: function () {
             let self = this;
             window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             _log('App.Views.Site.destroy', self.model);
-            self.model.destroy({
-                success: function (model, response, options) {
-                    window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
-                    $.when(
-                        self.options.parentView.sitesDropdownView.collection.fetch({reset: true})
-                    ).then(function () {
-                        //initialize your views here
-                        _log('App.Views.Site.destroy.event', 'site collection fetch promise done');
-                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                        self.options.parentView.sitesDropdownView.$el.trigger('change')
-                    });
-                },
-                error: function (model, response, options) {
-                    window.growl(response.msg, 'error');
-                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                }
+            self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                self.model.destroy({
+                    success: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
+                        $.when(
+                            self.options.parentView.sitesDropdownView.collection.fetch({reset: true})
+                        ).then(function () {
+                            //initialize your views here
+                            _log('App.Views.Site.destroy.event', 'site collection fetch promise done');
+                            self.options.parentView.sitesDropdownView.$el.trigger('change')
+                        });
+                    },
+                    error: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
+
         }
     });
 
@@ -136,14 +159,12 @@
         },
         fetchIfNewID: function (e) {
             let self = this;
-            window.ajaxWaiting('show', '#site-status-well');
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             self.model.url = self.getModelUrl(e[self.model.idAttribute]);
             $.when(
                 self.model.fetch({reset: true})
             ).then(function () {
-
-                window.ajaxWaiting('remove', '#site-status-well');
-
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
         },
         update: function (e) {
@@ -157,25 +178,52 @@
             if (attrType === 'checkbox') {
                 attrValue = selected ? 1 : 0;
             }
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             //console.log('attrType:' + attrType, 'selected: ', selected, 'attrName:' + attrName, 'value: ', attrValue);
             self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
-            self.model.save({[attrName]: attrValue},
-                {
-                    success: function (model, response, options) {
-                        growl(response.msg, response.success ? 'success' : 'error');
-                    },
-                    error: function (model, response, options) {
-                        growl(response.msg, 'error')
-                    }
-                });
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                self.model.save({[attrName]: attrValue},
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         destroy: function () {
             let self = this;
-            self.model.destroy();  // 2. calling backbone js destroy function to destroy that model object
+            self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                self.model.destroy({
+                    success: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    },
+                    error: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         remove: function () {
             let self = this;
-            this.$el.remove();  // 4. Calling Jquery remove function to remove that HTML li tag element..
+            self.$el.remove();
         },
         render: function () {
             let self = this;
@@ -188,9 +236,9 @@
                 'EstimationCommentsIsChecked': self.model.get('EstimationComments') === 1 ? 'checked' : ''
             };
             self.model.set('disabled', !App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager ? 'disabled' : '');
-            this.$el.html(this.template(_.extend(self.model.toJSON(), checkedBoxes)));
+            self.$el.html(self.template(_.extend(self.model.toJSON(), checkedBoxes)));
             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            return this;
+            return self;
         }
     });
 })(window.App);

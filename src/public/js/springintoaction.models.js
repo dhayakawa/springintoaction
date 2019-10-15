@@ -549,6 +549,17 @@
 })(window.App);
 
 (function (App) {
+    App.Models.Option = Backbone.Model.extend({
+        idAttribute: "id",
+        url: '/admin/option',
+        defaults: {
+            'option_label': '',
+            'DisplaySequence': ''
+        },
+    });
+})(window.App);
+
+(function (App) {
     App.Models.siteSettingModel = new App.Models.SiteSetting();
     App.Models.siteModel = new App.Models.Site();
     App.Models.siteStatusModel = new App.Models.SiteStatus();
@@ -572,5 +583,5 @@
     App.Models.annualBudgetModel = new App.Models.AnnualBudget();
     App.Models.reportModel = new App.Models.Report();
     App.Models.statusManagementModel = new App.Models.StatusManagement();
-
+    App.Models.optionModel = new App.Models.Option();
 })(window.App);

@@ -29,7 +29,6 @@
                 currentModelIDDataStoreSelector: '#project_lead',
                 parentView: this,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-leads-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Leads',
                 mainApp: self.mainApp
@@ -48,7 +47,6 @@
                 currentModelIDDataStoreSelector: '#project_budget',
                 parentView: self,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-budgets-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Budget',
                 mainApp: self.mainApp
@@ -66,7 +64,6 @@
                 currentModelIDDataStoreSelector: '#project_contact',
                 parentView: self,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-contacts-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Contact',
                 mainApp: self.mainApp
@@ -84,7 +81,6 @@
                 currentModelIDDataStoreSelector: '#project_volunteer',
                 parentView: self,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-volunteers-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Volunteer',
                 mainApp: self.mainApp
@@ -102,7 +98,6 @@
                 currentModelIDDataStoreSelector: '#project_attachment',
                 parentView: self,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-attachments-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Attachment',
                 mainApp: self.mainApp

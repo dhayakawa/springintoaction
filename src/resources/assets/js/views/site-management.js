@@ -6,7 +6,7 @@
         siteStatusViewClass: App.Views.SiteStatus,
         siteVolunteersViewClass: App.Views.SiteVolunteer,
         attributes: {
-            class: 'site-management-view route-view box box-primary'
+            class: 'route-view box box-primary site-management-view'
         },
         template: template('siteManagementTemplate'),
         viewName: 'site-management-view',
@@ -60,8 +60,7 @@
             self.siteStatusView.render();
 
             self.siteVolunteersView = new self.siteVolunteersViewClass({
-                ajaxWaitingTargetClassSelector: '.site-volunteers-view',
-                backgridWrapperClassSelector: '.site-volunteers-backgrid-wrapper',
+                ajaxWaitingTargetClassSelector: '#site-volunteers-well',
                 collection: App.PageableCollections.siteVolunteersRoleCollection,
                 columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
                 currentModelIDDataStoreSelector: 'body',

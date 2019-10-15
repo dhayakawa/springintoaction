@@ -13,7 +13,6 @@
                     'getModelRoute',
                     'refreshView',
                     'getModalForm',
-                    'destroy',
                     'toggleDeleteBtn',
                     'showColumnHeaderLabel',
                     'showTruncatedCellContentPopup',
@@ -338,44 +337,8 @@
                 self.trigger('toggle-tabs-box');
             });
 
-        },
-        destroy: function (attributes) {
-            let self = this;
-            console.trace(attributes)
-            // window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
-            // attributes = _.extend(attributes, {
-            //     ProjectID: self.model.get(self.model.idAttribute),
-            //     ProjectRoleID: self.model.get('ProjectRoleID')
-            // });
-            // _log('App.Views.Project.destroy', attributes);
-            // $.ajax({
-            //     type: "POST",
-            //     dataType: "json",
-            //     url: self.getModelRoute() + '/batch/destroy',
-            //     data: attributes,
-            //     success: function (response) {
-            //         window.growl(response.msg, response.success ? 'success' : 'error');
-            //         self.collection.url = self.getCollectionUrl(App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute));
-            //
-            //         $.when(
-            //             self.collection.fetch({reset: true})
-            //         ).then(function () {
-            //             //App.Vars.currentProjectID = self.collection.length ? self.collection.at(0).get('ProjectID') : null;
-            //             self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
-            //             self.refocusGridRecord();
-            //             //initialize your views here
-            //             _log('App.Views.Project.destroy.event', 'project collection fetch promise done');
-            //             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            //             self.trigger('toggle-tabs-box');
-            //         });
-            //     },
-            //     fail: function (response) {
-            //         window.growl(response.msg, 'error');
-            //         window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            //         self.trigger('toggle-tabs-box');
-            //     }
-            // })
-        },
+        }
+
 
 
     });

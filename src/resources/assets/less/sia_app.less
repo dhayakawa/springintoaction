@@ -33,10 +33,57 @@
             }
         }
     }
+    .grab() {
+        cursor: move; /* fallback if grab cursor is unsupported */
+        cursor: grab;
+        cursor: -moz-grab;
+        cursor: -webkit-grab;
+        &:active,&.ui-sortable-helper {
+            cursor: grabbing;
+            cursor: -moz-grabbing;
+            cursor: -webkit-grabbing;
+        }
+    }
+    .options-management-view {
+        .table.options {
+            table-layout: fixed;
+            th.display-sequence-thead{
+                width: 70px;
+            }
+            tbody{
+                tr{
+                    .grab();
+                    td.display-sequence {
+                        span.ui-icon {
+                            .grab();
+                        }
+                        input {
+                            margin-left: 5px;
+                            width: 30px;
+                            border: 0;
 
-    .status-management-view {
-        .status-management-wrapper {
-            .status-management-record {
+                            &:focus {
+                                outline: none;
+                            }
+                        }
+                    }
+
+                    td.option-label {
+                        .ui-icon-trash {
+                            cursor: pointer;
+                            &:hover{
+                                color: red;
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+    .status-record-management-view {
+        .status-record-management-wrapper {
+            .status-record {
                 // use this margin instead of the h3 top-margin
                 margin-bottom: 20px;
 

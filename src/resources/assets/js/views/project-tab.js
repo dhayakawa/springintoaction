@@ -48,19 +48,19 @@
                 if (attributes[self.managedGridView.model.idAttribute] === '') {
                     attributes[self.managedGridView.model.idAttribute] = self.managedGridView.getViewDataStore('current-model-id');
                 }
-                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+                window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
                 //console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged: e.changed, saveAttributes: attributes, tModel: self.model});
                 self.model.url = self.getModelUrl(currentModelID);
                 self.model.save(attributes,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                             growl(response.msg, response.success ? 'success' : 'error');
                         },
                         error: function (model, response, options) {
                             console.error('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                             growl(response.msg, 'error')
                         }
                     });
@@ -68,7 +68,7 @@
         },
         create: function (attributes) {
             let self = this;
-            window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             attributes = _.extend(attributes, {
                 ProjectID: self.managedGridView.model.get(self.managedGridView.model.idAttribute)
             });
@@ -93,7 +93,7 @@
                         }
                     })
             ).then(function () {
-                window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
 
         },
@@ -109,7 +109,7 @@
 
             bootbox.confirm(confirmMsg, function (bConfirmed) {
                 if (bConfirmed) {
-                    window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+                    window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
 
                     attributes = _.extend(attributes, {
                         ProjectID: self.managedGridView.model.get(self.managedGridView.model.idAttribute),
@@ -137,7 +137,7 @@
                             }
                         })
                     ).then(function () {
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     });
 
                 }

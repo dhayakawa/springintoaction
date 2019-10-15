@@ -29,4 +29,6 @@
     // @App.Collections.reportsManagementCollection- This is for the reports management
     App.Collections.reportsManagementCollection = new App.Collections.Report();
     App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown();
+
+    App.Collections.optionsManagementCollection = new App.Collections.Option();
 })(window.App);

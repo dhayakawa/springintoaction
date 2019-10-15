@@ -270,6 +270,7 @@
     App.Views.SiteSetting = App.Views.Backend.fullExtend({
         tagName: 'li',
         template: template('siteSettingTemplate'),
+        viewName: 'site-setting-view',
         initialize: function (options) {
             let self = this;
             _.bindAll(this, '_initialize','render');
@@ -377,35 +378,47 @@
             class: 'site-settings-management-view route-view box box-primary'
         },
         template: template('siteSettingsManagementTemplate'),
+        viewName: 'site-settings-management-view',
         initialize: function (options) {
             let self = this;
-            this.itemsView = [];
-            this.options = options;
-            self.modelNameLabel = this.options.modelNameLabel;
+            try {
+                _.bindAll(self, 'addOne', 'addAll', 'render');
+            } catch (e) {
+                console.error(options, e);
+            }
+
+            this._initialize(options);
+            self.itemsView = [];
+            self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(' ', '_');
-            _.bindAll(this, 'addOne', 'addAll', 'render');
+
             self.listenTo(self.collection, "reset", self.addAll);
         },
         events: {},
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(this.template({
+            self.$el.html(self.template({
                 modelNameLabel: self.modelNameLabel,
                 modelNameLabelLowerCase: self.modelNameLabelLowerCase
             }));
-            this.addAll();
-            return this;
+            self.addAll();
+            return self;
         },
         addOne: function (SiteSetting) {
-            let $settingItem = new App.Views.SiteSetting({model: SiteSetting});
-            this.itemsView.push($settingItem);
-            this.$el.find('ul').append($settingItem.render().el);
+            let self = this;
+            let $settingItem = new App.Views.SiteSetting({
+                model: SiteSetting,
+                mainApp: self.mainApp
+            });
+            self.itemsView.push($settingItem);
+            self.$el.find('ul').append($settingItem.render().el);
         },
         addAll: function () {
-            this.$el.find('.site-settings-management-wrapper').empty();
-            this.$el.find('.site-settings-management-wrapper').append($('<ul class="nav nav-stacked"></ul>'));
-            this.collection.each(this.addOne);
+            let self = this;
+            self.$el.find('.site-settings-management-wrapper').empty();
+            self.$el.find('.site-settings-management-wrapper').append($('<ul class="nav nav-stacked"></ul>'));
+            self.collection.each(self.addOne);
         }
     });
 })(window.App);
@@ -1147,19 +1160,19 @@
                 if (attributes[self.managedGridView.model.idAttribute] === '') {
                     attributes[self.managedGridView.model.idAttribute] = self.managedGridView.getViewDataStore('current-model-id');
                 }
-                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+                window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
                 //console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged: e.changed, saveAttributes: attributes, tModel: self.model});
                 self.model.url = self.getModelUrl(currentModelID);
                 self.model.save(attributes,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                             growl(response.msg, response.success ? 'success' : 'error');
                         },
                         error: function (model, response, options) {
                             console.error('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                             growl(response.msg, 'error')
                         }
                     });
@@ -1167,7 +1180,7 @@
         },
         create: function (attributes) {
             let self = this;
-            window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             attributes = _.extend(attributes, {
                 ProjectID: self.managedGridView.model.get(self.managedGridView.model.idAttribute)
             });
@@ -1192,7 +1205,7 @@
                         }
                     })
             ).then(function () {
-                window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
 
         },
@@ -1208,7 +1221,7 @@
 
             bootbox.confirm(confirmMsg, function (bConfirmed) {
                 if (bConfirmed) {
-                    window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+                    window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
 
                     attributes = _.extend(attributes, {
                         ProjectID: self.managedGridView.model.get(self.managedGridView.model.idAttribute),
@@ -1236,7 +1249,7 @@
                             }
                         })
                     ).then(function () {
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     });
 
                 }
@@ -1473,7 +1486,6 @@
                 currentModelIDDataStoreSelector: '#project_lead',
                 parentView: this,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-leads-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Leads',
                 mainApp: self.mainApp
@@ -1492,7 +1504,6 @@
                 currentModelIDDataStoreSelector: '#project_budget',
                 parentView: self,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-budgets-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Budget',
                 mainApp: self.mainApp
@@ -1510,7 +1521,6 @@
                 currentModelIDDataStoreSelector: '#project_contact',
                 parentView: self,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-contacts-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Contact',
                 mainApp: self.mainApp
@@ -1528,7 +1538,6 @@
                 currentModelIDDataStoreSelector: '#project_volunteer',
                 parentView: self,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-volunteers-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Volunteer',
                 mainApp: self.mainApp
@@ -1546,7 +1555,6 @@
                 currentModelIDDataStoreSelector: '#project_attachment',
                 parentView: self,
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
-                backgridWrapperClassSelector: '.project-attachments-backgrid-wrapper',
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Attachment',
                 mainApp: self.mainApp
@@ -1693,7 +1701,6 @@
                     'getModelRoute',
                     'refreshView',
                     'getModalForm',
-                    'destroy',
                     'toggleDeleteBtn',
                     'showColumnHeaderLabel',
                     'showTruncatedCellContentPopup',
@@ -2018,44 +2025,8 @@
                 self.trigger('toggle-tabs-box');
             });
 
-        },
-        destroy: function (attributes) {
-            let self = this;
-            console.trace(attributes)
-            // window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
-            // attributes = _.extend(attributes, {
-            //     ProjectID: self.model.get(self.model.idAttribute),
-            //     ProjectRoleID: self.model.get('ProjectRoleID')
-            // });
-            // _log('App.Views.Project.destroy', attributes);
-            // $.ajax({
-            //     type: "POST",
-            //     dataType: "json",
-            //     url: self.getModelRoute() + '/batch/destroy',
-            //     data: attributes,
-            //     success: function (response) {
-            //         window.growl(response.msg, response.success ? 'success' : 'error');
-            //         self.collection.url = self.getCollectionUrl(App.Models.siteStatusModel.get(App.Models.siteStatusModel.idAttribute));
-            //
-            //         $.when(
-            //             self.collection.fetch({reset: true})
-            //         ).then(function () {
-            //             //App.Vars.currentProjectID = self.collection.length ? self.collection.at(0).get('ProjectID') : null;
-            //             self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
-            //             self.refocusGridRecord();
-            //             //initialize your views here
-            //             _log('App.Views.Project.destroy.event', 'project collection fetch promise done');
-            //             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            //             self.trigger('toggle-tabs-box');
-            //         });
-            //     },
-            //     fail: function (response) {
-            //         window.growl(response.msg, 'error');
-            //         window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            //         self.trigger('toggle-tabs-box');
-            //     }
-            // })
-        },
+        }
+
 
 
     });
@@ -2068,7 +2039,7 @@
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
         projectsViewClass: App.Views.Projects,
         attributes: {
-            class: 'project-management-view route-view box box-primary'
+            class: 'route-view box box-primary project-management-view'
         },
         template: template('projectTabbedManagementTemplate'),
         viewName: 'projects-management-view',
@@ -2091,7 +2062,6 @@
 
             self.projectsView = new self.projectsViewClass({
                 ajaxWaitingTargetClassSelector: '.projects-view',
-                backgridWrapperClassSelector: '.projects-backgrid-wrapper',
                 collection: App.PageableCollections.projectCollection,
                 columnCollectionDefinitions: App.Vars.projectsBackgridColumnDefinitions,
                 currentModelIDDataStoreSelector: '.site-projects-tabs-view',
@@ -2187,34 +2157,41 @@
             let self = this;
             let attrName = $(e.target).attr('name');
             let attrValue = $(e.target).val();
-            self.model.url = self.getModelUrl(self.model.get('SiteID'));
-            self.model.save({[attrName]: attrValue},
-                {
-                    success: function (model, response, options) {
-                        growl(response.msg, response.success ? 'success' : 'error');
-                    },
-                    error: function (model, response, options) {
-                        growl(response.msg, 'error')
-                    }
-                });
+            self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                self.model.save({[attrName]: attrValue},
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         fetchIfNewID: function (e) {
             let self = this;
-            window.ajaxWaiting('show', '#site-well');
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             self.model.url = self.getModelUrl(e[self.model.idAttribute]);
             $.when(
                 self.model.fetch({reset: true})
             ).then(function () {
-
-                window.ajaxWaiting('remove', '#site-well');
-
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
         },
         render: function () {
             let self = this;
             self.model.set('disabled', !App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager ? 'disabled' : '');
-            this.$el.html(this.template(self.model.toJSON()));
-            return this;
+            self.$el.html(self.template(self.model.toJSON()));
+            return self;
         },
         getModalForm: function () {
             let self = this;
@@ -2222,9 +2199,9 @@
 
             let tplVars = {
                 SiteID: '',
-                SiteName: 'test',
-                EquipmentLocation: 'test',
-                DebrisLocation: 'test'
+                SiteName: '',
+                EquipmentLocation: '',
+                DebrisLocation: ''
             };
             return template(tplVars);
         },
@@ -2235,50 +2212,66 @@
             _log('App.Views.Site.create', attributes, self.model);
             let newModel = new App.Models.Site();
             newModel.url = self.getModelUrl();
-            newModel.save(attributes,
-                {
-                    success: function (model, response, options) {
-                        window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
-                        $.when(
-                            self.sitesDropdownView.collection.fetch({reset: true})
-                        ).then(function () {
-                            //initialize your views here
-                            _log('App.Views.Site.create.event', 'site collection fetch promise done. new_site_id:' + response.new_site_id);
-                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                            self.options.parentView.sitesDropdownView.$el.val(response.new_site_id.toString());
-                            self.options.parentView.sitesDropdownView.$el.trigger('change');
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                newModel.save(attributes,
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                            self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
+                            $.when(
+                                self.sitesDropdownView.collection.fetch({reset: true})
+                            ).then(function () {
+                                //initialize your views here
+                                _log('App.Views.Site.create.event', 'site collection fetch promise done. new_site_id:' + response.new_site_id);
+                                self.options.parentView.sitesDropdownView.$el.val(response.new_site_id.toString());
+                                self.options.parentView.sitesDropdownView.$el.trigger('change');
 
-                        });
-                    },
-                    error: function (model, response, options) {
-                        window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                    }
-                });
+                            });
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         destroy: function () {
             let self = this;
             window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             _log('App.Views.Site.destroy', self.model);
-            self.model.destroy({
-                success: function (model, response, options) {
-                    window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
-                    $.when(
-                        self.options.parentView.sitesDropdownView.collection.fetch({reset: true})
-                    ).then(function () {
-                        //initialize your views here
-                        _log('App.Views.Site.destroy.event', 'site collection fetch promise done');
-                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                        self.options.parentView.sitesDropdownView.$el.trigger('change')
-                    });
-                },
-                error: function (model, response, options) {
-                    window.growl(response.msg, 'error');
-                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                }
+            self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                self.model.destroy({
+                    success: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
+                        $.when(
+                            self.options.parentView.sitesDropdownView.collection.fetch({reset: true})
+                        ).then(function () {
+                            //initialize your views here
+                            _log('App.Views.Site.destroy.event', 'site collection fetch promise done');
+                            self.options.parentView.sitesDropdownView.$el.trigger('change')
+                        });
+                    },
+                    error: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
+
         }
     });
 
@@ -2300,14 +2293,12 @@
         },
         fetchIfNewID: function (e) {
             let self = this;
-            window.ajaxWaiting('show', '#site-status-well');
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             self.model.url = self.getModelUrl(e[self.model.idAttribute]);
             $.when(
                 self.model.fetch({reset: true})
             ).then(function () {
-
-                window.ajaxWaiting('remove', '#site-status-well');
-
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
         },
         update: function (e) {
@@ -2321,25 +2312,52 @@
             if (attrType === 'checkbox') {
                 attrValue = selected ? 1 : 0;
             }
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             //console.log('attrType:' + attrType, 'selected: ', selected, 'attrName:' + attrName, 'value: ', attrValue);
             self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
-            self.model.save({[attrName]: attrValue},
-                {
-                    success: function (model, response, options) {
-                        growl(response.msg, response.success ? 'success' : 'error');
-                    },
-                    error: function (model, response, options) {
-                        growl(response.msg, 'error')
-                    }
-                });
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                self.model.save({[attrName]: attrValue},
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         destroy: function () {
             let self = this;
-            self.model.destroy();  // 2. calling backbone js destroy function to destroy that model object
+            self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                self.model.destroy({
+                    success: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    },
+                    error: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         remove: function () {
             let self = this;
-            this.$el.remove();  // 4. Calling Jquery remove function to remove that HTML li tag element..
+            self.$el.remove();
         },
         render: function () {
             let self = this;
@@ -2352,9 +2370,9 @@
                 'EstimationCommentsIsChecked': self.model.get('EstimationComments') === 1 ? 'checked' : ''
             };
             self.model.set('disabled', !App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager ? 'disabled' : '');
-            this.$el.html(this.template(_.extend(self.model.toJSON(), checkedBoxes)));
+            self.$el.html(self.template(_.extend(self.model.toJSON(), checkedBoxes)));
             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            return this;
+            return self;
         }
     });
 })(window.App);
@@ -2376,24 +2394,28 @@
             try {
                 _.bindAll(self, 'update', 'renderGrid', 'refreshView', 'getModalForm', 'create', 'batchDestroy', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
             } catch (e) {
-                console.error(self.viewName,e)
+                console.error(self.viewName, e)
             }
 
             self._initialize(options);
             self.listenTo(self.options.parentView.siteYearsDropdownView, 'site-status-id-change', self.fetchIfNewID);
             _log('App.Views.SiteVolunteer.initialize', options);
         },
-        events: {
-
-        },
-        fetchIfNewID: function() {
+        events: {},
+        getCollectionQueryString: function () {
             let self = this;
-            window.ajaxWaiting('show', '#site-volunteers-well');
+
+            return self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute);
+        },
+        fetchIfNewID: function (e) {
+            let self = this;
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            self.collection.url = self.getCollectionUrl();
             $.when(
                 self.collection.fetch({reset: true})
             ).then(function () {
 
-                window.ajaxWaiting('remove', '#site-volunteers-well');
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                 if (self.collection.length) {
                     App.Vars.currentSiteVolunteerRoleID = self.collection.at(0).get(self.model.idAttribute);
                     self.model.set(self.collection.at(0));
@@ -2470,25 +2492,31 @@
                     e.changed['Status'] = e.changed['SiteVolunteerRoleStatus'];
                 }
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
-                console.log('update',{currentModelID: currentModelID, parentSiteStatusID: self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute)})
+                //console.log('update', {currentModelID: currentModelID, parentSiteStatusID: self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute)})
                 attributes['SiteStatusID'] = self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute);
                 _log('App.Views.SiteVolunteer.update', self.viewName, e.changed, attributes, self.model);
-                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+                window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
                 self.model.url = self.getModelUrl(currentModelID);
-                self.model.save(attributes,
-                    {
-                        success: function (model, response, options) {
-                            _log('App.Views.SiteVolunteer.update', self.viewName + ' save', model, response, options);
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                            growl(response.msg, response.success ? 'success' : 'error');
-                        },
-                        error: function (model, response, options) {
-                            console.error('App.Views.SiteVolunteer.update', self.viewName + ' save', model, response, options);
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                            growl(response.msg, 'error')
-                        }
-                    });
-            } else {
+                let growlMsg = '';
+                let growlType = '';
+                $.when(
+                    self.model.save(attributes,
+                        {
+                            success: function (model, response, options) {
+                                _log('App.Views.SiteVolunteer.update', self.viewName + ' save', model, response, options);
+                                growlMsg = response.msg;
+                                growlType = response.success ? 'success' : 'error';
+                            },
+                            error: function (model, response, options) {
+                                console.error('App.Views.SiteVolunteer.update', self.viewName + ' save', model, response, options);
+                                growlMsg = response.msg;
+                                growlType = response.success ? 'success' : 'error';
+                            }
+                        })
+                ).then(function () {
+                    growl(growlMsg, growlType);
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+                });
             }
         },
         create: function (attributes) {
@@ -2499,53 +2527,66 @@
             _log('App.Views.SiteVolunteer.create', self.viewName, attributes, model, self.ajaxWaitingSelector);
             model.url = self.getModelRoute();
             attributes['SiteStatusID'] = self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute);
-            model.save(attributes,
-                {
-                    success: function (model, response, options) {
-                        window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = self.getCollectionUrl(self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute));
-                        $.when(
-                            self.collection.fetch({reset: true})
-                        ).then(function () {
-                            _log('App.Views.SiteVolunteer.create.event', self.viewName + ' collection fetch promise done');
-                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                        });
-                    },
-                    error: function (model, response, options) {
-                        window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                    }
-                });
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                model.save(attributes,
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                            self.collection.url = self.getCollectionUrl(self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute));
+                            $.when(
+                                self.collection.fetch({reset: true})
+                            ).then(function () {
+                                _log('App.Views.SiteVolunteer.create.event', self.viewName + ' collection fetch promise done');
+                            });
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         batchDestroy: function (attributes) {
             var self = this;
             window.ajaxWaiting('show', this.ajaxWaitingSelector);
 
             _log(this.viewName + '.destroy', attributes);
-            $.ajax({
-                type: "POST",
-                dataType: "json",
-                url: self.getModelRoute() + '/batch/destroy',
-                data: attributes,
-                success: function (response) {
-                    window.growl(response.msg, response.success ? 'success' : 'error');
-                    console.log('destroy', {currentModelID: self.model.get(self.model.idAttribute), parentSiteStatusID: self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute)})
-                    self.collection.url = self.getCollectionUrl(self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute));
-                    $.when(
-                        self.collection.fetch({reset: true})
-                    ).then(function () {
-                        //initialize your views here
-                        _log(self.viewName + '.destroy.event', self.viewName + ' collection fetch promise done');
-                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                    });
-                },
-                fail: function (response) {
-                    window.growl(response.msg, 'error');
-                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                }
-            })
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: self.getModelRoute() + '/batch/destroy',
+                    data: attributes,
+                    success: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        console.log('destroy', {currentModelID: self.model.get(self.model.idAttribute), parentSiteStatusID: self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute)})
+                        self.collection.url = self.getCollectionUrl(self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute));
+                        $.when(
+                            self.collection.fetch({reset: true})
+                        ).then(function () {
+                            //initialize your views here
+                            _log(self.viewName + '.destroy.event', self.viewName + ' collection fetch promise done');
+                        });
+                    },
+                    fail: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
-
     });
 })(window.App);
 
@@ -2557,7 +2598,7 @@
         siteStatusViewClass: App.Views.SiteStatus,
         siteVolunteersViewClass: App.Views.SiteVolunteer,
         attributes: {
-            class: 'site-management-view route-view box box-primary'
+            class: 'route-view box box-primary site-management-view'
         },
         template: template('siteManagementTemplate'),
         viewName: 'site-management-view',
@@ -2611,8 +2652,7 @@
             self.siteStatusView.render();
 
             self.siteVolunteersView = new self.siteVolunteersViewClass({
-                ajaxWaitingTargetClassSelector: '.site-volunteers-view',
-                backgridWrapperClassSelector: '.site-volunteers-backgrid-wrapper',
+                ajaxWaitingTargetClassSelector: '#site-volunteers-well',
                 collection: App.PageableCollections.siteVolunteersRoleCollection,
                 columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
                 currentModelIDDataStoreSelector: 'body',
@@ -3238,6 +3278,12 @@
         },
         render: function () {
             let self = this;
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+            self.$el.html(self.template({
+                modelNameLabel: self.modelNameLabel,
+                modelNameLabelLowerCase: self.modelNameLabelLowerCase
+            }));
 
             self.volunteersView = new self.volunteersViewClass({
                 ajaxWaitingTargetClassSelector: '.volunteers-view',
@@ -3268,6 +3314,14 @@
 
             self.volunteersView.render();
             self.childViews.push(self.volunteersView);
+
+            self.backGridFiltersPanel = new App.Views.BackGridFiltersPanel({
+                collection: self.collection,
+                parentEl: self.volunteersView.$gridContainer
+            });
+
+            self.volunteersView.$gridContainer.prepend(self.backGridFiltersPanel.render().$el);
+            self.childViews.push(self.backGridFiltersPanel);
 
             return self;
         }
@@ -3826,7 +3880,6 @@
 
             self.contactsView = new self.contactsViewClass({
                 ajaxWaitingTargetClassSelector: '.contacts-view',
-                backgridWrapperClassSelector: '.backgrid-wrapper',
                 collection: App.PageableCollections.contactsManagementCollection,
                 columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
                 currentModelIDDataStoreSelector: '.contacts-view',
@@ -3853,6 +3906,14 @@
 
             self.contactsView.render();
             self.childViews.push(self.contactsView);
+
+            self.backGridFiltersPanel = new App.Views.BackGridContactsFiltersPanel({
+                collection: self.collection,
+                parentEl: self.contactsView.$gridContainer
+            });
+
+            self.contactsView.$gridContainer.prepend(self.backGridFiltersPanel.render().$el);
+            self.childViews.push(self.backGridFiltersPanel);
 
             return self;
 
@@ -4038,12 +4099,12 @@
 })(window.App);
 
 (function (App) {
-    App.Views.StatusManagementRecord = App.Views.Backend.fullExtend({
+    App.Views.StatusRecord = App.Views.Backend.fullExtend({
         tagName: 'div',
         attributes: {
             class: 'row'
         },
-        template: template('statusManagementRecordTemplate'),
+        template: template('statusRecordTemplate'),
         initialize: function (options) {
             let self = this;
             _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
@@ -4557,12 +4618,14 @@
             return typeof savedModelAttributes[fieldStateVar] !== 'undefined' ? savedModelAttributes[fieldStateVar] : '';
         },
     });
+})(window.App);
 
-    App.Views.StatusManagement = App.Views.Backend.fullExtend({
+(function (App) {
+    App.Views.StatusRecordManagement = App.Views.Management.fullExtend({
         attributes: {
-            class: 'status-management-view route-view box box-primary'
+            class: 'route-view box box-primary status-record-management-view'
         },
-        template: template('statusManagementTemplate'),
+        template: template('statusRecordManagementTemplate'),
         initialize: function (options) {
             let self = this;
             _.bindAll(self, '_initialize','render', 'addOne', 'addAll');
@@ -4578,16 +4641,16 @@
 
             return self;
         },
-        addOne: function (StatusManagement) {
+        addOne: function (StatusRecord) {
             let self = this;
-            if (StatusManagement.attributes.projects.length) {
-                let $settingItem = new App.Views.StatusManagementRecord({model: StatusManagement});
-                self.$el.find('.status-management-wrapper').append($settingItem.render().el);
+            if (StatusRecord.attributes.projects.length) {
+                let $settingItem = new App.Views.StatusRecord({model: StatusRecord});
+                self.$el.find('.status-record-management-wrapper').append($settingItem.render().el);
             }
         },
         addAll: function () {
             let self = this;
-            self.$el.find('.status-management-wrapper').empty();
+            self.$el.find('.status-record-management-wrapper').empty();
 
             self.collection.each(this.addOne);
             self.$el.find('[data-toggle="tooltip"]').tooltip({html: true});
@@ -4597,12 +4660,183 @@
 })(window.App);
 
 (function (App) {
+    App.Views.OptionGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+        viewName: 'option-grid-manager-container-toolbar-view',
+        template: template('optionGridManagerContainerToolbarTemplate'),
+        initialize: function (options) {
+            let self = this;
+            try {
+                _.bindAll(self, 'saveOptionList', 'addOption');
+            } catch (e) {
+                console.error(options, e);
+            }
+            // Required call for inherited class
+            self._initialize(options);
+            _log('App.Views.OptionGridManagerContainerToolbar.initialize', options);
+        },
+        events: {
+            'click .btnSave': 'saveOptionList',
+            'click .btnAdd': 'addOption',
+        },
+        render: function () {
+            let self = this;
+            self._render();
+
+            return self;
+        },
+        saveOptionList: function (e) {
+
+        },
+        addOption: function (e) {
+
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.Option = App.Views.Backend.fullExtend({
+        template: template('optionTemplate'),
+        viewName: 'option-view',
+        events: {
+          'click .ui-icon-trash' : 'delete'
+        },
+        initialize: function (options) {
+            let self = this;
+
+            // try {
+            //     _.bindAll(self, 'update', 'refreshView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+            // } catch (e) {
+            //     console.error(options, e)
+            // }
+            // Required call for inherited class
+            self._initialize(options);
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
+            self.$sortableElement = null;
+        },
+        render: function () {
+            let self = this;
+            self.$el.html(self.template({
+                options: self.collection.models
+            }));
+
+            self.$sortableElement = self.$el.find('.table.options tbody');
+            self.$sortableElement.sortable({
+                axis: 'y',
+                revert: true,
+                delay: 150,
+                cursor: "move",
+                update: function (event, ui) {
+                    self.$sortableElement.sortable("refreshPositions");
+                    let aSortedIDs = self.$sortableElement.sortable("toArray");
+                    let serialized = self.$sortableElement.sortable("serialize", {key: "sort"});
+                    //console.log('update',{ui: ui, aSortedIDs: aSortedIDs, serialized: serialized});
+
+                    let iSequence = 1;
+                    self.$sortableElement.find('tr').each(function (idx, tr) {
+                        let id = tr.id.replace(/option_/, '');
+                        if (id !== '') {
+                            //console.log({tr: tr,'tr.id': tr.id, 'data-id': id, idx: idx, iSequence: iSequence, label: $(tr).find('[name="option_label"]').val()});
+                            self.$sortableElement.find('[name="DisplaySequence"][data-id="' + id + '"]').val(iSequence++);
+                        }
+                    });
+                },
+            });
+            return self;
+        },
+        setGridManagerContainerToolbar: function ($gridManagerContainerToolbar) {
+            let self = this;
+            self.$gridManagerContainerToolbar = $gridManagerContainerToolbar;
+        },
+        delete: function (e) {
+            let self = this;
+            console.log('delete',e)
+            bootbox.confirm("Do you really want to delete this option?", function (bConfirmed) {
+                if (bConfirmed) {
+
+                }
+            });
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.OptionManagement = App.Views.Management.fullExtend({
+        attributes: {
+            class: 'route-view box box-primary option-management-view'
+        },
+        template: template('managementTemplate'),
+        viewName: 'option-management-view',
+        initialize: function (options) {
+            let self = this;
+            // try {
+            //     _.bindAll(self, 'addSite', 'deleteSite');
+            // } catch (e) {
+            //     console.error(options, e)
+            // }
+            // Required call for inherited class
+            this._initialize(options);
+            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
+        },
+        events: {
+
+        },
+        render: function () {
+            let self = this;
+            // Add template to this views el now so child view el selectors exist when they are instantiated
+            self.modelNameLabel = self.options.modelNameLabel.replace(/_/g,' ').replace(/s$/,'');
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(/ /g,'-');
+            self.$el.html(self.template({
+                modelNameLabel: self.modelNameLabel,
+                modelNameLabelLowerCase: self.modelNameLabelLowerCase
+            }));
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            self.collection.url = self.getCollectionUrl(self.options.optionType);
+            $.when(
+                self.collection.fetch({reset:true})
+            ).then(function () {
+                let $option = new App.Views.Option({
+                    mainApp: self.options.mainApp,
+                    collection: self.collection,
+                    optionType: self.options.optionType,
+                    model: self.model,
+                    modelNameLabel: self.modelNameLabel,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector
+                });
+
+                self.optionGridManagerContainerToolbar = new App.Views.OptionGridManagerContainerToolbar({
+                    el: self.$('.grid-manager-container'),
+                    parentView: self,
+                    mainApp: self.mainApp,
+                    managedGridView: $option,
+                    viewName: 'option-grid-manager-toolbar'
+                });
+                self.optionGridManagerContainerToolbar.render();
+                self.childViews.push(self.optionGridManagerContainerToolbar);
+                $option.setGridManagerContainerToolbar(self.optionGridManagerContainerToolbar);
+
+                self.$('.backgrid-wrapper').append($option.render().el);
+                self.childViews.push($option);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
+
+            return self;
+        },
+
+    });
+})(window.App);
+
+(function (App) {
     App.Views.mainApp = App.Views.Backend.fullExtend({
         el: $(".sia-main-app"),
+        events: {
+            'click > .route-view .close-view' : 'hideRouteView'
+        },
         initialize: function (options) {
             let self = this;
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
-            _.bindAll(self, 'render', 'setRouteView');
+            _.bindAll(self, 'render', 'setRouteView', 'hideRouteView');
             self.preRenderedView = false;
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;
@@ -4624,6 +4858,10 @@
             });
             self.checkBrowser();
             self.checkMobileDevice();
+        },
+        hideRouteView: function(e) {
+            //console.log('hideRouteView',e,$(e.currentTarget).parents('.route-view'))
+            $(e.currentTarget).parents('.route-view').hide();
         },
         checkBrowser: function(){
             let bIsChrome = navigator.userAgent.indexOf('Chrome') > -1;

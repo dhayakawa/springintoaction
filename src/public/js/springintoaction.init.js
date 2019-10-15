@@ -55,9 +55,9 @@ window.App = {
         bBackgridColumnManagerSaveState: false,
         bBackgridColumnManagerLoadStateOnInit: false,
         // Turn on the console logging
-        bAllowConsoleOutput: 1,
-        bAllowConsoleOutputHiLite: 1,
-        bAllowConsoleVarGroupsOutput: 1,
+        bAllowConsoleOutput: false,
+        bAllowConsoleOutputHiLite: false,
+        bAllowConsoleVarGroupsOutput: false,
         rowBgColorSelected: '#e3f6b1',
         workerRoleID: 4,
         appInitialData: {},
@@ -67,8 +67,9 @@ window.App = {
     },
     CellEditors: {}
 };
+
 const fileStackApiKey = 'Ana2T1xQQ76feCTmPqLlSz';
-let fileStackClient = filestack.init(fileStackApiKey);
+//let fileStackClient = filestack.init(fileStackApiKey);
 
 let fileStackCombOptions = {
     "displayMode": "inline",
@@ -701,7 +702,7 @@ $('#sia-modal').modal({
                 throw "options.managedGridView is a required option";
             }
             self.managedGridView = self.options.managedGridView;
-            console.log('GridManagerContainerToolbar',{'self.managedGridView': self.managedGridView})
+
             self.singleModelName = self.managedGridView.modelNameLabel.replace(/s$/, '');
             self.templateVars = {btnLabel: self.singleModelName};
         },
@@ -990,11 +991,7 @@ $('#sia-modal').modal({
                 throw "options.parentView is a required option";
             }
             self.parentView = self.options.parentView;
-            if (_.isUndefined(self.options.backgridWrapperClassSelector)) {
-                console.error("options.backgridWrapperClassSelector is a required option", self);
-                throw "options.backgridWrapperClassSelector is a required option";
-            }
-            self.backgridWrapperClassSelector = self.options.backgridWrapperClassSelector;
+
             self.$gridManagerContainerToolbar = null;
 
             if (_.isUndefined(self.options.modelNameLabel)) {
@@ -1056,9 +1053,8 @@ $('#sia-modal').modal({
                 self.setViewDataStoreValue('current-model-id', currentModelID);
             });
 
-            let $gridContainer = this.$el.html(self.backgrid.render().el);
+            self.$gridContainer = self.$el.html(self.backgrid.render().el);
 
-            self.$gridContainer = $gridContainer;
             self.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
             self.paginator = new Backgrid.Extension.Paginator({
                 collection: self.collection
@@ -1074,20 +1070,20 @@ $('#sia-modal').modal({
                     columns: self.columnCollection,
                     grid: self.backgrid
                 });
-                $gridContainer.find('thead').before(sizeAbleCol.render().el);
+                self.$gridContainer.find('thead').before(sizeAbleCol.render().el);
                 // Add resize handlers
                 sizeHandler = new Backgrid.Extension.SizeAbleColumnsHandlers({
                     sizeAbleColumns: sizeAbleCol,
                     saveColumnWidth: true
                 });
-                $gridContainer.find('thead').before(sizeHandler.render().el);
+                self.$gridContainer.find('thead').before(sizeHandler.render().el);
 
                 // Make columns reorderable
                 orderHandler = new Backgrid.Extension.OrderableColumns({
                     grid: self.backgrid,
                     sizeAbleColumns: sizeAbleCol
                 });
-                $gridContainer.find('thead').before(orderHandler.render().el);
+                self.$gridContainer.find('thead').before(orderHandler.render().el);
 
                 self.parentView.$('.columnmanager-visibilitycontrol-container').html(colVisibilityControl.render().el);
             }
@@ -1105,7 +1101,7 @@ $('#sia-modal').modal({
             //_log('App.Views.ProjectTab.render', self.options.tab, 'Set the current model id on the tab so we can reference it in other views. self.model:', self.model);
 
             // Show a popup of the text that has been truncated
-            $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
+            self.$gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
                 placement: 'auto right',
                 padding: 0,
                 container: 'body',
@@ -1114,19 +1110,19 @@ $('#sia-modal').modal({
                 }
             });
             // hide popover if it is not overflown
-            let $cells = $gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]');
+            let $cells = self.$gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]');
             self.listenTo($cells, 'show.bs.popover', function (e) {
                 let element = this;
 
                 let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
                 if (!bOverflown) {
-                    $gridContainer.find('td.renderable').popover('hide')
+                    self.$gridContainer.find('td.renderable').popover('hide')
                 }
             });
 
-            let $cell = $gridContainer.find('td');
+            let $cell = self.$gridContainer.find('td');
             self.listenTo($cell, 'click', function (e) {
-                $gridContainer.find('td.renderable').popover('hide')
+                self.$gridContainer.find('td.renderable').popover('hide')
             });
 
             self.childViews.push(self.backgrid);
@@ -1416,7 +1412,7 @@ $('#sia-modal').modal({
         },
         create: function (attributes) {
             let self = this;
-            window.ajaxWaiting('show', this.ajaxWaitingSelector);
+            window.ajaxWaiting('show', this.ajaxWaitingTargetClassSelector);
 
             _log(this.viewName + '.create', attributes, self.model);
             let newModel = self.model.clone().clear({silent: true});
@@ -1439,7 +1435,7 @@ $('#sia-modal').modal({
                         }
                     })
             ).then(function () {
-                window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
         }
 

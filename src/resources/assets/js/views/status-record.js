@@ -1,10 +1,10 @@
 (function (App) {
-    App.Views.StatusManagementRecord = App.Views.Backend.fullExtend({
+    App.Views.StatusRecord = App.Views.Backend.fullExtend({
         tagName: 'div',
         attributes: {
             class: 'row'
         },
-        template: template('statusManagementRecordTemplate'),
+        template: template('statusRecordTemplate'),
         initialize: function (options) {
             let self = this;
             _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
@@ -517,42 +517,5 @@
             //console.log('getStatusCSS', fieldStateVar, savedModelAttributes, savedModel)
             return typeof savedModelAttributes[fieldStateVar] !== 'undefined' ? savedModelAttributes[fieldStateVar] : '';
         },
-    });
-
-    App.Views.StatusManagement = App.Views.Backend.fullExtend({
-        attributes: {
-            class: 'status-management-view route-view box box-primary'
-        },
-        template: template('statusManagementTemplate'),
-        initialize: function (options) {
-            let self = this;
-            _.bindAll(self, '_initialize','render', 'addOne', 'addAll');
-            this._initialize(options);
-            self.listenTo(self.collection, 'reset', self.addAll);
-        },
-        events: {},
-        render: function () {
-            let self = this;
-            // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(self.template());
-            self.addAll();
-
-            return self;
-        },
-        addOne: function (StatusManagement) {
-            let self = this;
-            if (StatusManagement.attributes.projects.length) {
-                let $settingItem = new App.Views.StatusManagementRecord({model: StatusManagement});
-                self.$el.find('.status-management-wrapper').append($settingItem.render().el);
-            }
-        },
-        addAll: function () {
-            let self = this;
-            self.$el.find('.status-management-wrapper').empty();
-
-            self.collection.each(this.addOne);
-            self.$el.find('[data-toggle="tooltip"]').tooltip({html: true});
-            self.$el.find('[data-popover="true"]').popover({html: true, title: ''});
-        }
     });
 })(window.App);

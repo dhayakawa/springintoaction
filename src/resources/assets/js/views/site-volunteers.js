@@ -15,24 +15,28 @@
             try {
                 _.bindAll(self, 'update', 'renderGrid', 'refreshView', 'getModalForm', 'create', 'batchDestroy', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
             } catch (e) {
-                console.error(self.viewName,e)
+                console.error(self.viewName, e)
             }
 
             self._initialize(options);
             self.listenTo(self.options.parentView.siteYearsDropdownView, 'site-status-id-change', self.fetchIfNewID);
             _log('App.Views.SiteVolunteer.initialize', options);
         },
-        events: {
-
-        },
-        fetchIfNewID: function() {
+        events: {},
+        getCollectionQueryString: function () {
             let self = this;
-            window.ajaxWaiting('show', '#site-volunteers-well');
+
+            return self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute);
+        },
+        fetchIfNewID: function (e) {
+            let self = this;
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            self.collection.url = self.getCollectionUrl();
             $.when(
                 self.collection.fetch({reset: true})
             ).then(function () {
 
-                window.ajaxWaiting('remove', '#site-volunteers-well');
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                 if (self.collection.length) {
                     App.Vars.currentSiteVolunteerRoleID = self.collection.at(0).get(self.model.idAttribute);
                     self.model.set(self.collection.at(0));
@@ -109,25 +113,31 @@
                     e.changed['Status'] = e.changed['SiteVolunteerRoleStatus'];
                 }
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
-                console.log('update',{currentModelID: currentModelID, parentSiteStatusID: self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute)})
+                //console.log('update', {currentModelID: currentModelID, parentSiteStatusID: self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute)})
                 attributes['SiteStatusID'] = self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute);
                 _log('App.Views.SiteVolunteer.update', self.viewName, e.changed, attributes, self.model);
-                window.ajaxWaiting('show', self.backgridWrapperClassSelector);
+                window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
                 self.model.url = self.getModelUrl(currentModelID);
-                self.model.save(attributes,
-                    {
-                        success: function (model, response, options) {
-                            _log('App.Views.SiteVolunteer.update', self.viewName + ' save', model, response, options);
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                            growl(response.msg, response.success ? 'success' : 'error');
-                        },
-                        error: function (model, response, options) {
-                            console.error('App.Views.SiteVolunteer.update', self.viewName + ' save', model, response, options);
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                            growl(response.msg, 'error')
-                        }
-                    });
-            } else {
+                let growlMsg = '';
+                let growlType = '';
+                $.when(
+                    self.model.save(attributes,
+                        {
+                            success: function (model, response, options) {
+                                _log('App.Views.SiteVolunteer.update', self.viewName + ' save', model, response, options);
+                                growlMsg = response.msg;
+                                growlType = response.success ? 'success' : 'error';
+                            },
+                            error: function (model, response, options) {
+                                console.error('App.Views.SiteVolunteer.update', self.viewName + ' save', model, response, options);
+                                growlMsg = response.msg;
+                                growlType = response.success ? 'success' : 'error';
+                            }
+                        })
+                ).then(function () {
+                    growl(growlMsg, growlType);
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+                });
             }
         },
         create: function (attributes) {
@@ -138,52 +148,65 @@
             _log('App.Views.SiteVolunteer.create', self.viewName, attributes, model, self.ajaxWaitingSelector);
             model.url = self.getModelRoute();
             attributes['SiteStatusID'] = self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute);
-            model.save(attributes,
-                {
-                    success: function (model, response, options) {
-                        window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = self.getCollectionUrl(self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute));
-                        $.when(
-                            self.collection.fetch({reset: true})
-                        ).then(function () {
-                            _log('App.Views.SiteVolunteer.create.event', self.viewName + ' collection fetch promise done');
-                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                        });
-                    },
-                    error: function (model, response, options) {
-                        window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                    }
-                });
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                model.save(attributes,
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                            self.collection.url = self.getCollectionUrl(self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute));
+                            $.when(
+                                self.collection.fetch({reset: true})
+                            ).then(function () {
+                                _log('App.Views.SiteVolunteer.create.event', self.viewName + ' collection fetch promise done');
+                            });
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         batchDestroy: function (attributes) {
             var self = this;
             window.ajaxWaiting('show', this.ajaxWaitingSelector);
 
             _log(this.viewName + '.destroy', attributes);
-            $.ajax({
-                type: "POST",
-                dataType: "json",
-                url: self.getModelRoute() + '/batch/destroy',
-                data: attributes,
-                success: function (response) {
-                    window.growl(response.msg, response.success ? 'success' : 'error');
-                    console.log('destroy', {currentModelID: self.model.get(self.model.idAttribute), parentSiteStatusID: self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute)})
-                    self.collection.url = self.getCollectionUrl(self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute));
-                    $.when(
-                        self.collection.fetch({reset: true})
-                    ).then(function () {
-                        //initialize your views here
-                        _log(self.viewName + '.destroy.event', self.viewName + ' collection fetch promise done');
-                        window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                    });
-                },
-                fail: function (response) {
-                    window.growl(response.msg, 'error');
-                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                }
-            })
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: self.getModelRoute() + '/batch/destroy',
+                    data: attributes,
+                    success: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        console.log('destroy', {currentModelID: self.model.get(self.model.idAttribute), parentSiteStatusID: self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute)})
+                        self.collection.url = self.getCollectionUrl(self.options.parentView.siteYearsDropdownView.model.get(self.options.parentView.siteYearsDropdownView.model.idAttribute));
+                        $.when(
+                            self.collection.fetch({reset: true})
+                        ).then(function () {
+                            //initialize your views here
+                            _log(self.viewName + '.destroy.event', self.viewName + ' collection fetch promise done');
+                        });
+                    },
+                    fail: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
-
     });
 })(window.App);

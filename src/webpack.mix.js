@@ -22,6 +22,7 @@ mix.setPublicPath("public");
  * this script is run
  */
 mix.scripts([
+    'resources/assets/js/jquery-ui-1.12.1/jquery-ui.js',
     'resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.js',
     'resources/assets/js/jquery-validation-1.19.0/dist/additional-methods.js',
     'node_modules/lodash/lodash.js',
@@ -53,6 +54,7 @@ mix.scripts([
     'resources/assets/js/jquery.sticky.js',
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
+    'resources/assets/js/jquery-ui-1.12.1/jquery-ui.min.js',
     'resources/assets/js/jquery-validation-1.19.0/dist/jquery.validate.min.js',
     'resources/assets/js/jquery-validation-1.19.0/dist/additional-methods.min.js',
     'node_modules/lodash/lodash.min.js',
@@ -102,6 +104,7 @@ mix.scripts([
     'resources/assets/js/models/site-volunteer.js',
     'resources/assets/js/models/report.js',
     'resources/assets/js/models/status-management.js',
+    'resources/assets/js/models/option.js',
     'resources/assets/js/models/init-models.js'
 ], 'public/js/springintoaction.models.js');
 mix.scripts([
@@ -117,6 +120,7 @@ mix.scripts([
     'resources/assets/js/collections/site-volunteer.js',
     'resources/assets/js/collections/report.js',
     'resources/assets/js/collections/status-management.js',
+    'resources/assets/js/collections/option.js',
     'resources/assets/js/collections/init-collections.js'
 ], 'public/js/springintoaction.collections.js');
 mix.scripts([
@@ -149,7 +153,11 @@ mix.scripts([
     'resources/assets/js/views/contact.js',
     'resources/assets/js/views/contact-management.js',
     'resources/assets/js/views/report-management.js',
-    'resources/assets/js/views/status-management.js',
+    'resources/assets/js/views/status-record.js',
+    'resources/assets/js/views/status-record-management.js',
+    'resources/assets/js/views/option-grid-manager-container-toolbar.js',
+    'resources/assets/js/views/option.js',
+    'resources/assets/js/views/option-management.js',
     'resources/assets/js/views/main-view.js'
 ], 'public/js/springintoaction.views.js');
 mix.scripts([
@@ -222,6 +230,9 @@ mix.less('resources/assets/less/frontend/registration/registration_app.less', 'p
 mix.less('resources/assets/less/frontend/fonts.less', 'public/css/springintoaction.fonts.css');
 mix.less('resources/assets/less/sia_frontend.less', 'public/css/springintoaction.frontend.css');
 mix.styles([
+    'resources/assets/js/jquery-ui-1.12.1/jquery-ui.min.css',
+    'resources/assets/js/jquery-ui-1.12.1/jquery-ui.theme.min.css',
+    'resources/assets/js/jquery-ui-1.12.1/jquery-ui.structure.min.css',
     'node_modules/backgrid/lib/backgrid.min.css',
     'node_modules/backgrid-paginator/backgrid-paginator.min.css',
     'node_modules/backgrid-columnmanager/lib/Backgrid.ColumnManager.css',
@@ -239,6 +250,8 @@ mix.styles([
 
 mix.copy('resources/assets/fonts','public/fonts');
 mix.copy('resources/assets/images', 'public/images');
+mix.copy('resources/assets/js/jquery-ui-1.12.1/images', 'public/js/jquery-ui-1.12.1/images');
+mix.copy('resources/assets/js/jquery-ui-1.12.1/images', 'packages/dhayakawa/springintoaction/src/public/js/jquery-ui-1.12.1/images');
 mix.copy('resources/assets/js/springintoaction.templates.js','public/js/springintoaction.templates.js');
 mix.copy('resources/assets/js/app-initial-models-vars-data.js','public/js/app-initial-models-vars-data.js');
 mix.copy('resources/assets/js/app-initial-collections-view-data.js','public/js/app-initial-collections-view-data.js');

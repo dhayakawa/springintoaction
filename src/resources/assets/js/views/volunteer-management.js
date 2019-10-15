@@ -17,6 +17,12 @@
         },
         render: function () {
             let self = this;
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+            self.$el.html(self.template({
+                modelNameLabel: self.modelNameLabel,
+                modelNameLabelLowerCase: self.modelNameLabelLowerCase
+            }));
 
             self.volunteersView = new self.volunteersViewClass({
                 ajaxWaitingTargetClassSelector: '.volunteers-view',
@@ -47,6 +53,14 @@
 
             self.volunteersView.render();
             self.childViews.push(self.volunteersView);
+
+            self.backGridFiltersPanel = new App.Views.BackGridFiltersPanel({
+                collection: self.collection,
+                parentEl: self.volunteersView.$gridContainer
+            });
+
+            self.volunteersView.$gridContainer.prepend(self.backGridFiltersPanel.render().$el);
+            self.childViews.push(self.backGridFiltersPanel);
 
             return self;
         }

@@ -2,6 +2,7 @@
     App.Views.SiteSetting = App.Views.Backend.fullExtend({
         tagName: 'li',
         template: template('siteSettingTemplate'),
+        viewName: 'site-setting-view',
         initialize: function (options) {
             let self = this;
             _.bindAll(this, '_initialize','render');
@@ -109,35 +110,47 @@
             class: 'site-settings-management-view route-view box box-primary'
         },
         template: template('siteSettingsManagementTemplate'),
+        viewName: 'site-settings-management-view',
         initialize: function (options) {
             let self = this;
-            this.itemsView = [];
-            this.options = options;
-            self.modelNameLabel = this.options.modelNameLabel;
+            try {
+                _.bindAll(self, 'addOne', 'addAll', 'render');
+            } catch (e) {
+                console.error(options, e);
+            }
+
+            this._initialize(options);
+            self.itemsView = [];
+            self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(' ', '_');
-            _.bindAll(this, 'addOne', 'addAll', 'render');
+
             self.listenTo(self.collection, "reset", self.addAll);
         },
         events: {},
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(this.template({
+            self.$el.html(self.template({
                 modelNameLabel: self.modelNameLabel,
                 modelNameLabelLowerCase: self.modelNameLabelLowerCase
             }));
-            this.addAll();
-            return this;
+            self.addAll();
+            return self;
         },
         addOne: function (SiteSetting) {
-            let $settingItem = new App.Views.SiteSetting({model: SiteSetting});
-            this.itemsView.push($settingItem);
-            this.$el.find('ul').append($settingItem.render().el);
+            let self = this;
+            let $settingItem = new App.Views.SiteSetting({
+                model: SiteSetting,
+                mainApp: self.mainApp
+            });
+            self.itemsView.push($settingItem);
+            self.$el.find('ul').append($settingItem.render().el);
         },
         addAll: function () {
-            this.$el.find('.site-settings-management-wrapper').empty();
-            this.$el.find('.site-settings-management-wrapper').append($('<ul class="nav nav-stacked"></ul>'));
-            this.collection.each(this.addOne);
+            let self = this;
+            self.$el.find('.site-settings-management-wrapper').empty();
+            self.$el.find('.site-settings-management-wrapper').append($('<ul class="nav nav-stacked"></ul>'));
+            self.collection.each(self.addOne);
         }
     });
 })(window.App);
