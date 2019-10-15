@@ -111,7 +111,7 @@ class ProjectRequestController extends BaseController
             $BudgetSourceOptions = $BudgetSourceOptions ? $BudgetSourceOptions->toArray() : [];
             foreach ($BudgetSourceOptions as $option) {
                 $aBudgetSourceOptions[] = ['option_value' => $option['option_value'], 'option_label' => $option['option_label']];
-                $aBudgetSources[$option['option_value']] = $option['option_label'];
+                $aBudgetSources['id_' . $option['option_value']] = $option['option_label'];
             }
             \array_shift($aBudgetSourceOptions);
             \array_shift($aBudgetSources);
@@ -128,9 +128,17 @@ class ProjectRequestController extends BaseController
             // need to make sure the year is for the upcoming/next spring
             // or this spring if the month is less than may
             $Year = $month > 5 ? $yearNow + 1 : $yearNow;
-            foreach ($sites as $option) {
 
-                $aaProjects[$option['SiteID']] = Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.Year', $Year)->where('site_status.SiteID', $option['SiteID'])->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            foreach ($sites as $option) {
+                $aResults = SiteStatus::where('Year', $Year)->where('SiteID', $option['SiteID'])->get()->toArray();
+                $aSiteStatus = current($aResults);
+                $projectModel = new Project();
+                $aProjects = $projectModel->getSiteProjects($aSiteStatus['SiteStatusID']);
+
+
+                $aaProjects[$option['SiteID']] = $aProjects;
+                //Project::join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where('site_status.Year', $Year)->where('site_status.SiteID', $option['SiteID'])->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+
             }
 
         } catch (\Exception $e) {
@@ -181,7 +189,7 @@ class ProjectRequestController extends BaseController
             $sequenceNumber = 1;
         }
         $project = new Project;
-        $defaultProjectRecordData = ['ProjectDescription' => '', 'Comments' => '', 'ChildFriendly' => 0, 'PrimarySkillNeeded' => '', 'VolunteersNeededEst' => 0, 'VolunteersAssigned' => 0, 'Status' => '', 'StatusReason' => '', 'MaterialsNeeded' => '', 'EstimatedCost' => 0.00, 'ActualCost' => 0.00, 'BudgetAvailableForPC' => 0.00, 'VolunteersLastYear' => 0, 'NeedsToBeStartedEarly' => 0, 'PCSeeBeforeSIA' => 0, 'SpecialEquipmentNeeded' => '', 'PermitsOrApprovalsNeeded' => '', 'PrepWorkRequiredBeforeSIA' => '', 'SetupDayInstructions' => '', 'SIADayInstructions' => '', 'Attachments' => '', 'Area' => '', 'PaintOrBarkEstimate' => '', 'PaintAlreadyOnHand' => '', 'PaintOrdered' => '', 'CostEstimateDone' => 0, 'MaterialListDone' => 0, 'BudgetAllocationDone' => 0, 'VolunteerAllocationDone' => 0, 'NeedSIATShirtsForPC' => 0, 'ProjectSend' => 'Not Ready', 'FinalCompletionStatus' => 0, 'FinalCompletionAssessment' => ''];
+        $defaultProjectRecordData = ['ProjectDescription' => '', 'Comments' => '', 'ChildFriendly' => 0, 'PrimarySkillNeeded' => '', 'VolunteersNeededEst' => 0, 'VolunteersAssigned' => 0, 'Status' => 6, 'StatusReason' => '', 'MaterialsNeeded' => '', 'EstimatedCost' => 0.00, 'ActualCost' => 0.00, 'BudgetAvailableForPC' => 0.00, 'VolunteersLastYear' => 0, 'NeedsToBeStartedEarly' => 0, 'PCSeeBeforeSIA' => 0, 'SpecialEquipmentNeeded' => '', 'PermitsOrApprovalsNeeded' => '', 'PrepWorkRequiredBeforeSIA' => '', 'SetupDayInstructions' => '', 'SIADayInstructions' => '', 'Attachments' => '', 'Area' => '', 'PaintOrBarkEstimate' => '', 'PaintAlreadyOnHand' => '', 'PaintOrdered' => '', 'CostEstimateDone' => 0, 'MaterialListDone' => 0, 'BudgetAllocationDone' => 0, 'VolunteerAllocationDone' => 0, 'NeedSIATShirtsForPC' => 0, 'ProjectSend' => 2, 'FinalCompletionStatus' => 0, 'FinalCompletionAssessment' => ''];
         $data = array_map(function ($value) {
             if (is_array($value)) {
                 return join(',', $value);
@@ -236,10 +244,32 @@ class ProjectRequestController extends BaseController
         $success = $model->save();
 
         $this->handleProjectAttachments($request, $Year, $ProjectID);
-
+        $this->handleBudgetSources($request, $ProjectID);
         return view('springintoaction::frontend.project_response', $request, compact('response'));
     }
 
+    public function handleBudgetSources($request, $ProjectID) {
+
+        $requestData = $request->all();
+        $aBudgetSources = isset($requestData['BudgetSources']) ? $requestData['BudgetSources'] : [10];
+        if(!is_array($aBudgetSources)) {
+            $aBudgetSources = [$aBudgetSources];
+        }
+        foreach($aBudgetSources as $budgetSource){
+            $model = new Budget;
+            $data = [
+                'ProjectID' => $ProjectID,
+                'BudgetSource' => $budgetSource,
+                'BudgetAmount' => 0.00,
+                'Status' => 1,
+                'Comments' => 'Created during project request. Needs to be verified and updated.',
+            ];
+            $model->fill($data);
+
+            $success = $model->save();
+        }
+
+    }
     public function handleProjectAttachments (Request $request, $Year, $ProjectID) {
         $timeStamp = date("Ymd") . round(microtime(true));
 

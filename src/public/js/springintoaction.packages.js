@@ -30758,6 +30758,7 @@ S2.define('jquery.select2',[
     _setElement: function(el) {
       this.$el = el instanceof Backbone.$ ? el : Backbone.$(el);
       this.el = this.$el[0];
+      
     },
 
     // Set callbacks, where `this.events` is a hash of
