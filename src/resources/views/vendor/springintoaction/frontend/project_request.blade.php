@@ -6,6 +6,7 @@
 <script type="text/javascript">
     let aaProjects = @json($formData['aaProjects']);
     let aBudgetSources = @json($formData['aBudgetSources']);
+    let aBudgetSourceOptions = @json($formData['aBudgetSourceOptions']);
 </script>
 <script src="{{ mix('/js/frontend/springintoaction.project-request.js') }}"></script>
 @endpush
@@ -71,7 +72,7 @@
             <thead>
                 <th>Project ID</th>
                 <th>Description</th>
-                <th>Budget Sources</th>
+<!--                <th>Budget Sources</th>-->
             </thead>
             <tbody>
 
@@ -111,15 +112,17 @@
                         $old = null;
                     }
                     foreach($formData['aBudgetSourceOptions'] as $option):
-                        if($old !== null):
-                            $checked = empty($old) && $option['option_value'] == '' ? "checked" : in_array($option['option_value'], $old) ? "checked" : "";
-                        else:
-                            $checked = "";
+                        if(in_array($option['option_label'],['School','PTO','Unknown'])) {
+                            if($old !== null):
+                                $checked = empty($old) && $option['option_value'] == '' ? "checked" : in_array($option['option_value'], $old) ? "checked" : "";
+                            else:
+                                $checked = "";
 
-                        endif;
-                        echo "<label class=\"checkbox-inline\">";
-                        echo "<input name=\"BudgetSources[]\" type=\"checkbox\" value=\"{$option['option_value']}\" {$checked}>{$option['option_label']}";
-                        echo "</label>";
+                            endif;
+                            echo "<label class=\"checkbox-inline\">";
+                            echo "<input name=\"BudgetSources[]\" type=\"checkbox\" value=\"{$option['option_value']}\" {$checked}>{$option['option_label']}";
+                            echo "</label>";
+                        }
                     endforeach;
                     @endphp
 

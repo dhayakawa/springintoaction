@@ -4,17 +4,19 @@ $(function () {
         $tBody.empty();
         if (aSiteProjects && aSiteProjects.length) {
             $.each(aSiteProjects, function (idx, value) {
-                //console.log(idx, value)
+                // console.log(idx, value)
                 if (!value.OriginalRequest.match(/test/i)) {
                     let budgetSources         = '';
-                    let aProjectBudgetSources = value.BudgetSources.split(/,/);
+                    let aProjectBudgetSources = value.BudgetSources !== null ? value.BudgetSources.split(/,/) : [];
                     $.each(aProjectBudgetSources, function (key, val) {
-                        if (typeof aBudgetSources[val] !== 'undefined') {
-                            budgetSources += aBudgetSources[val] + ', ';
+                        //console.log(val, aBudgetSources)
+                        if (typeof aBudgetSources['id_' + val] !== 'undefined') {
+                            budgetSources += aBudgetSources['id_' + val] + ', ';
                         }
                     });
                     budgetSources = budgetSources.replace(/, $/, '');
-                    $tBody.append('<tr><td>' + value.SequenceNumber + '</td><td>' + value.OriginalRequest.replace(/(\r\n|\n)/,'<br>') + '</td><td>' + budgetSources + '</td></tr>');
+                    $tBody.append('<tr><td>' + value.SequenceNumber + '</td><td>' + value.OriginalRequest.replace(/(\r\n|\n)/,'<br>') + '</td></tr>');
+                    //$tBody.append('<tr><td>' + value.SequenceNumber + '</td><td>' + value.OriginalRequest.replace(/(\r\n|\n)/,'<br>') + '</td><td>' + budgetSources + '</td></tr>');
                 }
             })
         }
