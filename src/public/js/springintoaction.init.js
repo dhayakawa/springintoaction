@@ -508,7 +508,7 @@ $('#sia-modal').modal({
                 $element.popover('hide');
             }
             //_log('App.Views.SiteVolunteer.hideTruncatedCellContent.event', e, element, bOverflown);
-        }
+        },
     });
 })(window.App);
 
