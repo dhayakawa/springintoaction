@@ -1,13 +1,11 @@
 (function (App) {
-    App.Collections.Budget = Backbone.Collection.extend({
+    App.Collections.AnnualBudget = Backbone.Collection.extend({
         url: '/admin/annualbudget/list/all',
         model: App.Models.Budget
     });
 
-    App.PageableCollections.Budget = Backbone.PageableCollection.extend({
-        url: function (ProjectID) {
-            return this.document.url() + '/admin/project/budgets/' + ProjectID;
-        },
+    App.PageableCollections.ProjectBudget = Backbone.PageableCollection.extend({
+        url: '/admin/project_budget/list/all',
         model: App.Models.Budget,
         state: {
             pageSize: 5000
@@ -127,7 +125,7 @@
                 setInterval(function () {
                     self.fetching = true;
 
-                    $.get("/admin/project/year/list/all").done(function (data) {
+                    $.get("/admin/project/year/all").done(function (data) {
                         self._optionValues = [];
                         _.each(data, function (model) {
                             self._optionValues.push([model['ProjectDescription'], model['ProjectID']]);
@@ -165,5 +163,14 @@
         }
         App.Vars.annualBudgetsBackgridColumnDefinitions.push(value);
     });
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.BudgetsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+        _.each(App.Vars.annualBudgetsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.BudgetsBackgridColumnDefinitions:', App.Vars.BudgetsBackgridColumnDefinitions);
+    _log('App.Vars.CollectionsGroup', 'App.Vars.annualBudgetsBackgridColumnDefinitions:', App.Vars.annualBudgetsBackgridColumnDefinitions);
 })(window.App);

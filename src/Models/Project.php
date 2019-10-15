@@ -191,7 +191,7 @@ class Project extends Model
             (!is_numeric($this->defaultRecordData['Year']) ||
              !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))
         ) {
-            $this->defaultRecordData['Year'] = date('Y');
+            $this->defaultRecordData['Year'] = $this->getCurrentYear();
         }
 
         return $this->defaultRecordData;

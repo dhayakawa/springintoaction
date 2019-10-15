@@ -1,17 +1,40 @@
 (function (App) {
     App.Views.Backend = Backbone.View.extend({
         _initialize: function (options) {
-            let self = this;
-            self.childViews = [];
-            self.options = options;
-            if (_.isUndefined(self.options.mainApp)) {
-                throw self.options.viewName + " options.mainApp is a required option";
+            try {
+                _.bindAll(this, 'close', 'getViewDataStore', 'setViewDataStoreValue', 'removeViewDataStore', 'removeChildViews', 'getViewClassName');
+            } catch (e) {
+                console.error(options, e)
             }
-            self.mainApp = self.options.mainApp;
-            _.bindAll(self, 'close', 'getViewDataStore','setViewDataStoreValue','removeViewDataStore','removeChildViews', 'getViewClassName');
+            //console.log('Backend _initialize called with options:',{options: options,this:this})
+            this.childViews = [];
+            this.options = options;
+            this._validateRequiredOptions(options);
+            this.setModelRoute();
+            this.setViewName();
+            this.mainApp = this.options.mainApp;
 
         },
+        setViewName: function(){
+            let self = this;
+            self.viewName = !_.isUndefined(self.options.viewName) ? self.options.viewName : self.__proto__.viewName;
+        },
+        _validateRequiredOptions: function(options) {
+            let self = this;
+            if (_.isUndefined(options.viewName) && _.isUndefined(self.__proto__.viewName)) {
+                console.error("options.viewName is a required option", {self: self, options: options});
+                throw "options.viewName is a required option";
+            }
+            if (_.isUndefined(options.mainApp)) {
+                console.error(options.viewName + " options.mainApp is a required option", {self:self, options:options});
+                throw options.viewName + " options.mainApp is a required option";
+            }
+        },
         close: function () {
+            let self = this;
+            self._close();
+        },
+        _close: function () {
             this.$el.hide();
             // handle other unbinding needs, here
             if (!_.isUndefined(this.childViews)) {
@@ -44,130 +67,473 @@
             return this.constructor.name;
         },
         getModalElement: function () {
-            return self.getModalElement();
+            return $('#sia-modal');
         },
-        getViewDataStore: function (data) {
+        getModalForm: function () {
+            return '';
+        },
+        getViewDataStore: function (data, _viewName) {
             let self = this;
-            let dataStore = localStorage.getItem(self.viewName);
+            let viewName = !_.isUndefined(_viewName) ? _viewName : self.viewName;
+            let dataStore = localStorage.getItem(viewName);
 
             if (dataStore) {
                 dataStore = JSON.parse(dataStore);
                 if (!_.isUndefined(data) && !_.isUndefined(dataStore[data])) {
                     return dataStore[data];
-                } else {
-                    dataStore = {};
+                } else if (!_.isUndefined(data)){
+                    return null;
                 }
             } else {
-                dataStore = {};
+                dataStore = null;
             }
-
+            //console.log('getViewDataStoreValue', {'viewName': viewName, dataStore: dataStore, data: data})
             return dataStore;
         },
-        setViewDataStoreValue: function (data, value) {
+        setViewDataStoreValue: function (data, value, _viewName) {
             let self = this;
+            let origDataStore = self.getViewDataStore();
             let dataStore = self.getViewDataStore();
+            if (_.isNull(dataStore)) {
+                dataStore = {};
+            }
+            let viewName = !_.isUndefined(_viewName) ? _viewName : self.viewName;
             dataStore[data] = value;
-            localStorage.setItem(self.viewName, JSON.stringify(dataStore));
+            localStorage.setItem(viewName, JSON.stringify(dataStore));
+            if (_.isUndefined(viewName)) {
+                console.error('setViewDataStoreValue', {self:self, origDataStore: origDataStore, data: data, value: value})
+            }
         },
-        removeViewDataStore: function () {
+        removeViewDataStore: function (_viewName) {
+            let self = this;
+            let viewName = !_.isUndefined(_viewName) ? _viewName : self.viewName;
+            localStorage.removeItem(viewName);
+        },
+        findModelRoute: function(model) {
+            let self = this;
+            let bFoundRoute = true;
+            let viewModel = !_.isUndefined(self.model) && !_.isNull(self.model) ? self.model : !_.isUndefined(self.options.model) && !_.isNull(self.options.model)? self.options.model : null;
+            model = !_.isUndefined(model) ? model : viewModel;
+
+            if (_.isNull(model) && !_.isUndefined(self.collection) && self.collection.length){
+                model = self.collection.at(0);
+            } else if (_.isNull(model) && !_.isUndefined(self.options.collection) && self.options.collection.length){
+                model = self.options.collection.at(0);
+            }
+            if (_.isUndefined(model) || _.isNull(model)) {
+                let bShowError = true;
+                if ((!_.isUndefined(self.viewName) && self.viewName.match(/(management|toolbar)/)) ||
+                    (!_.isUndefined(self.options.viewName) && self.options.viewName.match(/(management|toolbar)/))){
+                    bShowError = false;
+                }
+                if (bShowError) {
+                    console.error('findModelRoute missing model', {self: self, options: self.options});
+                }
+                self.modelRoute = '';
+            } else {
+                //console.log({model: model,url: model.__proto__.url, self: self, options: self.options})
+                if (!_.isUndefined(model.__proto__.url)) {
+                    self.modelRoute = model.__proto__.url;
+                } else {
+                    self.modelRoute = '';
+                    bFoundRoute = false;
+                    console.log('model.__proto__.url was undefined',{model: model, url: model.__proto__, self: self, options: self.options})
+                }
+                if (!bFoundRoute) {
+                    console.error('findModelRoute', {self: self, options: self.options,viewName: self.viewName, modelRoute: self.modelRoute, model: model, protoUrl: !_.isUndefined(model.__proto__) ? model.__proto__ : 'proto url not set', superIdAttributeOrUrl: !_.isUndefined(model._super) ? model._super : '_super not set'});
+                }
+
+            }
+            return self.modelRoute;
+        },
+        getModelRoute: function (model) {
+            let self = this;
+            if (_.isUndefined(self.modelRoute)) {
+                self.modelRoute = self.findModelRoute(model);
+            }
+            return self.modelRoute;
+        },
+        setModelRoute: function (modelRoute) {
+            let self = this;
+            if (!_.isUndefined(modelRoute)) {
+                self.modelRoute = modelRoute;
+                //console.log('setModelRoute modelRoute passed in', modelRoute, {self: self, options: self.options});
+            } else{
+                self.modelRoute = self.findModelRoute();
+            }
+        },
+        getModelUrl: function (modelId) {
+            let self = this;
+            let modelQS = '';
+            if (!_.isUndefined(modelId)) {
+                if (!_.isString(modelId)) {
+                    modelId = modelId.toString();
+                }
+                modelQS =  '/' + modelId;
+            }
+            let modelRoute = self.getModelRoute();
+            if (modelRoute === '') {
+                console.error('getModelUrl getModelRoute was set to ""', {modelRoute: modelRoute,self: self, viewName: self.viewName, modelId: modelId});
+                throw self.viewName + ' getModelUrl getModelRoute was set to ""';
+            }
+
+            return modelRoute + modelQS;
+        },
+        findCollectionRoute: function(collection){
+            let self = this;
+            let viewCollection = !_.isUndefined(self.collection) && !_.isNull(self.collection) ? self.collection : !_.isUndefined(self.options.collection) && !_.isNull(self.options.collection) ? self.options.collection : null;
+            collection = !_.isUndefined(collection) ? collection : viewCollection;
+
+            //console.log('findCollectionRoute',{collection: collection, options: self.options, self: self})
+            if (!_.isUndefined(collection) || !_.isNull(collection)) {
+                if (!_.isUndefined(collection.__proto__.url)) {
+                    self.collectionRoute = collection.__proto__.url;
+                } else {
+                    self.collectionRoute = '';
+                    }
+            }
+            return self.collectionRoute;
+        },
+        getCollectionRoute: function(collection){
+            let self = this;
+            if (_.isUndefined(self.collectionRoute)) {
+                self.collectionRoute = self.findCollectionRoute(collection);
+            }
+            return self.collectionRoute;
+        },
+        getCollectionUrl: function (qs) {
             let self = this;
 
-            localStorage.removeItem(self.viewName);
+            qs = _.isUndefined(qs) ? self.getCollectionQueryString() : qs;
+            if (!_.isString(qs)){
+                qs = qs.toString();
+            }
+            if (qs !== '' && !qs.match(/^\//)) {
+                qs = '/' + qs;
+            }
+            let collectionRoute = self.getCollectionRoute();
+            if (collectionRoute==='') {
+                let modelRoute = self.getModelRoute();
+                collectionRoute = modelRoute + '/list/all' + qs;
+            }
+
+            //console.error('getCollectionUrl', {collectionRoute: collectionRoute, self: self, viewName: self.viewName, qs: qs, options: self.options})
+            return collectionRoute + qs;
+        },
+        getCollectionQueryString: function () {
+            return '';
+        },
+        handleSiteIDChange: function (e) {
+            let self = this;
+
+            self.setViewDataStoreValue('current-site-id', e[self.sitesDropdownView.model.idAttribute]);
+        },
+        handleSiteStatusIDChange: function (e) {
+            let self = this;
+
+            self.setViewDataStoreValue('current-site-status-id', e[self.siteYearsDropdownView.model.idAttribute]);
         },
     });
 
-    App.Views.ManagedGrid = App.Views.Backend.fullExtend({
+    App.Views.Management = App.Views.Backend.fullExtend({
+        bModelExpected: false,
+        events: {
+
+        },
         _initialize: function (options) {
             let self = this;
+            try {
+                _.bindAll(self,
+                    'render',
+
+                );
+            } catch (e) {
+                console.error(options, e)
+            }
             self.childViews = [];
             self.options = options;
-
-            _.bindAll(
-                self,
-                'close',
-                'removeChildViews',
-                'getViewClassName',
-                '_destroy',
-                'getModalForm',
-                'getModelRoute',
-                'hideTruncatedCellContentPopup',
-                'positionOverlays',
-                '_refreshView',
-                'renderGrid',
-                'setCurrentRow',
-                'setModelRoute',
-                'showColumnHeaderLabel',
-                'showRadioBtnEditHelpMsg',
-                'showTruncatedCellContentPopup',
-                'toggleDeleteBtn',
-                'refocusGridRecord',
-                'getViewDataStore',
-                'setViewDataStoreValue',
-                'removeViewDataStore'
-            );
-            self.rowBgColor = 'lightYellow';
-            self.$currentRow = null;
-            self.currentModelID = null;
-
-            if (_.isUndefined(self.options.ajaxWaitingTargetClassSelector)) {
-                throw "options.ajaxWaitingTargetClassSelector is a required option";
-            }
-            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
-
-            if (_.isUndefined(self.options.viewName)) {
-                throw "options.viewName is a required option";
-            }
-            self.viewName = self.options.viewName;
-
-            if (_.isUndefined(self.options.mainApp)) {
-                throw "options.mainApp is a required option";
-            }
-            self.mainApp = self.options.mainApp;
-            if (_.isUndefined(self.options.currentModelIDDataStoreSelector)) {
-                throw "options.currentModelIDDataStoreSelector is a required option";
-            }
-            self.currentModelIDDataStoreSelector = self.options.currentModelIDDataStoreSelector;
-            if (_.isUndefined(self.options.columnCollectionDefinitions)) {
-                throw "options.columnCollectionDefinitions is a required option";
-            }
-            self.columnCollectionDefinitions = self.options.columnCollectionDefinitions;
-            if (_.isUndefined(self.options.parentView)) {
-                throw "options.parentView is a required option";
-            }
-            self.parentView = self.options.parentView;
-            if (_.isUndefined(self.options.backgridWrapperClassSelector)) {
-                throw "options.backgridWrapperClassSelector is a required option";
-            }
-            self.backgridWrapperClassSelector = self.options.backgridWrapperClassSelector;
-            if (_.isUndefined(self.options.gridManagerContainerToolbarClassName)) {
-                throw "options.gridManagerContainerToolbarClassName is a required option";
-            }
-            self.gridManagerContainerToolbarClassName = self.options.gridManagerContainerToolbarClassName;
-            self.gridManagerContainerToolbarSelector = '.' + self.gridManagerContainerToolbarClassName;
-            self.$gridManagerContainer = self.parentView.$(self.gridManagerContainerToolbarSelector);
-
-            if (_.isUndefined(self.options.modelNameLabel)) {
-                throw "options.modelNameLabel is a required option";
-            }
-            self.modelNameLabel = self.options.modelNameLabel;
-            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
-
-            if (_.isUndefined(self.options.model)) {
-                throw "options.model is a required option";
-            }
+            self._validateRequiredOptions(options);
             self.model = !_.isUndefined(self.model) ? self.model : !_.isUndefined(self.options.model) ? self.options.model : null;
-            if (_.isUndefined(self.model) || _.isNull(self.model)) {
-                //console.log('missing model', options, self.options.model);
-                self.modelRoute = null;
-            } else {
-                //console.log(' model', self.model, self.model._super.idAttribute, self.model._super.url);
-                if (!_.isUndefined(self.model.__proto__.url)) {
-                    self.setModelRoute(self.model.__proto__.url);
-                } else {
-                    self.setModelRoute('');
+            self.setModelRoute();
+            self.setViewName();
+            self.mainApp = self.options.mainApp;
+
+        },
+        renderSiteDropdowns: function () {
+            let self = this;
+
+            self.sitesDropdownView = new self.sitesDropdownViewClass({
+                el: self.$('select#sites'),
+                model: new App.Models.Site(),
+                collection: new App.Collections.Site(App.Vars.appInitialData.sites),
+                parentView: self,
+                selectedSiteID: self.getViewDataStore('current-site-id'),
+                mainApp: self.mainApp
+            });
+            self.siteYearsDropdownView = new self.siteYearsDropdownViewClass({
+                el: self.$('select#site_years'),
+                parentView: this,
+                model: new App.Models.SiteYear(),
+                collection: new App.Collections.SiteYear(App.Vars.appInitialData.site_years),
+                sitesDropdownView: self.sitesDropdownView,
+                selectedSiteStatusID: self.getViewDataStore('current-site-status-id'),
+                mainApp: self.mainApp
+            });
+            self.listenTo(self.sitesDropdownView, 'site-id-change', self.handleSiteIDChange);
+            self.sitesDropdownView.render();
+            self.childViews.push(self.sitesDropdownView);
+            self.listenTo(self.siteYearsDropdownView, 'site-status-id-change', self.handleSiteStatusIDChange);
+            self.siteYearsDropdownView.render();
+
+            self.childViews.push(self.siteYearsDropdownView);
+        }
+    });
+
+    App.Views.GridManagerContainerToolbar = App.Views.Backend.fullExtend({
+        bModelExpected: false,
+        events: {
+            'click .btnAdd': 'addGridRow',
+            'click .btnEdit': 'editGridRow',
+            'click .btnDeleteChecked': 'deleteCheckedRows',
+            'click .btnClearStored': 'clearStoredColumnState',
+        },
+        template: template('gridManagerContainerToolbarTemplate'),
+        _initialize: function (options) {
+            let self = this;
+            try {
+                _.bindAll(self, 'addGridRow', 'deleteCheckedRows', 'clearStoredColumnState', 'setStickyColumns');
+            } catch (e) {
+                console.error(options, e)
+            }
+            self.childViews = [];
+            self.options = options;
+            self._validateRequiredOptions(options);
+            self.setModelRoute();
+            self.bAppend = !_.isUndefined(self.options.bAppend) ? self.options.bAppend : false;
+            self.setViewName();
+            self.mainApp = self.options.mainApp;
+            if (_.isUndefined(self.options.managedGridView)) {
+                console.error("options.managedGridView is a required option", self);
+                throw "options.managedGridView is a required option";
+            }
+            self.managedGridView = self.options.managedGridView;
+            console.log('GridManagerContainerToolbar',{'self.managedGridView': self.managedGridView})
+            self.singleModelName = self.managedGridView.modelNameLabel.replace(/s$/, '');
+            self.templateVars = {btnLabel: self.singleModelName};
+        },
+        getAddBtn: function () {
+            let self = this;
+            return self.$el.find('.btnAdd');
+        },
+        getEditBtn: function() {
+            let self = this;
+            return self.$el.find('.btnEdit');
+        },
+        getDeleteCheckedBtn: function() {
+            let self = this;
+            return self.$el.find('.btnDeleteChecked');
+        },
+        getFileUploadsContainer: function () {
+            let self = this;
+            return self.$el.find('.file-upload-container');
+        },
+        getResetColumnsBtn: function () {
+            let self = this;
+            return self.$el.find('.btnClearStored');
+        },
+        _render: function () {
+            let self = this;
+
+            if (self.bAppend) {
+                self.$el.append(self.template(self.templateVars));
+            }else{
+                self.$el.html(self.template(self.templateVars));
+            }
+            // initialize all file upload inputs on the page at load time
+            self.initializeFileUploadObj(self.$el.find('input[type="file"]'));
+            let managedGridViewFunctions = _.functions(self.managedGridView);
+            //console.log('hide edit btn?',{viewName:self.viewName, 'self.$el': self.$el,'btn-edit-model': self.$el.find('.btn-edit-model'),indexOf: _.indexOf(managedGridViewFunctions, 'getEditForm'), hide: _.indexOf(managedGridViewFunctions, 'getEditForm') === -1})
+            if (_.indexOf(managedGridViewFunctions,'getEditForm') === -1){
+                self.getEditBtn().hide();
+            }
+            if (!App.Vars.bAllowManagedGridColumns) {
+                self.getResetColumnsBtn().hide();
+            }
+            if (!App.Vars.bAllowCSVFileImports) {
+                self.getFileUploadsContainer().hide();
+            }
+            return self;
+        },
+        render: function () {
+            let self = this;
+            self._render();
+
+            return this;
+        },
+        close: function () {
+            let self = this;
+            try {
+                self.$el.find('input[type="file"]').fileupload('destroy');
+            } catch (e) {
+            }
+            self._close();
+        },
+        initializeFileUploadObj: function (el) {
+            let self = this;
+            $(el).fileupload({
+                url: self.managedGridView.getModelRoute() + '/list/upload',
+                dataType: 'json',
+                done: function (e, data) {
+                    let self = this;
+                    $('#file_progress_' + self.id).fadeTo(0, 'slow');
+                    $('#file_' + self.id).val('')
+                    $('#file_chosen_' + self.id).empty()
+                    $.each(data.files, function (index, file) {
+                        let sFileName = file.name
+                        let sExistingVal = $('#file_' + self.id).val().length > 0 ? $('#file_' + self.id).val() + ',' : ''
+                        $('#file_' + self.id).val(sExistingVal + sFileName)
+                        $('#file_chosen_' + self.id).append(sFileName + '<br>')
+                    });
+                },
+                start: function (e) {
+                    let self = this;
+                    $('#file_progress_' + self.id).fadeTo('fast', 1);
+                    $('#file_progress_' + self.id).find('.meter').removeClass('green');
+                },
+                progress: function (e, data) {
+                    let self = this
+                    let progress = parseInt(data.loaded / data.total * 100, 10);
+
+                    $('#file_progress_' + self.id + ' .meter').addClass('green').css(
+                        'width',
+                        progress + '%'
+                    ).find('p').html(progress + '%');
                 }
+            }).prop('disabled', !$.support.fileInput)
+                .parent().addClass($.support.fileInput ? undefined : 'disabled');
+        },
+        addGridRow: function (e) {
+            var self = this;
+            e.preventDefault();
+            self.getModalElement().one('show.bs.modal', function (event) {
+                let modal = $(this);
+                modal.find('.modal-title').html('New ' + self.singleModelName);
+                modal.find('.modal-body').html(self.managedGridView.getModalForm());
+
+                modal.find('.save.btn').one('click', function (e) {
+                    e.preventDefault();
+                    self.managedGridView.create($.unserialize(modal.find('form').serialize()));
+                    self.getModalElement().modal('hide');
+                });
+
+            });
+            self.getModalElement().modal('show');
+
+        },
+        deleteCheckedRows: function (e) {
+            let self = this;
+            e.preventDefault();
+            if ($(e.target).hasClass('disabled')) {
+                growl('Please check a box to delete a ' + self.singleModelName + '.');
+                return;
+            }
+            bootbox.confirm("Do you really want to delete the checked " + self.managedGridView.modelNameLabel + "?", function (bConfirmed) {
+                if (bConfirmed) {
+                    let selectedModels = self.managedGridView.backgrid.getSelectedModels();
+                    // clear or else the previously selected models remain as undefined
+                    try {
+                        self.managedGridView.backgrid.clearSelectedModels();
+                    } catch (e) {
+                    }
+                    _log('App.Views.GridManagerContainerToolbar.deleteCheckedRows', {viewName: self.viewName, 'selectedModels': selectedModels});
+                    let modelIDs = _.map(selectedModels, function (model) {
+                        return model.get(self.managedGridView.model.idAttribute);
+                    });
+
+                    self.managedGridView.batchDestroy({deleteModelIDs: modelIDs});
+                }
+            });
+        },
+        clearStoredColumnState(e) {
+            let self = this;
+            e.preventDefault();
+            if (!_.isUndefined(self.managedGridView.gridColumnSaveStateKey) && localStorage.getItem(self.managedGridView.gridColumnSaveStateKey)) {
+                growl('Resetting ' + self.managedGridView.modelNameLabel + ' columns. Please wait while the page refreshes.', 'success');
+                localStorage.removeItem(self.managedGridView.gridColumnSaveStateKey);
+                location.reload();
+            } else {
+                growl('Automatically resetting ' + self.managedGridView.modelNameLabel + ' columns is not possible at the moment, Sorry. If you know how to, you can manually clear your browsers local storage using your browsers Dev Tool inspector or you can clear your browser history cache.', 'error');
             }
         },
+        editGridRow: function (e) {
+            let self = this;
+            e.preventDefault();
+            self.getModalElement().off().one('show.bs.modal', function (event) {
+                let $modal = $(this);
+                $modal.find('.modal-title').html('Edit ' + self.singleModelName);
+                $modal.find('.modal-body').html(self.managedGridView.getEditForm());
+
+                $modal.find('.save.btn').off().one('click', function (e) {
+                    e.preventDefault();
+
+                    let data = $.unserialize($modal.find('form').serialize());
+                    // fix multi valued select values
+                    // untested!!!!!!
+                    _.each(data,  function (value,idx) {
+                        if (_.isArray(value)) {
+                            data[idx] = value.join();
+                            console.log(idx, data[idx])
+                        }
+                    });
+
+                    self.managedGridView.saveEditForm(data);
+                    self.getModalElement().modal('hide');
+                });
+
+            });
+            self.getModalElement().modal('show');
+
+        },
+        setStickyColumns: function (colIdx) {
+            let self = this;
+            // Doesn't work yet.
+            return;
+
+            self.managedGridView.find('.cloned-backgrid-table-wrapper').remove();
+            let left = 0;
+            let $backgridTable = self.managedGridView.find('table.backgrid');
+            let backgridTableHeight = $backgridTable.height();
+            $backgridTable.find('tbody tr:first-child td:nth-child(-n+' +
+                                colIdx + ')').each(function (idx, el) {
+                let w = $(el).css('width');
+                left += parseInt(w.replace('px', ''));
+            });
+            let $tCloneWrapper = $('<div class="cloned-backgrid-table-wrapper"></div>');
+            $backgridTable.parent().parent().append($tCloneWrapper);
+            $tCloneWrapper.css({
+                'width': left + 10,
+                'height': backgridTableHeight - 1
+            });
+            let $tClone = $backgridTable.clone();
+            $tClone.addClass('cloned-backgrid-table').css({
+                'width': left
+            });
+            $tClone.find('>div').remove();
+            let nextColIdx = colIdx + 1;
+            $tClone.find('colgroup col:nth-child(n+' +
+                         nextColIdx + ')').remove();
+            $tClone.find('thead tr th:nth-child(n+' +
+                         nextColIdx + ')').remove();
+            $tClone.find('tbody tr td:nth-child(n+' +
+                         nextColIdx + ')').remove();
+
+            $tCloneWrapper.append($tClone);
+
+        }
+    });
+
+    App.Views.ManagedGrid = App.Views.Backend.fullExtend({
+        bModelExpected: true,
         events: {
             'focusin tbody tr': 'refreshView',
             'mouseenter thead th button': 'showColumnHeaderLabel',
@@ -176,20 +542,103 @@
             'click tbody td': 'hideTruncatedCellContentPopup',
             'click .overlay-top,.overlay-bottom': 'showRadioBtnEditHelpMsg',
         },
-        renderGrid: function(e, saveStateKey){
+        _initialize: function (options) {
+            let self = this;
+
+            try {
+                _.bindAll(self,
+                    'close',
+                    'removeChildViews',
+                    'getViewClassName',
+                    'batchDestroy',
+                    'getModalForm',
+                    'getModelRoute',
+                    'hideTruncatedCellContentPopup',
+                    'positionOverlays',
+                    '_refreshView',
+                    'renderGrid',
+                    'setCurrentRow',
+                    'setModelRoute',
+                    'showColumnHeaderLabel',
+                    'showRadioBtnEditHelpMsg',
+                    'showTruncatedCellContentPopup',
+                    'toggleDeleteBtn',
+                    'refocusGridRecord',
+                    'getViewDataStore',
+                    'setViewDataStoreValue',
+                    'removeViewDataStore',
+                    'setGridManagerContainerToolbar',
+                    'update'
+                );
+            } catch (e) {
+                console.error(options, e)
+            }
+            self.childViews = [];
+            self.options = options;
+            self._validateRequiredOptions(options);
+            self.model = !_.isUndefined(self.model) ? self.model : !_.isUndefined(self.options.model) ? self.options.model : null;
+            self.setModelRoute();
+            self.setViewName();
+            self.mainApp = self.options.mainApp;
+
+            self.rowBgColor = 'lightYellow';
+            self.$currentRow = null;
+            self.currentModelID = null;
+
+            if (_.isUndefined(self.options.ajaxWaitingTargetClassSelector)) {
+                console.error("options.ajaxWaitingTargetClassSelector is a required option", self);
+                throw "options.ajaxWaitingTargetClassSelector is a required option";
+            }
+            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
+
+            if (_.isUndefined(self.options.currentModelIDDataStoreSelector)) {
+                console.error("options.currentModelIDDataStoreSelector is a required option", self);
+                throw "options.currentModelIDDataStoreSelector is a required option";
+            }
+            self.currentModelIDDataStoreSelector = self.options.currentModelIDDataStoreSelector;
+            if (_.isUndefined(self.options.columnCollectionDefinitions)) {
+                console.error("options.columnCollectionDefinitions is a required option", self);
+                throw "options.columnCollectionDefinitions is a required option";
+            }
+            self.columnCollectionDefinitions = self.options.columnCollectionDefinitions;
+            if (_.isUndefined(self.options.parentView)) {
+                console.error("options.parentView is a required option", self);
+                throw "options.parentView is a required option";
+            }
+            self.parentView = self.options.parentView;
+            if (_.isUndefined(self.options.backgridWrapperClassSelector)) {
+                console.error("options.backgridWrapperClassSelector is a required option", self);
+                throw "options.backgridWrapperClassSelector is a required option";
+            }
+            self.backgridWrapperClassSelector = self.options.backgridWrapperClassSelector;
+            self.$gridManagerContainerToolbar = null;
+
+            if (_.isUndefined(self.options.modelNameLabel)) {
+                console.error("options.modelNameLabel is a required option", self);
+                throw "options.modelNameLabel is a required option";
+            }
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+
+            if (_.isUndefined(self.options.model)) {
+                console.error("options.model is a required option", self);
+                throw "options.model is a required option";
+            }
+
+            self.gridColumnSaveStateKey = '';
+        },
+        setGridManagerContainerToolbar: function ($gridManagerContainerToolbar) {
+            let self = this;
+            self.$gridManagerContainerToolbar = $gridManagerContainerToolbar;
+        },
+        renderGrid: function (e, saveStateKey) {
             let self = this;
             let colVisibilityControl, sizeAbleCol, sizeHandler, orderHandler, Header, hideCellCnt, initialColumnsVisible, colManager;
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             self.$el.empty();
-if (self.viewName === 'project-leads'){
-    console.log('renderGrid',self.viewName, self.getViewDataStore('current-model-id'))
-}
-            //this.model = App.Vars.currentTabModels[this.options.tab];
-            //self.currentModelID = self.model.get(self.model.idAttribute);
-            // Set the current model id on the tab so we can reference it in other views
-            //$(self.currentModelIDDataStoreSelector).data('current-model-id', self.currentModelID);
             self.columnCollectionDefinitions = self.options.columnCollectionDefinitions;
             self.columnCollection = self.columnCollectionDefinitions;
-
+            self.gridColumnSaveStateKey = 'backgrid-colmgr-' + saveStateKey;
             if (App.Vars.bAllowManagedGridColumns) {
                 hideCellCnt = self.options.hideCellCnt;
                 self.columnCollection = new Backgrid.Extension.OrderableColumns.orderableColumnCollection(self.columnCollectionDefinitions);
@@ -201,7 +650,7 @@ if (self.viewName === 'project-leads'){
                     trackOrder: true,
                     trackVisibility: true,
                     saveState: App.Vars.bBackgridColumnManagerSaveState,
-                    saveStateKey: saveStateKey,
+                    saveStateKey: self.gridColumnSaveStateKey,
                     loadStateOnInit: App.Vars.bBackgridColumnManagerLoadStateOnInit,
                     stateChecking: "strict"
                 });
@@ -210,6 +659,7 @@ if (self.viewName === 'project-leads'){
                     columnManager: colManager
                 });
             }
+
             Header = Backgrid.Header;
             self.backgrid = new Backgrid.Grid({
                 header: Header,
@@ -217,10 +667,13 @@ if (self.viewName === 'project-leads'){
                 collection: self.collection
             });
             self.listenTo(self.backgrid, 'backgrid:rendered', function (e) {
-                self.setCurrentRow(e);
+                //console.log('set current row and set current-model-id in storage when backgrid:rendered',self.viewName)
+                let currentModelID = self.setCurrentRow(e);
+                self.setViewDataStoreValue('current-model-id', currentModelID);
             });
 
             let $gridContainer = this.$el.html(self.backgrid.render().el);
+
             self.$gridContainer = $gridContainer;
             self.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
             self.paginator = new Backgrid.Extension.Paginator({
@@ -256,20 +709,16 @@ if (self.viewName === 'project-leads'){
             }
 
             // When a backgrid cell's model is updated it will trigger a 'backgrid:edited' event which will bubble up to the backgrid's collection
-            self.listenTo(self.backgrid.collection, 'backgrid:editing', function (e) {
-                self.refreshView(e);
-            });
+            self.listenTo(self.backgrid.collection, 'backgrid:editing', self.refreshView);
 
-            self.listenTo(self.backgrid.collection, 'backgrid:edited', function (e) {
-                self.update(e);
-            });
+            self.listenTo(self.backgrid.collection, 'reset', self.refreshView);
 
-            self.listenTo(self.backgrid.collection, 'backgrid:selected', function (e) {
-                self.toggleDeleteBtn(e);
-            });
+            self.listenTo(self.backgrid.collection, 'backgrid:edited', self.update);
+
+            self.listenTo(self.backgrid.collection, 'backgrid:selected', self.toggleDeleteBtn);
 
             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            //_log('App.Views.ProjectTab.render', self.options.tab, 'Set the current model id on the tab so we can reference it in other views. this.model:', self.model);
+            //_log('App.Views.ProjectTab.render', self.options.tab, 'Set the current model id on the tab so we can reference it in other views. self.model:', self.model);
 
             // Show a popup of the text that has been truncated
             $gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
@@ -297,7 +746,6 @@ if (self.viewName === 'project-leads'){
             });
 
             self.childViews.push(self.backgrid);
-            self.childViews.push(self.projectGridManagerContainerToolbar);
             self.childViews.push(self.paginator);
             if (App.Vars.bAllowManagedGridColumns) {
                 self.childViews.push(colVisibilityControl);
@@ -305,12 +753,6 @@ if (self.viewName === 'project-leads'){
                 self.childViews.push(sizeHandler);
                 self.childViews.push(orderHandler);
             }
-        },
-        getModelRoute: function () {
-            return this.modelRoute;
-        },
-        setModelRoute: function (modelRoute) {
-            this.modelRoute = modelRoute;
         },
         _refreshView: function (e) {
             let self = this;
@@ -327,17 +769,19 @@ if (self.viewName === 'project-leads'){
 
             self.positionOverlays(self.backgrid);
             //$('#' + this.options.tab).data('current-model-id')
-            console.log('_refreshView',self.viewName, currentModelID,self.getViewDataStore('current-model-id'));
+            //console.log('_refreshView current row should be set', {viewName:self.viewName});
+            //console.log('_refreshView current model id should be set to currentModelID value in storage', {viewName:self.viewName, currentModelID:currentModelID});
             if (App.Vars.mainAppDoneLoading && currentModelID && self.getViewDataStore('current-model-id') !== currentModelID) {
                 window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
                 // Refresh tabs on new row select
-                this.model.url = self.getModelRoute() + '/' + currentModelID;
-                this.model.fetch({
+                self.model.url = self.getModelUrl(currentModelID);
+                self.model.fetch({
                     reset: true,
                     success: function (model, response, options) {
+                        //console.log('_refreshView', {viewName: self.viewName, 'self.model': self.model, model:model});
                         self.currentModelID = self.model.get(self.model.idAttribute);
                         self.setViewDataStoreValue('current-model-id', self.model.get(self.model.idAttribute));
-                        console.log('model fetch set current-model-id', self.viewName, currentModelID, self.model)
+                        //console.log('_refreshView set current-model-id in storage', self.viewName, currentModelID, self.model)
                         window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     },
                     error: function (model, response, options) {
@@ -346,16 +790,26 @@ if (self.viewName === 'project-leads'){
                     }
                 });
 
+            } else if (App.Vars.mainAppDoneLoading && !currentModelID) {
+                //console.log('_refreshView set current-model-id in storage but did not fetch new model', self.viewName, currentModelID, self.model)
+                self.setViewDataStoreValue('current-model-id', currentModelID);
             }
 
         },
         setCurrentRow: function (e) {
             let self = this;
-            let currentModelID = 0;
+            let currentModelID = null;
             let $RadioElement = null;
             let $TableRowElement = null;
+            //console.log('setCurrentRow',{e:e})
+            if (typeof e === 'object' && !_.isUndefined(e.fullCollection)) {
 
-            if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
+                if (e.fullCollection.models.length) {
+                    $RadioElement = self.$gridContainer.find('input[type="radio"][name="' + self.model.idAttribute + '"][value="' + e.fullCollection.models[0].get(self.model.idAttribute) + '"]');
+                    $TableRowElement = $RadioElement.parents('tr');
+                }
+
+            } else if (typeof e === 'object' && !_.isUndefined(e.id) && !_.isUndefined(e.attributes)) {
 
                 $RadioElement = self.$gridContainer.find('input[type="radio"][name="' + self.model.idAttribute + '"][value="' + e.id + '"]');
                 $TableRowElement = $RadioElement.parents('tr');
@@ -414,9 +868,6 @@ if (self.viewName === 'project-leads'){
                 //console.log(recordIdx, this.paginator.collection.state.pageSize, page, this.backgrid, this.paginator, this.backgrid.collection)
                 self.$el.find('input[type="radio"][name="' + self.model.idAttribute + '"][value="' + self.getViewDataStore('current-model-id') + '"]').parents('tr').trigger('focusin');
             }
-        },
-        getModalForm: function () {
-            return '';
         },
         showRadioBtnEditHelpMsg: function () {
             growl('Select/click the radio button at the beginning of the row to edit the data', 'info');
@@ -515,53 +966,198 @@ if (self.viewName === 'project-leads'){
         toggleDeleteBtn: function (e) {
             let self = this;
             let selectedModels = self.backgrid.getSelectedModels();
-            _log(self.getViewClassName() + '.toggleDeleteBtn.event', selectedModels.length, e);
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
-            //App.Views.siteManagementView.trigger('toggle-delete-btn', {toggle: toggleState});
-            _log(self.getViewClassName() + '.toggleDeleteBtn.event', 'toggleState:' + toggleState, self.parentView.el);
+            _log(self.viewName + '.toggleDeleteBtn.event', {'selectedModels.length':selectedModels.length, e:e, toggleState: toggleState});
+            console.log({viewName:self.viewName, toggleState: toggleState, gridManagerContainerToolbar: self.$gridManagerContainerToolbar})
             if (toggleState === 'disable') {
-                self.parentView.$('.btn-delete-checked-models').addClass('disabled');
+                self.$gridManagerContainerToolbar.$('.btnDeleteChecked').addClass('disabled');
             } else {
-                self.parentView.$('.btn-delete-checked-models').removeClass('disabled');
+                self.$gridManagerContainerToolbar.$('.btnDeleteChecked').removeClass('disabled');
             }
         },
-        _destroy: function (attributes, parentModelId) {
+        batchDestroy: function (attributes) {
             let self = this;
-            let deleteCnt = attributes.deleteModelIDs.length;
-            let confirmMsg = "Do you really want to delete the checked " + self.modelNameLabel + "s?";
-            if (deleteCnt === self.collection.fullCollection.length) {
-                confirmMsg = "You are about to delete every checked " + self.modelNameLabel + ". Do you really want to" +
-                             " continue with deleting them all?";
-            }
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
 
-            bootbox.confirm(confirmMsg, function (bConfirmed) {
-                if (bConfirmed) {
-                    window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
-
-                    $.ajax({
-                        type: "POST",
-                        dataType: "json",
-                        url: self.getModelRoute() + '/batch/destroy',
-                        data: attributes,
-                        success: function (response) {
-                            window.growl(response.msg, response.success ? 'success' : 'error');
-                            self.collection.url = self.getModelRoute() + '/all/' + parentModelId;
-                            $.when(
-                                self.collection.fetch({reset: true})
-                            ).then(function () {
-                                _log('App.Views.ProjectTab.destroy.event', self.modelNameLabel + ' collection fetch promise done');
-                                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                            });
-                        },
-                        fail: function (response) {
-                            window.growl(response.msg, 'error');
-                            window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                        }
-                    })
-                }
+            _log(self.viewName + ' batchDestroy', attributes);
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: self.getModelRoute() + '/batch/destroy',
+                    data: attributes,
+                    success: function (response) {
+                        window.growl(response.msg, response.success ? 'success' : 'error');
+                        self.collection.url = self.getCollectionUrl();
+                        $.when(
+                            self.collection.fetch({reset: true})
+                        ).then(function () {
+                            //initialize your views here
+                            _log(self.viewName + '.destroy.event', self.modelNameLabelLowerCase + ' collection fetch promise done');
+                        });
+                    },
+                    fail: function (response) {
+                        window.growl(response.msg, 'error');
+                    }
+                })
+            ).then(function () {
+                window.ajaxWaiting('remove', self.ajaxWaitingSelector);
             });
 
         },
+        update: function (e) {
+            let self = this;
+            if (!_.isEmpty(e.changed)) {
+                window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+                console.log('update',{'self.model.idAttribute': self.model.idAttribute,'e.attributes[self.model.idAttribute]': e.attributes[self.model.idAttribute],e:e})
+                let currentModelID = e.attributes[self.model.idAttribute];
+                self.model.url = self.getModelUrl(currentModelID);
+                $.when(
+                    self.model.save(_.extend({[self.model.idAttribute]: currentModelID}, e.changed),
+                        {
+                            success: function (model, response, options) {
+                                _log(self.viewName + '.update', self.modelNameLabelLowerCase + ' save', model, response, options);
+                                growl(response.msg, response.success ? 'success' : 'error');
+                            },
+                            error: function (model, response, options) {
+                                console.error(self.viewName + '.update', self.modelNameLabelLowerCase + ' save', model, response, options);
+                                growl(response.msg, 'error');
+                            }
+                        })
+                ).then(function () {
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+                });
 
+            }
+        },
+        create: function (attributes) {
+            let self = this;
+            window.ajaxWaiting('show', this.ajaxWaitingSelector);
+
+            _log(this.viewName + '.create', attributes, self.model);
+            let newModel = self.model.clone().clear({silent: true});
+            newModel.url = self.getModelUrl();
+            $.when(
+                newModel.save(attributes,
+                    {
+                        success: function (model, response, options) {
+                            window.growl(response.msg, response.success ? 'success' : 'error');
+                            self.collection.url = self.getCollectionUrl();
+                            $.when(
+                                self.collection.fetch({reset: true})
+                            ).then(function () {
+                                //initialize your views here
+                                _log(self.viewName + '.create.event', self.modelNameLabelLowerCase + ' collection fetch promise done');
+                            });
+                        },
+                        error: function (model, response, options) {
+                            window.growl(response.msg, 'error');
+                        }
+                    })
+            ).then(function () {
+                window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+            });
+        }
+
+    });
+
+    App.Views.ManagedGridTabs = App.Views.Backend.fullExtend({
+        bModelExpected: false,
+        events: {
+            'shown.bs.tab a[data-toggle="tab"]': 'toggleTabToolbars',
+            'clear-child-views': 'removeChildViews'
+        },
+        _initialize: function (options) {
+            let self = this;
+            try {
+                _.bindAll(self, 'toggleTabsBox', 'removeChildViews', 'toggleTabToolbars', 'clearCurrentIds','fetchIfNewID');
+            } catch (e) {
+                console.error(options, e)
+            }
+            self.childViews = [];
+            self.options = options;
+            self._validateRequiredOptions(options);
+            self.setModelRoute();
+            this.setViewName();
+            this.mainApp = this.options.mainApp;
+
+            self.parentView = self.options.parentView;
+
+            if (_.isUndefined(self.options.ajaxWaitingTargetClassSelector)) {
+                console.error("options.ajaxWaitingTargetClassSelector is a required option", self);
+                throw "options.ajaxWaitingTargetClassSelector is a required option";
+            }
+            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
+
+            if (_.isUndefined(self.options.managedGridView)) {
+                console.error("options.managedGridView is a required option", self);
+                throw "options.managedGridView is a required option";
+            }
+            self.managedGridView = self.options.managedGridView;
+
+            self.childTabViews = [];
+            self.childTabsGridManagerContainerToolbarViews = [];
+            self.childViews = [];
+            // self.model is App.Models.projectModel
+            self.listenTo(self.model, "change", self.fetchIfNewID);
+            self.listenTo(self.managedGridView, 'toggle-tabs-box', self.toggleTabsBox);
+        },
+        fetchIfNewID: function() {
+
+        },
+        toggleTabsBox: function () {
+            let self = this;
+            _log(self.viewName, 'self.managedGridView.collection.length:' + self.managedGridView.collection.length);
+
+            if (self.managedGridView.collection.length === 0) {
+                self.$el.find('.nav-tabs').hide();
+                self.$el.find('.tabs-content-container').hide();
+                self.$el.find('.box-footer').hide();
+                self.mainApp.$('h3.box-title small').html('No projects created yet.');
+            } else {
+                self.$el.find('.nav-tabs').show();
+                self.$el.find('.tabs-content-container').show();
+                self.$el.find('.box-footer').show();
+            }
+        },
+        toggleTabToolbars: function (e) {
+            let self = this;
+
+            let clickedTab = $(e.currentTarget).attr('aria-controls');
+            self.managedGridView.setViewDataStoreValue('current-tab', clickedTab);
+            //App.Vars.currentTabModels[clickedTab]
+            self.parentView.$('.tab-grid-manager-container').hide();
+            self.parentView.$('.' + clickedTab + '.tab-grid-manager-container').show();
+            //console.log({clickedTab: clickedTab, parentView: self.parentView, tabButtonPane: self.parentView.$('.' + clickedTab + '.tab-grid-manager-container')})
+            // Hack to force grid columns to work
+            $('body').trigger('resize');
+        },
+        tabFetchSuccess: function (model, response, options) {
+            //console.log('tabFetchSuccess',model, response, options)
+        },
+        removeChildViews: function () {
+            let self = this;
+            //console.log('App.Views.SiteProjectTabs removeChildViews ');
+            _.each(this.childViews, function (view) {
+                view.remove();
+            });
+            _log(self.viewName, '.removeChildViews.event', 'trigger removed-child-views');
+            this.trigger('removed-child-views');
+        },
+        clearCurrentIds: function () {
+            let self = this;
+            let childTabViews = _.values(self.childTabViews);
+            _.each(childTabViews, function (tab) {
+                _.values(tab)[0].removeViewDataStore();
+            });
+        },
+        updateMainAppBoxTitleContentPreFetchTabCollections: function (newId) {
+            let self = this;
+            self.mainApp.$('h3.box-title small').html('Updating Tabs. Please wait...');
+        },
+        updateMainAppBoxTitleContentPostFetchTabCollections: function (newId) {
+            let self = this;
+            self.mainApp.$('h3.box-title small').html('');
+        }
     });
 })(window.App);

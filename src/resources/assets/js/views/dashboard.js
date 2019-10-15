@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.Dashboard = Backbone.View.extend({
+    App.Views.Dashboard = App.Views.Backend.fullExtend({
         attributes: {
             class: 'route-view dashboard'
         },
@@ -43,7 +43,7 @@
             })
         }
     });
-    App.Views.DashboardPanel = Backbone.View.extend({
+    App.Views.DashboardPanel = App.Views.Backend.fullExtend({
         template: template('dashboardPanelTemplate'),
         initialize: function (options) {
             this.options    = options;
@@ -51,11 +51,12 @@
         },
         events: {},
         render: function () {
-            this.$el.append(this.template(this.model.toJSON()));
+            let self = this;
+            this.$el.append(this.template(self.model.toJSON()));
             return this;
         }
     });
-    App.Views.DashboardPanelLinksListItem = Backbone.View.extend({
+    App.Views.DashboardPanelLinksListItem = App.Views.Backend.fullExtend({
         tagName: 'li',
         template: _.template("<a href=\"#/<%=route%>\" data-route><%=linkText%> <span class=\"pull-right badge bg-blue\"><%=badgeCount%></span></a>"),
         initialize: function (options) {
@@ -65,21 +66,23 @@
 
         },
         render: function () {
+            let self = this;
             let $link = this.template({
-                linkText: this.model.get('linkText'),
-                badgeCount: this.model.get('badgeCount'),
-                route: this.model.get('route')
+                linkText: self.model.get('linkText'),
+                badgeCount: self.model.get('badgeCount'),
+                route: self.model.get('route')
             });
-            $(this.el).append($link);
+            this.$el.append($link);
             return this;
         }
     });
 
-    App.Views.DashboardPanelLinksList = Backbone.View.extend({
+    App.Views.DashboardPanelLinksList = App.Views.Backend.fullExtend({
         initialize: function (options) {
+            let self = this;
             this.itemsView = [];
             _.bindAll(this, 'addOne', 'addAll','render');
-            this.collection.bind('reset', this.addAll, this);
+            self.listenTo(self.collection, "reset", self.addAll);
         },
         events: {},
         addOne: function (DashboardPanelLinksListItem) {

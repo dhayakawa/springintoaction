@@ -71,7 +71,7 @@
             } catch(\Exception $e) {
                 report($e);
             }
-
+\Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $result]);
             return $result;
 
         }

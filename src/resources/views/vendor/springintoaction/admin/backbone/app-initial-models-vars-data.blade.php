@@ -36,6 +36,15 @@
      * Global var defining the project tab models
      *
      */
+    App.Vars.tabModels = [];
+    App.Vars.tabModels['project'] =
+    {
+        project_lead: App.Models.projectLeadModel,
+        project_budget: App.Models.projectBudgetModel,
+        project_contact: App.Models.projectContactModel,
+        project_volunteer: App.Models.projectVolunteerModel,
+        project_attachment: App.Models.projectAttachmentModel
+    };
     App.Vars.currentTabModels =
         {
             project_lead: App.Models.projectLeadModel,

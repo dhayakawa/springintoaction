@@ -234,9 +234,10 @@ function getSIAConfirmModal(id){
 (function (App) {
     // Abstract Select View meant to be extended
 
-    App.Views.SelectOption = Backbone.View.extend({
+    App.Views.SelectOption = App.Views.Backend.fullExtend({
         tagName: 'option',
         initialize: function (options) {
+            let self = this;
             this.optionValueModelAttrName = options.optionValueModelAttrName;
             this.optionLabelModelAttrName = options.optionLabelModelAttrName;
             _.bindAll(this, 'render');
@@ -254,27 +255,29 @@ function getSIAConfirmModal(id){
                     label += labels[i] + ' ';
                 }
             } else {
-                label = this.model.get(this.optionLabelModelAttrName);
+                label = self.model.get(this.optionLabelModelAttrName);
             }
-            $(this.el).attr('value', this.model.get(this.optionValueModelAttrName)).html(label);
+            this.$el.attr('value', self.model.get(this.optionValueModelAttrName)).html(label);
             return this;
         }
     });
 
-    App.Views.Select = Backbone.View.extend({
+    App.Views.Select = App.Views.Backend.fullExtend({
         tagName: 'select',
         initialize: function (options) {
+            let self = this;
             this.childViews = [];
             if (!_.isNull(options) && !_.isUndefined(options)){
                 this.buildHTML = !_.isUndefined(options.buildHTML) ? options.buildHTML : false;
                 this.setSelectedValue = !this.buildHTML && !_.isUndefined(options.setSelectedValue) ? options.setSelectedValue : null;
                 this.optionValueModelAttrName = options.optionValueModelAttrName;
                 this.optionLabelModelAttrName = options.optionLabelModelAttrName;
+                this.addBlankOption = false;
                 if (!_.isUndefined(options.addBlankOption)) {
                     this.addBlankOption = options.addBlankOption;
                 }
                 if (!_.isUndefined(this.collection)) {
-                    this.collection.bind('reset', this.addAll);
+                    self.listenTo(self.collection, "reset", self.addAll);
                 }
             }
             this.html = '';
@@ -284,6 +287,7 @@ function getSIAConfirmModal(id){
             "change": "changeSelected"
         },
         addOne: function (model) {
+            let self = this;
             let option = new App.Views.SelectOption({
                 model: model,
                 setSelectedValue: this.setSelectedValue,
@@ -293,29 +297,34 @@ function getSIAConfirmModal(id){
             this.childViews.push(option);
             let optionHTML = option.render().el;
 
-            $(this.el).append(optionHTML);
+            this.$el.append(optionHTML);
 
         },
         addAll: function () {
+            let self = this;
             this.collection.each(this.addOne);
         },
         render: function () {
+            let self = this;
             this.addAll();
             if (this.addBlankOption) {
-                $(this.el).prepend('<option value=""></option>');
+                this.$el.prepend('<option value=""></option>');
             }
             if (!_.isNull(this.setSelectedValue)) {
-                $(this.el).val(this.setSelectedValue);
+                this.$el.val(this.setSelectedValue);
             }
             return this;
         },
         changeSelected: function () {
-            this.setSelectedId($(this.el).val());
+            let self = this;
+            this.setSelectedId(this.$el.val());
         },
         setSelectedId: function (id) {
+            let self = this;
             // Do something in child object
         },
         getHtml: function () {
+            let self = this;
             // Events are not triggered for this view when getHtml is called
             this.render();
             let $wrap = $('<div></div>').html(this.el);

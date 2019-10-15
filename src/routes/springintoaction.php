@@ -125,6 +125,13 @@ Route::group(
 
         Route::resource('sia', 'SpringIntoActionMainAppController');
 
+        //Route::resource('site', 'SiteController');
+        Route::get('site/list/all', ['as' => 'site.list.all', 'uses' => 'SiteController@getSites']);
+        Route::get('site/{SiteID}', ['as' => 'site', 'uses' => 'SiteController@show']);
+        Route::delete('site/{SiteID}', ['as' => 'site.destroy', 'uses' => 'SiteController@destroy']);
+        Route::put('site/{SiteID}', ['as' => 'site.update', 'uses' => 'SiteController@update']);
+        Route::post('site', ['as' => 'site.create', 'uses' => 'SiteController@store']);
+
         Route::get(
             'grove/{importType}',
             ['as' => 'grove.import', 'uses' => 'GroveController@runImport']
@@ -147,15 +154,14 @@ Route::group(
             ['as' => 'project.batch.destroy', 'uses' => 'ProjectsController@batchDestroy']
         );
 
+        Route::get(
+            'site_setting/list/all',
+            ['as' => 'site.setting.list.all', 'uses' => 'SiteSettingsManagement@getSettings']
+        );
         Route::put('site_setting/{SiteSettingID}',['as' => 'site.setting.update', 'uses' => 'SiteSettingsManagement@update']);
-        Route::get('site_setting/list/all',['as' => 'site.setting.list.all', 'uses' => 'SiteSettingsManagement@getSettings']);
 
-        //Route::resource('site', 'SiteController');
-        Route::get('site/{SiteID}', ['as' => 'site', 'uses' => 'SiteController@show']);
-        Route::delete('site/{SiteID}', ['as' => 'site.destroy', 'uses' => 'SiteController@destroy']);
-        Route::get('site/list/all', ['as' => 'site.list.all', 'uses' => 'SiteController@getSites']);
-        Route::put('site/{SiteID}', ['as' => 'site.update', 'uses' => 'SiteController@update']);
-        Route::post('site', ['as' => 'site.create', 'uses' => 'SiteController@store']);
+
+
 
         //Route::resource('sitestatus', 'SiteStatusController');
         Route::get('sitestatus/{SiteStatusID}', ['as' => 'site', 'uses' => 'SiteStatusController@show']);
@@ -163,17 +169,17 @@ Route::group(
         Route::post('sitestatus/{SiteStatusID}', ['as' => 'sitestatus.create', 'uses' => 'SiteStatusController@store']);
         // Gets list for site years dropdown
         Route::get(
-            'sitestatus/all/site/years/{SiteID}',
+            'sitestatus/list/all/site/years/{SiteID}',
             ['as' => 'sitestatus.all.site.years', 'uses' => 'SiteStatusController@getAllSiteYears']
         );
         Route::get(
-            'sitestatus/all/statusmanagementrecords',
+            'sitestatus/list/all/statusmanagementrecords',
             ['as' => 'sitestatus.all.statusmanagementrecords', 'uses' => 'SiteStatusController@getStatusManagementRecords']
         );
 
         //Route::resource('volunteer', 'VolunteerController');
-        Route::get('volunteer/{VolunteerID}', ['as' => 'volunteer', 'uses' => 'VolunteerController@show']);
         Route::get('volunteer/list/all', ['as' => 'volunteer.list.all', 'uses' => 'VolunteerController@getAll']);
+        Route::get('volunteer/{VolunteerID}', ['as' => 'volunteer', 'uses' => 'VolunteerController@show']);
         Route::put('volunteer/{VolunteerID}', ['as' => 'volunteer.update', 'uses' => 'VolunteerController@update']);
         Route::post('volunteer', ['as' => 'volunteer.create', 'uses' => 'VolunteerController@store']);
         Route::post('volunteer/list/upload', ['as' => 'volunteer.upload', 'uses' => 'VolunteerController@uploadList']);
@@ -183,8 +189,8 @@ Route::group(
         );
 
         //Route::resource('contact', 'ContactController');
-        Route::get('contact/{ContactID}', ['as' => 'contact', 'uses' => 'ContactController@show']);
         Route::get('contact/list/all', ['as' => 'contact.list.all', 'uses' => 'ContactController@getContacts']);
+        Route::get('contact/{ContactID}', ['as' => 'contact', 'uses' => 'ContactController@show']);
         Route::put('contact/{ContactID}', ['as' => 'contact.update', 'uses' => 'ContactController@update']);
         Route::post('contact', ['as' => 'contact.create', 'uses' => 'ContactController@store']);
         Route::post(
@@ -193,11 +199,11 @@ Route::group(
         );
         Route::post('contact/list/upload', ['as' => 'contact.upload', 'uses' => 'ContactController@uploadList']);
 
-        Route::get('annualbudget/{AnnualBudgetID}', ['as' => 'annualbudget', 'uses' => 'AnnualBudgetController@show']);
         Route::get(
             'annualbudget/list/all',
             ['as' => 'annualbudget.list.all', 'uses' => 'AnnualBudgetController@getSiteBudgets']
         );
+        Route::get('annualbudget/{AnnualBudgetID}', ['as' => 'annualbudget', 'uses' => 'AnnualBudgetController@show']);
         Route::put(
             'annualbudget/{AnnualBudgetID}',
             ['as' => 'annualbudget.update', 'uses' => 'AnnualBudgetController@update']
@@ -213,7 +219,7 @@ Route::group(
         );
         Route::get(
             'project/contacts/{ProjectID}',
-            ['as' => 'project.contacts', 'uses' => 'ProjectsController@getContacts']
+            ['as' => 'project.contacts', 'uses' => 'ProjectContactController@getProjectContacts']
         );
         Route::get(
             'project/project_leads/{ProjectID}',
@@ -230,11 +236,11 @@ Route::group(
 
         //Route::resource('lead_volunteer', 'ProjectVolunteerRoleController');
         Route::get(
-            'project_lead/all',
+            'project_lead/list/all',
             ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getAllProjectLeads']
         );
         Route::get(
-            'project_lead/all/{ProjectID}',
+            'project_lead/list/all/{ProjectID}',
             ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getProjectLeads']
         );
         Route::get(
@@ -252,11 +258,11 @@ Route::group(
         );
 
         //Route::resource('budget', 'BudgetController');
-        Route::get('project_budget/{BudgetID}', ['as' => 'project_budget', 'uses' => 'BudgetController@show']);
         Route::get(
-            'project_budget/all/{ProjectID}',
+            'project_budget/list/all/{ProjectID}',
             ['as' => 'project_budget', 'uses' => 'BudgetController@getProjectBudgets']
         );
+        Route::get('project_budget/{BudgetID}', ['as' => 'project_budget', 'uses' => 'BudgetController@show']);
         Route::put('project_budget/{BudgetID}', ['as' => 'project_budget.update', 'uses' => 'BudgetController@update']);
         Route::post('project_budget', ['as' => 'project_budget.create', 'uses' => 'BudgetController@store']);
         Route::post(
@@ -266,15 +272,15 @@ Route::group(
 
         //Route::resource('project_contact', 'ProjectContactController');
         Route::get(
-            'project_contact/{ProjectContactID}',
-            ['as' => 'project_contact', 'uses' => 'ProjectContactController@show']
-        );
-        Route::get(
-            'project_contact/all/{ProjectID}',
+            'project_contact/list/all/{ProjectID}',
             ['as' => 'project_contact', 'uses' => 'ProjectContactController@getProjectContacts']
         );
+        Route::get(
+            'project_contact/{ProjectContactsID}',
+            ['as' => 'project_contact', 'uses' => 'ProjectContactController@show']
+        );
         Route::put(
-            'project_contact/{ProjectContactID}',
+            'project_contact/{ProjectContactsID}',
             ['as' => 'project_contact.update', 'uses' => 'ProjectContactController@update']
         );
         Route::post('project_contact', ['as' => 'project_contact.create', 'uses' => 'ProjectContactController@store']);
@@ -286,6 +292,10 @@ Route::group(
             ]
         );
 
+        Route::get(
+            'project_volunteer/list/all/{ProjectID}',
+            ['as' => 'project_volunteer', 'uses' => 'ProjectVolunteerController@getProjectVolunteers']
+        );
         Route::post(
             'project_volunteer/batch/store',
             ['as' => 'project_volunteer.batch.store', 'uses' => 'ProjectVolunteerController@batchStore']
@@ -306,11 +316,11 @@ Route::group(
             'project_volunteer/{ProjectVolunteerRoleID}',
             ['as' => 'project_volunteer', 'uses' => 'ProjectVolunteerController@show']
         );
-        Route::get(
-            'project_volunteer/all/{ProjectID}',
-            ['as' => 'project_volunteer', 'uses' => 'ProjectVolunteerController@getProjectVolunteers']
-        );
 
+        Route::get(
+            'project_attachment/list/all/{ProjectID}',
+            ['as' => 'project_attachment.all', 'uses' => 'ProjectAttachmentController@getProjectAttachments']
+        );
         Route::get(
             'project_attachment/{ProjectAttachmentID}',
             ['as' => 'project_attachment.show', 'uses' => 'ProjectAttachmentController@show']
@@ -319,10 +329,7 @@ Route::group(
             'project_attachment/stream/{AttachmentPath}',
             ['as' => 'project_attachment.stream', 'uses' => 'ProjectAttachmentController@streamAttachment']
         )->where('AttachmentPath', '.*$');
-        Route::get(
-            'project_attachment/all/{ProjectID}',
-            ['as' => 'project_attachment.all', 'uses' => 'ProjectAttachmentController@getProjectAttachments']
-        );
+
         Route::put(
             'project_attachment/{ProjectAttachmentID}',
             ['as' => 'project_attachment.update', 'uses' => 'ProjectAttachmentController@update']
@@ -340,6 +347,10 @@ Route::group(
             ['as' => 'project_attachment.batch.destroy', 'uses' => 'ProjectAttachmentController@batchDestroy']
         );
 
+        Route::get(
+            'site_volunteer/list/all/{SiteStatusID}',
+            ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@getSiteVolunteers']
+        );
         Route::post(
             'site_volunteer',
             ['as' => 'site_volunteer.batch.store', 'uses' => 'SiteVolunteerController@store']
@@ -360,11 +371,11 @@ Route::group(
             'site_volunteer/{VolunteerID}',
             ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@show']
         );
-        Route::get(
-            'site_volunteer/all/{SiteStatusID}',
-            ['as' => 'site_volunteer', 'uses' => 'SiteVolunteerController@getSiteVolunteers']
-        );
 
+        Route::get(
+            'site_volunteer_role/list/all/{SiteStatusID}',
+            ['as' => 'site_volunteer_role', 'uses' => 'SiteVolunteerRoleController@getSiteVolunteers']
+        );
         Route::post(
             'site_volunteer_role',
             ['as' => 'site_volunteer_role.batch.store', 'uses' => 'SiteVolunteerRoleController@store']
@@ -385,10 +396,7 @@ Route::group(
             'site_volunteer_role/{SiteVolunteerRoleID}',
             ['as' => 'site_volunteer_role', 'uses' => 'SiteVolunteerRoleController@show']
         );
-        Route::get(
-            'site_volunteer_role/all/{SiteStatusID}',
-            ['as' => 'site_volunteer_role', 'uses' => 'SiteVolunteerRoleController@getSiteVolunteers']
-        );
+
 
         Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
 

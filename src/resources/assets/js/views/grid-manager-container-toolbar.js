@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.GridManagerContainerToolbar = Backbone.View.extend({
+    App.Views.oldGridManagerContainerToolbar = App.Views.Backend.fullExtend({
         template: template('gridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
@@ -7,8 +7,8 @@
             this.options = options;
             this.localStorageKey = this.options.localStorageKey;
             this.parentView = this.options.parentView;
-            this.modelNameLabel = this.parentView.modelNameLabel;
-            this.modelNameLabelLowerCase = this.parentView.modelNameLabelLowerCase;
+            self.modelNameLabel = this.parentView.modelNameLabel;
+            self.modelNameLabelLowerCase = this.parentView.modelNameLabelLowerCase;
             this.sAjaxFileUploadURL = this.options.sAjaxFileUploadURL;
             this.listenTo(this.parentView, 'toggle-delete-btn', function (e) {
                 self.toggleDeleteBtn(e);
@@ -27,7 +27,8 @@
             this.remove();
         },
         render: function () {
-            this.$el.html(this.template({modelName: this.modelNameLabel}));
+            let self = this;
+            this.$el.html(this.template({modelName: self.modelNameLabel}));
             // initialize all file upload inputs on the page at load time
             this.initializeFileUploadObj(this.$el.find('input[type="file"]'));
 
@@ -114,7 +115,7 @@
             let self = this;
             let toggle = e.toggle;
 
-            _log('App.Views.GridManagerContainerToolbar.toggleDeleteBtn.event', this.modelNameLabel, e.toggle, e);
+            _log('App.Views.GridManagerContainerToolbar.toggleDeleteBtn.event', self.modelNameLabel, e.toggle, e);
             if (toggle === 'disable') {
                 this.$el.find('.btnDeleteChecked').addClass('disabled');
             } else {

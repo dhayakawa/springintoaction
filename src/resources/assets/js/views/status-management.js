@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.StatusManagementRecord = Backbone.View.extend({
+    App.Views.StatusManagementRecord = App.Views.Backend.fullExtend({
         tagName: 'div',
         attributes: {
             class: 'row'
@@ -528,9 +528,7 @@
             let self = this;
             _.bindAll(self, '_initialize','render', 'addOne', 'addAll');
             this._initialize(options);
-            self.listenTo(self.collection, 'reset', function (e) {
-                self.addAll();
-            });
+            self.listenTo(self.collection, 'reset', self.addAll);
         },
         events: {},
         render: function () {

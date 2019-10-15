@@ -1,9 +1,11 @@
 (function (App) {
     App.Collections.ProjectAttachment = Backbone.Collection.extend({
+        url: '/admin/project_attachment/list/all',
         model: App.Models.ProjectAttachment
     });
 
     App.PageableCollections.ProjectAttachment            = Backbone.PageableCollection.extend({
+        url: '/admin/project_attachment/list/all',
         model: App.Models.ProjectAttachment,
         state: {
             pageSize: 5000
@@ -48,5 +50,10 @@
             width: "*"
         }
     ];
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.ProjectAttachmentsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.ProjectAttachmentsBackgridColumnDefinitions:', App.Vars.ProjectAttachmentsBackgridColumnDefinitions);
 })(window.App);

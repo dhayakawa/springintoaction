@@ -9,16 +9,19 @@
 
 (function (App) {
     App.Collections.SiteSetting = Backbone.Collection.extend({
+        url:'/admin/site_setting/list/all',
         model: App.Models.SiteSetting
     });
 })(window.App);
 
 (function (App) {
     App.Collections.ProjectAttachment = Backbone.Collection.extend({
+        url: '/admin/project_attachment/list/all',
         model: App.Models.ProjectAttachment
     });
 
     App.PageableCollections.ProjectAttachment            = Backbone.PageableCollection.extend({
+        url: '/admin/project_attachment/list/all',
         model: App.Models.ProjectAttachment,
         state: {
             pageSize: 5000
@@ -63,19 +66,22 @@
             width: "*"
         }
     ];
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.ProjectAttachmentsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.ProjectAttachmentsBackgridColumnDefinitions:', App.Vars.ProjectAttachmentsBackgridColumnDefinitions);
 })(window.App);
 
 (function (App) {
-    App.Collections.Budget = Backbone.Collection.extend({
+    App.Collections.AnnualBudget = Backbone.Collection.extend({
         url: '/admin/annualbudget/list/all',
         model: App.Models.Budget
     });
 
-    App.PageableCollections.Budget = Backbone.PageableCollection.extend({
-        url: function (ProjectID) {
-            return this.document.url() + '/admin/project/budgets/' + ProjectID;
-        },
+    App.PageableCollections.ProjectBudget = Backbone.PageableCollection.extend({
+        url: '/admin/project_budget/list/all',
         model: App.Models.Budget,
         state: {
             pageSize: 5000
@@ -195,7 +201,7 @@
                 setInterval(function () {
                     self.fetching = true;
 
-                    $.get("/admin/project/year/list/all").done(function (data) {
+                    $.get("/admin/project/year/all").done(function (data) {
                         self._optionValues = [];
                         _.each(data, function (model) {
                             self._optionValues.push([model['ProjectDescription'], model['ProjectID']]);
@@ -233,14 +239,25 @@
         }
         App.Vars.annualBudgetsBackgridColumnDefinitions.push(value);
     });
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.BudgetsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+        _.each(App.Vars.annualBudgetsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.BudgetsBackgridColumnDefinitions:', App.Vars.BudgetsBackgridColumnDefinitions);
+    _log('App.Vars.CollectionsGroup', 'App.Vars.annualBudgetsBackgridColumnDefinitions:', App.Vars.annualBudgetsBackgridColumnDefinitions);
 })(window.App);
 
 (function (App) {
     App.Collections.Project = Backbone.Collection.extend({
+        url: '/admin/project/list/all',
         model: App.Models.Project
     });
     App.PageableCollections.Project = Backbone.PageableCollection.extend({
+        url: '/admin/project/list/all',
         model: App.Models.Project,
         state: {
             pageSize: 5000
@@ -607,7 +624,8 @@
             name: "PaintAlreadyOnHand",
             label: "Paint Already On Hand",
             cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
@@ -616,7 +634,8 @@
             name: "PaintOrdered",
             label: "Paint Ordered",
             cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
@@ -679,7 +698,8 @@
             name: "FinalCompletionStatus",
             label: "Project Completed",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
@@ -688,7 +708,8 @@
             name: "FinalCompletionAssessment",
             label: "Final Completion Assessment",
             cell: App.Vars.TextareaCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
@@ -698,7 +719,7 @@
             label: "updated_at",
             cell: "string",
             editable: false,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             renderable: true,
@@ -707,16 +728,21 @@
 
     ];
 
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.projectsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.projectsBackgridColumnDefinitions', App.Vars.projectsBackgridColumnDefinitions);
 })(window.App);
 
 (function (App) {
     App.Collections.Site = Backbone.Collection.extend({
+        url: 'admin/site/list/all',
         model: App.Models.Site
     });
     App.Collections.SiteYear = Backbone.Collection.extend({
-        url: 'site/years',
+        url: 'admin/sitestatus/list/all/site/years',
         model: App.Models.SiteYear
     });
 })(window.App);
@@ -724,10 +750,20 @@
 
 (function (App) {
     App.Collections.Contact = Backbone.Collection.extend({
+        url: '/admin/contact/list/all',
         model: App.Models.Contact
     });
     App.PageableCollections.Contact = Backbone.PageableCollection.extend({
+        url: '/admin/contact/list/all',
         model: App.Models.Contact,
+        state: {
+            pageSize: 5000
+        },
+        mode: "client" // page entirely on the client side
+    });
+    App.PageableCollections.ProjectContact = Backbone.PageableCollection.extend({
+        url: '/admin/project_contact/list/all',
+        model: App.Models.ProjectContact,
         state: {
             pageSize: 5000
         },
@@ -885,19 +921,35 @@
     App.Vars.projectContactsBackgridColumnDefinitions = [];
     _.each(contactsBackgridColumnDefinitions, function (value, key) {
         value = _.clone(value);
+        if (value.name === 'ContactID') {
+            value.name = 'ProjectContactsID';
+            value.formatter = _.extend({}, Backgrid.CellFormatter.prototype, {
+                fromRaw: function (rawValue) {
+                    return '<input title="' + rawValue + '" type="radio" name="ProjectContactsID" value="' + rawValue + '" />';
+                    //You can use rawValue to custom your html, you can change this value using the name parameter.
+                }
+            });
+        }
         value.editable = false;
         App.Vars.projectContactsBackgridColumnDefinitions.push(value);
     });
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.ContactsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.ContactsBackgridColumnDefinitions:', App.Vars.ContactsBackgridColumnDefinitions);
+    _log('App.Vars.CollectionsGroup', 'App.Vars.projectContactsBackgridColumnDefinitions:', App.Vars.projectContactsBackgridColumnDefinitions);
 })(window.App);
 
 (function (App) {
     App.Collections.Volunteer = Backbone.Collection.extend({
+        url:'/admin/volunteer/list/all',
         model: App.Models.Volunteer
     });
 
     App.PageableCollections.Volunteer = Backbone.PageableCollection.extend({
+        url: '/admin/volunteer/list/all',
         model: App.Models.Volunteer,
         state: {
             pageSize: 5000
@@ -1293,7 +1345,11 @@
         value.displayOrder = displayOrderCnt++;
     });
 
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.volunteersBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
 
     _log('App.Vars.CollectionsGroup', 'App.Vars.volunteersBackgridColumnDefinitions:', App.Vars.volunteersBackgridColumnDefinitions);
 
@@ -1301,6 +1357,7 @@
 
 (function (App) {
     App.PageableCollections.ProjectVolunteer = Backbone.PageableCollection.extend({
+        url: '/admin/project_volunteer/list/all',
         model: App.Models.ProjectVolunteer,
         state: {
             pageSize: 5000
@@ -1308,6 +1365,7 @@
         mode: "client" // page entirely on the client side
     });
     App.PageableCollections.ProjectLead = Backbone.PageableCollection.extend({
+        url: '/admin/project_lead/list/all',
         model: App.Models.ProjectVolunteerRole,
         state: {
             pageSize: 5000
@@ -1896,13 +1954,21 @@
             displayOrder: displayOrder++
         }
     ];
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.projectVolunteersBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+        _.each(App.Vars.volunteerLeadsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.projectVolunteerLeadsBackgridColumnDefinitions:', App.Vars.projectVolunteersBackgridColumnDefinitions);
     _log('App.Vars.CollectionsGroup', 'App.Vars.volunteerLeadsBackgridColumnDefinitions:', App.Vars.volunteerLeadsBackgridColumnDefinitions);
 })(window.App);
 
 (function (App) {
     App.PageableCollections.SiteVolunteerRoles = Backbone.PageableCollection.extend({
+        url: 'admin/site_volunteer/list/all',
         model: App.Models.SiteVolunteerRole,
         state: {
             pageSize: 5000
@@ -2004,6 +2070,18 @@
             displayOrder: displayOrder++
         },
         {
+            name: "SiteVolunteerID",
+            label: "SiteVolunteerID",
+            cell: "string",
+            editable: false,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: false,
+            renderable: false,
+            width: "15",
+            filterType: "string",
+            displayOrder: displayOrder++
+        },
+        {
             name: "LastName",
             label: "LastName",
             cell: "string",
@@ -2091,16 +2169,22 @@
         }
     ];
 
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.siteVolunteersBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.siteVolunteersBackgridColumnDefinitions:', App.Vars.siteVolunteersBackgridColumnDefinitions);
 
 })(window.App);
 
 (function (App) {
     App.Collections.Report = Backbone.Collection.extend({
+        url:'/admin/report',
         model: App.Models.Report
     });
     App.Collections.ProjectsDropDown = Backbone.Collection.extend({
+        url:'/admin/project/year/list/all',
         model: App.Models.ProjectDropDown
     });
 
@@ -2108,7 +2192,7 @@
 
 (function (App) {
     App.Collections.StatusManagement = Backbone.Collection.extend({
-        url: '/admin/sitestatus/all/statusmanagementrecords',
+        url: '/admin/sitestatus/list/all/statusmanagementrecords',
         model: App.Models.StatusManagement
     });
 })(window.App);
@@ -2123,8 +2207,8 @@
 
     // project tabs
     App.PageableCollections.projectLeadsCollection = new App.PageableCollections.ProjectLead();
-    App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget();
-    App.PageableCollections.projectContactsCollection = new App.PageableCollections.Contact();
+    App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.ProjectBudget();
+    App.PageableCollections.projectContactsCollection = new App.PageableCollections.ProjectContact();
     App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.ProjectVolunteer();
 
     // @App.Collections.projectVolunteersCollection- This is for the drop down in the select new project lead form
@@ -2135,7 +2219,7 @@
     // This is for the volunteer management view
     App.PageableCollections.volunteersManagementCollection = new App.PageableCollections.Volunteer();
     App.PageableCollections.contactsManagementCollection = new App.PageableCollections.Contact();
-    App.Collections.annualBudgetsManagementCollection = new App.Collections.Budget();
+    App.Collections.annualBudgetsManagementCollection = new App.Collections.AnnualBudget();
     // @App.PageableCollections.backGridFiltersPanelCollection - filter for volunteer collection
     App.PageableCollections.backGridFiltersPanelCollection = App.PageableCollections.volunteersManagementCollection;
     // This is for the project volunteers tab

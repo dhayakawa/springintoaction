@@ -1,6 +1,6 @@
 (function (App) {
 
-    let BackGridFiltersPanelSelectFilter = Backgrid.Extension.BackGridFiltersPanelSelectFilter = Backbone.View.extend({
+    let BackGridFiltersPanelSelectFilter = Backgrid.Extension.BackGridFiltersPanelSelectFilter = App.Views.Backend.fullExtend({
         tagName: "select",
         className: "backgrid-filter",
         template: _.template([
@@ -43,7 +43,7 @@
 
      @class Backgrid.Extension.BackGridFiltersPanelClientSideFilter
      */
-    let BackGridFiltersPanelClientSideFilter = Backgrid.Extension.BackGridFiltersPanelClientSideFilter = Backbone.View.extend({
+    let BackGridFiltersPanelClientSideFilter = Backgrid.Extension.BackGridFiltersPanelClientSideFilter = App.Views.Backend.fullExtend({
         /** @property */
         tagName: "div",
 
@@ -115,7 +115,7 @@
         }
     });
 
-    App.Views.BackGridFiltersPanel = Backbone.View.extend({
+    App.Views.BackGridFiltersPanel = App.Views.Backend.fullExtend({
         tagName: 'div',
         /**
          @property [wait=149] The time in milliseconds to wait since the last
@@ -127,6 +127,7 @@
         selectClearValue: "null",
         template: template('backgridFiltersPanelTemplate'),
         initialize: function (options) {
+            let self = this;
             //_log('App.Views.BackGridFiltersPanel.initialize');
             _.bindAll(this,
                 'render',
@@ -144,27 +145,27 @@
                 'getSearchSelect',
                 'currentSelectValue',
                 'onChange');
-            this.parentEl = $(options.parentEl);
-            this.wait = options.wait || this.wait;
+            self.parentEl = $(options.parentEl);
+            self.wait = options.wait || self.wait;
             // fullCollection is so we can get the entire collection for pageable collections instead of just the collection for the first page
-            let collection = this.collection = this.collection.fullCollection || this.collection;
-            this.origCollection = collection.clone();
+            let collection = self.collection = self.collection.fullCollection || self.collection;
+            self.origCollection = collection.clone();
 
-            this._debounceMethods(["search", "clear"]);
+            self._debounceMethods(["search", "clear"]);
 
-            this.listenTo(collection, "add", function (model, collection, options) {
-                this.origCollection.add(model, options);
+            self.listenTo(collection, "add", function (model, collection, options) {
+                self.origCollection.add(model, options);
             });
-            this.listenTo(collection, "remove", function (model, collection, options) {
-                this.origCollection.remove(model, options);
+            self.listenTo(collection, "remove", function (model, collection, options) {
+                self.origCollection.remove(model, options);
             });
-            this.listenTo(collection, "sort", function (col) {
-                if (!this.query()) this.origCollection.reset(col.models);
+            self.listenTo(collection, "sort", function (col) {
+                if (!self.query()) self.origCollection.reset(col.models);
             });
-            this.listenTo(collection, "reset", function (col, options) {
+            self.listenTo(collection, "reset", function (col, options) {
                 options = _.extend({reindex: true}, options || {});
                 if (options.reindex && options.from == null && options.to == null) {
-                    this.origCollection.reset(col.models);
+                    self.origCollection.reset(col.models);
                 }
             });
         },

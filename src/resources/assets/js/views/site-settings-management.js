@@ -83,10 +83,10 @@
             if (attributes['SiteSettingID'] === '') {
                 attributes['SiteSettingID'] = currentModelID;
             }
-            _log('App.Views.SiteSetting.update', self.options.tab, e.changed, attributes, this.model);
-            this.model.url = '/admin/site_setting/' + currentModelID;
+            _log('App.Views.SiteSetting.update', self.options.tab, e.changed, attributes, self.model);
+            self.model.url = self.getModelUrl(currentModelID);
             window.ajaxWaiting('show', 'form[name="SiteSetting' + currentModelID + '"]');
-            this.model.save(attributes,
+            self.model.save(attributes,
                 {
                     success: function (model, response, options) {
                         _log('App.Views.SiteSetting.update', self.options.tab + ' save', model, response, options);
@@ -104,7 +104,7 @@
         },
     });
 
-    App.Views.SiteSettingsManagement = Backbone.View.extend({
+    App.Views.SiteSettingsManagement = App.Views.Backend.fullExtend({
         attributes: {
             class: 'site-settings-management-view route-view box box-primary'
         },
@@ -113,10 +113,10 @@
             let self = this;
             this.itemsView = [];
             this.options = options;
-            this.modelNameLabel = this.options.modelNameLabel;
-            this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase().replace(' ', '_');
+            self.modelNameLabel = this.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(' ', '_');
             _.bindAll(this, 'addOne', 'addAll', 'render');
-            this.collection.bind('reset', this.addAll, this);
+            self.listenTo(self.collection, "reset", self.addAll);
         },
         events: {},
         render: function () {

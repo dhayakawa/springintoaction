@@ -9,8 +9,8 @@
     App.PageableCollections.siteVolunteersRoleCollection= new App.PageableCollections.SiteVolunteerRoles(@json($appInitialData['site_volunteers']));
     // project tabs
     App.PageableCollections.projectLeadsCollection = new App.PageableCollections.ProjectLead(@json($appInitialData['project_leads']));
-    App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.Budget(@json($appInitialData['project_budgets']));
-    App.PageableCollections.projectContactsCollection = new App.PageableCollections.Contact(@json($appInitialData['project_contacts']));
+    App.PageableCollections.projectBudgetsCollection = new App.PageableCollections.ProjectBudget(@json($appInitialData['project_budgets']));
+    App.PageableCollections.projectContactsCollection = new App.PageableCollections.ProjectContact(@json($appInitialData['project_contacts']));
     App.PageableCollections.projectVolunteersCollection = new App.PageableCollections.ProjectVolunteer(@json($appInitialData['project_volunteers']));
     App.PageableCollections.projectAttachmentsCollection = new App.PageableCollections.ProjectAttachment(@json($appInitialData['project_attachments']));
 
@@ -22,12 +22,20 @@
     // This is for the volunteer management view
     App.PageableCollections.volunteersManagementCollection = new App.PageableCollections.Volunteer(@json($appInitialData['volunteers']));
     App.PageableCollections.contactsManagementCollection = new App.PageableCollections.Contact(@json($appInitialData['all_contacts']));
-    App.Collections.annualBudgetsManagementCollection = new App.Collections.Budget(@json($appInitialData['annual_budgets']));
+    App.Collections.annualBudgetsManagementCollection = new App.Collections.AnnualBudget(@json($appInitialData['annual_budgets']));
     // @App.PageableCollections.backGridFiltersPanelCollection - filter for volunteer collection
     App.PageableCollections.backGridFiltersPanelCollection = App.PageableCollections.volunteersManagementCollection;
     // This is for the project volunteers tab
     App.PageableCollections.unassignedProjectVolunteersCollection = new App.PageableCollections.ProjectVolunteer();
     App.PageableCollections.unassignedProjectVolunteersCollection.url = '/admin/project_volunteer/unassigned/' + App.Models.siteStatusModel.get('SiteID') + '/' + App.Models.siteStatusModel.get('Year');
     App.PageableCollections.unassignedProjectVolunteersCollection.fetch({reset: true});
-
+    App.Vars.tabCollections = [];
+    App.Vars.tabCollections['project'] =
+    {
+        project_lead: App.PageableCollections.projectLeadsCollection,
+        project_budget: App.PageableCollections.projectBudgetsCollection,
+        project_contact: App.PageableCollections.projectContactsCollection,
+        project_volunteer: App.PageableCollections.projectVolunteersCollection,
+        project_attachment: App.PageableCollections.projectAttachmentsCollection
+    };
 })(window.App);

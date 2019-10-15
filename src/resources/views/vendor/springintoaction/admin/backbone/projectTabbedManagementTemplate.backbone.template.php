@@ -56,7 +56,11 @@
                     </div>
                 </div>
                 <div class="box-footer">
-                    <div class="project-tabs-grid-manager-container grid-manager-container"></div>
+                    <div class="project_lead tab-grid-manager-container grid-manager-container" style="display:none"></div>
+                    <div class="project_budget tab-grid-manager-container grid-manager-container" style="display:none"></div>
+                    <div class="project_contact tab-grid-manager-container grid-manager-container" style="display:none"></div>
+                    <div class="project_volunteer tab-grid-manager-container grid-manager-container" style="display:none"></div>
+                    <div class="project_attachment tab-grid-manager-container grid-manager-container" style="display:none"></div>
                 </div>
             </div>
         </div>

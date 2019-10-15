@@ -496,10 +496,13 @@ class SpringIntoActionMainAppController extends BaseController
                 \glob(base_path() . "/resources/views/vendor/springintoaction/admin/backbone/*.backbone.template.php");
             foreach ($files as $file) {
                 $templateID = str_replace('.backbone.template.php', '', basename($file));
+                ob_start();
+                include_once $file;
+                $fileContents = \ob_get_clean();
                 $fileContents = preg_replace(
                     ["/(\r\n|\n)/", "/\s+/", "/> </"],
                     ["", " ", "><"],
-                    addcslashes(\file_get_contents($file), '"')
+                    addcslashes($fileContents, '"')
                 );
                 $content .= "window.JST['{$templateID}'] = _.template(
                         \"{$fileContents}\"

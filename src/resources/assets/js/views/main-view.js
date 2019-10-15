@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.mainApp = Backbone.View.extend({
+    App.Views.mainApp = App.Views.Backend.fullExtend({
         el: $(".sia-main-app"),
         initialize: function (options) {
             let self = this;
@@ -9,8 +9,7 @@
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;
             App.Vars.currentSiteID      = App.Vars.appInitialData.site.SiteID;
-            //App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
-            localStorage.setItem('projects-view.project-model.current-id', App.Vars.appInitialData.project.ProjectID);
+            App.Vars.currentProjectID   = App.Vars.appInitialData.project.ProjectID;
             App.Vars.currentSiteVolunteerRoleID   = App.Vars.appInitialData.site_volunteer.SiteVolunteerRoleID;
             App.Vars.mainAppDoneLoading = false;
             self.listenTo(App.Models.projectModel, 'sync', function (e) {

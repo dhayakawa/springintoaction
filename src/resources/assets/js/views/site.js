@@ -12,7 +12,7 @@
 
             _.bindAll(this, 'update');
             self._initialize(options);
-            self.sitesDropDownView = options.sitesDropDownView;
+            self.listenTo(self.options.parentView.siteYearsDropdownView, 'site-status-id-change', self.fetchIfNewID);
             this.listenTo(self.model, 'change', self.render);
             this.listenTo(self.model, 'set', self.render);
         },
@@ -33,6 +33,18 @@
                         growl(response.msg, 'error')
                     }
                 });
+        },
+        fetchIfNewID: function (e) {
+            let self = this;
+            window.ajaxWaiting('show', '#site-well');
+            self.model.url = self.getModelUrl(e[self.model.idAttribute]);
+            $.when(
+                self.model.fetch({reset: true})
+            ).then(function () {
+
+                window.ajaxWaiting('remove', '#site-well');
+
+            });
         },
         render: function () {
             let self = this;
@@ -63,15 +75,15 @@
                 {
                     success: function (model, response, options) {
                         window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.sitesDropDownView.collection.url = self.sitesDropDownView.getCollectionUrl();
+                        self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
                         $.when(
-                            self.sitesDropDownView.collection.fetch({reset: true})
+                            self.sitesDropdownView.collection.fetch({reset: true})
                         ).then(function () {
                             //initialize your views here
                             _log('App.Views.Site.create.event', 'site collection fetch promise done. new_site_id:' + response.new_site_id);
                             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                            self.sitesDropDownView.$el.val(response.new_site_id.toString());
-                            self.sitesDropDownView.$el.trigger('change');
+                            self.options.parentView.sitesDropdownView.$el.val(response.new_site_id.toString());
+                            self.options.parentView.sitesDropdownView.$el.trigger('change');
 
                         });
                     },
@@ -88,14 +100,14 @@
             self.model.destroy({
                 success: function (model, response, options) {
                     window.growl(response.msg, response.success ? 'success' : 'error');
-                    self.sitesDropDownView.collection.url = self.sitesDropDownView.getCollectionUrl();
+                    self.options.parentView.sitesDropdownView.collection.url = self.options.parentView.sitesDropdownView.getCollectionUrl();
                     $.when(
-                        self.sitesDropDownView.collection.fetch({reset: true})
+                        self.options.parentView.sitesDropdownView.collection.fetch({reset: true})
                     ).then(function () {
                         //initialize your views here
                         _log('App.Views.Site.destroy.event', 'site collection fetch promise done');
                         window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                        self.sitesDropDownView.$el.trigger('change')
+                        self.options.parentView.sitesDropdownView.$el.trigger('change')
                     });
                 },
                 error: function (model, response, options) {
@@ -113,7 +125,7 @@
             let self = this;
             _.bindAll(this, 'update');
             self._initialize(options);
-            self.sitesDropDownView = options.sitesDropDownView;
+            self.listenTo(self.options.parentView.siteYearsDropdownView, 'site-status-id-change', self.fetchIfNewID);
             self.listenTo(self.model, 'change', self.render);
             self.listenTo(self.model, 'destroy', self.remove);
         },
@@ -121,6 +133,18 @@
             'click input[type="checkbox"]': 'update',
             'change textarea': 'update',
             'click .delete': 'destroy'
+        },
+        fetchIfNewID: function (e) {
+            let self = this;
+            window.ajaxWaiting('show', '#site-status-well');
+            self.model.url = self.getModelUrl(e[self.model.idAttribute]);
+            $.when(
+                self.model.fetch({reset: true})
+            ).then(function () {
+
+                window.ajaxWaiting('remove', '#site-status-well');
+
+            });
         },
         update: function (e) {
             let self = this;

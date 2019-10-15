@@ -27,11 +27,7 @@
         preRouteViewRender: function () {
             let self = this;
             self.mainApp.$el.find('> .route-view').hide();
-            // actually remove old console from DOM
-            // let oldViewElement = document.querySelector('#view-trash');
-            // if (oldViewElement) {
-            //     oldViewElement.parentNode.removeChild(oldViewElement);
-            // }
+            console.log('preRouteViewRender',{'self.mainApp': self.mainApp,"self.mainApp.$el.find('> .route-view')": self.mainApp.$el.find('> .route-view')})
             self.bRouteViewRendered = false;
         },
         postRouteViewRender: function () {
@@ -61,7 +57,7 @@
                 /**
                  * Put new dashboard panel below.
                  */
-                if (App.Vars.Auth.bCanSiteManagement) {
+                /*if (App.Vars.Auth.bCanSiteManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
@@ -90,7 +86,7 @@
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
-                }
+                }*/
                 if (App.Vars.Auth.bCanPeopleManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
@@ -116,6 +112,7 @@
                             })
                     }).render().$el.html());
                 }
+                /*
                 if (App.Vars.Auth.bCanBudgetManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
@@ -135,8 +132,8 @@
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
-                }
-                if (App.Vars.Auth.bCanSiteManagement) {
+                }*/
+                /*if (App.Vars.Auth.bCanSiteManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
@@ -155,8 +152,8 @@
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
-                }
-                if (App.Vars.Auth.bCanProjectManagement) {
+                }*/
+                /*if (App.Vars.Auth.bCanProjectManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
                             new App.Models.DashboardPanel({
@@ -245,7 +242,7 @@
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
-                }
+                }*/
 
                 self.managementViews['dashboard'] = new self.dashboardViewClass({
                     dashboardPanelViews: aDashboardPanelViews
@@ -253,11 +250,11 @@
 
                 // pre-render core management views so triggers b/w views work
                 self.mainApp.preRenderedView = true;
-                this.loadView('site','management','');
-                this.loadView('project','management','');
-                this.loadView('project', 'status', '');
-                this.loadView('site_contacts','management','');
-                this.loadView('volunteers','management','');
+                // self.loadView('site','management','');
+                // self.loadView('project','management','');
+                // self.loadView('project', 'status', '');
+                self.loadView('site_contacts','management','');
+                // self.loadView('volunteers','management','');
                 self.mainApp.preRenderedView = false;
             }
             self.mainApp.setRouteView(self.managementViews['dashboard']).render();

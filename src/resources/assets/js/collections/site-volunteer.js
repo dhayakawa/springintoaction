@@ -1,6 +1,6 @@
 (function (App) {
     App.PageableCollections.SiteVolunteerRoles = Backbone.PageableCollection.extend({
-        url: 'admin/site_volunteer/all',
+        url: 'admin/site_volunteer/list/all',
         model: App.Models.SiteVolunteerRole,
         state: {
             pageSize: 5000

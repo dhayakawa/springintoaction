@@ -8,10 +8,12 @@
 
     namespace Dhayakawa\SpringIntoAction\Models;
 
+    use Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
     use Illuminate\Database\Eloquent\Model;
 
     class Budget extends Model {
 
+        use ProjectRegistrationHelper;
         use \Illuminate\Database\Eloquent\SoftDeletes;
 
         protected $dates = ['deleted_at'];
@@ -57,7 +59,7 @@
                 }
             }
             if(isset($this->defaultRecordData['Year']) && (!is_numeric($this->defaultRecordData['Year']) || !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))) {
-                $this->defaultRecordData['Year'] = date('Y');
+                $this->defaultRecordData['Year'] = $this->getCurrentYear();
             }
 
             return $this->defaultRecordData;

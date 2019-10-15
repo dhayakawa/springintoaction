@@ -11,4 +11,6 @@
         </div>
     </div>
 </div>
-<div class="box-footer"></div>
+<div class="box-footer">
+    <div class="grid-manager-container col-xs-12 col-sm-12 col-md-12 col-lg-12"></div>
+</div>

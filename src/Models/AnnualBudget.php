@@ -137,32 +137,32 @@
                     }
 
                     $aSiteBudgets['Sites'][$site['SiteName']]['Projects'][$aaProject['Proj Num']]['Est Cost'] = $aaProject['Est Cost'];
-                    if ($site['SiteName'] == 'Ben Franklin Junior High') {
-                        \Illuminate\Support\Facades\Log::debug(
-                            '',
-                            [
-                                'File:' . __FILE__,
-                                'Method:' . __METHOD__,
-                                'Line:' . __LINE__,
-                                $key,
-                                ['$aaProject'=>$aaProject,
-                                '$aSiteBudgets'=>$aSiteBudgets['Sites'][$site['SiteName']]['Projects']]
-                            ]
-                        );
-                    }
+                    // if ($site['SiteName'] == 'Ben Franklin Junior High') {
+                    //     \Illuminate\Support\Facades\Log::debug(
+                    //         '',
+                    //         [
+                    //             'File:' . __FILE__,
+                    //             'Method:' . __METHOD__,
+                    //             'Line:' . __LINE__,
+                    //             $key,
+                    //             ['$aaProject'=>$aaProject,
+                    //             '$aSiteBudgets'=>$aSiteBudgets['Sites'][$site['SiteName']]['Projects']]
+                    //         ]
+                    //     );
+                    // }
                 }
             }
             // \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
             //     $aSiteBudgets]);
-            \Illuminate\Support\Facades\Log::debug(
-                '',
-                [
-                    'File:' . __FILE__,
-                    'Method:' . __METHOD__,
-                    'Line:' . __LINE__,
-                    $aSiteBudgets['Sites']['Ben Franklin Junior High'],
-                ]
-            );
+            // \Illuminate\Support\Facades\Log::debug(
+            //     '',
+            //     [
+            //         'File:' . __FILE__,
+            //         'Method:' . __METHOD__,
+            //         'Line:' . __LINE__,
+            //         $aSiteBudgets['Sites']['Ben Franklin Junior High'],
+            //     ]
+            // );
             return $aSiteBudgets;
         }
 

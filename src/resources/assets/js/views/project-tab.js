@@ -3,30 +3,29 @@
         initialize: function (options) {
             let self = this;
 
-            _.bindAll(this, '_initialize','render', 'update', 'refreshView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+            try {
+                _.bindAll(self, 'update', 'refreshView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
+            } catch (e) {
+                console.error(options, e)
+            }
+            // Required call for inherited class
             self._initialize(options);
-            self.projectsView = self.options.parentView.projectsView;
-            //self.backgridWrapperClassSelector = '.tab-content.backgrid-wrapper';
+            self.managedGridView = self.options.parentView.managedGridView;
+            self.sitesDropdownView = self.options.parentView.sitesDropdownView;
+            self.siteYearsDropdownView = self.options.parentView.siteYearsDropdownView;
+
             _log('App.Views.ProjectTab.initialize', options);
         },
         events: {
 
         },
-
         render: function (e) {
             let self = this;
-            if (self.viewName === 'project-leads') {
-                let cmi = self.getViewDataStore('current-model-id');
-                console.log('render', self.viewName,  _.isEmpty(cmi),self.getViewDataStore('current-model-id'))
-            }
-            if (!_.isNumber(self.getViewDataStore('current-model-id'))) {
+            let currentModelId = self.getViewDataStore('current-model-id');
+            if (!_.isNumber(currentModelId)) {
                 self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
-                if (self.viewName === 'project-leads') {
-                    console.log('render setting current model id', self.viewName, self.getViewDataStore('current-model-id'))
-                }
             }
             self.renderGrid(e, 'site-project-tab-' + self.options.tab);
-
 
             return self;
         },
@@ -46,13 +45,13 @@
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
-                if (attributes[self.projectsView.model.idAttribute] === '') {
-                    attributes[self.projectsView.model.idAttribute] = self.projectsView.getViewDataStore('current-model-id');
+                if (attributes[self.managedGridView.model.idAttribute] === '') {
+                    attributes[self.managedGridView.model.idAttribute] = self.managedGridView.getViewDataStore('current-model-id');
                 }
                 window.ajaxWaiting('show', self.backgridWrapperClassSelector);
-                console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged: e.changed, saveAttributes: attributes, tModel: this.model});
-                this.model.url = self.getModelRoute() + '/' + currentModelID;
-                this.model.save(attributes,
+                //console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged: e.changed, saveAttributes: attributes, tModel: self.model});
+                self.model.url = self.getModelUrl(currentModelID);
+                self.model.save(attributes,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectTab.update', self.options.tab + ' save', model, response, options);
@@ -65,41 +64,40 @@
                             growl(response.msg, 'error')
                         }
                     });
-            } else {
             }
         },
         create: function (attributes) {
             let self = this;
             window.ajaxWaiting('show', self.backgridWrapperClassSelector);
-
-            let model = this.model.clone().clear({silent: true});
-            console.log('App.Views.ProjectTab.create', self.options.tab, {attributes: attributes, model: model, thisModel: this.model});
+            attributes = _.extend(attributes, {
+                ProjectID: self.managedGridView.model.get(self.managedGridView.model.idAttribute)
+            });
+            let model = self.model.clone().clear({silent: true});
+            //console.log('App.Views.ProjectTab.create', self.options.tab, {attributes: attributes, model: model, thisModel: self.model});
             model.url = self.getModelRoute();
-            model.save(attributes,
-                {
-                    success: function (model, response, options) {
-                        window.growl(response.msg, response.success ? 'success' : 'error');
-                        self.collection.url = self.getModelRoute() + '/all/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
-                        $.when(
-                            self.collection.fetch({reset: true})
-                        ).then(function () {
-                            _log('App.Views.ProjectTab.create.event', self.options.tab + ' collection fetch promise done');
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                        });
-                    },
-                    error: function (model, response, options) {
-                        window.growl(response.msg, 'error');
-                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                    }
-                });
+            //console.log('create',{viewName:self.viewName,attributes:attributes})
+            $.when(
+                model.save(attributes,
+                    {
+                        success: function (model, response, options) {
+                            window.growl(response.msg, response.success ? 'success' : 'error');
+                            self.collection.url = self.getCollectionUrl(self.managedGridView.model.get(self.managedGridView.model.idAttribute));
+                            $.when(
+                                self.collection.fetch({reset: true})
+                            ).then(function () {
+                                _log('App.Views.ProjectTab.create.event', self.options.tab + ' collection fetch promise done');
+                            });
+                        },
+                        error: function (model, response, options) {
+                            window.growl(response.msg, 'error');
+                        }
+                    })
+            ).then(function () {
+                window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+            });
+
         },
-        toggleDeleteBtn: function (e) {
-            let self = this;
-            let selectedModels = self.backgrid.getSelectedModels();
-            _log('App.Views.ProjectTab.toggleDeleteBtn.event', self.options.tab, 'selectedModels.length:' + selectedModels.length, e);
-            let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
-            self.parentView.trigger('toggle-delete-btn', {toggle: toggleState, tab: self.options.tab});
-        },
+
         destroy: function (attributes) {
             let self = this;
             let deleteCnt = attributes.deleteModelIDs.length;
@@ -114,31 +112,34 @@
                     window.ajaxWaiting('show', self.backgridWrapperClassSelector);
 
                     attributes = _.extend(attributes, {
-                        ProjectID: self.projectsView.model.get(self.projectsView.model.idAttribute),
+                        ProjectID: self.managedGridView.model.get(self.managedGridView.model.idAttribute),
                         ProjectRoleID: self.model.get('ProjectRoleID')
                     });
                     // console.log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:' + deleteCnt, 'self.collection.fullCollection.length:' +
-                    //                                                                                                     self.collection.fullCollection.length, self.model);
-                    $.ajax({
-                        type: "POST",
-                        dataType: "json",
-                        url: self.getModelRoute() + '/batch/destroy',
-                        data: attributes,
-                        success: function (response) {
-                            window.growl(response.msg, response.success ? 'success' : 'error');
-                            self.collection.url = self.getModelRoute() + '/all/' + self.projectsView.model.get(self.projectsView.model.idAttribute);
-                            $.when(
-                                self.collection.fetch({reset: true})
-                            ).then(function () {
-                                _log('App.Views.ProjectTab.destroy.event', self.options.tab + ' collection fetch promise done');
-                                window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                            });
-                        },
-                        fail: function (response) {
-                            window.growl(response.msg, 'error');
-                            window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
-                        }
-                    })
+                    //                                                                                                    self.collection.fullCollection.length, self.model);
+                    $.when(
+                        $.ajax({
+                            type: "POST",
+                            dataType: "json",
+                            url: self.getModelRoute() + '/batch/destroy',
+                            data: attributes,
+                            success: function (response) {
+                                window.growl(response.msg, response.success ? 'success' : 'error');
+                                self.collection.url = self.getCollectionUrl(self.managedGridView.model.get(self.managedGridView.model.idAttribute));
+                                $.when(
+                                    self.collection.fetch({reset: true})
+                                ).then(function () {
+                                    _log('App.Views.ProjectTab.destroy.event', self.options.tab + ' collection fetch promise done');
+                                });
+                            },
+                            fail: function (response) {
+                                window.growl(response.msg, 'error');
+                            }
+                        })
+                    ).then(function () {
+                        window.ajaxWaiting('remove', self.backgridWrapperClassSelector);
+                    });
+
                 }
             });
 

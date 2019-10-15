@@ -1,4 +1,5 @@
 <form name="newContact">
+    <input name="Active" type="hidden" value="1"/>
     <div class="form-group">
         <label for="selectSite">Site</label>
         <%= siteSelect %>
