@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.SiteVolunteerGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.SiteVolunteerGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'site-volunteers-grid-manager-container-toolbar-view',
         initialize: function (options) {
             let self = this;
@@ -8,7 +8,7 @@
         }
     });
 
-    App.Views.SiteVolunteer = App.Views.ManagedGrid.fullExtend({
+    App.Views.SiteVolunteer = App.Views.ManagedGrid.extend({
         viewName: 'site-volunteers-view',
         initialize: function (options) {
             let self = this;

@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ProjectContact = App.Views.ProjectTab.fullExtend({
+    App.Views.ProjectContact = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('newProjectContactTemplate');

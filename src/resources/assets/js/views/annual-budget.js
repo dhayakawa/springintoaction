@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.AnnualBudgetView = App.Views.Backend.fullExtend({
+    App.Views.AnnualBudgetView = App.Views.Backend.extend({
         template: template('annualBudgetTemplate'),
         initialize: function (options) {
             let self = this;

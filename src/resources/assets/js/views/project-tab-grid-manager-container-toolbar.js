@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ProjectTabGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.ProjectTabGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         template: template('tabGridManagerContainerToolbarsTemplate'),
         initialize: function (options) {
             let self = this;

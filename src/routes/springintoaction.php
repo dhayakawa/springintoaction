@@ -409,13 +409,13 @@ Route::group(
             'option/list/all/{OptionType}',
             ['as' => 'option', 'uses' => 'OptionsManagementController@getOptions']
         );
-        Route::get(
-            'option/{OptionType}/{OptionID}',
-            ['as' => 'option', 'uses' => 'OptionsManagementController@getOption']
-        );
-        Route::delete('option/{OptionType}/{OptionID}', ['as' => 'option.destroy', 'uses' => 'OptionsManagementController@destroy']);
-        Route::put('option/{OptionType}/{OptionID}', ['as' => 'option.update', 'uses' => 'OptionsManagementController@update']);
-        Route::post('option/{OptionType}', ['as' => 'option.create', 'uses' => 'OptionsManagementController@store']);
+        //Route::get(
+        //    'option/{OptionType}/{OptionID}',
+        //    ['as' => 'option', 'uses' => 'OptionsManagementController@getOption']
+        //);
+        //Route::delete('option/{OptionType}/{OptionID}', ['as' => 'option.destroy', 'uses' => 'OptionsManagementController@destroy']);
+        //Route::put('option/{OptionType}/{OptionID}', ['as' => 'option.update', 'uses' => 'OptionsManagementController@update']);
+        Route::post('option/list/{OptionType}', ['as' => 'option.list.update', 'uses' => 'OptionsManagementController@updateList']);
 
     }
 );

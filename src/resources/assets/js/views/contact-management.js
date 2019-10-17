@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ContactsManagement = App.Views.Management.fullExtend({
+    App.Views.ContactsManagement = App.Views.Management.extend({
         contactsViewClass: App.Views.Contact,
         template: template('managementTemplate'),
         initialize: function (options) {
@@ -32,7 +32,7 @@
                 currentModelIDDataStoreSelector: '.contacts-view',
                 el: self.$('.backgrid-wrapper'),
                 gridManagerContainerToolbarClassName: 'grid-manager-container',
-                mainApp: self.mainApp,
+
                 model: App.Models.contactModel,
                 modelNameLabel: 'Contact',
                 parentView: self,
@@ -42,7 +42,7 @@
             self.contactsGridManagerContainerToolbar = new App.Views.ContactGridManagerContainerToolbar({
                 el: self.$('.grid-manager-container'),
                 parentView: self,
-                mainApp: self.mainApp,
+
                 managedGridView: self.contactsView,
                 viewName: 'contacts-grid-manager-toolbar'
             });

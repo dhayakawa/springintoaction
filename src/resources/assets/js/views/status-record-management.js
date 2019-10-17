@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.StatusRecordManagement = App.Views.Management.fullExtend({
+    App.Views.StatusRecordManagement = App.Views.Management.extend({
         attributes: {
             class: 'route-view box box-primary status-record-management-view'
         },

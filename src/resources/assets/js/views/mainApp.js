@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.mainApp = App.Views.Backend.fullExtend({
+    App.Views.MainApp = App.Views.Backend.extend({
         el: $(".sia-main-app"),
         events: {
             'click > .route-view .close-view' : 'hideRouteView'
@@ -89,12 +89,12 @@
                         } else {
                             window.ajaxWaiting('remove', '.sia-main-app');
                         }
-                        this.$el.append(viewEl);
+                        self.$el.append(viewEl);
                     }
                 }
+                _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), self.$el);
             }
 
-            _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), this.$el);
             if (self.preRenderedView === false && App.Vars.mainAppDoneLoading === false) {
                 App.Vars.mainAppDoneLoading = true;
                 _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
@@ -102,7 +102,7 @@
                 $('body').trigger('resize');
             }
 
-            return this;
+            return self;
         }
     });
 

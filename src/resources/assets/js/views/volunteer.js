@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.Volunteer = App.Views.ManagedGrid.fullExtend({
+    App.Views.Volunteer = App.Views.ManagedGrid.extend({
         viewName: 'volunteers-view',
         events: {},
         initialize: function (options) {

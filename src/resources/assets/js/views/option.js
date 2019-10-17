@@ -1,28 +1,33 @@
 (function (App) {
-    App.Views.Option = App.Views.Backend.fullExtend({
+    App.Views.Option = App.Views.Backend.extend({
         template: template('optionTemplate'),
         viewName: 'option-view',
         events: {
-          'click .ui-icon-trash' : 'delete'
+            'click .ui-icon-trash': 'delete'
         },
         initialize: function (options) {
             let self = this;
 
-            // try {
-            //     _.bindAll(self, 'update', 'refreshView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
-            // } catch (e) {
-            //     console.error(options, e)
-            // }
+            try {
+                _.bindAll(self, 'render', 'delete');
+            } catch (e) {
+                console.error(options, e)
+            }
             // Required call for inherited class
             self._initialize(options);
+            self.listenTo(self.collection, 'reset', self.render);
             self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
-            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
             self.$sortableElement = null;
+            self.deletedOptionIds = [];
+            self.optionIdAttribute = self.options.optionIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
         },
-        render: function () {
+        render: function (e) {
             let self = this;
             self.$el.html(self.template({
+                idAttribute: self.optionIdAttribute,
+                labelAttribute: self.labelAttribute,
                 options: self.collection.models
             }));
 
@@ -31,19 +36,14 @@
                 axis: 'y',
                 revert: true,
                 delay: 150,
-                cursor: "move",
                 update: function (event, ui) {
                     self.$sortableElement.sortable("refreshPositions");
-                    let aSortedIDs = self.$sortableElement.sortable("toArray");
-                    let serialized = self.$sortableElement.sortable("serialize", {key: "sort"});
-                    //console.log('update',{ui: ui, aSortedIDs: aSortedIDs, serialized: serialized});
-
                     let iSequence = 1;
                     self.$sortableElement.find('tr').each(function (idx, tr) {
                         let id = tr.id.replace(/option_/, '');
                         if (id !== '') {
                             //console.log({tr: tr,'tr.id': tr.id, 'data-id': id, idx: idx, iSequence: iSequence, label: $(tr).find('[name="option_label"]').val()});
-                            self.$sortableElement.find('[name="DisplaySequence"][data-id="' + id + '"]').val(iSequence++);
+                            self.$sortableElement.find('[name="option[' + id + '][DisplaySequence]"]').val(iSequence++);
                         }
                     });
                     self.trigger('option-list-changed');
@@ -57,10 +57,15 @@
         },
         delete: function (e) {
             let self = this;
-            console.log('delete',e)
-            bootbox.confirm("Do you really want to delete this option?", function (bConfirmed) {
+            let $parentRow = $(e.currentTarget).parents('tr');
+            let id = $parentRow.attr('id').replace(/option_/, '');
+            let optionLabel = self.$sortableElement.find('[name="option[' + id + ']['+ self.labelAttribute+ ']"]').val();
+            bootbox.confirm("Do you really want to delete this option: " + optionLabel + "?", function (bConfirmed) {
                 if (bConfirmed) {
 
+                    self.deletedOptionIds.push(id);
+                    $parentRow.remove();
+                    self.trigger('option-list-changed');
                 }
             });
         }

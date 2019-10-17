@@ -1,29 +1,34 @@
 (function (App) {
-    App.Views.Dashboard = App.Views.Backend.fullExtend({
+    App.Views.Dashboard = App.Views.Backend.extend({
+        viewName:'dashboard',
         attributes: {
             class: 'route-view dashboard'
         },
         template: _.template([
-            '<div class="row">',
             "<% for (let i=0; i < dashboardPanelViews.length; i++) { %>",
-            '   <div class="col-xs-6">',
+            '   <div class="dashboard-grid-item col-xs-6">',
             "    <%= dashboardPanelViews[i] %>",
             "   </div>",
-            " <% if(i!==0 && (i+1)%2===0) { print('</div><div class=\"row\">'); } %>",
-            "<% } %>",
-            "</div>"
+            "<% } %>"
         ].join("\n")),
         initialize: function (options) {
-            this.options    = options;
-            this.dashboardPanelViews = this.options['dashboardPanelViews'];
-            _.bindAll(this, 'render');
+            let self = this;
+            self._initialize(options);
+            self.dashboardPanelViews = options['dashboardPanelViews'];
         },
         render: function () {
-            this.$el.off();
-            this.$el.empty().append(this.template({
-                dashboardPanelViews: this.dashboardPanelViews
+            let self = this;
+            self.$el.off();
+            self.$el.empty().append(self.template({
+                dashboardPanelViews: self.dashboardPanelViews
             }));
-            return this;
+            setTimeout(function () {
+                self.$el.masonry({
+                    columnWidth: self.$('.dashboard-grid-item')[0],
+                    itemSelector: '.dashboard-grid-item'
+                });
+            }, 1000);
+            return self;
         },
         close: function () {
             this.remove();
@@ -43,45 +48,55 @@
             })
         }
     });
-    App.Views.DashboardPanel = App.Views.Backend.fullExtend({
+    App.Views.DashboardPanel = App.Views.Backend.extend({
+        viewName: 'dashboard-panel',
         template: template('dashboardPanelTemplate'),
         initialize: function (options) {
-            this.options    = options;
-            _.bindAll(this, 'render');
+            let self = this;
+            self._initialize(options);
         },
         events: {},
         render: function () {
             let self = this;
-            this.$el.append(this.template(self.model.toJSON()));
-            return this;
+            self.$el.append(self.template(self.model.toJSON()));
+            return self;
         }
     });
-    App.Views.DashboardPanelLinksListItem = App.Views.Backend.fullExtend({
+    App.Views.DashboardPanelLinksListItem = App.Views.Backend.extend({
+        viewName: 'dashboard-panel-links-list-item',
         tagName: 'li',
         template: _.template("<a href=\"#/<%=route%>\" data-route><%=linkText%> <span class=\"pull-right badge bg-blue\"><%=badgeCount%></span></a>"),
         initialize: function (options) {
-            _.bindAll(this, 'render');
+            let self = this;
+            self._initialize(options);
         },
         events: {
 
         },
         render: function () {
             let self = this;
-            let $link = this.template({
+            let $link = self.template({
                 linkText: self.model.get('linkText'),
                 badgeCount: self.model.get('badgeCount'),
                 route: self.model.get('route')
             });
-            this.$el.append($link);
-            return this;
+            self.$el.append($link);
+            return self;
         }
     });
 
-    App.Views.DashboardPanelLinksList = App.Views.Backend.fullExtend({
+    App.Views.DashboardPanelLinksList = App.Views.Backend.extend({
+        viewName: 'dashboard-panel-links-list',
         initialize: function (options) {
             let self = this;
-            this.itemsView = [];
-            _.bindAll(this, 'addOne', 'addAll','render');
+
+            try {
+                _.bindAll(this, 'addOne', 'addAll', 'render');
+            } catch (e) {
+                console.error(options, e)
+            }
+            self._initialize(options);
+            self.itemsView = [];
             self.listenTo(self.collection, "reset", self.addAll);
         },
         events: {},
@@ -104,7 +119,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.oldGridManagerContainerToolbar = App.Views.Backend.fullExtend({
+    App.Views.oldGridManagerContainerToolbar = App.Views.Backend.extend({
         template: template('gridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
@@ -267,7 +282,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.SiteSetting = App.Views.Backend.fullExtend({
+    App.Views.SiteSetting = App.Views.Backend.extend({
         tagName: 'li',
         template: template('siteSettingTemplate'),
         viewName: 'site-setting-view',
@@ -373,7 +388,7 @@
         },
     });
 
-    App.Views.SiteSettingsManagement = App.Views.Backend.fullExtend({
+    App.Views.SiteSettingsManagement = App.Views.Backend.extend({
         attributes: {
             class: 'site-settings-management-view route-view box box-primary'
         },
@@ -409,8 +424,7 @@
             let self = this;
             let $settingItem = new App.Views.SiteSetting({
                 model: SiteSetting,
-                mainApp: self.mainApp
-            });
+                            });
             self.itemsView.push($settingItem);
             self.$el.find('ul').append($settingItem.render().el);
         },
@@ -425,7 +439,7 @@
 
 (function (App) {
     // This is the sites drop down
-    App.Views.SiteOption = App.Views.Backend.fullExtend({
+    App.Views.SiteOption = App.Views.Backend.extend({
         viewName: 'sites-dropdown-option',
         tagName: 'option',
         initialize: function (options) {
@@ -440,7 +454,7 @@
             return self;
         }
     });
-    App.Views.SitesDropdown = App.Views.Backend.fullExtend({
+    App.Views.SitesDropdown = App.Views.Backend.extend({
         viewName: 'sites-dropdown',
         initialize: function (options) {
             let self = this;
@@ -460,8 +474,7 @@
             self.$el.append(
                 new App.Views.SiteOption({
                     model: site,
-                    mainApp: self.parentView.mainApp
-                }).render().el);
+                                    }).render().el);
         },
         addAll: function () {
             let self = this;
@@ -500,7 +513,7 @@
             });
         }
     });
-    App.Views.SiteYearsOption = App.Views.Backend.fullExtend({
+    App.Views.SiteYearsOption = App.Views.Backend.extend({
         viewName: 'site-years-dropdown-option',
         tagName: 'option',
         initialize: function (options) {
@@ -517,7 +530,7 @@
             return self;
         }
     });
-    App.Views.SiteYearsDropdown = App.Views.Backend.fullExtend({
+    App.Views.SiteYearsDropdown = App.Views.Backend.extend({
         viewName: 'site-years-dropdown',
         initialize: function (options) {
             let self = this;
@@ -544,8 +557,7 @@
             let self = this;
             let option = new App.Views.SiteYearsOption({
                 model: site,
-                mainApp: self.parentView.mainApp
-            });
+                            });
             this.optionsView.push(option);
             self.$el.append(option.render().el);
         },
@@ -594,7 +606,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.AnnualBudgetView = App.Views.Backend.fullExtend({
+    App.Views.AnnualBudgetView = App.Views.Backend.extend({
         template: template('annualBudgetTemplate'),
         initialize: function (options) {
             let self = this;
@@ -636,7 +648,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.AnnualBudgetsManagement = App.Views.Backend.fullExtend({
+    App.Views.AnnualBudgetsManagement = App.Views.Backend.extend({
         template: template('managementTemplate'),
         initialize: function (options) {
             let self = this;
@@ -910,7 +922,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectTabGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.ProjectTabGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         template: template('tabGridManagerContainerToolbarsTemplate'),
         initialize: function (options) {
             let self = this;
@@ -1111,7 +1123,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectTab = App.Views.ManagedGrid.fullExtend({
+    App.Views.ProjectTab = App.Views.ManagedGrid.extend({
         initialize: function (options) {
             let self = this;
 
@@ -1261,7 +1273,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectAttachment = App.Views.ProjectTab.fullExtend({
+    App.Views.ProjectAttachment = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('newProjectAttachmentTemplate');
@@ -1276,7 +1288,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectLead = App.Views.ProjectTab.fullExtend({
+    App.Views.ProjectLead = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('newProjectLeadTemplate');
@@ -1301,7 +1313,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectVolunteer = App.Views.ProjectTab.fullExtend({
+    App.Views.ProjectVolunteer = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('addProjectVolunteerTemplate');
@@ -1413,7 +1425,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.Budget = App.Views.ProjectTab.fullExtend({
+    App.Views.Budget = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('newBudgetTemplate');
@@ -1429,7 +1441,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectContact = App.Views.ProjectTab.fullExtend({
+    App.Views.ProjectContact = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('newProjectContactTemplate');
@@ -1456,7 +1468,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.SiteProjectTabs = App.Views.ManagedGridTabs.fullExtend({
+    App.Views.SiteProjectTabs = App.Views.ManagedGridTabs.extend({
         projectContactsViewClass: App.Views.ProjectContact,
         projectVolunteersViewClass: App.Views.ProjectVolunteer,
         projectLeadsViewClass: App.Views.ProjectLead,
@@ -1488,9 +1500,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Leads',
-                mainApp: self.mainApp
-
-            });
+                            });
             self.childTabViews.push({project_lead: self.projectLeadsView});
 
             self.projectBudgetView = new self.projectBudgetViewClass({
@@ -1506,8 +1516,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Budget',
-                mainApp: self.mainApp
-            });
+                            });
             self.childTabViews.push({project_budget: self.projectBudgetView});
 
             self.projectContactsView = new self.projectContactsViewClass({
@@ -1523,8 +1532,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Contact',
-                mainApp: self.mainApp
-            });
+                            });
             self.childTabViews.push({project_contact: self.projectContactsView});
 
             self.projectVolunteersView = new self.projectVolunteersViewClass({
@@ -1540,8 +1548,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Volunteer',
-                mainApp: self.mainApp
-            });
+                            });
             self.childTabViews.push({project_volunteer: self.projectVolunteersView});
 
             self.projectAttachmentsView = new self.projectAttachmentsViewClass({
@@ -1557,8 +1564,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Attachment',
-                mainApp: self.mainApp
-            });
+                            });
             self.childTabViews.push({project_attachment: self.projectAttachmentsView});
 
             _.each(App.Vars.currentTabModels, function (model, key) {
@@ -1577,7 +1583,7 @@
                     el: self.parentView.$('.' + key + '.tab-grid-manager-container'),
                     bAppend: true,
                     parentChildViews: self.childTabViews,
-                    mainApp: self.mainApp,
+
                     managedGridView: managedGridView,
                     viewName: 'tab-' + key + '-grid-manager-toolbar',
                     tabId: key
@@ -1600,9 +1606,8 @@
             self.projectVolunteersView.render();
             self.projectAttachmentsView.render();
             let titleDescription = self.managedGridView.collection.length === 0 ? 'No projects created yet.' : self.model.get('ProjectDescription');
-            self.mainApp.$('h3.box-title small').html(titleDescription);
+            App.Views.mainApp.$('h3.box-title small').html(titleDescription);
             _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + titleDescription, 'setting data-project-id to ' + self.model.get(self.model.idAttribute) + ' on', self.$el);
-            self.$el.data('project-id', self.model.get(self.model.idAttribute));
             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             self.toggleTabsBox();
 
@@ -1627,19 +1632,16 @@
                     self.projectVolunteersView.collection.url = self.projectVolunteersView.getCollectionUrl(newId);
                     self.projectAttachmentsView.collection.url = self.projectAttachmentsView.getCollectionUrl(newId);
 
-                    let fetchArgs = {reset: true, silent: false, success: self.tabFetchSuccess};
-                    self.updateMainAppBoxTitleContentPreFetchTabCollections(newId);
+                    self.updateMainAppBoxTitleContentPreFetchTabCollections();
                     $.when(
-                        self.projectLeadsView.collection.fetch(fetchArgs),
-                        self.projectBudgetView.collection.fetch(fetchArgs),
-                        self.projectContactsView.collection.fetch(fetchArgs),
-                        self.projectVolunteersView.collection.fetch(fetchArgs),
-                        self.projectAttachmentsView.collection.fetch(fetchArgs)
+                        self.projectLeadsView.collection.fetch({reset: true, silent: false}),
+                        self.projectBudgetView.collection.fetch({reset: true, silent: false}),
+                        self.projectContactsView.collection.fetch({reset: true, silent: false}),
+                        self.projectVolunteersView.collection.fetch({reset: true, silent: false}),
+                        self.projectAttachmentsView.collection.fetch({reset: true, silent: false})
                     ).then(function () {
-                        //initialize your views here
                         _log(self.viewName + '.fetchIfNewID.event', 'tab collections fetch promise done');
-                        self.updateMainAppBoxTitleContentPostFetchTabCollections(newId);
-                        // DO NOT RE-Render tab views or duplicate data and events start up
+                        self.updateMainAppBoxTitleContentPostFetchTabCollections();
                         window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     });
                 }
@@ -1649,21 +1651,21 @@
             }
             return this;
         },
-        updateMainAppBoxTitleContentPreFetchTabCollections: function(newId){
+        updateMainAppBoxTitleContentPreFetchTabCollections: function(){
             let self = this;
-            self.mainApp.$('h3.box-title small').html('Updating Tabs. Please wait...');
+            App.Views.mainApp.$('h3.box-title small').html('Updating Tabs. Please wait...');
         },
-        updateMainAppBoxTitleContentPostFetchTabCollections: function (newId) {
+        updateMainAppBoxTitleContentPostFetchTabCollections: function () {
             let self = this;
-            self.mainApp.$('h3.box-title small').html(self.model.get('ProjectDescription'));
-            _log(self.viewName + '.fetchIfNewID.event', 'setting data-project-id to ' + newId + ' on', self.$el);
-            self.$el.data('project-id', newId);
+            let description = self.model.get('ProjectDescription') !== '' ? self.model.get('ProjectDescription') : self.model.get('OriginalRequest');
+            App.Views.mainApp.$('h3.box-title small').html(description);
+
         }
     });
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.ProjectGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'project-grid-manager-container-toolbar-view',
         initialize: function (options) {
             let self = this;
@@ -1687,7 +1689,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.Projects = App.Views.ManagedGrid.fullExtend({
+    App.Views.Projects = App.Views.ManagedGrid.extend({
         viewName: 'projects-view',
         events: {},
         initialize: function (options) {
@@ -2033,7 +2035,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectManagement = App.Views.Management.fullExtend({
+    App.Views.ProjectManagement = App.Views.Management.extend({
         sitesDropdownViewClass: App.Views.SitesDropdown,
         siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
@@ -2067,7 +2069,7 @@
                 currentModelIDDataStoreSelector: '.site-projects-tabs-view',
                 el: self.$('.projects-backgrid-wrapper'),
                 gridManagerContainerToolbarClassName: 'projects-grid-manager-container',
-                mainApp: self.mainApp,
+
                 model: App.Models.projectModel,
                 modelNameLabel: 'Project',
                 parentView: self,
@@ -2077,7 +2079,7 @@
             self.projectGridManagerContainerToolbar = new App.Views.ProjectGridManagerContainerToolbar({
                 el: self.$('.projects-grid-manager-container'),
                 parentView: self,
-                mainApp: self.mainApp,
+
                 managedGridView: self.projectsView,
                 viewName: 'projects-grid-manager-toolbar'
             });
@@ -2091,7 +2093,7 @@
             self.siteProjectTabsView = new self.siteProjectTabsViewClass({
                 el: self.$('.site-projects-tabs-view'),
                 ajaxWaitingTargetClassSelector: '.tabs-content-container',
-                mainApp: self.mainApp,
+
                 parentView: self,
                 managedGridView: self.projectsView,
                 model: self.projectsView.model,
@@ -2126,7 +2128,7 @@
 
             if (typeof ProjectID === 'string') {
                 let currentProjectModel = self.collection.findWhere({ProjectID: parseInt(ProjectID)});
-                self.mainApp.$('.site-projects-tabs-view .box-title small').html(currentProjectModel.get('ProjectDescription'))
+                App.Views.mainApp.$('.site-projects-tabs-view .box-title small').html(currentProjectModel.get('ProjectDescription'))
             }
         }
     });
@@ -2137,7 +2139,7 @@
     /**
      * This is the site form
      */
-    App.Views.Site = App.Views.Backend.fullExtend({
+    App.Views.Site = App.Views.Backend.extend({
         viewName: 'sites-view',
         tagName: 'div',
         template: template('siteTemplate'),
@@ -2275,7 +2277,7 @@
         }
     });
 
-    App.Views.SiteStatus = App.Views.Backend.fullExtend({
+    App.Views.SiteStatus = App.Views.Backend.extend({
         viewName: 'site-status-view',
         template: template('siteStatusTemplate'),
         initialize: function (options) {
@@ -2378,7 +2380,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.SiteVolunteerGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.SiteVolunteerGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'site-volunteers-grid-manager-container-toolbar-view',
         initialize: function (options) {
             let self = this;
@@ -2387,7 +2389,7 @@
         }
     });
 
-    App.Views.SiteVolunteer = App.Views.ManagedGrid.fullExtend({
+    App.Views.SiteVolunteer = App.Views.ManagedGrid.extend({
         viewName: 'site-volunteers-view',
         initialize: function (options) {
             let self = this;
@@ -2591,7 +2593,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.SiteManagement = App.Views.Management.fullExtend({
+    App.Views.SiteManagement = App.Views.Management.extend({
         sitesDropdownViewClass: App.Views.SitesDropdown,
         siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         siteViewClass: App.Views.Site,
@@ -2634,7 +2636,7 @@
                 ajaxWaitingTargetClassSelector: '#site-well',
                 model: App.Models.siteModel,
                 collection: App.Collections.sitesDropDownCollection,
-                mainApp: self.mainApp,
+
                 parentView: self,
                 sitesDropdownView: self.sitesDropdownView,
                 viewName: 'site-view'
@@ -2645,7 +2647,7 @@
                 el: self.$('.site-status-view'),
                 ajaxWaitingTargetClassSelector: '#site-well',
                 model: App.Models.siteStatusModel,
-                mainApp: self.mainApp,
+
                 parentView: self,
                 viewName: 'site-status-view'
             });
@@ -2658,7 +2660,7 @@
                 currentModelIDDataStoreSelector: 'body',
                 el: self.$('.site-volunteers-backgrid-wrapper'),
                 gridManagerContainerToolbarClassName: 'site-volunteers-grid-manager-container',
-                mainApp: self.mainApp,
+
                 model: App.Models.siteVolunteerRoleModel,
                 modelNameLabel: 'Site Volunteers',
                 parentView: self,
@@ -2667,7 +2669,7 @@
             self.siteVolunteerGridManagerContainerToolbar = new App.Views.SiteVolunteerGridManagerContainerToolbar({
                 el: self.$('.site-volunteers-grid-manager-container'),
                 parentView: self,
-                mainApp: self.mainApp,
+
                 managedGridView: self.siteVolunteersView,
                 viewName: 'site-volunteers-grid-manager-toolbar'
             });
@@ -2716,7 +2718,7 @@
 
 (function (App) {
 
-    let BackGridFiltersPanelSelectFilter = Backgrid.Extension.BackGridFiltersPanelSelectFilter = App.Views.Backend.fullExtend({
+    let BackGridFiltersPanelSelectFilter = Backgrid.Extension.BackGridFiltersPanelSelectFilter = App.Views.Backend.extend({
         tagName: "select",
         className: "backgrid-filter",
         template: _.template([
@@ -2759,7 +2761,7 @@
 
      @class Backgrid.Extension.BackGridFiltersPanelClientSideFilter
      */
-    let BackGridFiltersPanelClientSideFilter = Backgrid.Extension.BackGridFiltersPanelClientSideFilter = App.Views.Backend.fullExtend({
+    let BackGridFiltersPanelClientSideFilter = Backgrid.Extension.BackGridFiltersPanelClientSideFilter = App.Views.Backend.extend({
         /** @property */
         tagName: "div",
 
@@ -2831,7 +2833,7 @@
         }
     });
 
-    App.Views.BackGridFiltersPanel = App.Views.Backend.fullExtend({
+    App.Views.BackGridFiltersPanel = App.Views.Backend.extend({
         tagName: 'div',
         /**
          @property [wait=149] The time in milliseconds to wait since the last
@@ -3179,7 +3181,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.VolunteerGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.VolunteerGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'volunteer-grid-manager-container-toolbar-view',
         initialize: function (options) {
             let self = this;
@@ -3198,7 +3200,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.Volunteer = App.Views.ManagedGrid.fullExtend({
+    App.Views.Volunteer = App.Views.ManagedGrid.extend({
         viewName: 'volunteers-view',
         events: {},
         initialize: function (options) {
@@ -3260,7 +3262,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.VolunteersManagement = App.Views.Management.fullExtend({
+    App.Views.VolunteersManagement = App.Views.Management.extend({
         volunteersViewClass: App.Views.Volunteer,
         template: template('managementTemplate'),
         initialize: function (options) {
@@ -3293,7 +3295,7 @@
                 currentModelIDDataStoreSelector: '.volunteers-view',
                 el: self.$('.backgrid-wrapper'),
                 gridManagerContainerToolbarClassName: 'grid-manager-container',
-                mainApp: self.mainApp,
+
                 model: App.Models.volunteerModel,
                 modelNameLabel: 'Volunteers',
                 parentView: self,
@@ -3303,7 +3305,7 @@
             self.volunteersGridManagerContainerToolbar = new App.Views.VolunteerGridManagerContainerToolbar({
                 el: self.$('.grid-manager-container'),
                 parentView: self,
-                mainApp: self.mainApp,
+
                 managedGridView: self.volunteersView,
                 viewName: 'volunteers-grid-manager-toolbar'
             });
@@ -3330,7 +3332,7 @@
 
 (function (App) {
 
-    let BackGridContactsFiltersPanelSelectFilter = Backgrid.Extension.BackGridContactsFiltersPanelSelectFilter = App.Views.Backend.fullExtend({
+    let BackGridContactsFiltersPanelSelectFilter = Backgrid.Extension.BackGridContactsFiltersPanelSelectFilter = App.Views.Backend.extend({
         tagName: "select",
         className: "backgrid-filter",
         template: _.template([
@@ -3373,7 +3375,7 @@
 
      @class Backgrid.Extension.BackGridContactsFiltersPanelClientSideFilter
      */
-    let BackGridContactsFiltersPanelClientSideFilter = Backgrid.Extension.BackGridContactsFiltersPanelClientSideFilter = App.Views.Backend.fullExtend({
+    let BackGridContactsFiltersPanelClientSideFilter = Backgrid.Extension.BackGridContactsFiltersPanelClientSideFilter = App.Views.Backend.extend({
         /** @property */
         tagName: "div",
 
@@ -3445,7 +3447,7 @@
         }
     });
 
-    App.Views.BackGridContactsFiltersPanel = App.Views.Backend.fullExtend({
+    App.Views.BackGridContactsFiltersPanel = App.Views.Backend.extend({
         tagName: 'div',
         /**
          @property [wait=149] The time in milliseconds to wait since the last
@@ -3782,7 +3784,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ContactGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.ContactGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'contact-grid-manager-container-toolbar-view',
         initialize: function (options) {
             let self = this;
@@ -3801,7 +3803,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.Contact = App.Views.ManagedGrid.fullExtend({
+    App.Views.Contact = App.Views.ManagedGrid.extend({
         viewName: 'contacts-view',
         events: {},
         initialize: function (options) {
@@ -3852,7 +3854,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ContactsManagement = App.Views.Management.fullExtend({
+    App.Views.ContactsManagement = App.Views.Management.extend({
         contactsViewClass: App.Views.Contact,
         template: template('managementTemplate'),
         initialize: function (options) {
@@ -3885,7 +3887,7 @@
                 currentModelIDDataStoreSelector: '.contacts-view',
                 el: self.$('.backgrid-wrapper'),
                 gridManagerContainerToolbarClassName: 'grid-manager-container',
-                mainApp: self.mainApp,
+
                 model: App.Models.contactModel,
                 modelNameLabel: 'Contact',
                 parentView: self,
@@ -3895,7 +3897,7 @@
             self.contactsGridManagerContainerToolbar = new App.Views.ContactGridManagerContainerToolbar({
                 el: self.$('.grid-manager-container'),
                 parentView: self,
-                mainApp: self.mainApp,
+
                 managedGridView: self.contactsView,
                 viewName: 'contacts-grid-manager-toolbar'
             });
@@ -3922,7 +3924,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.ProjectsDropDownOption = App.Views.Backend.fullExtend({
+    App.Views.ProjectsDropDownOption = App.Views.Backend.extend({
         tagName: 'option',
         initialize: function (options) {
             _.bindAll(this, 'render');
@@ -3934,7 +3936,7 @@
             return this;
         }
     });
-    App.Views.ProjectsDropDown = App.Views.Backend.fullExtend({
+    App.Views.ProjectsDropDown = App.Views.Backend.extend({
         initialize: function (options) {
             let self = this;
             this.options = options;
@@ -3978,7 +3980,7 @@
         }
     });
 
-    App.Views.ReportsManagement = App.Views.Backend.fullExtend({
+    App.Views.ReportsManagement = App.Views.Backend.extend({
         sitesDropdownViewClass: App.Views.SitesDropdown,
         siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         projectsDropDownViewClass: App.Views.ProjectsDropDown,
@@ -4099,7 +4101,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.StatusRecord = App.Views.Backend.fullExtend({
+    App.Views.StatusRecord = App.Views.Backend.extend({
         tagName: 'div',
         attributes: {
             class: 'row'
@@ -4621,7 +4623,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.StatusRecordManagement = App.Views.Management.fullExtend({
+    App.Views.StatusRecordManagement = App.Views.Management.extend({
         attributes: {
             class: 'route-view box box-primary status-record-management-view'
         },
@@ -4660,18 +4662,29 @@
 })(window.App);
 
 (function (App) {
-    App.Views.OptionGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.OptionGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'option-grid-manager-container-toolbar-view',
         template: template('optionGridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;
             try {
-                _.bindAll(self, 'saveOptionList', 'addOption');
+                _.bindAll(self, 'saveOptionList', 'addOption', 'toggleSaveBtn');
             } catch (e) {
                 console.error(options, e);
             }
             // Required call for inherited class
             self._initialize(options);
+            self._newOptionTemplate = '<tr id="<%= optionId %>">' +
+                                      '    <td class="display-sequence">' +
+                                      '        <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' +
+                                      '        <input name="option[<%= id %>][DisplaySequence]"  data-id="<%= id %>" value="<%= DisplaySequence %>" readonly>' +
+                                      '    </td>' +
+                                      '    <td class="option-label">' +
+                                      '        <input name="option[<%= id %>][<%= labelAttribute %>]" data-id="<%= id %>" value="">' +
+                                      '        <span data-option-id="<%= optionId %>" class="ui-icon ui-icon-trash"></span>' +
+                                      '    </td>' +
+                                      '</tr>';
+            self.listenTo(self.options.managedGridView, 'option-list-changed', self.toggleSaveBtn);
             _log('App.Views.OptionGridManagerContainerToolbar.initialize', options);
         },
         events: {
@@ -4685,39 +4698,106 @@
             return self;
         },
         saveOptionList: function (e) {
+            let self = this;
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            let data = {
+                deletedOptionIds: self.options.managedGridView.deletedOptionIds,
+                optionList: $('form[name="option"]').serialize()
+            };
 
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: 'admin/option/list/' + self.options.managedGridView.options.optionType,
+                    data: data,
+                    success: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        self.options.managedGridView.collection.url = self.managedGridView.getCollectionUrl(self.options.managedGridView.options.optionType);
+                        $.when(
+                            self.options.managedGridView.collection.fetch({reset: true})
+                        ).then(function () {
+                            //_log('App.Views.ProjectTab.destroy.event', self.options.tab + ' collection fetch promise done');
+                        });
+                    },
+                    fail: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
         },
         addOption: function (e) {
+            let self = this;
+            let newOptionTemplate = _.template(self._newOptionTemplate);
+            let id = _.uniqueId('new');
+            let optionId = 'option_' + id;
+            let aSorted = self.options.managedGridView.$sortableElement.sortable("toArray");
+            let lastOptionId = _.last(aSorted);
+            let lastDisplaySequence = self.options.managedGridView.$sortableElement.find('[name="option[' + lastOptionId.replace(/option_/, '') + '][DisplaySequence]"]').val();
 
-        }
+            let DisplaySequence = parseInt(lastDisplaySequence) + 1;
+            self.options.managedGridView.$sortableElement.append(newOptionTemplate({
+                id: id,
+                optionId: optionId,
+                DisplaySequence: DisplaySequence,
+                labelAttribute: self.options.managedGridView.labelAttribute
+            }));
+            self.options.managedGridView.$sortableElement.sortable("refresh");
+
+
+        },
+        toggleSaveBtn: function (e) {
+            let self = this;
+
+            let toggleState = 'enable';//selectedModels.length === 0 ? 'disable' : 'enable';
+            _log(self.viewName + '.toggleSaveBtn.event', {e: e, toggleState: toggleState});
+            //console.log({viewName: self.viewName, toggleState: toggleState})
+            if (toggleState === 'disable') {
+                self.$('.btnSave').addClass('disabled');
+            } else {
+                self.$('.btnSave').removeClass('disabled');
+            }
+        },
     });
 })(window.App);
 
 (function (App) {
-    App.Views.Option = App.Views.Backend.fullExtend({
+    App.Views.Option = App.Views.Backend.extend({
         template: template('optionTemplate'),
         viewName: 'option-view',
         events: {
-          'click .ui-icon-trash' : 'delete'
+            'click .ui-icon-trash': 'delete'
         },
         initialize: function (options) {
             let self = this;
 
-            // try {
-            //     _.bindAll(self, 'update', 'refreshView', 'getModalForm', 'create', 'destroy', 'toggleDeleteBtn', 'showColumnHeaderLabel', 'showTruncatedCellContentPopup', 'hideTruncatedCellContentPopup');
-            // } catch (e) {
-            //     console.error(options, e)
-            // }
+            try {
+                _.bindAll(self, 'render', 'delete');
+            } catch (e) {
+                console.error(options, e)
+            }
             // Required call for inherited class
             self._initialize(options);
+            self.listenTo(self.collection, 'reset', self.render);
             self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
-            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
             self.$sortableElement = null;
+            self.deletedOptionIds = [];
+            self.optionIdAttribute = self.options.optionIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
         },
-        render: function () {
+        render: function (e) {
             let self = this;
             self.$el.html(self.template({
+                idAttribute: self.optionIdAttribute,
+                labelAttribute: self.labelAttribute,
                 options: self.collection.models
             }));
 
@@ -4726,21 +4806,17 @@
                 axis: 'y',
                 revert: true,
                 delay: 150,
-                cursor: "move",
                 update: function (event, ui) {
                     self.$sortableElement.sortable("refreshPositions");
-                    let aSortedIDs = self.$sortableElement.sortable("toArray");
-                    let serialized = self.$sortableElement.sortable("serialize", {key: "sort"});
-                    //console.log('update',{ui: ui, aSortedIDs: aSortedIDs, serialized: serialized});
-
                     let iSequence = 1;
                     self.$sortableElement.find('tr').each(function (idx, tr) {
                         let id = tr.id.replace(/option_/, '');
                         if (id !== '') {
                             //console.log({tr: tr,'tr.id': tr.id, 'data-id': id, idx: idx, iSequence: iSequence, label: $(tr).find('[name="option_label"]').val()});
-                            self.$sortableElement.find('[name="DisplaySequence"][data-id="' + id + '"]').val(iSequence++);
+                            self.$sortableElement.find('[name="option[' + id + '][DisplaySequence]"]').val(iSequence++);
                         }
                     });
+                    self.trigger('option-list-changed');
                 },
             });
             return self;
@@ -4751,10 +4827,15 @@
         },
         delete: function (e) {
             let self = this;
-            console.log('delete',e)
-            bootbox.confirm("Do you really want to delete this option?", function (bConfirmed) {
+            let $parentRow = $(e.currentTarget).parents('tr');
+            let id = $parentRow.attr('id').replace(/option_/, '');
+            let optionLabel = self.$sortableElement.find('[name="option[' + id + ']['+ self.labelAttribute+ ']"]').val();
+            bootbox.confirm("Do you really want to delete this option: " + optionLabel + "?", function (bConfirmed) {
                 if (bConfirmed) {
 
+                    self.deletedOptionIds.push(id);
+                    $parentRow.remove();
+                    self.trigger('option-list-changed');
                 }
             });
         }
@@ -4762,12 +4843,11 @@
 })(window.App);
 
 (function (App) {
-    App.Views.OptionManagement = App.Views.Management.fullExtend({
+    App.Views.OptionManagement = App.Views.Management.extend({
         attributes: {
             class: 'route-view box box-primary option-management-view'
         },
         template: template('managementTemplate'),
-        viewName: 'option-management-view',
         initialize: function (options) {
             let self = this;
             // try {
@@ -4777,7 +4857,10 @@
             // }
             // Required call for inherited class
             this._initialize(options);
-            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
+
+            self.optionIdAttribute = self.options.optionIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
+
         },
         events: {
 
@@ -4797,26 +4880,28 @@
                 self.collection.fetch({reset:true})
             ).then(function () {
                 let $option = new App.Views.Option({
-                    mainApp: self.options.mainApp,
-                    collection: self.collection,
+                                        collection: self.collection,
                     optionType: self.options.optionType,
                     model: self.model,
                     modelNameLabel: self.modelNameLabel,
+                    optionIdAttribute: self.optionIdAttribute,
+                    labelAttribute: self.labelAttribute,
                     ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector
                 });
 
                 self.optionGridManagerContainerToolbar = new App.Views.OptionGridManagerContainerToolbar({
                     el: self.$('.grid-manager-container'),
                     parentView: self,
-                    mainApp: self.mainApp,
+
                     managedGridView: $option,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                     viewName: 'option-grid-manager-toolbar'
                 });
                 self.optionGridManagerContainerToolbar.render();
                 self.childViews.push(self.optionGridManagerContainerToolbar);
                 $option.setGridManagerContainerToolbar(self.optionGridManagerContainerToolbar);
 
-                self.$('.backgrid-wrapper').append($option.render().el);
+                self.$('.backgrid-wrapper').html($option.render().el);
                 self.childViews.push($option);
                 window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
@@ -4828,7 +4913,7 @@
 })(window.App);
 
 (function (App) {
-    App.Views.mainApp = App.Views.Backend.fullExtend({
+    App.Views.MainApp = App.Views.Backend.extend({
         el: $(".sia-main-app"),
         events: {
             'click > .route-view .close-view' : 'hideRouteView'
@@ -4918,12 +5003,12 @@
                         } else {
                             window.ajaxWaiting('remove', '.sia-main-app');
                         }
-                        this.$el.append(viewEl);
+                        self.$el.append(viewEl);
                     }
                 }
+                _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), self.$el);
             }
 
-            _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), this.$el);
             if (self.preRenderedView === false && App.Vars.mainAppDoneLoading === false) {
                 App.Vars.mainAppDoneLoading = true;
                 _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
@@ -4931,7 +5016,7 @@
                 $('body').trigger('resize');
             }
 
-            return this;
+            return self;
         }
     });
 

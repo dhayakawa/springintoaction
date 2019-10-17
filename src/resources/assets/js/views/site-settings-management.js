@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.SiteSetting = App.Views.Backend.fullExtend({
+    App.Views.SiteSetting = App.Views.Backend.extend({
         tagName: 'li',
         template: template('siteSettingTemplate'),
         viewName: 'site-setting-view',
@@ -105,7 +105,7 @@
         },
     });
 
-    App.Views.SiteSettingsManagement = App.Views.Backend.fullExtend({
+    App.Views.SiteSettingsManagement = App.Views.Backend.extend({
         attributes: {
             class: 'site-settings-management-view route-view box box-primary'
         },
@@ -141,8 +141,7 @@
             let self = this;
             let $settingItem = new App.Views.SiteSetting({
                 model: SiteSetting,
-                mainApp: self.mainApp
-            });
+                            });
             self.itemsView.push($settingItem);
             self.$el.find('ul').append($settingItem.render().el);
         },

@@ -49,6 +49,9 @@ class OptionsManagementController extends BaseController
             case 'volunteer_status_options':
                 $model = new VolunteerStatusOptions();
                 break;
+            case 'send_status_options':
+                $model = new SendStatusOptions();
+                break;
         }
         return $model;
     }
@@ -82,6 +85,49 @@ class OptionsManagementController extends BaseController
         $success = $model->save();
 
         if ($success) {
+            $response = ['success' => true, 'msg' => 'Option Update Succeeded.'];
+        } else {
+            $response = ['success' => false, 'msg' => 'Option Update Failed.'];
+        }
+
+        return view('springintoaction::admin.main.response', $request, compact('response'));
+    }
+    public function updateList(Request $request, $OptionType)
+    {
+        $requestData = $request->all();
+
+        if(!empty($requestData['deletedOptionIds'])){
+            foreach($requestData['deletedOptionIds'] as $deletedOptionId){
+                $success = $this->getOptionModel($OptionType)->findOrFail($deletedOptionId)->delete();
+            }
+        }
+        $aOptionList = [];
+        parse_str($requestData['optionList'],$aOptionList);
+        // \Illuminate\Support\Facades\Log::debug(
+        //     '',
+        //     [
+        //         'File:' . __FILE__,
+        //         'Method:' . __METHOD__,
+        //         'Line:' . __LINE__,
+        //         $aOptionList
+        //     ]
+        // );
+        foreach($aOptionList['option'] as $optionId => $optionData){
+            // \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
+            //
+            //     $optionId,
+            //     $optionData]);
+            $model = $this->getOptionModel($OptionType);
+            if (is_numeric($optionId)) {
+                $model = $model->findOrFail($optionId);
+            }
+            $model->fill($optionData);
+            $success = $model->save();
+        }
+
+        if (!isset($success)) {
+            $response = ['success' => false, 'msg' => 'Option Update Not Implemented Yet.'];
+        } elseif ($success) {
             $response = ['success' => true, 'msg' => 'Option Update Succeeded.'];
         } else {
             $response = ['success' => false, 'msg' => 'Option Update Failed.'];

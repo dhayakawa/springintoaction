@@ -48,6 +48,7 @@ mix.scripts([
     'resources/assets/js/filestack.min.js',
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
+    'resources/assets/js/masonry.pkgd.min.js',
     'resources/assets/js/frontend/registration/confirm.jquery.js',
     'resources/assets/js/frontend/registration/siaModal.jquery.js',
     'resources/assets/js/frontend/registration/carasel.bootstrap.js',
@@ -80,6 +81,7 @@ mix.scripts([
     'resources/assets/js/filestack.min.js',
     'resources/assets/js/jquery-file-upload/js/jquery.fileupload.js',
     'resources/assets/js/jquery-file-upload/js/jquery.iframe-transport.js',
+    'resources/assets/js/masonry.pkgd.min.js',
     'resources/assets/js/frontend/registration/confirm.jquery.js',
     'resources/assets/js/frontend/registration/siaModal.jquery.js',
     'resources/assets/js/frontend/registration/carasel.bootstrap.js',
@@ -158,7 +160,7 @@ mix.scripts([
     'resources/assets/js/views/option-grid-manager-container-toolbar.js',
     'resources/assets/js/views/option.js',
     'resources/assets/js/views/option-management.js',
-    'resources/assets/js/views/main-view.js'
+    'resources/assets/js/views/mainApp.js'
 ], 'public/js/springintoaction.views.js');
 mix.scripts([
     'resources/assets/js/init.js',

@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.Projects = App.Views.ManagedGrid.fullExtend({
+    App.Views.Projects = App.Views.ManagedGrid.extend({
         viewName: 'projects-view',
         events: {},
         initialize: function (options) {

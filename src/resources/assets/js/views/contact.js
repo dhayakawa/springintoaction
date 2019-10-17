@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.Contact = App.Views.ManagedGrid.fullExtend({
+    App.Views.Contact = App.Views.ManagedGrid.extend({
         viewName: 'contacts-view',
         events: {},
         initialize: function (options) {

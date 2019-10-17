@@ -55,7 +55,7 @@ window.App = {
         bBackgridColumnManagerSaveState: false,
         bBackgridColumnManagerLoadStateOnInit: false,
         // Turn on the console logging
-        bAllowConsoleOutput: false,
+        bAllowConsoleOutput: true,
         bAllowConsoleOutputHiLite: false,
         bAllowConsoleVarGroupsOutput: false,
         rowBgColorSelected: '#e3f6b1',
@@ -286,30 +286,30 @@ window.ajaxWaiting = function (action, selector) {
 /**
  * A way to extend backbone Models with existing Models
  */
-(function (Model) {
-    'use strict';
-    // Additional extension layer for Models
-    Model.fullExtend = function (protoProps, staticProps) {
-        // Call default extend method
-        let extended = Model.extend.call(this, protoProps, staticProps);
-        // Add a usable super method for better inheritance
-        extended.prototype._super = this.prototype;
-        // Apply new or different defaults on top of the original
-        if (protoProps.defaults) {
-            for (let k in this.prototype.defaults) {
-                if (!extended.prototype.defaults[k]) {
-                    extended.prototype.defaults[k] = this.prototype.defaults[k];
-                }
-            }
-        }
-        return extended;
-    };
-
-})(Backbone.Model);
+// (function (Model) {
+//     'use strict';
+//     // Additional extension layer for Models
+//     Model.fullExtend = function (protoProps, staticProps) {
+//         // Call default extend method
+//         let extended = Model.extend.call(this, protoProps, staticProps);
+//         // Add a usable super method for better inheritance
+//         extended.prototype._super = this.prototype;
+//         // Apply new or different defaults on top of the original
+//         if (protoProps.defaults) {
+//             for (let k in this.prototype.defaults) {
+//                 if (!extended.prototype.defaults[k]) {
+//                     extended.prototype.defaults[k] = this.prototype.defaults[k];
+//                 }
+//             }
+//         }
+//         return extended;
+//     };
+//
+// })(Backbone.Model);
 /**
  * A way to extend backbone Views with existing Views
  */
-(function (View) {
+/*(function (View) {
     'use strict';
     // Additional extension layer for Views
     View.fullExtend = function (protoProps, staticProps) {
@@ -328,7 +328,7 @@ window.ajaxWaiting = function (action, selector) {
         return extended;
     };
 
-})(Backbone.View);
+})(Backbone.View);/**/
 
 /**
  * Catching Ajax session logged out scenario

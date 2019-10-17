@@ -3,7 +3,7 @@
     /**
      * This is the site form
      */
-    App.Views.Site = App.Views.Backend.fullExtend({
+    App.Views.Site = App.Views.Backend.extend({
         viewName: 'sites-view',
         tagName: 'div',
         template: template('siteTemplate'),
@@ -141,7 +141,7 @@
         }
     });
 
-    App.Views.SiteStatus = App.Views.Backend.fullExtend({
+    App.Views.SiteStatus = App.Views.Backend.extend({
         viewName: 'site-status-view',
         template: template('siteStatusTemplate'),
         initialize: function (options) {

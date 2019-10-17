@@ -31,4 +31,6 @@
     App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown();
 
     App.Collections.optionsManagementCollection = new App.Collections.Option();
+    App.Collections.optionsManagementSiteRoleCollection = new App.Collections.SiteRoleOption();
+    App.Collections.optionsManagementProjectRoleCollection = new App.Collections.ProjectRoleOption();
 })(window.App);

@@ -1,6 +1,6 @@
 (function (App) {
     // This is the sites drop down
-    App.Views.SiteOption = App.Views.Backend.fullExtend({
+    App.Views.SiteOption = App.Views.Backend.extend({
         viewName: 'sites-dropdown-option',
         tagName: 'option',
         initialize: function (options) {
@@ -15,7 +15,7 @@
             return self;
         }
     });
-    App.Views.SitesDropdown = App.Views.Backend.fullExtend({
+    App.Views.SitesDropdown = App.Views.Backend.extend({
         viewName: 'sites-dropdown',
         initialize: function (options) {
             let self = this;
@@ -35,8 +35,7 @@
             self.$el.append(
                 new App.Views.SiteOption({
                     model: site,
-                    mainApp: self.parentView.mainApp
-                }).render().el);
+                                    }).render().el);
         },
         addAll: function () {
             let self = this;
@@ -75,7 +74,7 @@
             });
         }
     });
-    App.Views.SiteYearsOption = App.Views.Backend.fullExtend({
+    App.Views.SiteYearsOption = App.Views.Backend.extend({
         viewName: 'site-years-dropdown-option',
         tagName: 'option',
         initialize: function (options) {
@@ -92,7 +91,7 @@
             return self;
         }
     });
-    App.Views.SiteYearsDropdown = App.Views.Backend.fullExtend({
+    App.Views.SiteYearsDropdown = App.Views.Backend.extend({
         viewName: 'site-years-dropdown',
         initialize: function (options) {
             let self = this;
@@ -119,8 +118,7 @@
             let self = this;
             let option = new App.Views.SiteYearsOption({
                 model: site,
-                mainApp: self.parentView.mainApp
-            });
+                            });
             this.optionsView.push(option);
             self.$el.append(option.render().el);
         },

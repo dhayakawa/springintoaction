@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.VolunteerGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.VolunteerGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'volunteer-grid-manager-container-toolbar-view',
         initialize: function (options) {
             let self = this;

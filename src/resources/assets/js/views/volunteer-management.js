@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.VolunteersManagement = App.Views.Management.fullExtend({
+    App.Views.VolunteersManagement = App.Views.Management.extend({
         volunteersViewClass: App.Views.Volunteer,
         template: template('managementTemplate'),
         initialize: function (options) {
@@ -32,7 +32,7 @@
                 currentModelIDDataStoreSelector: '.volunteers-view',
                 el: self.$('.backgrid-wrapper'),
                 gridManagerContainerToolbarClassName: 'grid-manager-container',
-                mainApp: self.mainApp,
+
                 model: App.Models.volunteerModel,
                 modelNameLabel: 'Volunteers',
                 parentView: self,
@@ -42,7 +42,7 @@
             self.volunteersGridManagerContainerToolbar = new App.Views.VolunteerGridManagerContainerToolbar({
                 el: self.$('.grid-manager-container'),
                 parentView: self,
-                mainApp: self.mainApp,
+
                 managedGridView: self.volunteersView,
                 viewName: 'volunteers-grid-manager-toolbar'
             });

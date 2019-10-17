@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.oldGridManagerContainerToolbar = App.Views.Backend.fullExtend({
+    App.Views.oldGridManagerContainerToolbar = App.Views.Backend.extend({
         template: template('gridManagerContainerToolbarTemplate'),
         initialize: function (options) {
             let self = this;

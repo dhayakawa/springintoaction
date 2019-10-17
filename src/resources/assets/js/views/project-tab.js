@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ProjectTab = App.Views.ManagedGrid.fullExtend({
+    App.Views.ProjectTab = App.Views.ManagedGrid.extend({
         initialize: function (options) {
             let self = this;
 

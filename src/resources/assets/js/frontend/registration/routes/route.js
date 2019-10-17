@@ -7,7 +7,7 @@
         initialize: function (options) {
             let self = this;
             _.bindAll(self, 'registration', 'loadView');
-            self.mainApp = new App.Views.mainApp;
+            App.Views.mainApp = new App.Views.mainApp;
         },
         routes: {
             '': 'registration',
@@ -16,7 +16,7 @@
         },
         preRouteViewRender: function () {
             let self = this;
-            self.mainApp.$el.html('');
+            App.Views.mainApp.$el.html('');
             self.bRouteViewRendered = false;
         },
         postRouteViewRender: function () {
@@ -43,10 +43,10 @@
             //growl('SIA registration route has been called');
             if (self.registrationView === null) {
                     App.Views.registrationView = self.registrationView = new self.registrationViewClass({
-                        parentView: self.mainApp.el
+                        parentView: App.Views.mainApp.el
                     });
             }
-            self.mainApp.setRouteView(self.registrationView).render();
+            App.Views.mainApp.setRouteView(self.registrationView).render();
             self.bRouteViewRendered = true;
             self.postRouteViewRender();
         },
@@ -71,7 +71,7 @@
                         //         className: 'box box-primary volunteers-management-view',
                         //         viewClassName: 'volunteers-management-view',
                         //
-                        //         mainApp: self.mainApp,
+                        //
                         //         modelNameLabel: 'Volunteer',
                         //         collection: App.PageableCollections.volunteersManagementCollection,
                         //         columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
@@ -93,10 +93,10 @@
 
             if (routeView !== null) {
                 try {
-                    self.mainApp.setRouteView(routeView).render();
+                    App.Views.mainApp.setRouteView(routeView).render();
                     self.bRouteViewRendered = true;
                 } catch (e) {
-                    console.error('self.mainApp.setRouteView render exception:', e);
+                    console.error('App.Views.mainApp.setRouteView render exception:', e);
                     self.bRouteViewRendered = false;
                 }
 

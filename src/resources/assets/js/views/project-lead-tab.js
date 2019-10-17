@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ProjectLead = App.Views.ProjectTab.fullExtend({
+    App.Views.ProjectLead = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('newProjectLeadTemplate');

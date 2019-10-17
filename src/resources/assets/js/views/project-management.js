@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ProjectManagement = App.Views.Management.fullExtend({
+    App.Views.ProjectManagement = App.Views.Management.extend({
         sitesDropdownViewClass: App.Views.SitesDropdown,
         siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
@@ -33,7 +33,7 @@
                 currentModelIDDataStoreSelector: '.site-projects-tabs-view',
                 el: self.$('.projects-backgrid-wrapper'),
                 gridManagerContainerToolbarClassName: 'projects-grid-manager-container',
-                mainApp: self.mainApp,
+
                 model: App.Models.projectModel,
                 modelNameLabel: 'Project',
                 parentView: self,
@@ -43,7 +43,7 @@
             self.projectGridManagerContainerToolbar = new App.Views.ProjectGridManagerContainerToolbar({
                 el: self.$('.projects-grid-manager-container'),
                 parentView: self,
-                mainApp: self.mainApp,
+
                 managedGridView: self.projectsView,
                 viewName: 'projects-grid-manager-toolbar'
             });
@@ -57,7 +57,7 @@
             self.siteProjectTabsView = new self.siteProjectTabsViewClass({
                 el: self.$('.site-projects-tabs-view'),
                 ajaxWaitingTargetClassSelector: '.tabs-content-container',
-                mainApp: self.mainApp,
+
                 parentView: self,
                 managedGridView: self.projectsView,
                 model: self.projectsView.model,
@@ -92,7 +92,7 @@
 
             if (typeof ProjectID === 'string') {
                 let currentProjectModel = self.collection.findWhere({ProjectID: parseInt(ProjectID)});
-                self.mainApp.$('.site-projects-tabs-view .box-title small').html(currentProjectModel.get('ProjectDescription'))
+                App.Views.mainApp.$('.site-projects-tabs-view .box-title small').html(currentProjectModel.get('ProjectDescription'))
             }
         }
     });

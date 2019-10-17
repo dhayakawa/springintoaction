@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ProjectVolunteer = App.Views.ProjectTab.fullExtend({
+    App.Views.ProjectVolunteer = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('addProjectVolunteerTemplate');

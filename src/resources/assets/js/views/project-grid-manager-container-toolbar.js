@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ProjectGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.ProjectGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'project-grid-manager-container-toolbar-view',
         initialize: function (options) {
             let self = this;

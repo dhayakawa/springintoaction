@@ -1,29 +1,34 @@
 (function (App) {
-    App.Views.Dashboard = App.Views.Backend.fullExtend({
+    App.Views.Dashboard = App.Views.Backend.extend({
+        viewName:'dashboard',
         attributes: {
             class: 'route-view dashboard'
         },
         template: _.template([
-            '<div class="row">',
             "<% for (let i=0; i < dashboardPanelViews.length; i++) { %>",
-            '   <div class="col-xs-6">',
+            '   <div class="dashboard-grid-item col-xs-6">',
             "    <%= dashboardPanelViews[i] %>",
             "   </div>",
-            " <% if(i!==0 && (i+1)%2===0) { print('</div><div class=\"row\">'); } %>",
-            "<% } %>",
-            "</div>"
+            "<% } %>"
         ].join("\n")),
         initialize: function (options) {
-            this.options    = options;
-            this.dashboardPanelViews = this.options['dashboardPanelViews'];
-            _.bindAll(this, 'render');
+            let self = this;
+            self._initialize(options);
+            self.dashboardPanelViews = options['dashboardPanelViews'];
         },
         render: function () {
-            this.$el.off();
-            this.$el.empty().append(this.template({
-                dashboardPanelViews: this.dashboardPanelViews
+            let self = this;
+            self.$el.off();
+            self.$el.empty().append(self.template({
+                dashboardPanelViews: self.dashboardPanelViews
             }));
-            return this;
+            setTimeout(function () {
+                self.$el.masonry({
+                    columnWidth: self.$('.dashboard-grid-item')[0],
+                    itemSelector: '.dashboard-grid-item'
+                });
+            }, 1000);
+            return self;
         },
         close: function () {
             this.remove();
@@ -43,45 +48,55 @@
             })
         }
     });
-    App.Views.DashboardPanel = App.Views.Backend.fullExtend({
+    App.Views.DashboardPanel = App.Views.Backend.extend({
+        viewName: 'dashboard-panel',
         template: template('dashboardPanelTemplate'),
         initialize: function (options) {
-            this.options    = options;
-            _.bindAll(this, 'render');
+            let self = this;
+            self._initialize(options);
         },
         events: {},
         render: function () {
             let self = this;
-            this.$el.append(this.template(self.model.toJSON()));
-            return this;
+            self.$el.append(self.template(self.model.toJSON()));
+            return self;
         }
     });
-    App.Views.DashboardPanelLinksListItem = App.Views.Backend.fullExtend({
+    App.Views.DashboardPanelLinksListItem = App.Views.Backend.extend({
+        viewName: 'dashboard-panel-links-list-item',
         tagName: 'li',
         template: _.template("<a href=\"#/<%=route%>\" data-route><%=linkText%> <span class=\"pull-right badge bg-blue\"><%=badgeCount%></span></a>"),
         initialize: function (options) {
-            _.bindAll(this, 'render');
+            let self = this;
+            self._initialize(options);
         },
         events: {
 
         },
         render: function () {
             let self = this;
-            let $link = this.template({
+            let $link = self.template({
                 linkText: self.model.get('linkText'),
                 badgeCount: self.model.get('badgeCount'),
                 route: self.model.get('route')
             });
-            this.$el.append($link);
-            return this;
+            self.$el.append($link);
+            return self;
         }
     });
 
-    App.Views.DashboardPanelLinksList = App.Views.Backend.fullExtend({
+    App.Views.DashboardPanelLinksList = App.Views.Backend.extend({
+        viewName: 'dashboard-panel-links-list',
         initialize: function (options) {
             let self = this;
-            this.itemsView = [];
-            _.bindAll(this, 'addOne', 'addAll','render');
+
+            try {
+                _.bindAll(this, 'addOne', 'addAll', 'render');
+            } catch (e) {
+                console.error(options, e)
+            }
+            self._initialize(options);
+            self.itemsView = [];
             self.listenTo(self.collection, "reset", self.addAll);
         },
         events: {},

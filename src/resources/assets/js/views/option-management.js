@@ -1,10 +1,9 @@
 (function (App) {
-    App.Views.OptionManagement = App.Views.Management.fullExtend({
+    App.Views.OptionManagement = App.Views.Management.extend({
         attributes: {
             class: 'route-view box box-primary option-management-view'
         },
         template: template('managementTemplate'),
-        viewName: 'option-management-view',
         initialize: function (options) {
             let self = this;
             // try {
@@ -14,7 +13,10 @@
             // }
             // Required call for inherited class
             this._initialize(options);
-            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
+
+            self.optionIdAttribute = self.options.optionIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
+
         },
         events: {
 
@@ -34,26 +36,28 @@
                 self.collection.fetch({reset:true})
             ).then(function () {
                 let $option = new App.Views.Option({
-                    mainApp: self.options.mainApp,
-                    collection: self.collection,
+                                        collection: self.collection,
                     optionType: self.options.optionType,
                     model: self.model,
                     modelNameLabel: self.modelNameLabel,
+                    optionIdAttribute: self.optionIdAttribute,
+                    labelAttribute: self.labelAttribute,
                     ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector
                 });
 
                 self.optionGridManagerContainerToolbar = new App.Views.OptionGridManagerContainerToolbar({
                     el: self.$('.grid-manager-container'),
                     parentView: self,
-                    mainApp: self.mainApp,
+
                     managedGridView: $option,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                     viewName: 'option-grid-manager-toolbar'
                 });
                 self.optionGridManagerContainerToolbar.render();
                 self.childViews.push(self.optionGridManagerContainerToolbar);
                 $option.setGridManagerContainerToolbar(self.optionGridManagerContainerToolbar);
 
-                self.$('.backgrid-wrapper').append($option.render().el);
+                self.$('.backgrid-wrapper').html($option.render().el);
                 self.childViews.push($option);
                 window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });

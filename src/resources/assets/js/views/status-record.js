@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.StatusRecord = App.Views.Backend.fullExtend({
+    App.Views.StatusRecord = App.Views.Backend.extend({
         tagName: 'div',
         attributes: {
             class: 'row'

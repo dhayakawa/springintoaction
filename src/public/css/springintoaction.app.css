@@ -18,46 +18,46 @@
 .sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-desc {
   display: none;
 }
-.sia-main-app .options-management-view .table.options {
+.sia-main-app .option-management-view .table.options {
   table-layout: fixed;
 }
-.sia-main-app .options-management-view .table.options th.display-sequence-thead {
+.sia-main-app .option-management-view .table.options th.display-sequence-thead {
   width: 70px;
 }
-.sia-main-app .options-management-view .table.options tbody tr {
+.sia-main-app .option-management-view .table.options tbody tr {
   cursor: move;
   /* fallback if grab cursor is unsupported */
   cursor: grab;
   cursor: -webkit-grab;
 }
-.sia-main-app .options-management-view .table.options tbody tr:active,
-.sia-main-app .options-management-view .table.options tbody tr.ui-sortable-helper {
+.sia-main-app .option-management-view .table.options tbody tr:active,
+.sia-main-app .option-management-view .table.options tbody tr.ui-sortable-helper {
   cursor: grabbing;
   cursor: -webkit-grabbing;
 }
-.sia-main-app .options-management-view .table.options tbody tr td.display-sequence span.ui-icon {
+.sia-main-app .option-management-view .table.options tbody tr td.display-sequence span.ui-icon {
   cursor: move;
   /* fallback if grab cursor is unsupported */
   cursor: grab;
   cursor: -webkit-grab;
 }
-.sia-main-app .options-management-view .table.options tbody tr td.display-sequence span.ui-icon:active,
-.sia-main-app .options-management-view .table.options tbody tr td.display-sequence span.ui-icon.ui-sortable-helper {
+.sia-main-app .option-management-view .table.options tbody tr td.display-sequence span.ui-icon:active,
+.sia-main-app .option-management-view .table.options tbody tr td.display-sequence span.ui-icon.ui-sortable-helper {
   cursor: grabbing;
   cursor: -webkit-grabbing;
 }
-.sia-main-app .options-management-view .table.options tbody tr td.display-sequence input {
+.sia-main-app .option-management-view .table.options tbody tr td.display-sequence input {
   margin-left: 5px;
   width: 30px;
   border: 0;
 }
-.sia-main-app .options-management-view .table.options tbody tr td.display-sequence input:focus {
+.sia-main-app .option-management-view .table.options tbody tr td.display-sequence input:focus {
   outline: none;
 }
-.sia-main-app .options-management-view .table.options tbody tr td.option-label .ui-icon-trash {
+.sia-main-app .option-management-view .table.options tbody tr td.option-label .ui-icon-trash {
   cursor: pointer;
 }
-.sia-main-app .options-management-view .table.options tbody tr td.option-label .ui-icon-trash:hover {
+.sia-main-app .option-management-view .table.options tbody tr td.option-label .ui-icon-trash:hover {
   color: red;
 }
 .sia-main-app .status-record-management-view .status-record-management-wrapper .status-record {

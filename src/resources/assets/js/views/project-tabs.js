@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.SiteProjectTabs = App.Views.ManagedGridTabs.fullExtend({
+    App.Views.SiteProjectTabs = App.Views.ManagedGridTabs.extend({
         projectContactsViewClass: App.Views.ProjectContact,
         projectVolunteersViewClass: App.Views.ProjectVolunteer,
         projectLeadsViewClass: App.Views.ProjectLead,
@@ -31,9 +31,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Leads',
-                mainApp: self.mainApp
-
-            });
+                            });
             self.childTabViews.push({project_lead: self.projectLeadsView});
 
             self.projectBudgetView = new self.projectBudgetViewClass({
@@ -49,8 +47,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Budget',
-                mainApp: self.mainApp
-            });
+                            });
             self.childTabViews.push({project_budget: self.projectBudgetView});
 
             self.projectContactsView = new self.projectContactsViewClass({
@@ -66,8 +63,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Contact',
-                mainApp: self.mainApp
-            });
+                            });
             self.childTabViews.push({project_contact: self.projectContactsView});
 
             self.projectVolunteersView = new self.projectVolunteersViewClass({
@@ -83,8 +79,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Volunteer',
-                mainApp: self.mainApp
-            });
+                            });
             self.childTabViews.push({project_volunteer: self.projectVolunteersView});
 
             self.projectAttachmentsView = new self.projectAttachmentsViewClass({
@@ -100,8 +95,7 @@
                 ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
                 gridManagerContainerToolbarClassName: 'project-tabs-grid-manager-container',
                 modelNameLabel: 'Project Attachment',
-                mainApp: self.mainApp
-            });
+                            });
             self.childTabViews.push({project_attachment: self.projectAttachmentsView});
 
             _.each(App.Vars.currentTabModels, function (model, key) {
@@ -120,7 +114,7 @@
                     el: self.parentView.$('.' + key + '.tab-grid-manager-container'),
                     bAppend: true,
                     parentChildViews: self.childTabViews,
-                    mainApp: self.mainApp,
+
                     managedGridView: managedGridView,
                     viewName: 'tab-' + key + '-grid-manager-toolbar',
                     tabId: key
@@ -143,9 +137,8 @@
             self.projectVolunteersView.render();
             self.projectAttachmentsView.render();
             let titleDescription = self.managedGridView.collection.length === 0 ? 'No projects created yet.' : self.model.get('ProjectDescription');
-            self.mainApp.$('h3.box-title small').html(titleDescription);
+            App.Views.mainApp.$('h3.box-title small').html(titleDescription);
             _log('App.Views.SiteProjectTabs.render', 'set tabs project title to:' + titleDescription, 'setting data-project-id to ' + self.model.get(self.model.idAttribute) + ' on', self.$el);
-            self.$el.data('project-id', self.model.get(self.model.idAttribute));
             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             self.toggleTabsBox();
 
@@ -170,19 +163,16 @@
                     self.projectVolunteersView.collection.url = self.projectVolunteersView.getCollectionUrl(newId);
                     self.projectAttachmentsView.collection.url = self.projectAttachmentsView.getCollectionUrl(newId);
 
-                    let fetchArgs = {reset: true, silent: false, success: self.tabFetchSuccess};
-                    self.updateMainAppBoxTitleContentPreFetchTabCollections(newId);
+                    self.updateMainAppBoxTitleContentPreFetchTabCollections();
                     $.when(
-                        self.projectLeadsView.collection.fetch(fetchArgs),
-                        self.projectBudgetView.collection.fetch(fetchArgs),
-                        self.projectContactsView.collection.fetch(fetchArgs),
-                        self.projectVolunteersView.collection.fetch(fetchArgs),
-                        self.projectAttachmentsView.collection.fetch(fetchArgs)
+                        self.projectLeadsView.collection.fetch({reset: true, silent: false}),
+                        self.projectBudgetView.collection.fetch({reset: true, silent: false}),
+                        self.projectContactsView.collection.fetch({reset: true, silent: false}),
+                        self.projectVolunteersView.collection.fetch({reset: true, silent: false}),
+                        self.projectAttachmentsView.collection.fetch({reset: true, silent: false})
                     ).then(function () {
-                        //initialize your views here
                         _log(self.viewName + '.fetchIfNewID.event', 'tab collections fetch promise done');
-                        self.updateMainAppBoxTitleContentPostFetchTabCollections(newId);
-                        // DO NOT RE-Render tab views or duplicate data and events start up
+                        self.updateMainAppBoxTitleContentPostFetchTabCollections();
                         window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
                     });
                 }
@@ -192,15 +182,15 @@
             }
             return this;
         },
-        updateMainAppBoxTitleContentPreFetchTabCollections: function(newId){
+        updateMainAppBoxTitleContentPreFetchTabCollections: function(){
             let self = this;
-            self.mainApp.$('h3.box-title small').html('Updating Tabs. Please wait...');
+            App.Views.mainApp.$('h3.box-title small').html('Updating Tabs. Please wait...');
         },
-        updateMainAppBoxTitleContentPostFetchTabCollections: function (newId) {
+        updateMainAppBoxTitleContentPostFetchTabCollections: function () {
             let self = this;
-            self.mainApp.$('h3.box-title small').html(self.model.get('ProjectDescription'));
-            _log(self.viewName + '.fetchIfNewID.event', 'setting data-project-id to ' + newId + ' on', self.$el);
-            self.$el.data('project-id', newId);
+            let description = self.model.get('ProjectDescription') !== '' ? self.model.get('ProjectDescription') : self.model.get('OriginalRequest');
+            App.Views.mainApp.$('h3.box-title small').html(description);
+
         }
     });
 })(window.App);

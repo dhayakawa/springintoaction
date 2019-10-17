@@ -1,5 +1,6 @@
 (function (App) {
     App.BackboneRouter = Backbone.Router.extend({
+        bAllowPreRender: true,
         dashboardViewClass: App.Views.Dashboard,
         dashboardView: null,
         optionManagementViewClass: App.Views.OptionManagement,
@@ -18,7 +19,14 @@
         initialize: function (options) {
             let self = this;
             _.bindAll(self, 'dashboard', 'loadView', 'getShouldBuildView');
-            self.mainApp = new App.Views.mainApp;
+            App.Views.mainApp = new App.Views.MainApp;
+            self.viewsToPreRender = {
+                'site_management': ['site', 'management'],
+                'project_management': ['project', 'management'],
+                'project_status': ['project', 'status'],
+                'site_contacts_management': ['site_contacts', 'management'],
+                'volunteers_management': ['volunteers', 'management']
+            };
         },
         routes: {
             '': 'dashboard',
@@ -28,9 +36,9 @@
         preRouteViewRender: function () {
             let self = this;
 
-            //self.mainApp.$el.find('> .route-view').filter(":visible").hide();
-            self.mainApp.$el.find('.route-view.dashboard').hide();
-            //console.trace('preRouteViewRender',{'self.mainApp': self.mainApp,"self.mainApp.$el.find('> .route-view')": self.mainApp.$el.find('> .route-view')})
+            //App.Views.mainApp.$el.find('> .route-view').filter(":visible").hide();
+            App.Views.mainApp.$el.find('.route-view.dashboard').hide();
+            //console.trace('preRouteViewRender',{'App.Views.mainApp': App.Views.mainApp,"App.Views.mainApp.$el.find('> .route-view')": App.Views.mainApp.$el.find('> .route-view')})
             self.bRouteViewRendered = false;
         },
         postRouteViewRender: function () {
@@ -158,6 +166,41 @@
                                             'badgeCount': '',
                                             'route': 'view/option/management/budget_source_options'
                                         }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Budget Status Options',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/budget_status_options'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Project Skill Needed Options',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/project_skill_needed_options'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Project Status Options',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/project_status_options'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Site Roles',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/site_roles'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Project Roles',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/project_roles'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Volunteer Status Options',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/volunteer_status_options'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Update Send Status Options',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/send_status_options'
+                                        }),
                                     ])
                                 }).render().$el.html()
                             })
@@ -259,34 +302,56 @@
                 });
 
                 // pre-render core management views so triggers b/w views work
-                self.mainApp.preRenderedView = true;
-                self.loadView('site', 'management', '');
-                self.loadView('project', 'management', '');
-                self.loadView('project', 'status', '');
-                self.loadView('site_contacts', 'management', '');
-                self.loadView('volunteers', 'management', '');
-                self.mainApp.preRenderedView = false;
+                self.preRenderViews();
             }
-            self.mainApp.setRouteView(self.managementViews['dashboard']).render();
+            App.Views.mainApp.setRouteView(self.managementViews['dashboard']).render();
             self.bRouteViewRendered = true;
             self.postRouteViewRender();
+        },
+        preRenderViews: function () {
+            let self = this;
+            if (!self.bAllowPreRender){
+                return;
+            }
+            App.Views.mainApp.preRenderedView = true;
+            _.each(_.values(self.viewsToPreRender), function (aViewRoute, idx) {
+                self.loadView(aViewRoute[0], aViewRoute[1], '');
+            });
+            let maxAttempts = 5;
+            let attempts = 0;
+            let iVisible;
+            do {
+                App.Views.mainApp.$el.find('> .route-view').hide();
+                iVisible = App.Views.mainApp.$el.find('> .route-view').filter(":visible").length;
+                //console.log('preRenderViews', {attempts: attempts, iVisible: iVisible, 'route-views': App.Views.mainApp.$el.find('> .route-view')})
+                attempts++;
+            } while (iVisible > 0 && attempts <= maxAttempts);
+
+
+            App.Views.mainApp.preRenderedView = false;
         },
         loadView: function (route, action, type) {
             let self = this;
             type = typeof type !== 'undefined' ? type : '';
             self.routeRequested = route + '_' + action;
-            if (!self.mainApp.preRenderedView) {
-                self.preRouteViewRender();
+            self.preRouteViewRender();
+            if (self.bAllowPreRender && !App.Views.mainApp.preRenderedView) {
+                if (self.getShouldPreRenderViews()) {
+                    // save route or it will be lost after running self.preRenderViews()
+                    let currentRouteRequested = self.routeRequested;
+                    self.preRenderViews();
+                    self.routeRequested = currentRouteRequested;
+                }
             }
 
-            if (App.Vars.devMode && !self.mainApp.preRenderedView) {
+            if (App.Vars.devMode && !App.Views.mainApp.preRenderedView) {
                 growl('SIA loadView route has been called:' + route + '_' + action);
             }
 
 
             // The backbone View to render
             let routeView = null;
-            if (!self.mainApp.preRenderedView) {
+            if (!App.Views.mainApp.preRenderedView) {
                 window.ajaxWaiting('show', '.sia-main-app');
             }
             try {
@@ -296,8 +361,7 @@
                             self.managementViews[self.routeRequested] = new self.siteSettingsManagementViewClass({
                                 model: App.Models.siteSettingModel,
                                 viewName: self.routeRequested,
-                                mainApp: self.mainApp,
-                                modelNameLabel: 'Site Settings Management',
+                                                                modelNameLabel: 'Site Settings Management',
                                 collection: App.Collections.siteSettingsCollection
                             });
                         }
@@ -307,8 +371,7 @@
                     case 'site_management':
                         if (self.getShouldBuildView(self.routeRequested)) {
                             self.managementViews[self.routeRequested] = new self.siteManagementViewClass({
-                                mainApp: self.mainApp,
-                                viewName: self.routeRequested
+                                                                viewName: self.routeRequested
                             });
                         }
 
@@ -317,8 +380,7 @@
                     case 'project_management':
                         if (self.getShouldBuildView(self.routeRequested)) {
                             self.managementViews[self.routeRequested] = new self.projectManagementViewClass({
-                                mainApp: self.mainApp,
-                                viewName: self.routeRequested
+                                                                viewName: self.routeRequested
 
                             });
                         }
@@ -329,8 +391,7 @@
                     case 'project_status':
                         if (self.getShouldBuildView(self.routeRequested)) {
                             self.managementViews[self.routeRequested] = new self.statusRecordManagementViewClass({
-                                mainApp: self.mainApp,
-                                collection: App.Collections.statusManagementCollection,
+                                                                collection: App.Collections.statusManagementCollection,
                                 viewName: self.routeRequested
                             });
                         }
@@ -344,8 +405,7 @@
                                 className: 'route-view box box-primary contacts-management-view',
                                 viewClassName: 'contacts-management-view',
 
-                                mainApp: self.mainApp,
-                                modelNameLabel: 'Contact',
+                                                                modelNameLabel: 'Contact',
                                 collection: App.PageableCollections.contactsManagementCollection,
                                 columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
                                 hideCellCnt: 0,
@@ -360,8 +420,7 @@
                             self.managementViews[self.routeRequested] = new self.volunteersManagementViewClass({
                                 className: 'route-view box box-primary volunteers-management-view',
                                 viewClassName: 'volunteers-management-view',
-                                mainApp: self.mainApp,
-                                modelNameLabel: 'Volunteer',
+                                                                modelNameLabel: 'Volunteer',
                                 collection: App.PageableCollections.volunteersManagementCollection,
                                 columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
                                 hideCellCnt: 0,
@@ -378,8 +437,7 @@
                                 viewClassName: 'annualbudgets-management-view',
                                 model: App.Models.annualBudgetModel,
 
-                                mainApp: self.mainApp,
-                                modelNameLabel: 'AnnualBudget',
+                                                                modelNameLabel: 'AnnualBudget',
                                 collection: App.Collections.annualBudgetsManagementCollection,
                                 columnCollectionDefinitions: App.Vars.annualBudgetsBackgridColumnDefinitions,
                                 hideCellCnt: 0,
@@ -397,8 +455,7 @@
                                 viewClassName: 'reports-management-view',
                                 model: App.Models.reportModel,
 
-                                mainApp: self.mainApp,
-                                modelNameLabel: type.charAt(0).toUpperCase() + type.substr(1) + ' Report',
+                                                                modelNameLabel: type.charAt(0).toUpperCase() + type.substr(1) + ' Report',
                                 collection: App.Collections.reportsManagementCollection,
                                 columnCollectionDefinitions: [],
                                 hideCellCnt: 0,
@@ -410,16 +467,35 @@
                         routeView = self.managementViews[self.routeRequested];
 
                         break;
-                    case 'options_management':
+                    case 'option_management':
                         if (self.getShouldBuildView(self.routeRequested + '-' + type)) {
+                            let optionModel = App.Models.optionModel;
+                            let optionCollection = App.Collections.optionsManagementCollection;
+                            let optionIdAttribute = 'id';
+                            let labelAttribute = 'option_label';
+                            if (type === 'site_roles') {
+                                optionModel = new App.Models.SiteRole();
+                                optionCollection = App.Collections.optionsManagementSiteRoleCollection;
+                                optionIdAttribute = 'SiteRoleID';
+                                labelAttribute = 'Role';
+                            } else if (type === 'project_roles') {
+                                optionModel = new App.Models.ProjectRole();
+                                optionCollection = App.Collections.optionsManagementProjectRoleCollection;
+                                optionIdAttribute = 'ProjectRoleID';
+                                labelAttribute = 'Role';
+                            }
                             self.managementViews[self.routeRequested + '-' + type] = new self.optionManagementViewClass({
-                                model: App.Models.optionModel,
-                                viewName: self.routeRequested,
-                                mainApp: self.mainApp,
-                                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
+                                attributes: {
+                                    class: 'route-view box box-primary option-management-view option-management-view' + '-' + type
+                                },
+                                model: optionModel,
+                                viewName: self.routeRequested + '-' + type,
+                                                                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
                                 modelNameLabel: type.charAt(0).toUpperCase() + type.substr(1),
                                 optionType: type,
-                                collection: App.Collections.optionsManagementCollection,
+                                optionIdAttribute: optionIdAttribute,
+                                labelAttribute: labelAttribute,
+                                collection: optionCollection,
                                 columnCollectionDefinitions: [],
                             });
                         }
@@ -437,10 +513,10 @@
 
             if (routeView !== null) {
                 //try {
-                self.mainApp.setRouteView(routeView).render();
+                App.Views.mainApp.setRouteView(routeView).render();
                 self.bRouteViewRendered = true;
                 //} catch (e) {
-                //console.error('self.mainApp.setRouteView render exception for routeRequested:' + self.routeRequested, 'Exception:' + e);
+                //console.error('App.Views.mainApp.setRouteView render exception for routeRequested:' + self.routeRequested, 'Exception:' + e);
                 // self.bRouteViewRendered = false;
                 //}
 
@@ -451,6 +527,10 @@
         getShouldBuildView: function (view) {
             let self = this;
             return _.isUndefined(self.managementViews[view]) || (!_.isUndefined(self.managementViews[view]) && _.isNull(self.managementViews[view]));
+        },
+        getShouldPreRenderViews: function () {
+            let self = this;
+            return !App.Views.mainApp.$el.find('> .route-view').length;
         }
     });
 

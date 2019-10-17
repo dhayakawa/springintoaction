@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ProjectsDropDownOption = App.Views.Backend.fullExtend({
+    App.Views.ProjectsDropDownOption = App.Views.Backend.extend({
         tagName: 'option',
         initialize: function (options) {
             _.bindAll(this, 'render');
@@ -11,7 +11,7 @@
             return this;
         }
     });
-    App.Views.ProjectsDropDown = App.Views.Backend.fullExtend({
+    App.Views.ProjectsDropDown = App.Views.Backend.extend({
         initialize: function (options) {
             let self = this;
             this.options = options;
@@ -55,7 +55,7 @@
         }
     });
 
-    App.Views.ReportsManagement = App.Views.Backend.fullExtend({
+    App.Views.ReportsManagement = App.Views.Backend.extend({
         sitesDropdownViewClass: App.Views.SitesDropdown,
         siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         projectsDropDownViewClass: App.Views.ProjectsDropDown,

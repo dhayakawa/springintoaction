@@ -1,23 +1,84 @@
 (function (App) {
-    App.Views.Backend = Backbone.View.extend({
+    App.Views.BaseView = Backbone.View.extend({
+        bModelExpected: false,
+        childViews:[],
+        extendableOptions: ['viewName','managedGridView','parentView','ajaxWaitingTargetClassSelector'],
+        extendableProperties: {
+            "events": "defaults",
+            "className": function (propertyName, prototypeValue) {
+                this[propertyName] += " " + prototypeValue;
+            },
+            "viewName": null,
+            "childViews":[]
+        },
+
+        extendProperties: function (properties) {
+            var propertyName, prototypeValue, extendMethod,
+                prototype = this.constructor.prototype;
+            var cnt = 0;
+            while (prototype) {
+                for (propertyName in properties) {
+                    if (propertyName === 'mainApp') {
+                        console.log({cnt: cnt, prototype: prototype, propertyName: propertyName, 'properties.hasOwnProperty(propertyName)': properties.hasOwnProperty(propertyName),'prototype.hasOwnProperty(propertyName)': prototype.hasOwnProperty(propertyName), this: this})
+                    }
+                    if (properties.hasOwnProperty(propertyName) && prototype.hasOwnProperty(propertyName)) {
+                        prototypeValue = _.result(prototype, propertyName);
+                        extendMethod = properties[propertyName];
+
+                        if (!this.hasOwnProperty(propertyName)) {
+                            this[propertyName] = prototypeValue;
+
+                        } else if (_.isFunction(extendMethod)) {
+                            extendMethod.call(this, propertyName, prototypeValue);
+                        } else if (extendMethod === "defaults") {
+                            _.defaults(this[propertyName], prototypeValue);
+                        }
+                    }
+
+                }
+                // console.log({cnt: cnt,prototype: prototype, properties: properties,this:this})
+                prototype = prototype.constructor.__super__;
+                cnt++;
+            }
+        },
+
+        constructor: function () {
+            if (this.extendableProperties) {
+                // First, extend the extendableProperties by collecting all the extendable properties
+                // defined by classes in the prototype chain.
+                this.extendProperties({"extendableProperties": "defaults"});
+
+                // Now, extend all the properties defined in the final extendableProperties object
+                this.extendProperties(this.extendableProperties);
+            }
+
+            //this.options = arguments[0];
+            if (this.extendableOptions) {
+                let opts = arguments[0];
+                var props = _.pick(opts, this.extendableOptions);
+                _.extend(this, props);
+            }
+
+            Backbone.View.apply(this, arguments);
+            //console.log('constructor', {extendableProperties: this.extendableProperties, arguments: arguments,this:this})
+        }
+    });
+
+    App.Views.Backend = App.Views.BaseView.extend({
         _initialize: function (options) {
+            let self = this;
             try {
-                _.bindAll(this, 'close', 'getViewDataStore', 'setViewDataStoreValue', 'removeViewDataStore', 'removeChildViews', 'getViewClassName');
+                _.bindAll(self, 'close', 'getViewDataStore', 'setViewDataStoreValue', 'removeViewDataStore', 'removeChildViews', 'getViewClassName');
             } catch (e) {
                 console.error(options, e)
             }
-            //console.log('Backend _initialize called with options:',{options: options,this:this})
-            this.childViews = [];
-            this.options = options;
-            this._validateRequiredOptions(options);
-            this.setModelRoute();
-            this.setViewName();
-            this.mainApp = this.options.mainApp;
-
+            self.__init(options);
         },
-        setViewName: function(){
+        __init: function(options){
             let self = this;
-            self.viewName = !_.isUndefined(self.options.viewName) ? self.options.viewName : self.__proto__.viewName;
+            self.options = options;
+            self._validateRequiredOptions(self.options);
+            self.setModelRoute();
         },
         _validateRequiredOptions: function(options) {
             let self = this;
@@ -25,20 +86,17 @@
                 console.error("options.viewName is a required option", {self: self, options: options});
                 throw "options.viewName is a required option";
             }
-            if (_.isUndefined(options.mainApp)) {
-                console.error(options.viewName + " options.mainApp is a required option", {self:self, options:options});
-                throw options.viewName + " options.mainApp is a required option";
-            }
         },
         close: function () {
             let self = this;
             self._close();
         },
         _close: function () {
-            this.$el.hide();
+            let self = this;
+            self.$el.hide();
             // handle other unbinding needs, here
-            if (!_.isUndefined(this.childViews)) {
-                _.each(this.childViews, function (childView) {
+            if (!_.isUndefined(self.childViews)) {
+                _.each(self.childViews, function (childView) {
                     if (childView.close) {
                         try {
                             childView.close();
@@ -52,19 +110,21 @@
                     }
                 })
             }
-            this.remove();
+            self.remove();
 
         },
         removeChildViews: function () {
+            let self = this;
             //console.log('App.Views.SiteProjectTabs removeChildViews ');
-            _.each(this.childViews, function (view) {
+            _.each(self.childViews, function (view) {
                 view.remove();
             });
             //_log(self.getViewClassName() + '.removeChildViews.event', 'trigger removed-child-views');
-            this.trigger('removed-child-views');
+            self.trigger('removed-child-views');
         },
         getViewClassName: function () {
-            return this.constructor.name;
+            let self = this;
+            return self.constructor.name;
         },
         getModalElement: function () {
             return $('#sia-modal');
@@ -126,7 +186,7 @@
                     (!_.isUndefined(self.options.viewName) && self.options.viewName.match(/(management|toolbar)/))){
                     bShowError = false;
                 }
-                if (bShowError) {
+                if (bShowError && self.bModelExpected) {
                     console.error('findModelRoute missing model', {self: self, options: self.options});
                 }
                 self.modelRoute = '';
@@ -137,9 +197,11 @@
                 } else {
                     self.modelRoute = '';
                     bFoundRoute = false;
-                    console.log('model.__proto__.url was undefined',{model: model, url: model.__proto__, self: self, options: self.options})
+                    if (self.bModelExpected) {
+                        console.log('model.__proto__.url was undefined', {model: model, url: model.__proto__, self: self, options: self.options})
+                    }
                 }
-                if (!bFoundRoute) {
+                if (!bFoundRoute && self.bModelExpected) {
                     console.error('findModelRoute', {self: self, options: self.options,viewName: self.viewName, modelRoute: self.modelRoute, model: model, protoUrl: !_.isUndefined(model.__proto__) ? model.__proto__ : 'proto url not set', superIdAttributeOrUrl: !_.isUndefined(model._super) ? model._super : '_super not set'});
                 }
 
@@ -235,13 +297,14 @@
         },
     });
 
-    App.Views.Management = App.Views.Backend.fullExtend({
+    App.Views.Management = App.Views.Backend.extend({
         bModelExpected: false,
         events: {
 
         },
         _initialize: function (options) {
             let self = this;
+
             try {
                 _.bindAll(self,
                     'render',
@@ -250,13 +313,7 @@
             } catch (e) {
                 console.error(options, e)
             }
-            self.childViews = [];
-            self.options = options;
-            self._validateRequiredOptions(options);
-            self.model = !_.isUndefined(self.model) ? self.model : !_.isUndefined(self.options.model) ? self.options.model : null;
-            self.setModelRoute();
-            self.setViewName();
-            self.mainApp = self.options.mainApp;
+            self.__init(options);
 
         },
         renderSiteDropdowns: function () {
@@ -268,8 +325,7 @@
                 collection: new App.Collections.Site(App.Vars.appInitialData.sites),
                 parentView: self,
                 selectedSiteID: self.getViewDataStore('current-site-id'),
-                mainApp: self.mainApp
-            });
+                            });
             self.siteYearsDropdownView = new self.siteYearsDropdownViewClass({
                 el: self.$('select#site_years'),
                 parentView: this,
@@ -277,8 +333,7 @@
                 collection: new App.Collections.SiteYear(App.Vars.appInitialData.site_years),
                 sitesDropdownView: self.sitesDropdownView,
                 selectedSiteStatusID: self.getViewDataStore('current-site-status-id'),
-                mainApp: self.mainApp
-            });
+                            });
             self.listenTo(self.sitesDropdownView, 'site-id-change', self.handleSiteIDChange);
             self.sitesDropdownView.render();
             self.childViews.push(self.sitesDropdownView);
@@ -289,7 +344,7 @@
         }
     });
 
-    App.Views.GridManagerContainerToolbar = App.Views.Backend.fullExtend({
+    App.Views.GridManagerContainerToolbar = App.Views.Backend.extend({
         bModelExpected: false,
         events: {
             'click .btnAdd': 'addGridRow',
@@ -305,18 +360,14 @@
             } catch (e) {
                 console.error(options, e)
             }
-            self.childViews = [];
-            self.options = options;
-            self._validateRequiredOptions(options);
-            self.setModelRoute();
+
+            self.__init(options);
             self.bAppend = !_.isUndefined(self.options.bAppend) ? self.options.bAppend : false;
-            self.setViewName();
-            self.mainApp = self.options.mainApp;
+
             if (_.isUndefined(self.options.managedGridView)) {
                 console.error("options.managedGridView is a required option", self);
                 throw "options.managedGridView is a required option";
             }
-            self.managedGridView = self.options.managedGridView;
 
             self.singleModelName = self.managedGridView.modelNameLabel.replace(/s$/, '');
             self.templateVars = {btnLabel: self.singleModelName};
@@ -532,7 +583,7 @@
         }
     });
 
-    App.Views.ManagedGrid = App.Views.Backend.fullExtend({
+    App.Views.ManagedGrid = App.Views.Backend.extend({
         bModelExpected: true,
         events: {
             'focusin tbody tr': 'refreshView',
@@ -573,13 +624,8 @@
             } catch (e) {
                 console.error(options, e)
             }
-            self.childViews = [];
-            self.options = options;
-            self._validateRequiredOptions(options);
-            self.model = !_.isUndefined(self.model) ? self.model : !_.isUndefined(self.options.model) ? self.options.model : null;
-            self.setModelRoute();
-            self.setViewName();
-            self.mainApp = self.options.mainApp;
+
+            self.__init(options);
 
             self.rowBgColor = 'lightYellow';
             self.$currentRow = null;
@@ -589,7 +635,6 @@
                 console.error("options.ajaxWaitingTargetClassSelector is a required option", self);
                 throw "options.ajaxWaitingTargetClassSelector is a required option";
             }
-            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
 
             if (_.isUndefined(self.options.currentModelIDDataStoreSelector)) {
                 console.error("options.currentModelIDDataStoreSelector is a required option", self);
@@ -605,7 +650,6 @@
                 console.error("options.parentView is a required option", self);
                 throw "options.parentView is a required option";
             }
-            self.parentView = self.options.parentView;
 
             self.$gridManagerContainerToolbar = null;
 
@@ -1056,7 +1100,7 @@
 
     });
 
-    App.Views.ManagedGridTabs = App.Views.Backend.fullExtend({
+    App.Views.ManagedGridTabs = App.Views.Backend.extend({
         bModelExpected: false,
         events: {
             'shown.bs.tab a[data-toggle="tab"]': 'toggleTabToolbars',
@@ -1069,30 +1113,23 @@
             } catch (e) {
                 console.error(options, e)
             }
-            self.childViews = [];
-            self.options = options;
-            self._validateRequiredOptions(options);
-            self.setModelRoute();
-            this.setViewName();
-            this.mainApp = this.options.mainApp;
 
-            self.parentView = self.options.parentView;
+            self.__init(options);
 
             if (_.isUndefined(self.options.ajaxWaitingTargetClassSelector)) {
                 console.error("options.ajaxWaitingTargetClassSelector is a required option", self);
                 throw "options.ajaxWaitingTargetClassSelector is a required option";
             }
-            self.ajaxWaitingTargetClassSelector = self.options.ajaxWaitingTargetClassSelector;
+
 
             if (_.isUndefined(self.options.managedGridView)) {
                 console.error("options.managedGridView is a required option", self);
                 throw "options.managedGridView is a required option";
             }
-            self.managedGridView = self.options.managedGridView;
 
             self.childTabViews = [];
             self.childTabsGridManagerContainerToolbarViews = [];
-            self.childViews = [];
+
             // self.model is App.Models.projectModel
             self.listenTo(self.model, "change", self.fetchIfNewID);
             self.listenTo(self.managedGridView, 'toggle-tabs-box', self.toggleTabsBox);
@@ -1108,7 +1145,7 @@
                 self.$el.find('.nav-tabs').hide();
                 self.$el.find('.tabs-content-container').hide();
                 self.$el.find('.box-footer').hide();
-                self.mainApp.$('h3.box-title small').html('No projects created yet.');
+                App.Views.mainApp.$('h3.box-title small').html('No projects created yet.');
             } else {
                 self.$el.find('.nav-tabs').show();
                 self.$el.find('.tabs-content-container').show();
@@ -1126,9 +1163,6 @@
             //console.log({clickedTab: clickedTab, parentView: self.parentView, tabButtonPane: self.parentView.$('.' + clickedTab + '.tab-grid-manager-container')})
             // Hack to force grid columns to work
             $('body').trigger('resize');
-        },
-        tabFetchSuccess: function (model, response, options) {
-            //console.log('tabFetchSuccess',model, response, options)
         },
         removeChildViews: function () {
             let self = this;
@@ -1148,11 +1182,11 @@
         },
         updateMainAppBoxTitleContentPreFetchTabCollections: function (newId) {
             let self = this;
-            self.mainApp.$('h3.box-title small').html('Updating Tabs. Please wait...');
+            App.Views.mainApp.$('h3.box-title small').html('Updating Tabs. Please wait...');
         },
         updateMainAppBoxTitleContentPostFetchTabCollections: function (newId) {
             let self = this;
-            self.mainApp.$('h3.box-title small').html('');
+            App.Views.mainApp.$('h3.box-title small').html('');
         }
     });
 })(window.App);

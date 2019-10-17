@@ -1,6 +1,6 @@
 (function (App) {
 
-    let BackGridFiltersPanelSelectFilter = Backgrid.Extension.BackGridFiltersPanelSelectFilter = App.Views.Backend.fullExtend({
+    let BackGridFiltersPanelSelectFilter = Backgrid.Extension.BackGridFiltersPanelSelectFilter = App.Views.Backend.extend({
         tagName: "select",
         className: "backgrid-filter",
         template: _.template([
@@ -43,7 +43,7 @@
 
      @class Backgrid.Extension.BackGridFiltersPanelClientSideFilter
      */
-    let BackGridFiltersPanelClientSideFilter = Backgrid.Extension.BackGridFiltersPanelClientSideFilter = App.Views.Backend.fullExtend({
+    let BackGridFiltersPanelClientSideFilter = Backgrid.Extension.BackGridFiltersPanelClientSideFilter = App.Views.Backend.extend({
         /** @property */
         tagName: "div",
 
@@ -115,7 +115,7 @@
         }
     });
 
-    App.Views.BackGridFiltersPanel = App.Views.Backend.fullExtend({
+    App.Views.BackGridFiltersPanel = App.Views.Backend.extend({
         tagName: 'div',
         /**
          @property [wait=149] The time in milliseconds to wait since the last

@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ContactGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.fullExtend({
+    App.Views.ContactGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
         viewName: 'contact-grid-manager-container-toolbar-view',
         initialize: function (options) {
             let self = this;

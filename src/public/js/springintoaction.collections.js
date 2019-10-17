@@ -2202,6 +2202,14 @@
         url: '/admin/option/list/all',
         model: App.Models.Option
     });
+    App.Collections.SiteRoleOption = Backbone.Collection.extend({
+        url: '/admin/option/list/all',
+        model: App.Models.SiteRole
+    });
+    App.Collections.ProjectRoleOption = Backbone.Collection.extend({
+        url: '/admin/option/list/all',
+        model: App.Models.ProjectRole
+    });
 })(window.App);
 
 (function (App) {
@@ -2237,4 +2245,6 @@
     App.Collections.projectsDropDownCollection = new App.Collections.ProjectsDropDown();
 
     App.Collections.optionsManagementCollection = new App.Collections.Option();
+    App.Collections.optionsManagementSiteRoleCollection = new App.Collections.SiteRoleOption();
+    App.Collections.optionsManagementProjectRoleCollection = new App.Collections.ProjectRoleOption();
 })(window.App);

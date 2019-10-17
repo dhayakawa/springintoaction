@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.Budget = App.Views.ProjectTab.fullExtend({
+    App.Views.Budget = App.Views.ProjectTab.extend({
         getModalForm: function () {
             let self = this;
             let template = window.template('newBudgetTemplate');

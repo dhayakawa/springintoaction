@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.SiteManagement = App.Views.Management.fullExtend({
+    App.Views.SiteManagement = App.Views.Management.extend({
         sitesDropdownViewClass: App.Views.SitesDropdown,
         siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         siteViewClass: App.Views.Site,
@@ -42,7 +42,7 @@
                 ajaxWaitingTargetClassSelector: '#site-well',
                 model: App.Models.siteModel,
                 collection: App.Collections.sitesDropDownCollection,
-                mainApp: self.mainApp,
+
                 parentView: self,
                 sitesDropdownView: self.sitesDropdownView,
                 viewName: 'site-view'
@@ -53,7 +53,7 @@
                 el: self.$('.site-status-view'),
                 ajaxWaitingTargetClassSelector: '#site-well',
                 model: App.Models.siteStatusModel,
-                mainApp: self.mainApp,
+
                 parentView: self,
                 viewName: 'site-status-view'
             });
@@ -66,7 +66,7 @@
                 currentModelIDDataStoreSelector: 'body',
                 el: self.$('.site-volunteers-backgrid-wrapper'),
                 gridManagerContainerToolbarClassName: 'site-volunteers-grid-manager-container',
-                mainApp: self.mainApp,
+
                 model: App.Models.siteVolunteerRoleModel,
                 modelNameLabel: 'Site Volunteers',
                 parentView: self,
@@ -75,7 +75,7 @@
             self.siteVolunteerGridManagerContainerToolbar = new App.Views.SiteVolunteerGridManagerContainerToolbar({
                 el: self.$('.site-volunteers-grid-manager-container'),
                 parentView: self,
-                mainApp: self.mainApp,
+
                 managedGridView: self.siteVolunteersView,
                 viewName: 'site-volunteers-grid-manager-toolbar'
             });

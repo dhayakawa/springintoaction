@@ -1,7 +1,7 @@
 (function (App) {
     // Abstract Select View meant to be extended
 
-    App.Views.SelectOption = App.Views.Backend.fullExtend({
+    App.Views.SelectOption = App.Views.Backend.extend({
         tagName: 'option',
         initialize: function (options) {
             let self = this;
@@ -29,7 +29,7 @@
         }
     });
 
-    App.Views.Select = App.Views.Backend.fullExtend({
+    App.Views.Select = App.Views.Backend.extend({
         tagName: 'select',
         initialize: function (options) {
             let self = this;
@@ -103,7 +103,7 @@
      * Example of how to extend this select view
      * Your select view will have all attributes from App.Views.Select View
      * But will also have it's own modifications
-     * App.Views.YourCustomSelect = App.Views.select.fullExtend({
+     * App.Views.YourCustomSelect = App.Views.select.extend({
             el: '.yourSelectElementSelector',
             collection: someCollection,
             optionValueModelAttrName: 'VolunteerID',
