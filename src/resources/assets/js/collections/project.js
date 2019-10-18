@@ -1,8 +1,10 @@
 (function (App) {
     App.Collections.Project = Backbone.Collection.extend({
+        url: '/admin/project/list/all',
         model: App.Models.Project
     });
     App.PageableCollections.Project = Backbone.PageableCollection.extend({
+        url: '/admin/project/list/all',
         model: App.Models.Project,
         state: {
             pageSize: 5000
@@ -369,7 +371,8 @@
             name: "PaintAlreadyOnHand",
             label: "Paint Already On Hand",
             cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
@@ -378,7 +381,8 @@
             name: "PaintOrdered",
             label: "Paint Ordered",
             cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
@@ -441,7 +445,8 @@
             name: "FinalCompletionStatus",
             label: "Project Completed",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
@@ -450,7 +455,8 @@
             name: "FinalCompletionAssessment",
             label: "Final Completion Assessment",
             cell: App.Vars.TextareaCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "255",
             displayOrder: displayOrderCnt++
@@ -460,7 +466,7 @@
             label: "updated_at",
             cell: "string",
             editable: false,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             renderable: true,
@@ -469,6 +475,10 @@
 
     ];
 
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.projectsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.projectsBackgridColumnDefinitions', App.Vars.projectsBackgridColumnDefinitions);
 })(window.App);

@@ -315,6 +315,8 @@ class ProjectsController extends BaseController
 
     public function getAllProjects()
     {
+        $projectModel = new Project();
+        $sSqlVolunteersAssigned = $projectModel->getVolunteersAssignedSql();
         $all_projects =
             Project::select(
                 'projects.*',
@@ -322,7 +324,7 @@ class ProjectsController extends BaseController
                     '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
                 ),
                 DB::raw(
-                    '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID and pv.deleted_at is null) as VolunteersAssigned'
+                    "{$sSqlVolunteersAssigned} as VolunteersAssigned"
                 ),
                 DB::raw(
                     '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'

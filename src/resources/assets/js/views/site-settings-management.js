@@ -1,12 +1,13 @@
 (function (App) {
-    App.Views.SiteSetting = Backbone.View.extend({
+    App.Views.SiteSetting = App.Views.Backend.extend({
         tagName: 'li',
         template: template('siteSettingTemplate'),
+        viewName: 'site-setting-view',
         initialize: function (options) {
             let self = this;
-            this.options = options;
+            _.bindAll(this, '_initialize','render');
+            this._initialize(options);
 
-            _.bindAll(this, 'render');
         },
         events: {
             'click button': 'update',
@@ -83,10 +84,10 @@
             if (attributes['SiteSettingID'] === '') {
                 attributes['SiteSettingID'] = currentModelID;
             }
-            _log('App.Views.SiteSetting.update', self.options.tab, e.changed, attributes, this.model);
-            this.model.url = '/admin/site_setting/' + currentModelID;
+            _log('App.Views.SiteSetting.update', self.options.tab, e.changed, attributes, self.model);
+            self.model.url = self.getModelUrl(currentModelID);
             window.ajaxWaiting('show', 'form[name="SiteSetting' + currentModelID + '"]');
-            this.model.save(attributes,
+            self.model.save(attributes,
                 {
                     success: function (model, response, options) {
                         _log('App.Views.SiteSetting.update', self.options.tab + ' save', model, response, options);
@@ -104,40 +105,51 @@
         },
     });
 
-    App.Views.SiteSettingsManagement = Backbone.View.extend({
+    App.Views.SiteSettingsManagement = App.Views.Backend.extend({
         attributes: {
             class: 'site-settings-management-view route-view box box-primary'
         },
         template: template('siteSettingsManagementTemplate'),
+        viewName: 'site-settings-management-view',
         initialize: function (options) {
             let self = this;
-            this.itemsView = [];
-            this.options = options;
-            this.modelNameLabel = this.options.modelNameLabel;
-            this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase().replace(' ', '_');
-            _.bindAll(this, 'addOne', 'addAll', 'render');
-            this.collection.bind('reset', this.addAll, this);
+            try {
+                _.bindAll(self, 'addOne', 'addAll', 'render');
+            } catch (e) {
+                console.error(options, e);
+            }
+
+            this._initialize(options);
+            self.itemsView = [];
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(' ', '_');
+
+            self.listenTo(self.collection, "reset", self.addAll);
         },
         events: {},
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(this.template({
+            self.$el.html(self.template({
                 modelNameLabel: self.modelNameLabel,
                 modelNameLabelLowerCase: self.modelNameLabelLowerCase
             }));
-            this.addAll();
-            return this;
+            self.addAll();
+            return self;
         },
         addOne: function (SiteSetting) {
-            let $settingItem = new App.Views.SiteSetting({model: SiteSetting});
-            this.itemsView.push($settingItem);
-            this.$el.find('ul').append($settingItem.render().el);
+            let self = this;
+            let $settingItem = new App.Views.SiteSetting({
+                model: SiteSetting,
+                            });
+            self.itemsView.push($settingItem);
+            self.$el.find('ul').append($settingItem.render().el);
         },
         addAll: function () {
-            this.$el.find('.site-settings-management-wrapper').empty();
-            this.$el.find('.site-settings-management-wrapper').append($('<ul class="nav nav-stacked"></ul>'));
-            this.collection.each(this.addOne);
+            let self = this;
+            self.$el.find('.site-settings-management-wrapper').empty();
+            self.$el.find('.site-settings-management-wrapper').append($('<ul class="nav nav-stacked"></ul>'));
+            self.collection.each(self.addOne);
         }
     });
 })(window.App);

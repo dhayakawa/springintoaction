@@ -101,7 +101,7 @@
             $model  = new SiteVolunteerRole;
             $result = $model->getDefaultRecordData();
             try {
-                $result = $model->getSiteLead($id);
+                $result = $model->getSiteVolunteer($id);
             } catch(\Exception $e) {
                 report($e);
             }

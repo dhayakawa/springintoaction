@@ -1,33 +1,48 @@
 (function (App) {
-    App.Views.Contact = Backbone.View.extend({
-        getModalForm: function () {
-            let template = window.template('newContactTemplate');
+    App.Views.Contact = App.Views.ManagedGrid.extend({
+        viewName: 'contacts-view',
+        events: {},
+        initialize: function (options) {
+            let self = this;
+            try {
+                _.bindAll(self,
+                    'update');
+            } catch (e) {
+                console.error(options, e)
+            }
 
-            let tplVars = {
-                SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute)
-            };
-            return template(tplVars);
-        }
-    });
-    App.Views.ProjectContact = App.Views.ProjectTab.fullExtend({
-        getModalForm: function () {
-            let template = window.template('newProjectContactTemplate');
+            // Required call for inherited class
+            self._initialize(options);
 
-            let siteContacts = App.Collections.contactsManagementCollection.where({SiteID: App.Vars.currentSiteID});
-            let siteContactsCollection = new App.Collections.Contact(siteContacts);
-            let contactsSelect = new App.Views.Select({
+            if (self.collection.length === 0) {
+                self.setViewDataStoreValue('current-model-id', null);
+            }
+
+            _log('App.Views.Contact.initialize', options);
+        },
+        render: function (e) {
+            let self = this;
+
+            // Need to set the current model id every time the view is rendered
+            self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
+            self.renderGrid(e, self.viewName);
+
+            return self;
+
+        },
+        getModalForm: function () {
+            let self = this;
+            let template = window.template('new' + self.modelNameLabel + 'Template');
+            let siteSelect = new App.Views.Select({
                 el: '',
-                attributes: {id: 'ContactID', name: 'ContactID', class: 'form-control'},
+                attributes: {id: 'SiteID', name: 'SiteID', class: 'form-control'},
                 buildHTML: true,
-                collection: siteContactsCollection,
-                optionValueModelAttrName: 'ContactID',
-                optionLabelModelAttrName: ['LastName', 'FirstName', 'ContactType']
+                collection: App.Collections.sitesDropDownCollection,
+                optionValueModelAttrName: 'SiteID',
+                optionLabelModelAttrName: ['SiteName']
             });
             let tplVars = {
-                SiteID: App.Models.siteModel.get(App.Models.siteModel.idAttribute),
-                ProjectID: App.Models.projectModel.get(App.Models.projectModel.idAttribute),
-                contactsSelect: contactsSelect.getHtml()
+                siteSelect: siteSelect.getHtml()
             };
             return template(tplVars);
         }

@@ -1,4 +1,5 @@
 <form name="newVolunteer">
+    <input name="Active" type="hidden" value="1" />
     <div class="form-group">
         <label for="inputFirstName">First Name</label>
         <input type="text" name="FirstName" class="form-control" id="inputFirstName" placeholder="First Name" value="<%= testString %>"/>

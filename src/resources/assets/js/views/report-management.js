@@ -1,22 +1,24 @@
 (function (App) {
-    App.Views.ProjectsDropDownOption = Backbone.View.extend({
+    App.Views.ProjectsDropDownOption = App.Views.Backend.extend({
         tagName: 'option',
         initialize: function (options) {
             _.bindAll(this, 'render');
         },
         render: function () {
-            $(this.el).attr('value', this.model.get('ProjectID'))
-                .html(this.model.get('SequenceNumber'));
+            let self = this;
+            this.$el.attr('value', self.model.get('ProjectID'))
+                .html(self.model.get('SequenceNumber'));
             return this;
         }
     });
-    App.Views.ProjectsDropDown = Backbone.View.extend({
+    App.Views.ProjectsDropDown = App.Views.Backend.extend({
         initialize: function (options) {
+            let self = this;
             this.options = options;
             this.optionsView = [];
             this.parentView = this.options.parentView;
             _.bindAll(this, 'addOne', 'addAll', 'changeSelected');
-            this.collection.bind('reset', this.addAll, this);
+            self.listenTo(self.collection, "reset", self.addAll);
         },
         events: {
             "change": "changeSelected"
@@ -24,7 +26,7 @@
         addOne: function (projectDropDown) {
             let option = new App.Views.ProjectsDropDownOption({model: projectDropDown});
             this.optionsView.push(option);
-            $(this.el).append(option.render().el);
+            this.$el.append(option.render().el);
         },
         addAll: function () {
             _.each(this.optionsView, function (option) {
@@ -38,9 +40,9 @@
             return this;
         },
         changeSelected: function () {
-            let $option = $(this.el).find(':selected');
+            let $option = this.$el.find(':selected');
             if (!$option.length) {
-                $option = $(this.el).find(':first-child');
+                $option = this.$el.find(':first-child');
             }
             this.setSelectedId(this.parentView.$('select#site_years option').filter(':selected').text(), this.parentView.$('select#sites').val(), $option.val());
         },
@@ -53,9 +55,9 @@
         }
     });
 
-    App.Views.ReportsManagement = Backbone.View.extend({
-        sitesViewClass: App.Views.Sites,
-        siteYearsViewClass: App.Views.SiteYears,
+    App.Views.ReportsManagement = App.Views.Backend.extend({
+        sitesDropdownViewClass: App.Views.SitesDropdown,
+        siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         projectsDropDownViewClass: App.Views.ProjectsDropDown,
         template: template('reportManagementTemplate'),
         initialize: function (options) {
@@ -63,10 +65,10 @@
             let self = this;
             this.options = options;
             this.viewClassName = this.options.viewClassName;
-            this.modelNameLabel = this.options.modelNameLabel;
-            this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase().replace(' ','_');
+            self.modelNameLabel = this.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(' ','_');
             this.viewName = 'App.Views.ReportsManagement';
-            this.localStorageKey = this.modelNameLabel;
+            this.localStorageKey = self.modelNameLabel;
             this.backgridWrapperClassSelector = '.backgrid-wrapper';
             this.ajaxWaitingSelector = '.' + this.viewClassName + ' ' + this.backgridWrapperClassSelector;
             this.reportType = this.options.reportType;
@@ -80,32 +82,32 @@
                 modelNameLabel: self.modelNameLabel,
                 modelNameLabelLowerCase: self.modelNameLabelLowerCase
             }));
-            App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
+            this.sitesDropdownView = new this.sitesDropdownViewClass({
                 el: this.$('select#sites'),
                 parentView: this,
                 collection: App.Collections.sitesDropDownCollection
             });
-            this.sitesDropDownView.render();
+            this.sitesDropdownView.render();
 
 
-            App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
+            this.siteYearsDropdownView = new this.siteYearsDropdownViewClass({
                 el: this.$('select#site_years'),
                 parentView: this,
                 collection: App.Collections.siteYearsDropDownCollection
             });
-            this.siteYearsDropDownView.render();
+            this.siteYearsDropdownView.render();
 
-            App.Views.projectsDropDownView = this.projectsDropDownView = new this.projectsDropDownViewClass({
+            this.projectsDropDownView = new this.projectsDropDownViewClass({
                 el: this.$('select#projects'),
                 parentView: this,
                 collection: App.Collections.projectsDropDownCollection
             });
             this.projectsDropDownView.render();
 
-            this.listenTo(App.Views.siteYearsDropDownView, 'site-status-id-change', function (e) {
+            this.listenTo(this.siteYearsDropdownView, 'site-status-id-change', function (e) {
                 self.handleSiteStatusIDChange(e);
             });
-            this.listenTo(App.Views.sitesDropDownView, 'site-id-change', function (e) {
+            this.listenTo(this.sitesDropdownView, 'site-id-change', function (e) {
                 self.handleSiteStatusIDChange(e);
             });
 

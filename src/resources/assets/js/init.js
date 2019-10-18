@@ -12,7 +12,7 @@ window.App = {
         volunteerModel: null,
         projectContactModel: null,
         projectLeadModel: null,
-        projectBudgetModel: new Backbone.Model(),
+        projectBudgetModel: null,
         projectVolunteerModel: null,
         projectVolunteerRoleModel: null,
         annualBudgetModel: null,
@@ -45,39 +45,90 @@ window.App = {
         projectsDropDownCollection:null,
         statusManagementCollection:null
     },
-    Views: {
-        dashboardView: {},
-        settingsManagementView: {},
-        siteManagementView: {},
-        siteYearsDropDownView: {},
-        projectManagementView: {},
-        siteProjectTabsView: {},
-        projectsView: {},
-        contactsManagementView: {},
-        volunteersManagementView: {},
-        budgetManagementView: {},
-        reportsManagementView: [],
-        statusManagementView: {}
-    },
+    Views: {},
     Templates: {},
     Router: {},
     Vars: {
+        bAllowBackgridInlineEditing: true,
+        bAllowCSVFileImports: false,
         bAllowManagedGridColumns: false,
         bBackgridColumnManagerSaveState: false,
         bBackgridColumnManagerLoadStateOnInit: false,
         // Turn on the console logging
-        bAllowConsoleOutput: 1,
-        bAllowConsoleOutputHiLite: 1,
-        bAllowConsoleVarGroupsOutput: 1,
+        bAllowConsoleOutput: true,
+        bAllowConsoleOutputHiLite: false,
+        bAllowConsoleVarGroupsOutput: false,
         rowBgColorSelected: '#e3f6b1',
         workerRoleID: 4,
         appInitialData: {},
         selectOptions:{},
-        devMode: false,
+        devMode: true,
         auth:[]
     },
     CellEditors: {}
 };
+
+const fileStackApiKey = 'Ana2T1xQQ76feCTmPqLlSz';
+//let fileStackClient = filestack.init(fileStackApiKey);
+
+let fileStackCombOptions = {
+    "displayMode": "inline",
+    "container": ".picker-content",
+    "maxFiles": 5,
+    "accept": [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/bmp",
+        "image/gif",
+        "application/pdf"
+    ],
+    "storeTo": {
+        "container": "devportal-customers-assets",
+        "path": "user-uploads/",
+        "region": "us-east-1"
+    },
+    "fromSources": [
+        "local_file_system"
+    ],
+    "uploadInBackground": false
+};
+/**
+ * let fileStackComboPicker = fileStackClient.picker(fileStackComboOptions);
+ * fileStackComboPicker.open();
+ */
+
+
+let fileStackDragDropOptions = {
+    "displayMode": "dropPane",
+    "container": ".picker-content",
+    "maxFiles": 4,
+    "accept": [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/bmp",
+        "image/gif",
+        "application/pdf"
+    ],
+    "storeTo": {
+        "container": "devportal-customers-assets",
+        "path": "user-uploads/",
+        "region": "us-east-1"
+    },
+    "fromSources": [
+        "local_file_system"
+    ],
+    "uploadInBackground": false,
+    "dropPane": {
+        "overlay": false
+    }
+};
+/*
+ * Just Drag N Drop
+ * let fileStackDragDropPicker = fileStackClient.picker(fileStackDragDropOptions);
+ * fileStackDragDropPicker.open();
+*/
 
 /**
  * Needed to fix the select so when it triggers a backgrid:edited the model has been flagged as changed
@@ -235,30 +286,30 @@ window.ajaxWaiting = function (action, selector) {
 /**
  * A way to extend backbone Models with existing Models
  */
-(function (Model) {
-    'use strict';
-    // Additional extension layer for Models
-    Model.fullExtend = function (protoProps, staticProps) {
-        // Call default extend method
-        let extended = Model.extend.call(this, protoProps, staticProps);
-        // Add a usable super method for better inheritance
-        extended.prototype._super = this.prototype;
-        // Apply new or different defaults on top of the original
-        if (protoProps.defaults) {
-            for (let k in this.prototype.defaults) {
-                if (!extended.prototype.defaults[k]) {
-                    extended.prototype.defaults[k] = this.prototype.defaults[k];
-                }
-            }
-        }
-        return extended;
-    };
-
-})(Backbone.Model);
+// (function (Model) {
+//     'use strict';
+//     // Additional extension layer for Models
+//     Model.fullExtend = function (protoProps, staticProps) {
+//         // Call default extend method
+//         let extended = Model.extend.call(this, protoProps, staticProps);
+//         // Add a usable super method for better inheritance
+//         extended.prototype._super = this.prototype;
+//         // Apply new or different defaults on top of the original
+//         if (protoProps.defaults) {
+//             for (let k in this.prototype.defaults) {
+//                 if (!extended.prototype.defaults[k]) {
+//                     extended.prototype.defaults[k] = this.prototype.defaults[k];
+//                 }
+//             }
+//         }
+//         return extended;
+//     };
+//
+// })(Backbone.Model);
 /**
  * A way to extend backbone Views with existing Views
  */
-(function (View) {
+/*(function (View) {
     'use strict';
     // Additional extension layer for Views
     View.fullExtend = function (protoProps, staticProps) {
@@ -277,7 +328,7 @@ window.ajaxWaiting = function (action, selector) {
         return extended;
     };
 
-})(Backbone.View);
+})(Backbone.View);/**/
 
 /**
  * Catching Ajax session logged out scenario

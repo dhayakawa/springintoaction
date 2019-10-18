@@ -8,12 +8,15 @@
 
 namespace Dhayakawa\SpringIntoAction\Models;
 
+use Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Dhayakawa\SpringIntoAction\Models\Volunteer;
 
 class SiteVolunteerRole extends Model
 {
+    use ProjectRegistrationHelper;
+
     /**
      * The table associated with the model.
      *
@@ -156,7 +159,7 @@ class SiteVolunteerRole extends Model
             (!is_numeric($this->defaultRecordData['Year']) ||
              !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))
         ) {
-            $this->defaultRecordData['Year'] = date('Y');
+            $this->defaultRecordData['Year'] = $this->getCurrentYear();
         }
 
         return $this->defaultRecordData;

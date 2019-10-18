@@ -7,10 +7,10 @@
             'ReportUrl':''
         },
     });
-    /**
-     * This is the site years drop down
-     */
+
     App.Models.ProjectDropDown = Backbone.Model.extend({
+        idAttribute: "ProjectID",
+        url: '/admin/project',
         defaults: {
             'ProjectID': '',
             'SequenceNumber': 1

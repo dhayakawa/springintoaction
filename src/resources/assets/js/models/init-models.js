@@ -22,5 +22,5 @@
     App.Models.annualBudgetModel = new App.Models.AnnualBudget();
     App.Models.reportModel = new App.Models.Report();
     App.Models.statusManagementModel = new App.Models.StatusManagement();
-
+    App.Models.optionModel = new App.Models.Option();
 })(window.App);

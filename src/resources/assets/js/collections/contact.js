@@ -1,9 +1,19 @@
 (function (App) {
     App.Collections.Contact = Backbone.Collection.extend({
+        url: '/admin/contact/list/all',
         model: App.Models.Contact
     });
     App.PageableCollections.Contact = Backbone.PageableCollection.extend({
+        url: '/admin/contact/list/all',
         model: App.Models.Contact,
+        state: {
+            pageSize: 5000
+        },
+        mode: "client" // page entirely on the client side
+    });
+    App.PageableCollections.ProjectContact = Backbone.PageableCollection.extend({
+        url: '/admin/project_contact/list/all',
+        model: App.Models.ProjectContact,
         state: {
             pageSize: 5000
         },
@@ -161,9 +171,23 @@
     App.Vars.projectContactsBackgridColumnDefinitions = [];
     _.each(contactsBackgridColumnDefinitions, function (value, key) {
         value = _.clone(value);
+        if (value.name === 'ContactID') {
+            value.name = 'ProjectContactsID';
+            value.formatter = _.extend({}, Backgrid.CellFormatter.prototype, {
+                fromRaw: function (rawValue) {
+                    return '<input title="' + rawValue + '" type="radio" name="ProjectContactsID" value="' + rawValue + '" />';
+                    //You can use rawValue to custom your html, you can change this value using the name parameter.
+                }
+            });
+        }
         value.editable = false;
         App.Vars.projectContactsBackgridColumnDefinitions.push(value);
     });
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.ContactsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.ContactsBackgridColumnDefinitions:', App.Vars.ContactsBackgridColumnDefinitions);
+    _log('App.Vars.CollectionsGroup', 'App.Vars.projectContactsBackgridColumnDefinitions:', App.Vars.projectContactsBackgridColumnDefinitions);
 })(window.App);

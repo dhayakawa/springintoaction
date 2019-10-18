@@ -1,9 +1,11 @@
 (function (App) {
     App.Collections.Volunteer = Backbone.Collection.extend({
+        url:'/admin/volunteer/list/all',
         model: App.Models.Volunteer
     });
 
     App.PageableCollections.Volunteer = Backbone.PageableCollection.extend({
+        url: '/admin/volunteer/list/all',
         model: App.Models.Volunteer,
         state: {
             pageSize: 5000
@@ -399,7 +401,11 @@
         value.displayOrder = displayOrderCnt++;
     });
 
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.volunteersBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
 
     _log('App.Vars.CollectionsGroup', 'App.Vars.volunteersBackgridColumnDefinitions:', App.Vars.volunteersBackgridColumnDefinitions);
 

@@ -172,7 +172,8 @@
         }
 
         public function getContacts(){
-            $all_contacts = Contact::orderBy('LastName', 'asc')->get();
+            $contact = Contact::orderBy('LastName', 'asc')->distinct();
+            $all_contacts = $contact->get();
             $all_contacts = $all_contacts ? $all_contacts->toArray() : [];
             return $all_contacts;
         }

@@ -9,7 +9,7 @@
     <a class="report-download download-csv" target="_blank" href="">download csv</a>
     <a class="report-download download-spreadsheet" target="_blank" href="">download spreadsheet</a>
     <div class="pull-right">
-        <a href="#" class="btn btn-box-tool"><i class="fa fa-times"></i></a>
+        <a href="#" class="btn btn-box-tool close-view"><i class="fa fa-times"></i></a>
     </div>
 </div>
 <div class="box-body">

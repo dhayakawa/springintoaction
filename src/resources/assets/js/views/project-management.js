@@ -1,59 +1,87 @@
 (function (App) {
-    App.Views.ProjectManagement = Backbone.View.extend({
-        sitesViewClass: App.Views.Sites,
-        siteYearsViewClass: App.Views.SiteYears,
+    App.Views.ProjectManagement = App.Views.Management.extend({
+        sitesDropdownViewClass: App.Views.SitesDropdown,
+        siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         siteProjectTabsViewClass: App.Views.SiteProjectTabs,
         projectsViewClass: App.Views.Projects,
         attributes: {
-            class: 'project-management-view route-view box box-primary'
+            class: 'route-view box box-primary project-management-view'
         },
-        template: template('projectManagementTemplate'),
+        template: template('projectTabbedManagementTemplate'),
+        viewName: 'projects-management-view',
         initialize: function (options) {
-            this.options    = options;
-            this.childViews = [];
-            this.mainApp    = this.options.mainApp;
-            _.bindAll(this, 'render', 'updateProjectDataViews', 'updateProjectDataTabButtons');
+            let self = this;
+            // try {
+            //     _.bindAll(self, '');
+            // } catch (e) {
+            //     console.error(options, e);
+            // }
+            // Required call for inherited class
+            self._initialize(options);
+
         },
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
             self.$el.html(this.template());
+            self.renderSiteDropdowns();
 
-            App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
-                el: this.$('select#sites'),
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.sitesDropDownView.render();
-            this.childViews.push(this.sitesDropDownView);
-
-            App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
-                el: this.$('select#site_years'),
-                parentView: this,
-                collection: App.Collections.siteYearsDropDownCollection
-            });
-            this.siteYearsDropDownView.render();
-            this.childViews.push(this.siteYearsDropDownView);
-
-            App.Views.projectsView = this.projectsView = new this.projectsViewClass({
-                el: this.$('.projects-backgrid-wrapper'),
-                parentView: this,
+            self.projectsView = new self.projectsViewClass({
+                ajaxWaitingTargetClassSelector: '.projects-view',
                 collection: App.PageableCollections.projectCollection,
                 columnCollectionDefinitions: App.Vars.projectsBackgridColumnDefinitions,
-                model: App.Models.projectModel
-            });
-            this.projectsView.render();
-            this.childViews.push(this.projectsView);
+                currentModelIDDataStoreSelector: '.site-projects-tabs-view',
+                el: self.$('.projects-backgrid-wrapper'),
+                gridManagerContainerToolbarClassName: 'projects-grid-manager-container',
 
-            App.Views.siteProjectTabsView = this.siteProjectTabsView = new this.siteProjectTabsViewClass({
-                el: this.$('.site-projects-tabs'),
-                mainApp: self.mainApp,
-                parentView: this,
-                model: App.Models.projectModel
+                model: App.Models.projectModel,
+                modelNameLabel: 'Project',
+                parentView: self,
+                viewName: 'projects'
             });
-            this.siteProjectTabsView.render();
-            this.childViews.push(this.siteProjectTabsView);
 
-            return this;
+            self.projectGridManagerContainerToolbar = new App.Views.ProjectGridManagerContainerToolbar({
+                el: self.$('.projects-grid-manager-container'),
+                parentView: self,
+
+                managedGridView: self.projectsView,
+                viewName: 'projects-grid-manager-toolbar'
+            });
+            self.projectGridManagerContainerToolbar.render();
+            self.childViews.push(self.projectGridManagerContainerToolbar);
+            this.projectsView.setGridManagerContainerToolbar(self.projectGridManagerContainerToolbar);
+
+            self.projectsView.render();
+            self.childViews.push(self.projectsView);
+
+            self.siteProjectTabsView = new self.siteProjectTabsViewClass({
+                el: self.$('.site-projects-tabs-view'),
+                ajaxWaitingTargetClassSelector: '.tabs-content-container',
+
+                parentView: self,
+                managedGridView: self.projectsView,
+                model: self.projectsView.model,
+                viewName: 'site-projects-tabs-view'
+            });
+            self.siteProjectTabsView.render();
+            self.childViews.push(self.siteProjectTabsView);
+
+            if (!_.isEmpty(self.projectsView.getViewDataStore('current-tab'))) {
+                try {
+                    self.$el.find('.nav-tabs [href="#' + self.projectsView.getViewDataStore('current-tab') + '"]').tab('show');
+                    self.$el.find('.tab-content .tab-pane').removeClass('active');
+                    self.$el.find('.tab-content .tab-pane#' + self.projectsView.getViewDataStore('current-tab')).addClass('active');
+                    self.$el.find('.tab-grid-manager-container.' + self.projectsView.getViewDataStore('current-tab')).show();
+                } catch (e) {
+                    //console.log(e, self.managedGridView.getViewDataStore('current-tab'))
+                }
+
+                //console.log('just set the tab', self.managedGridView.getViewDataStore('current-tab'), self.$el.find('.nav-tabs [href="#' + self.managedGridView.getViewDataStore('current-tab') + '"]'))
+            } else {
+                self.$el.find('.nav-tabs #project_lead').tab('show');
+                self.$el.find('.tab-grid-manager-container.project_lead').show();
+            }
+            return self;
         },
         /**
          * ProjectID can also be an event
@@ -64,11 +92,8 @@
 
             if (typeof ProjectID === 'string') {
                 let currentProjectModel = self.collection.findWhere({ProjectID: parseInt(ProjectID)});
-                self.mainApp.$('.site-projects-tabs .box-title small').html(currentProjectModel.get('ProjectDescription'))
+                App.Views.mainApp.$('.site-projects-tabs-view .box-title small').html(currentProjectModel.get('ProjectDescription'))
             }
-        },
-        updateProjectDataTabButtons: function (e) {
-            console.log('updateProjectDataTabButtons triggered')
         }
     });
 })(window.App);

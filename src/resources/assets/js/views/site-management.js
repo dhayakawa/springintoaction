@@ -1,19 +1,24 @@
 (function (App) {
-    App.Views.SiteManagement = Backbone.View.extend({
-        sitesViewClass: App.Views.Sites,
-        siteYearsViewClass: App.Views.SiteYears,
+    App.Views.SiteManagement = App.Views.Management.extend({
+        sitesDropdownViewClass: App.Views.SitesDropdown,
+        siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         siteViewClass: App.Views.Site,
         siteStatusViewClass: App.Views.SiteStatus,
         siteVolunteersViewClass: App.Views.SiteVolunteer,
         attributes: {
-            class: 'site-management-view route-view box box-primary'
+            class: 'route-view box box-primary site-management-view'
         },
         template: template('siteManagementTemplate'),
+        viewName: 'site-management-view',
         initialize: function (options) {
-            this.options = options;
-            this.childViews = [];
-            this.mainApp = this.options.mainApp;
-            _.bindAll(this, 'render', 'addSite', 'deleteSite');
+            let self = this;
+            try {
+                _.bindAll(self, 'addSite', 'deleteSite');
+            } catch (e) {
+                console.error(options, e)
+            }
+            // Required call for inherited class
+            this._initialize(options);
         },
         events: {
             'click #btnAddSite': 'addSite',
@@ -22,73 +27,95 @@
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(this.template());
+            self.$el.html(self.template());
             if (!App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager) {
                 self.$el.find('#btnAddSite').hide();
             }
             if (!App.Vars.Auth.bIsAdmin && !App.Vars.Auth.bIsProjectManager) {
                 self.$el.find('#btnDeleteSite').hide();
             }
-            App.Views.sitesDropDownView = this.sitesDropDownView = new this.sitesViewClass({
-                el: this.$('select#sites'),
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.sitesDropDownView.render();
 
-            App.Views.siteYearsDropDownView = this.siteYearsDropDownView = new this.siteYearsViewClass({
-                el: this.$('select#site_years'),
-                parentView: this,
-                collection: App.Collections.siteYearsDropDownCollection
-            });
-            this.siteYearsDropDownView.render();
+            self.renderSiteDropdowns();
 
-            App.Views.siteView = this.siteView = new this.siteViewClass({
-                el: this.$('.site-view'),
+            self.siteView = new self.siteViewClass({
+                el: self.$('.site-view'),
+                ajaxWaitingTargetClassSelector: '#site-well',
                 model: App.Models.siteModel,
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.siteView.render();
+                collection: App.Collections.sitesDropDownCollection,
 
-            App.Views.siteStatusView = this.siteStatusView = new this.siteStatusViewClass({
-                el: this.$('.site-status-view'),
-                model: App.Models.siteStatusModel
+                parentView: self,
+                sitesDropdownView: self.sitesDropdownView,
+                viewName: 'site-view'
             });
-            this.siteStatusView.render();
+            self.siteView.render();
 
-            App.Views.siteVolunteersView = this.siteVolunteersView = new this.siteVolunteersViewClass({
-                el: this.$('.site-volunteers-backgrid-wrapper'),
-                parentView: this,
-                model: App.Models.siteVolunteerRoleModel,
-                modelNameLabel: 'SiteVolunteerRole',
+            self.siteStatusView = new self.siteStatusViewClass({
+                el: self.$('.site-status-view'),
+                ajaxWaitingTargetClassSelector: '#site-well',
+                model: App.Models.siteStatusModel,
+
+                parentView: self,
+                viewName: 'site-status-view'
+            });
+            self.siteStatusView.render();
+
+            self.siteVolunteersView = new self.siteVolunteersViewClass({
+                ajaxWaitingTargetClassSelector: '#site-volunteers-well',
                 collection: App.PageableCollections.siteVolunteersRoleCollection,
                 columnCollectionDefinitions: App.Vars.siteVolunteersBackgridColumnDefinitions,
-                hideCellCnt: 0//2
-            });
-            this.siteVolunteersView.render();
+                currentModelIDDataStoreSelector: 'body',
+                el: self.$('.site-volunteers-backgrid-wrapper'),
+                gridManagerContainerToolbarClassName: 'site-volunteers-grid-manager-container',
 
-            return this;
+                model: App.Models.siteVolunteerRoleModel,
+                modelNameLabel: 'Site Volunteers',
+                parentView: self,
+                hideCellCnt: 0
+            });
+            self.siteVolunteerGridManagerContainerToolbar = new App.Views.SiteVolunteerGridManagerContainerToolbar({
+                el: self.$('.site-volunteers-grid-manager-container'),
+                parentView: self,
+
+                managedGridView: self.siteVolunteersView,
+                viewName: 'site-volunteers-grid-manager-toolbar'
+            });
+            self.siteVolunteerGridManagerContainerToolbar.render();
+
+            self.siteVolunteersView.render();
+            self.siteVolunteersView.setGridManagerContainerToolbar(self.siteVolunteerGridManagerContainerToolbar);
+
+            self.childViews.push(self.sitesDropdownView);
+            self.childViews.push(self.siteYearsDropdownView);
+            self.childViews.push(self.siteView);
+            self.childViews.push(self.siteStatusView);
+            self.childViews.push(self.siteVolunteerGridManagerContainerToolbar);
+            self.childViews.push(self.siteVolunteersView);
+
+            return self;
         },
         addSite: function () {
-            $('#sia-modal').one('show.bs.modal', function (event) {
+            let self = this;
+            self.getModalElement().one('show.bs.modal', function (event) {
                 let modal = $(this);
                 modal.find('.modal-title').html('New Site');
-                modal.find('.modal-body').html(App.Views.siteView.getModalForm());
+                modal.find('.modal-body').html(self.siteView.getModalForm());
 
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
-                    App.Views.siteView.create($.unserialize(modal.find('form').serialize()));
+                    self.siteView.create($.unserialize(modal.find('form').serialize()));
 
 
-                    $('#sia-modal').modal('hide');
+                    self.getModalElement().modal('hide');
                 });
 
             });
-            $('#sia-modal').modal('show');
+            self.getModalElement().modal('show');
         },
         deleteSite: function () {
+            let self = this;
             bootbox.confirm("Do you really want to delete the "+ App.Models.siteModel.get('SiteName') +" site and all of its projects?", function (bConfirmed) {
                 if (bConfirmed) {
-                    App.Views.siteView.destroy();
+                    self.siteView.destroy();
                 }
             });
         }

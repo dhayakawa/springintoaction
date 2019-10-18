@@ -1,10 +1,13 @@
 (function (App) {
-    App.Views.mainApp = Backbone.View.extend({
+    App.Views.MainApp = App.Views.Backend.extend({
         el: $(".sia-main-app"),
+        events: {
+            'click > .route-view .close-view' : 'hideRouteView'
+        },
         initialize: function (options) {
             let self = this;
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
-            _.bindAll(self, 'render', 'setRouteView');
+            _.bindAll(self, 'render', 'setRouteView', 'hideRouteView');
             self.preRenderedView = false;
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;
@@ -26,6 +29,10 @@
             });
             self.checkBrowser();
             self.checkMobileDevice();
+        },
+        hideRouteView: function(e) {
+            //console.log('hideRouteView',e,$(e.currentTarget).parents('.route-view'))
+            $(e.currentTarget).parents('.route-view').hide();
         },
         checkBrowser: function(){
             let bIsChrome = navigator.userAgent.indexOf('Chrome') > -1;
@@ -82,19 +89,20 @@
                         } else {
                             window.ajaxWaiting('remove', '.sia-main-app');
                         }
-                        this.$el.append(viewEl);
+                        self.$el.append(viewEl);
                     }
                 }
+                _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), self.$el);
             }
 
-            _log('App.Views.mainApp.render', 'render', 'routeView:' + self.routeView.$el.attr('class'), this.$el);
-            if (App.Vars.mainAppDoneLoading === false) {
+            if (self.preRenderedView === false && App.Vars.mainAppDoneLoading === false) {
                 App.Vars.mainAppDoneLoading = true;
                 _log('App.Views.mainApp.render', 'App.Vars.mainAppDoneLoading = true');
+                // Hack to force grid columns to work
+                $('body').trigger('resize');
             }
-            // Hack to force grid columns to work
-            $('body').trigger('resize');
-            return this;
+
+            return self;
         }
     });
 

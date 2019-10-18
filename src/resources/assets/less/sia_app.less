@@ -33,10 +33,57 @@
             }
         }
     }
+    .grab() {
+        cursor: move; /* fallback if grab cursor is unsupported */
+        cursor: grab;
+        cursor: -moz-grab;
+        cursor: -webkit-grab;
+        &:active,&.ui-sortable-helper {
+            cursor: grabbing;
+            cursor: -moz-grabbing;
+            cursor: -webkit-grabbing;
+        }
+    }
+    .option-management-view {
+        .table.options {
+            table-layout: fixed;
+            th.display-sequence-thead{
+                width: 70px;
+            }
+            tbody{
+                tr{
+                    .grab();
+                    td.display-sequence {
+                        span.ui-icon {
+                            .grab();
+                        }
+                        input {
+                            margin-left: 5px;
+                            width: 30px;
+                            border: 0;
 
-    .status-management-view {
-        .status-management-wrapper {
-            .status-management-record {
+                            &:focus {
+                                outline: none;
+                            }
+                        }
+                    }
+
+                    td.option-label {
+                        .ui-icon-trash {
+                            cursor: pointer;
+                            &:hover{
+                                color: red;
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+    .status-record-management-view {
+        .status-record-management-wrapper {
+            .status-record {
                 // use this margin instead of the h3 top-margin
                 margin-bottom: 20px;
 
@@ -287,7 +334,7 @@
         padding: 0;
     }
 
-    .site-projects-tabs {
+    .site-projects-tabs-view {
         .nav-tabs > li.active > a {
 
         }
@@ -321,7 +368,7 @@
         opacity:.6;
 
         width:100%;
-        height:279px;
+        height:0px;
 
     }
 
@@ -361,6 +408,7 @@
                     content: "\f0c6";
                 }
             }
+
         }
 
         tbody {
@@ -370,9 +418,67 @@
                 &:hover {
                     background-color: lightyellow;
                 }
+                td:nth-child(n+4){
+                    pointer-events: none;
+                }
             }
         }
     }
+
+    &.site-volunteers-backgrid-wrapper {
+        .backgrid {
+            thead {
+                th:nth-child(1) {
+                    width: 30px;
+                }
+
+                th:nth-child(2) {
+                    width: 30px;
+                }
+
+                th:nth-child(3) {
+                    width: 50px;
+                }
+
+                th:nth-child(4) {
+                    width: 30px;
+                }
+
+                th:nth-child(5) {
+                    width: 150px;
+                }
+
+                th:nth-child(6) {
+                    width: 150px;
+                }
+
+                th:nth-child(7) {
+                    width: 250px;
+                }
+
+                th:nth-child(8) {
+                    width: 250px;
+                }
+
+                th:nth-child(9) {
+                    width: 150px;
+                }
+
+                th:nth-child(10) {
+                    width: 150px;
+                }
+
+                th:nth-child(11) {
+                    width: 175px;
+                }
+
+                th:nth-child(12) {
+                    width: 250px;
+                }
+            }
+        }
+    }
+
     .project-leads-backgrid-wrapper{
         .backgrid{
             thead{
@@ -426,7 +532,8 @@
             }
         }
     }
-    .project-budget-backgrid-wrapper{
+
+    .project-budgets-backgrid-wrapper{
         .backgrid{
             thead{
                 th:nth-child(1){
@@ -455,6 +562,7 @@
             }
         }
     }
+
     .project-volunteers-backgrid-wrapper{
         .backgrid{
             thead{
@@ -593,6 +701,7 @@
             }
         }
     }
+
     .project-attachments-backgrid-wrapper{
         .backgrid{
             thead{
