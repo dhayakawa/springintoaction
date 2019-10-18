@@ -465,10 +465,6 @@ $('#sia-modal').modal({
             self._validateRequiredOptions(self.options);
             self.setModelRoute();
         },
-        setViewName: function(){
-            let self = this;
-            self.viewName = !_.isUndefined(self.options.viewName) ? self.options.viewName : self.__proto__.viewName;
-        },
         _validateRequiredOptions: function(options) {
             let self = this;
             if (_.isUndefined(options.viewName) && _.isUndefined(self.__proto__.viewName)) {
@@ -1103,7 +1099,7 @@ $('#sia-modal').modal({
 
             self.$gridContainer = self.$el.html(self.backgrid.render().el);
 
-            self.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
+            //self.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
             self.paginator = new Backgrid.Extension.Paginator({
                 collection: self.collection
             });
@@ -1181,6 +1177,8 @@ $('#sia-modal').modal({
                 self.childViews.push(sizeHandler);
                 self.childViews.push(orderHandler);
             }
+            self.backgrid.$el.find('tr td:nth-child(n+4)').css("pointer-events", "none");
+
         },
         _refreshView: function (e) {
             let self = this;
@@ -1192,7 +1190,7 @@ $('#sia-modal').modal({
             if (!_.isUndefined(e.target) && e.target.nodeName === 'INPUT' && e.target.type === 'checkbox') {
                 return;
             }
-            //_log(self.getViewClassName() + '.updateProjectTabView.event', 'event triggered:', e);
+            _log(self.getViewClassName() + '.updateProjectTabView.event', 'event triggered:', e);
             currentModelID = self.setCurrentRow(e);
 
             self.positionOverlays(self.backgrid);
@@ -1303,7 +1301,7 @@ $('#sia-modal').modal({
         positionOverlays: function (e) {
             let self = this;
             let width;
-            if (!_.isUndefined(self.$gridContainer)) {
+            /*if (!_.isUndefined(self.$gridContainer)) {
                 width = 0;
                 self.$gridContainer.find('thead th:nth-child(n+3)').each(function (idx, el) {
                     width += parseInt($(el).outerWidth());
@@ -1322,7 +1320,7 @@ $('#sia-modal').modal({
                         clearInterval(ii);
                     }
                 }, 1000);
-            }
+            }*/
             // get current row
             if (e && !self.$currentRow) {
                 let $checkedInput = e.$el.find('[type="radio"][name="' + self.model.idAttribute + '"]:checked');
@@ -1332,7 +1330,7 @@ $('#sia-modal').modal({
             }
 
             if (!_.isNull(self.$currentRow) && !_.isUndefined(self.$currentRow[0])) {
-                let rowHeight = self.$currentRow.outerHeight();
+                /*let rowHeight = self.$currentRow.outerHeight();
                 let gridHeight = self.$currentRow.parents('.backgrid').outerHeight();
                 //console.log('self.$currentRow', _.isUndefined(self.$currentRow[0].rowIndex), self.$currentRow)
                 if (self.$el.find('table.backgrid tbody tr').length === 1) {
@@ -1345,7 +1343,10 @@ $('#sia-modal').modal({
                     self.$el.find('.overlay-top').show();
                     self.$el.find('.overlay-top').css({'top': rowHeight, 'height': rowHeight * (self.$currentRow[0].rowIndex - 1)})
                     self.$el.find('.overlay-bottom').css({'top': (rowHeight * (1 + self.$currentRow[0].rowIndex)), 'height': gridHeight - (rowHeight * self.$currentRow[0].rowIndex) - rowHeight})
-                }
+                }*/
+                self.$currentRow.find('td').css("pointer-events", "auto");
+            } else {
+                self.backgrid.$el.find('tr td').css("pointer-events", "auto");
             }
         },
         showColumnHeaderLabel: function (e) {

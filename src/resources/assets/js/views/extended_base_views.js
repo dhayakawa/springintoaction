@@ -714,7 +714,7 @@
 
             self.$gridContainer = self.$el.html(self.backgrid.render().el);
 
-            self.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
+            //self.$el.append('<div class="overlay-top"></div><div class="overlay-bottom"></div>');
             self.paginator = new Backgrid.Extension.Paginator({
                 collection: self.collection
             });
@@ -803,7 +803,7 @@
             if (!_.isUndefined(e.target) && e.target.nodeName === 'INPUT' && e.target.type === 'checkbox') {
                 return;
             }
-            //_log(self.getViewClassName() + '.updateProjectTabView.event', 'event triggered:', e);
+            _log(self.getViewClassName() + '.updateProjectTabView.event', 'event triggered:', e);
             currentModelID = self.setCurrentRow(e);
 
             self.positionOverlays(self.backgrid);
@@ -914,7 +914,7 @@
         positionOverlays: function (e) {
             let self = this;
             let width;
-            if (!_.isUndefined(self.$gridContainer)) {
+            /*if (!_.isUndefined(self.$gridContainer)) {
                 width = 0;
                 self.$gridContainer.find('thead th:nth-child(n+3)').each(function (idx, el) {
                     width += parseInt($(el).outerWidth());
@@ -933,7 +933,7 @@
                         clearInterval(ii);
                     }
                 }, 1000);
-            }
+            }*/
             // get current row
             if (e && !self.$currentRow) {
                 let $checkedInput = e.$el.find('[type="radio"][name="' + self.model.idAttribute + '"]:checked');
@@ -943,7 +943,7 @@
             }
 
             if (!_.isNull(self.$currentRow) && !_.isUndefined(self.$currentRow[0])) {
-                let rowHeight = self.$currentRow.outerHeight();
+                /*let rowHeight = self.$currentRow.outerHeight();
                 let gridHeight = self.$currentRow.parents('.backgrid').outerHeight();
                 //console.log('self.$currentRow', _.isUndefined(self.$currentRow[0].rowIndex), self.$currentRow)
                 if (self.$el.find('table.backgrid tbody tr').length === 1) {
@@ -956,7 +956,10 @@
                     self.$el.find('.overlay-top').show();
                     self.$el.find('.overlay-top').css({'top': rowHeight, 'height': rowHeight * (self.$currentRow[0].rowIndex - 1)})
                     self.$el.find('.overlay-bottom').css({'top': (rowHeight * (1 + self.$currentRow[0].rowIndex)), 'height': gridHeight - (rowHeight * self.$currentRow[0].rowIndex) - rowHeight})
-                }
+                }*/
+                self.$currentRow.find('td').css("pointer-events", "auto");
+            } else {
+                self.backgrid.$el.find('tr td').css("pointer-events", "auto");
             }
         },
         showColumnHeaderLabel: function (e) {

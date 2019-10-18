@@ -300,6 +300,9 @@
 .backgrid-wrapper .backgrid tbody tr:hover {
   background-color: lightyellow;
 }
+.backgrid-wrapper .backgrid tbody tr td:nth-child(n+4) {
+  pointer-events: none;
+}
 .backgrid-wrapper.site-volunteers-backgrid-wrapper .backgrid thead th:nth-child(1) {
   width: 30px;
 }
