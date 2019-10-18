@@ -1,6 +1,6 @@
 (function (App) {
     App.Models.ProjectContact = Backbone.Model.extend({
-        idAttribute: "ProjectContactID",
+        idAttribute: "ProjectContactsID",
         url: '/admin/project_contact',
         defaults: {
             'ProjectID': '',

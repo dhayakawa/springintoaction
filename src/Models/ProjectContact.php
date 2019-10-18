@@ -26,7 +26,7 @@
          *
          * @var string
          */
-        protected $primaryKey = 'ProjectContactID';
+        protected $primaryKey = 'ProjectContactsID';
         protected $fillable = ['ProjectID',
             'ContactID'];
         private $defaultRecordData = [
@@ -66,17 +66,17 @@
         }
 
         public function getProjectContact($ProjectID, $ContactID) {
-            return Contact::join('project_contacts', 'contacts.ContactID', '=', 'project_contacts.ContactID')
+            return self::join('contacts', 'contacts.ContactID', '=', 'project_contacts.ContactID')
                 ->where('project_contacts.ProjectID', '=', $ProjectID)->where('contacts.ContactID', '=', $ContactID)->whereNull('project_contacts.deleted_at')->get()->toArray();
         }
 
         public function getProjectContacts($ProjectID) {
-            return Contact::join('project_contacts', 'contacts.ContactID', '=', 'project_contacts.ContactID')
+            return self::join('contacts', 'contacts.ContactID', '=', 'project_contacts.ContactID')
                 ->where('project_contacts.ProjectID', '=', $ProjectID)->whereNull('project_contacts.deleted_at')->get()->toArray();
         }
 
         public function getAllProjectContacts() {
-            return Contact::join('project_contacts', 'contacts.ContactID', '=', 'project_contacts.ContactID')->whereNull('project_contacts.deleted_at')
+            return self::join('contacts', 'contacts.ContactID', '=', 'project_contacts.ContactID')->whereNull('project_contacts.deleted_at')
                 ->groupBy('contacts.ContactID')->get()->toArray();
         }
 

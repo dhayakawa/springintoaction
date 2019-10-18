@@ -1,5 +1,6 @@
 (function (App) {
     App.PageableCollections.SiteVolunteerRoles = Backbone.PageableCollection.extend({
+        url: 'admin/site_volunteer/list/all',
         model: App.Models.SiteVolunteerRole,
         state: {
             pageSize: 5000
@@ -101,6 +102,18 @@
             displayOrder: displayOrder++
         },
         {
+            name: "SiteVolunteerID",
+            label: "SiteVolunteerID",
+            cell: "string",
+            editable: false,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: false,
+            renderable: false,
+            width: "15",
+            filterType: "string",
+            displayOrder: displayOrder++
+        },
+        {
             name: "LastName",
             label: "LastName",
             cell: "string",
@@ -188,7 +201,11 @@
         }
     ];
 
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.siteVolunteersBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.siteVolunteersBackgridColumnDefinitions:', App.Vars.siteVolunteersBackgridColumnDefinitions);
 
 })(window.App);

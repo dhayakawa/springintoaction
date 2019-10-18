@@ -1,18 +1,25 @@
 (function (App) {
-    App.Views.AnnualBudgetsManagement = Backbone.View.extend({
+    App.Views.AnnualBudgetsManagement = App.Views.Backend.extend({
         template: template('managementTemplate'),
         initialize: function (options) {
-            _.bindAll(this, 'render', 'update', 'refresh','addAll','addOne');
-            this.model.on('change', this.render, this);
+            let self = this;
+            try {
+                _.bindAll(this, 'update', 'refresh', 'addAll', 'addOne');
+            } catch (e) {
+                console.error(options, e)
+            }
+            // Required call for inherited class
+            this._initialize(options);
+            this.listenTo(self.model, 'change', this.render);
             this.listenTo(this.annualBudgetView, 'updated', this.refresh);
-            this.options = options;
+
             this.rowBgColor = 'lightYellow';
             this.viewClassName = this.options.viewClassName;
             this.columnCollectionDefinitions = this.options.columnCollectionDefinitions;
-            this.modelNameLabel = this.options.modelNameLabel;
-            this.modelNameLabelLowerCase = this.modelNameLabel.toLowerCase();
+            self.modelNameLabel = this.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
             this.viewName = 'App.Views.AnnualBudgetsManagement';
-            this.localStorageKey = this.modelNameLabel;
+            this.localStorageKey = self.modelNameLabel;
             this.backgridWrapperClassSelector = '.backgrid-wrapper';
             this.paginationControlsSelector = '.pagination-controls';
             this.gridManagerContainerToolbarClassName = 'grid-manager-container';
@@ -21,20 +28,20 @@
 
             this.lastSiteProccessed = null;
             if (!_.isUndefined(this.collection)) {
-                this.collection.bind('reset', this.addAll);
+                self.listenTo(self.collection, "reset", self.addAll);
             }
             this.aSiteTotals = [];
             this.BudgetSourceOptions = _.omit(App.Vars.selectOptions['BudgetSourceOptions'],'');
+            // $(".site-budgets-table thead").sticky({
+            //     topSpacing: 0, className: 'site-budgets-table-thead-sticked',
+            //     originalPosition: 'relative', allowResetLeft: false
+            // });
 
             _log(this.viewName + '.initialize', options, this);
         },
         events: {
             'click .btnRefreshTotals': 'refresh',
             'click .box-header .btn.btn-box-tool': 'close'
-        },
-        close: function (e) {
-            e.stopPropagation();
-            this.$el.hide()
         },
         addOne: function (sSiteName, key, data) {
             let self = this;
@@ -232,8 +239,8 @@
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
-                this.model.url = '/admin/' + this.modelNameLabelLowerCase + '/' + currentModelID;
-                this.model.save(_.extend({[self.model.idAttribute]: currentModelID}, e.changed),
+                self.model.url = self.getModelUrl(currentModelID);
+                self.model.save(_.extend({[self.model.idAttribute]: currentModelID}, e.changed),
                     {
                         success: function (model, response, options) {
                             _log(self.viewName + '.update', self.modelNameLabelLowerCase + ' save', model, response, options);

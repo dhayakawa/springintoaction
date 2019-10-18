@@ -113,7 +113,7 @@
 
 (function (App) {
     App.Models.ProjectContact = Backbone.Model.extend({
-        idAttribute: "ProjectContactID",
+        idAttribute: "ProjectContactsID",
         url: '/admin/project_contact',
         defaults: {
             'ProjectID': '',
@@ -270,6 +270,8 @@
      * This is the site years drop down
      */
     App.Models.SiteYear = Backbone.Model.extend({
+        idAttribute: "SiteStatusID",
+        url: '/admin/sitestatus',
         defaults: {
             'SiteID': '',
             'Year': new Date('Y')
@@ -525,10 +527,10 @@
             'ReportUrl':''
         },
     });
-    /**
-     * This is the site years drop down
-     */
+
     App.Models.ProjectDropDown = Backbone.Model.extend({
+        idAttribute: "ProjectID",
+        url: '/admin/project',
         defaults: {
             'ProjectID': '',
             'SequenceNumber': 1
@@ -543,6 +545,17 @@
         defaults: {
 
         }
+    });
+})(window.App);
+
+(function (App) {
+    App.Models.Option = Backbone.Model.extend({
+        idAttribute: "id",
+        url: '/admin/option',
+        defaults: {
+            'option_label': '',
+            'DisplaySequence': ''
+        },
     });
 })(window.App);
 
@@ -570,5 +583,5 @@
     App.Models.annualBudgetModel = new App.Models.AnnualBudget();
     App.Models.reportModel = new App.Models.Report();
     App.Models.statusManagementModel = new App.Models.StatusManagement();
-
+    App.Models.optionModel = new App.Models.Option();
 })(window.App);

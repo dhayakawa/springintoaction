@@ -1,10 +1,11 @@
 (function (App) {
-    App.Views.AnnualBudgetView = Backbone.View.extend({
+    App.Views.AnnualBudgetView = App.Views.Backend.extend({
         template: template('annualBudgetTemplate'),
         initialize: function (options) {
+            let self = this;
             _.bindAll(this, 'render', 'update');
             this.options = options;
-            this.model.on('change', this.render, this);
+            self.model.on('change', this.render, this);
             _log(this.viewName + '.initialize', options, this);
         },
         events: {
@@ -13,9 +14,9 @@
         render: function () {
             let self = this;
             this.$el.html(this.template({
-                annualBudgetID: this.model.get('AnnualBudgetID'),
-                budgetAmount: this.model.get('BudgetAmount'),
-                year: this.model.get('Year')
+                annualBudgetID: self.model.get('AnnualBudgetID'),
+                budgetAmount: self.model.get('BudgetAmount'),
+                year: self.model.get('Year')
             }));
             return this;
         },
@@ -24,8 +25,8 @@
             e.preventDefault();
             let attrName = 'BudgetAmount';
             let attrValue = this.$el.find('[name="BudgetAmount"]').val();
-            this.model.url = '/admin/annualbudget/' + this.model.get(this.model.idAttribute);
-            this.model.save({[attrName]: attrValue},
+            self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
+            self.model.save({[attrName]: attrValue},
                 {
                     success: function (model, response, options) {
                         growl(response.msg, response.success ? 'success' : 'error');

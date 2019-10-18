@@ -1,5 +1,5 @@
 (function (App) {
-    App.Views.ExampleDashboardManagement = Backbone.View.extend({
+    App.Views.ExampleDashboardManagement = App.Views.Backend.extend({
         attributes: {
             class: 'example-dashboard-management-view route-view box box-primary'
         },

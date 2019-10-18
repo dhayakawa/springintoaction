@@ -193,7 +193,7 @@ class Project extends Model
             (!is_numeric($this->defaultRecordData['Year']) ||
              !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))
         ) {
-            $this->defaultRecordData['Year'] = date('Y');
+            $this->defaultRecordData['Year'] = $this->getCurrentYear();
         }
 
         return $this->defaultRecordData;
@@ -645,13 +645,15 @@ FROM (
 
     public static function getBaseProjectModelForQuery()
     {
+        $projectModel = new Project();
+        $sSqlVolunteersAssigned = $projectModel->getVolunteersAssignedSql();
         return self::select(
             'projects.*',
             DB::raw(
                 '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
             ),
             DB::raw(
-                '(select count(*) from project_volunteers pv where pv.ProjectID = projects.ProjectID and pv.deleted_at is null) as VolunteersAssigned'
+                "{$sSqlVolunteersAssigned} as VolunteersAssigned"
             ),
             DB::raw(
                 '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'

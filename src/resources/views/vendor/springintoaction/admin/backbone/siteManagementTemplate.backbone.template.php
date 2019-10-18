@@ -3,9 +3,9 @@
     <select id="sites" class="site-management-selects form-control input-sm inline"></select>
     <select id="site_years" class="site-management-selects form-control input-sm inline"></select>
     &nbsp;
-    <button id="btnAddSite" type="button" class="btn btn-sm btn-primary">Add Site</button>
+    <button id="btnAddSite" type="button" class="btn-add-model btn btn-sm btn-primary">Add Site</button>
     &nbsp;
-    <button id="btnDeleteSite" type="button" class="btn btn-sm btn-danger">Delete Site</button>
+    <button id="btnDeleteSite" type="button" class="btn-delete-model btn btn-sm btn-danger">Delete Site</button>
     <div class="pull-right">
         <a href="#" class="btn btn-box-tool close-view"><i class="fa fa-times"></i></a>
     </div>
@@ -18,8 +18,8 @@
                     <div class="site-view col-xs-12"></div>
                 </div>
                 <div class="site-create-toolbar" style="display:none">
-                    <button id="btnSaveNewSite" type="button" class="btn btn-success">Save New Site</button>
-                    <button id="btnCancelNewSite" type="button" class="btn btn-default">Cancel</button>
+                    <button id="btnSaveNewSite" type="button" class="btn-save-new-model btn btn-success">Save New Site</button>
+                    <button id="btnCancelNewSite" type="button" class="btn-cancel-new-model btn btn-default">Cancel</button>
                 </div>
             </div>
         </div>

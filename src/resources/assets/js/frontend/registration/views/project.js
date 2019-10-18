@@ -32,7 +32,7 @@
         registerForProject: function () {
             let self = this;
 
-            self.trigger('register-for-project', {model: this.model});
+            self.trigger('register-for-project', {model: self.model});
         }
     });
     App.Views.ProjectList = Backbone.View.extend({
@@ -40,7 +40,7 @@
             let self = this;
             this.options = options;
             _.bindAll(this, 'addOne', 'addAll', 'render');
-            this.collection.bind('reset', this.addAll);
+            self.listenTo(self.collection, "reset", self.addAll);
             this.parentView = this.options.parentView;
 
             _log('App.Views.ProjectList.initialize', options);
@@ -129,7 +129,7 @@
             let self = this;
             this.options = options;
             _.bindAll(this, 'addOne', 'addAll', 'render');
-            this.collection.bind('reset', this.addAll);
+            self.listenTo(self.collection, "reset", self.addAll);
 
             _log('App.Views.ProjectFilterGroup.initialize', options);
         },

@@ -1,5 +1,6 @@
 (function (App) {
     App.PageableCollections.ProjectVolunteer = Backbone.PageableCollection.extend({
+        url: '/admin/project_volunteer/list/all',
         model: App.Models.ProjectVolunteer,
         state: {
             pageSize: 5000
@@ -7,6 +8,7 @@
         mode: "client" // page entirely on the client side
     });
     App.PageableCollections.ProjectLead = Backbone.PageableCollection.extend({
+        url: '/admin/project_lead/list/all',
         model: App.Models.ProjectVolunteerRole,
         state: {
             pageSize: 5000
@@ -595,7 +597,14 @@
             displayOrder: displayOrder++
         }
     ];
-
+    if (!App.Vars.bAllowBackgridInlineEditing) {
+        _.each(App.Vars.projectVolunteersBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+        _.each(App.Vars.volunteerLeadsBackgridColumnDefinitions, function (value, key) {
+            value.editable = false;
+        });
+    }
     _log('App.Vars.CollectionsGroup', 'App.Vars.projectVolunteerLeadsBackgridColumnDefinitions:', App.Vars.projectVolunteersBackgridColumnDefinitions);
     _log('App.Vars.CollectionsGroup', 'App.Vars.volunteerLeadsBackgridColumnDefinitions:', App.Vars.volunteerLeadsBackgridColumnDefinitions);
 })(window.App);

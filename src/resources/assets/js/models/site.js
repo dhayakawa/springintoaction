@@ -21,6 +21,8 @@
      * This is the site years drop down
      */
     App.Models.SiteYear = Backbone.Model.extend({
+        idAttribute: "SiteStatusID",
+        url: '/admin/sitestatus',
         defaults: {
             'SiteID': '',
             'Year': new Date('Y')

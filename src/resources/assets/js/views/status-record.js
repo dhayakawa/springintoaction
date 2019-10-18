@@ -1,12 +1,13 @@
 (function (App) {
-    App.Views.StatusManagementRecord = Backbone.View.extend({
+    App.Views.StatusRecord = App.Views.Backend.extend({
         tagName: 'div',
         attributes: {
             class: 'row'
         },
-        template: template('statusManagementRecordTemplate'),
+        template: template('statusRecordTemplate'),
         initialize: function (options) {
             let self = this;
+            _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
             self.options = options;
             self.defaultStateIcon = 'fa fa-circle';
             self.doneIcon = self.defaultStateIcon + ' text-success';
@@ -72,7 +73,7 @@
                     }
                 }
             };
-            _.bindAll(self, 'render', 'setPopOverContent', 'cancelSaveStatusManagementOption', 'saveStatusManagementOption');
+
         },
         events: {
             'click button': 'update',
@@ -516,43 +517,5 @@
             //console.log('getStatusCSS', fieldStateVar, savedModelAttributes, savedModel)
             return typeof savedModelAttributes[fieldStateVar] !== 'undefined' ? savedModelAttributes[fieldStateVar] : '';
         },
-    });
-
-    App.Views.StatusManagement = Backbone.View.extend({
-        attributes: {
-            class: 'status-management-view route-view box box-primary'
-        },
-        template: template('statusManagementTemplate'),
-        initialize: function (options) {
-            let self = this;
-            self.options = options;
-
-            _.bindAll(self, 'render', 'addOne', 'addAll');
-            self.collection.bind('reset', self.addAll, self);
-        },
-        events: {},
-        render: function () {
-            let self = this;
-            // Add template to this views el now so child view el selectors exist when they are instantiated
-            self.$el.html(self.template());
-            self.addAll();
-
-            return self;
-        },
-        addOne: function (StatusManagement) {
-            let self = this;
-            if (StatusManagement.attributes.projects.length) {
-                let $settingItem = new App.Views.StatusManagementRecord({model: StatusManagement});
-                self.$el.find('.status-management-wrapper').append($settingItem.render().el);
-            }
-        },
-        addAll: function () {
-            let self = this;
-            self.$el.find('.status-management-wrapper').empty();
-
-            self.collection.each(this.addOne);
-            self.$el.find('[data-toggle="tooltip"]').tooltip({html: true});
-            self.$el.find('[data-popover="true"]').popover({html: true, title: ''});
-        }
     });
 })(window.App);
