@@ -3980,7 +3980,7 @@
         }
     });
 
-    App.Views.ReportsManagement = App.Views.Backend.extend({
+    App.Views.ReportsManagement = App.Views.Management.extend({
         sitesDropdownViewClass: App.Views.SitesDropdown,
         siteYearsDropdownViewClass: App.Views.SiteYearsDropdown,
         projectsDropDownViewClass: App.Views.ProjectsDropDown,
@@ -3988,10 +3988,8 @@
         initialize: function (options) {
             _.bindAll(this, 'render','handleSiteStatusIDChange');
             let self = this;
-            this.options = options;
+            self._initialize(options);
             this.viewClassName = this.options.viewClassName;
-            self.modelNameLabel = this.options.modelNameLabel;
-            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(' ','_');
             this.viewName = 'App.Views.ReportsManagement';
             this.localStorageKey = self.modelNameLabel;
             this.backgridWrapperClassSelector = '.backgrid-wrapper';
@@ -4003,24 +4001,27 @@
         events: {},
         render: function () {
             let self = this;
+            self.modelNameLabel = this.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(' ', '_');
             this.$el.html(this.template({
                 modelNameLabel: self.modelNameLabel,
                 modelNameLabelLowerCase: self.modelNameLabelLowerCase
             }));
-            this.sitesDropdownView = new this.sitesDropdownViewClass({
-                el: this.$('select#sites'),
-                parentView: this,
-                collection: App.Collections.sitesDropDownCollection
-            });
-            this.sitesDropdownView.render();
-
-
-            this.siteYearsDropdownView = new this.siteYearsDropdownViewClass({
-                el: this.$('select#site_years'),
-                parentView: this,
-                collection: App.Collections.siteYearsDropDownCollection
-            });
-            this.siteYearsDropdownView.render();
+            self.renderSiteDropdowns();
+            // this.sitesDropdownView = new this.sitesDropdownViewClass({
+            //     el: this.$('select#sites'),
+            //     parentView: this,
+            //     collection: App.Collections.sitesDropDownCollection
+            // });
+            // this.sitesDropdownView.render();
+            //
+            //
+            // this.siteYearsDropdownView = new this.siteYearsDropdownViewClass({
+            //     el: this.$('select#site_years'),
+            //     parentView: this,
+            //     collection: App.Collections.siteYearsDropDownCollection
+            // });
+            // this.siteYearsDropdownView.render();
 
             this.projectsDropDownView = new this.projectsDropDownViewClass({
                 el: this.$('select#projects'),
@@ -4028,13 +4029,7 @@
                 collection: App.Collections.projectsDropDownCollection
             });
             this.projectsDropDownView.render();
-
-            this.listenTo(this.siteYearsDropdownView, 'site-status-id-change', function (e) {
-                self.handleSiteStatusIDChange(e);
-            });
-            this.listenTo(this.sitesDropdownView, 'site-id-change', function (e) {
-                self.handleSiteStatusIDChange(e);
-            });
+            
 
             if (this.reportType !== 'projects') {
                 this.$('.project-dropdown').hide();
