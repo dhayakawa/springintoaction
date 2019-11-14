@@ -1177,8 +1177,6 @@ $('#sia-modal').modal({
                 self.childViews.push(sizeHandler);
                 self.childViews.push(orderHandler);
             }
-            self.backgrid.$el.find('tr td:nth-child(n+4)').css("pointer-events", "none");
-
         },
         _refreshView: function (e) {
             let self = this;
