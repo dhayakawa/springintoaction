@@ -1,0 +1,6 @@
+(function (App) {
+    App.Collections.{{ListNameProperCase}} = Backbone.Collection.extend({
+        url: '/admin/{{NewManagementRouteName}}/list/all',
+        model: App.Models.{{ListNameProperCase}}
+    });
+})(window.App);

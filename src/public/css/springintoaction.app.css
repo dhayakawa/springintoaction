@@ -1,3 +1,98 @@
+.admin__actions-switch {
+  display: block;
+  position: relative;
+  vertical-align: middle;
+}
+.admin__field-control .admin__actions-switch {
+  line-height: 3.2rem;
+}
+.admin__actions-switch + .admin__field-service {
+  min-width: 34rem;
+}
+.admin__actions-switch-checkbox {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+  z-index: -1;
+}
+._disabled .admin__actions-switch-checkbox + .admin__actions-switch-label,
+.admin__actions-switch-checkbox.disabled + .admin__actions-switch-label {
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.admin__actions-switch-checkbox:checked + .admin__actions-switch-label:before {
+  left: 15px;
+}
+.admin__actions-switch-checkbox:checked + .admin__actions-switch-label:after {
+  background: #79a22e;
+}
+.admin__actions-switch-checkbox:checked + .admin__actions-switch-label .admin__actions-switch-text:before {
+  content: attr(data-text-on);
+}
+.admin__actions-switch-checkbox:focus + .admin__actions-switch-label:before,
+.admin__actions-switch-checkbox:focus + .admin__actions-switch-label:after {
+  border-color: #007bdb;
+}
+._error .admin__actions-switch-checkbox + .admin__actions-switch-label:before,
+._error .admin__actions-switch-checkbox + .admin__actions-switch-label:after {
+  border-color: #e22626;
+}
+.admin__actions-switch-label {
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  display: inline-block;
+  height: 22px;
+  line-height: 22px;
+  position: relative;
+  user-select: none;
+  vertical-align: middle;
+  font-weight: normal;
+}
+.admin__actions-switch-label:before,
+.admin__actions-switch-label:after {
+  left: 0;
+  position: absolute;
+  right: auto;
+  top: 0;
+}
+.admin__actions-switch-label:before {
+  background: #fff;
+  border: 1px solid #aaa6a0;
+  border-radius: 100%;
+  content: '';
+  display: block;
+  height: 22px;
+  -webkit-transition: left 0.2s ease-in 0s;
+  transition: left 0.2s ease-in 0s;
+  width: 22px;
+  z-index: 1;
+}
+.admin__actions-switch-label:after {
+  background: #e3e3e3;
+  border: 1px solid #aaa6a0;
+  border-radius: 12px;
+  content: '';
+  display: block;
+  height: 22px;
+  -webkit-transition: background 0.2s ease-in 0s;
+  transition: background 0.2s ease-in 0s;
+  vertical-align: middle;
+  width: 37px;
+  z-index: 0;
+}
+.admin__actions-switch-text:before {
+  content: attr(data-text-off);
+  padding-left: 47px;
+  white-space: nowrap;
+}
 .badge {
   padding: 1px 7px 3px 7px;
 }
@@ -17,6 +112,65 @@
 }
 .sia-main-app .dashboard .widget-user-2 .widget-user-header .widget-user-desc {
   display: none;
+}
+.sia-main-app .table.list-items {
+  table-layout: fixed;
+}
+.sia-main-app .table.list-items th.display-sequence-thead {
+  width: 70px;
+}
+.sia-main-app .table.list-items tbody tr {
+  cursor: move;
+  /* fallback if grab cursor is unsupported */
+  cursor: grab;
+  cursor: -webkit-grab;
+}
+.sia-main-app .table.list-items tbody tr:active,
+.sia-main-app .table.list-items tbody tr.ui-sortable-helper {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+.sia-main-app .table.list-items tbody tr td input {
+  width: 90%;
+}
+.sia-main-app .table.list-items tbody tr td.display-sequence span.ui-icon {
+  cursor: move;
+  /* fallback if grab cursor is unsupported */
+  cursor: grab;
+  cursor: -webkit-grab;
+}
+.sia-main-app .table.list-items tbody tr td.display-sequence span.ui-icon:active,
+.sia-main-app .table.list-items tbody tr td.display-sequence span.ui-icon.ui-sortable-helper {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+.sia-main-app .table.list-items tbody tr td.display-sequence input {
+  margin-left: 5px;
+  width: 30px;
+  border: 0;
+}
+.sia-main-app .table.list-items tbody tr td.display-sequence input:focus {
+  outline: none;
+}
+.sia-main-app .table.list-items tbody tr td.list-item-label select {
+  width: 100%;
+}
+.sia-main-app .table.list-items tbody tr td.list-item-label .ui-icon-trash {
+  cursor: pointer;
+}
+.sia-main-app .table.list-items tbody tr td.list-item-label .ui-icon-trash:hover {
+  color: red;
+}
+.sia-main-app .table.list-items tbody tr td.list-item-label.required {
+  position: relative;
+}
+.sia-main-app .table.list-items tbody tr td.list-item-label.required:before {
+  content: '*';
+  color: red;
+  font-size: smaller;
+  position: absolute;
+  top: 5px;
+  left: 0;
 }
 .sia-main-app .option-management-view .table.options {
   table-layout: fixed;

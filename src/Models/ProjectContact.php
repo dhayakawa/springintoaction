@@ -11,7 +11,7 @@
     use Illuminate\Database\Eloquent\Model;
     use \Dhayakawa\SpringIntoAction\Models\Contact;
 
-    class ProjectContact extends Model {
+    class ProjectContact extends BaseModel {
 
         use \Illuminate\Database\Eloquent\SoftDeletes;
         protected $dates = ['deleted_at'];

@@ -14,6 +14,7 @@
     App.Models.siteModel = new App.Models.Site(@json($appInitialData['site']));
     App.Models.siteStatusModel = new App.Models.SiteStatus(@json($appInitialData['siteStatus']));
     App.Models.projectModel = new App.Models.Project(@json($appInitialData['project']));
+    App.Models.projectScopeModel = new App.Models.ProjectScope(@json($appInitialData['project_scope']));
     App.Models.siteVolunteerModel = new App.Models.SiteVolunteer(@json($appInitialData['site_volunteer']));
     App.Models.siteVolunteerRoleModel = new App.Models.SiteVolunteerRole(@json($appInitialData['site_volunteer']));
 
@@ -313,4 +314,7 @@
             }
         }
     });
+    App.Models.attributesModel = new App.Models.Attributes();
+    App.Models.projectAttributesModel = new App.Models.ProjectAttributes();
+    App.Models.workflowModel = new App.Models.Workflow();
 })(window.App);

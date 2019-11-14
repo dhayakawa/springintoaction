@@ -48,6 +48,7 @@
                 self.$el.val(self.options.selectedSiteID);
                 self.options.selectedSiteID = null;
             }
+
             self.changeSelected();
         },
         render: function () {

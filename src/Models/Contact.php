@@ -9,7 +9,7 @@
     namespace Dhayakawa\SpringIntoAction\Models;
 
     use Illuminate\Database\Eloquent\Model;
-    class Contact extends Model {
+    class Contact extends BaseModel {
 
         use \Illuminate\Database\Eloquent\SoftDeletes;
         protected $dates = ['deleted_at'];

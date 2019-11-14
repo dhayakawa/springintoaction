@@ -23,4 +23,8 @@
     App.Models.reportModel = new App.Models.Report();
     App.Models.statusManagementModel = new App.Models.StatusManagement();
     App.Models.optionModel = new App.Models.Option();
+    App.Models.attributesModel = new App.Models.Attributes();
+    App.Models.projectScopeModel = new App.Models.ProjectScope();
+    App.Models.projectAttributesModel = new App.Models.ProjectAttributes();
+    App.Models.workflowModel = new App.Models.Workflow();
 })(window.App);

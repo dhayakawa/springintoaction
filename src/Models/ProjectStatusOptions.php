@@ -10,9 +10,9 @@ namespace Dhayakawa\SpringIntoAction\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ProjectStatusOptions extends Model
+class ProjectStatusOptions extends BaseModel
 {
-    use \Dhayakawa\SpringIntoAction\Helpers\OptionsTrait;
+
     /**
      * The table associated with the model.
      *

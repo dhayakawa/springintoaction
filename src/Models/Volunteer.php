@@ -10,7 +10,7 @@
 
     use Illuminate\Database\Eloquent\Model;
 
-    class Volunteer extends Model {
+    class Volunteer extends BaseModel {
 
         use \Illuminate\Database\Eloquent\SoftDeletes;
         protected $dates = ['deleted_at'];

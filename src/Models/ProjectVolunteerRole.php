@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Dhayakawa\SpringIntoAction\Models\Volunteer;
 
-class ProjectVolunteerRole extends Model
+class ProjectVolunteerRole extends BaseModel
 {
     use \Illuminate\Database\Eloquent\SoftDeletes;
     protected $dates = ['deleted_at'];

@@ -11,7 +11,7 @@ namespace Dhayakawa\SpringIntoAction\Models;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 
-class SiteSetting extends Model
+class SiteSetting extends BaseModel
 {
     /**
      * The table associated with the model.

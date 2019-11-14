@@ -33,7 +33,7 @@ Route::group(
                 'uses' => 'HomeController@index',
             ]
         );
-        Route::get('unauthorized',['as' => 'unauthorized', 'uses' => 'UnauthorizedController@index']);
+        Route::get('unauthorized', ['as' => 'unauthorized', 'uses' => 'UnauthorizedController@index']);
 
         // Frontend Login Routes...
         Route::get('login', ['as' => 'login', 'uses' => 'Auth\LoginController@showLoginForm']);
@@ -93,13 +93,39 @@ Route::group(
             'project_registration',
             ['as' => 'project.registration', 'uses' => 'ProjectRegistrationController@showProjectRegistrationForm']
         );
-        Route::get('project_registration/filter_project_list', ['as' => 'project.registration.filter_project_list', 'uses' => 'ProjectRegistrationController@getFilteredProjectList']);
-        Route::post('project_registration', ['as' => 'project.registration.store', 'uses' => 'ProjectRegistrationController@store']);
-        Route::post('project_registration/reserve', ['as' => 'project.registration.reserve', 'uses' => 'ProjectRegistrationController@reserve']);
-        Route::post('project_registration/grove_login', ['as' => 'project.registration.grove_login', 'uses' => 'ProjectRegistrationController@groveLogin']);
-        Route::get('project_registration/delete_reservation/{ProjectID}', ['as' => 'project.registration.delete_reservation', 'uses' => 'ProjectRegistrationController@deleteReservation']);
-        Route::get('project_registration/update_reservation/{ProjectID}/{newAmt}', ['as' => 'project.registration.update_reservation', 'uses' => 'ProjectRegistrationController@updateReservation']);
-
+        Route::get(
+            'project_registration/filter_project_list',
+            [
+                'as' => 'project.registration.filter_project_list',
+                'uses' => 'ProjectRegistrationController@getFilteredProjectList',
+            ]
+        );
+        Route::post(
+            'project_registration',
+            ['as' => 'project.registration.store', 'uses' => 'ProjectRegistrationController@store']
+        );
+        Route::post(
+            'project_registration/reserve',
+            ['as' => 'project.registration.reserve', 'uses' => 'ProjectRegistrationController@reserve']
+        );
+        Route::post(
+            'project_registration/grove_login',
+            ['as' => 'project.registration.grove_login', 'uses' => 'ProjectRegistrationController@groveLogin']
+        );
+        Route::get(
+            'project_registration/delete_reservation/{ProjectID}',
+            [
+                'as' => 'project.registration.delete_reservation',
+                'uses' => 'ProjectRegistrationController@deleteReservation',
+            ]
+        );
+        Route::get(
+            'project_registration/update_reservation/{ProjectID}/{newAmt}',
+            [
+                'as' => 'project.registration.update_reservation',
+                'uses' => 'ProjectRegistrationController@updateReservation',
+            ]
+        );
 
         //onedrive routes.
         Route::get('onedrive_callback', ['as' => 'onedrive.callback', 'uses' => 'OneDriveController@callback']);
@@ -109,11 +135,12 @@ Route::group(
 Route::group(
     array_merge($adminDefault, ['middleware' => ['web', 'auth', 'ajax.request', 'ability:admin,backend_access']]),
     function () {
-        Route::get('/',
-                   [
-                       'as' => 'boilerplate.home',
-                       'uses' => 'SpringIntoActionMainAppController@index'
-                   ]
+        Route::get(
+            '/',
+            [
+                'as' => 'boilerplate.home',
+                'uses' => 'SpringIntoActionMainAppController@index',
+            ]
         );
         Route::get(
             'home',
@@ -137,6 +164,10 @@ Route::group(
             ['as' => 'grove.import', 'uses' => 'GroveController@runImport']
         );
         //Route::resource('projects', 'ProjectsController');
+        Route::put('project_scope/{ProjectID}', ['as' => 'project.scope.update', 'uses' => 'ProjectsController@scopeUpdate']);
+        Route::get('project_scope/projects/{SiteStatusID}', ['as' => 'project.scope.dropdown', 'uses' => 'ProjectsController@getProjectScopeProjectDropdownOptions']);
+        Route::get('project_scope/{ProjectID}', ['as' => 'project.scope.project', 'uses' => 'ProjectsController@getProjectScopeProject']);
+
         Route::put('project/{ProjectID}', ['as' => 'project.update', 'uses' => 'ProjectsController@update']);
         Route::post('project', ['as' => 'project.store', 'uses' => 'ProjectsController@store']);
         Route::get(
@@ -158,10 +189,10 @@ Route::group(
             'site_setting/list/all',
             ['as' => 'site.setting.list.all', 'uses' => 'SiteSettingsManagement@getSettings']
         );
-        Route::put('site_setting/{SiteSettingID}',['as' => 'site.setting.update', 'uses' => 'SiteSettingsManagement@update']);
-
-
-
+        Route::put(
+            'site_setting/{SiteSettingID}',
+            ['as' => 'site.setting.update', 'uses' => 'SiteSettingsManagement@update']
+        );
 
         //Route::resource('sitestatus', 'SiteStatusController');
         Route::get('sitestatus/{SiteStatusID}', ['as' => 'site', 'uses' => 'SiteStatusController@show']);
@@ -174,7 +205,10 @@ Route::group(
         );
         Route::get(
             'sitestatus/list/all/statusmanagementrecords',
-            ['as' => 'sitestatus.all.statusmanagementrecords', 'uses' => 'SiteStatusController@getStatusManagementRecords']
+            [
+                'as' => 'sitestatus.all.statusmanagementrecords',
+                'uses' => 'SiteStatusController@getStatusManagementRecords',
+            ]
         );
 
         //Route::resource('volunteer', 'VolunteerController');
@@ -397,7 +431,6 @@ Route::group(
             ['as' => 'site_volunteer_role', 'uses' => 'SiteVolunteerRoleController@show']
         );
 
-
         Route::get('onedrive', ['as' => 'onedrive.index', 'uses' => 'OneDriveController@index']);
 
         Route::get(
@@ -409,13 +442,40 @@ Route::group(
             'option/list/all/{OptionType}',
             ['as' => 'option', 'uses' => 'OptionsManagementController@getOptions']
         );
-        //Route::get(
-        //    'option/{OptionType}/{OptionID}',
-        //    ['as' => 'option', 'uses' => 'OptionsManagementController@getOption']
-        //);
-        //Route::delete('option/{OptionType}/{OptionID}', ['as' => 'option.destroy', 'uses' => 'OptionsManagementController@destroy']);
-        //Route::put('option/{OptionType}/{OptionID}', ['as' => 'option.update', 'uses' => 'OptionsManagementController@update']);
-        Route::post('option/list/{OptionType}', ['as' => 'option.list.update', 'uses' => 'OptionsManagementController@updateList']);
 
+        Route::post(
+            'option/list/{OptionType}',
+            ['as' => 'option.list.update', 'uses' => 'OptionsManagementController@updateList']
+        );
+
+        Route::get(
+            "attributes/list/all/{listType}",
+            ["as" => "attributes", "uses" => "AttributesManagementController@getList"]
+        );
+        Route::post(
+            "attributes/list/{listType}",
+            ["as" => "attributes.list.update", "uses" => "AttributesManagementController@updateList"]
+        );
+
+        Route::get(
+            "project_attributes/list/all/{listType}",
+            ["as" => "project_attributes", "uses" => "ProjectAttributesManagementController@getList"]
+        );
+        Route::post(
+            "project_attributes/list/{listType}",
+            [
+                "as" => "project_attributes.list.update",
+                "uses" => "ProjectAttributesManagementController@updateList",
+            ]
+        );
+        Route::get(
+            "workflow/list/all/{listType}",
+            ["as" => "workflow", "uses" => "WorkflowManagementController@getList"]
+        );
+        Route::post(
+            "workflow/list/{listType}",
+            ["as" => "workflow.list.update", "uses" => "WorkflowManagementController@updateList"]
+        );
+        //##End Admin Routes##
     }
 );

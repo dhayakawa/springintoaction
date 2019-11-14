@@ -450,10 +450,13 @@ $('#sia-modal').modal({
     });
 
     App.Views.Backend = App.Views.BaseView.extend({
+        events: {
+            'click [data-role="switcher"]': 'toggleYesNoSwitch'
+        },
         _initialize: function (options) {
             let self = this;
             try {
-                _.bindAll(self, 'close', 'getViewDataStore', 'setViewDataStoreValue', 'removeViewDataStore', 'removeChildViews', 'getViewClassName');
+                _.bindAll(self, 'close', 'getViewDataStore', 'setViewDataStoreValue', 'removeViewDataStore', 'removeChildViews', 'getViewClassName', 'toggleYesNoSwitch');
             } catch (e) {
                 console.error(options, e)
             }
@@ -679,6 +682,19 @@ $('#sia-modal').modal({
             let self = this;
 
             self.setViewDataStoreValue('current-site-status-id', e[self.siteYearsDropdownView.model.idAttribute]);
+        },
+        toggleYesNoSwitch: function (e) {
+            let $switch = $(e.currentTarget);
+
+            let $checkbox = $switch.find('.admin__actions-switch-checkbox');
+            let $label = $switch.find('.admin__actions-switch-text');
+
+            $checkbox.trigger('click');
+            if ($checkbox.prop('checked')) {
+                $label.text('Yes');
+            } else {
+                $label.text('No');
+            }
         },
     });
 
@@ -1428,7 +1444,7 @@ $('#sia-modal').modal({
                     }
                 })
             ).then(function () {
-                window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
 
         },

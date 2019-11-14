@@ -11,21 +11,23 @@ namespace Dhayakawa\SpringIntoAction\Controllers;
 
 use Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
 use Illuminate\Http\Request;
-use \Dhayakawa\SpringIntoAction\Models\BudgetSourceOptions;
-use \Dhayakawa\SpringIntoAction\Models\BudgetStatusOptions;
-use \Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
-use \Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
-use \Dhayakawa\SpringIntoAction\Models\SendStatusOptions;
-use \Dhayakawa\SpringIntoAction\Models\VolunteerAgeRangeOptions;
-use \Dhayakawa\SpringIntoAction\Models\VolunteerPrimarySkillOptions;
-use \Dhayakawa\SpringIntoAction\Models\VolunteerSkillLevelOptions;
-use \Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
+use Dhayakawa\SpringIntoAction\Models\BudgetSourceOptions;
+use Dhayakawa\SpringIntoAction\Models\BudgetStatusOptions;
+use Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
+use Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
+use Dhayakawa\SpringIntoAction\Models\SendStatusOptions;
+use Dhayakawa\SpringIntoAction\Models\VolunteerAgeRangeOptions;
+use Dhayakawa\SpringIntoAction\Models\VolunteerPrimarySkillOptions;
+use Dhayakawa\SpringIntoAction\Models\VolunteerSkillLevelOptions;
+use Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
 use Dhayakawa\SpringIntoAction\Models\ProjectRole;
 use Dhayakawa\SpringIntoAction\Models\SiteRole;
+use Dhayakawa\SpringIntoAction\Models\WhenWillProjectBeCompletedOptions;
 
 class OptionsManagementController extends BaseController
 {
-    public function getOptionModel($OptionType){
+    public function getOptionModel($OptionType)
+    {
         $model = null;
         switch ($OptionType) {
             case 'budget_source_options':
@@ -52,12 +54,18 @@ class OptionsManagementController extends BaseController
             case 'send_status_options':
                 $model = new SendStatusOptions();
                 break;
+            case 'when_will_project_be_completed_options':
+                $model = new WhenWillProjectBeCompletedOptions();
+                break;
         }
+
         return $model;
     }
+
     public function getOption(Request $request, $OptionType, $OptionID)
     {
         $model = $this->getOptionModel($OptionType)->findOrFail($OptionID);
+
         return $model->toArray();
     }
 
@@ -92,17 +100,18 @@ class OptionsManagementController extends BaseController
 
         return view('springintoaction::admin.main.response', $request, compact('response'));
     }
+
     public function updateList(Request $request, $OptionType)
     {
         $requestData = $request->all();
 
-        if(!empty($requestData['deletedOptionIds'])){
-            foreach($requestData['deletedOptionIds'] as $deletedOptionId){
+        if (!empty($requestData['deletedOptionIds'])) {
+            foreach ($requestData['deletedOptionIds'] as $deletedOptionId) {
                 $success = $this->getOptionModel($OptionType)->findOrFail($deletedOptionId)->delete();
             }
         }
         $aOptionList = [];
-        parse_str($requestData['optionList'],$aOptionList);
+        parse_str($requestData['optionList'], $aOptionList);
         // \Illuminate\Support\Facades\Log::debug(
         //     '',
         //     [
@@ -112,7 +121,7 @@ class OptionsManagementController extends BaseController
         //         $aOptionList
         //     ]
         // );
-        foreach($aOptionList['option'] as $optionId => $optionData){
+        foreach ($aOptionList['option'] as $optionId => $optionData) {
             // \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,
             //
             //     $optionId,
@@ -154,11 +163,10 @@ class OptionsManagementController extends BaseController
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Option Creation Not Implemented Yet.'];
         } elseif ($success) {
-            $response =
-                [
-                    'success' => true,
-                    'msg' => 'Option Creation Succeeded.'
-                ];
+            $response = [
+                'success' => true,
+                'msg' => 'Option Creation Succeeded.',
+            ];
         } else {
             $response = ['success' => false, 'msg' => 'Option Creation Failed.'];
         }

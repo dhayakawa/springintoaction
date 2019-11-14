@@ -11,7 +11,7 @@
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Support\Facades\DB;
 
-    class SiteVolunteer extends Model {
+    class SiteVolunteer extends BaseModel {
 
         /**
          * The table associated with the model.

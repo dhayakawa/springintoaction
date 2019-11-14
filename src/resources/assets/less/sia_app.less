@@ -1,3 +1,5 @@
+@import '_action-switcher.less';
+
 // Bootstrap 3 badge component
 .badge {
     // global override of boilerplate's bootstrap css which is based on 'Helvetica Neue' font size
@@ -44,6 +46,64 @@
             cursor: -webkit-grabbing;
         }
     }
+
+    .table.list-items {
+        table-layout: fixed;
+
+        th.display-sequence-thead {
+            width: 70px;
+        }
+
+        tbody {
+            tr {
+                .grab();
+                td{
+                    input{
+                        width:90%;
+                    }
+                    &.display-sequence {
+                        span.ui-icon {
+                            .grab();
+                        }
+
+                        input {
+                            margin-left: 5px;
+                            width: 30px;
+                            border: 0;
+
+                            &:focus {
+                                outline: none;
+                            }
+                        }
+                    }
+                    &.list-item-label {
+                        select{
+                            width: 100%;
+                        }
+                        .ui-icon-trash {
+                            cursor: pointer;
+
+                            &:hover {
+                                color: red;
+                            }
+                        }
+                        &.required{
+                            position:relative;
+                            &:before {
+                                content: '*';
+                                color: red;
+                                font-size: smaller;
+                                position:absolute;
+                                top: 5px;
+                                left: 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     .option-management-view {
         .table.options {
             table-layout: fixed;

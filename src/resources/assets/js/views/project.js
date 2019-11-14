@@ -1,7 +1,6 @@
 (function (App) {
     App.Views.Projects = App.Views.ManagedGrid.extend({
         viewName: 'projects-view',
-        events: {},
         initialize: function (options) {
             let self = this;
             try {
@@ -175,9 +174,10 @@
                     });
             }
         },
+
         getModalForm: function () {
             let self = this;
-            let template = window.template('newProjectTemplate');
+            let template = window.template('newProjectScopeTemplate');
             let contactSelect = new App.Views.Select({
                 el: '',
                 attributes: {id: 'ContactID', name: 'selectContactID', class: 'form-control'},
@@ -192,34 +192,27 @@
             }).get('SequenceNumber') : 1;
 
             let tplVars = {
+                projectAttributes: App.Collections.projectAttributesManagementCollection.where({workflow_id: 1}),
+                attributesOptions: App.Collections.attributesManagementCollection.getTableOptions('projects', false),
+                workflowOptions: App.Collections.workflowManagementCollection.getOptions(false),
+                projectTypeOptions: App.Models.projectModel.getSkillsNeededOptions(true, 'General'),
                 SiteID: self.sitesDropdownView.model.get(self.sitesDropdownView.model.idAttribute),
                 SiteStatusID: self.siteYearsDropdownView.model.get(self.siteYearsDropdownView.model.idAttribute),
-                yesNoIsActiveOptions: self.model.getYesNoOptions(true, 'Yes'),
-                yesNoOptions: self.model.getYesNoOptions(true),
                 contactSelect: contactSelect.getHtml(),
-                primarySkillNeededOptions: self.model.getSkillsNeededOptions(true, ''),
-                statusOptions: self.model.getStatusOptions(true, 'Pending'),
-                projectSendOptions: self.model.getSendOptions(true),
+                options: {
+                    yesNoIsActiveOptions: self.model.getYesNoOptions(true, 'Yes'),
+                    bool: self.model.getYesNoOptions(true),
+                    permit_required_status_options: self.model.getPermitRequiredStatusOptions(true),
+                    permit_required_options: self.model.getPermitRequiredOptions(true),
+                    project_skill_needed_options: self.model.getSkillsNeededOptions(true),
+                    project_status_options: self.model.getStatusOptions(true, 'Pending'),
+                    send_status_options: self.model.getSendOptions(true),
+                    when_will_project_be_completed_options: self.model.getWhenWillProjectBeCompletedOptions(true)
+                },
                 SequenceNumber: sequenceNumber + 1,
                 OriginalRequest: '',
                 ProjectDescription: '',
                 Comments: '',
-                VolunteersNeededEst: '',
-                StatusReason: '',
-                MaterialsNeeded: '',
-                EstimatedCost: '',
-                ActualCost: '',
-                BudgetAvailableForPC: '',
-                SpecialEquipmentNeeded: '',
-                PermitsOrApprovalsNeeded: '',
-                PrepWorkRequiredBeforeSIA: '',
-                SetupDayInstructions: '',
-                SIADayInstructions: '',
-                Area: '',
-                PaintOrBarkEstimate: '',
-                PaintAlreadyOnHand: '',
-                PaintOrdered: '',
-                FinalCompletionAssessment: '',
                 bSetValues: false,
                 data: {
                     Active: '',
@@ -338,7 +331,6 @@
             });
 
         }
-
 
 
     });

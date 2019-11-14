@@ -107,6 +107,10 @@ mix.scripts([
     'resources/assets/js/models/report.js',
     'resources/assets/js/models/status-management.js',
     'resources/assets/js/models/option.js',
+    "resources/assets/js/models/attributes.js",
+    "resources/assets/js/models/project-attributes.js",
+    "resources/assets/js/models/workflow.js",
+    "resources/assets/js/models/project-scope.js",
     'resources/assets/js/models/init-models.js'
 ], 'public/js/springintoaction.models.js');
 mix.scripts([
@@ -123,6 +127,9 @@ mix.scripts([
     'resources/assets/js/collections/report.js',
     'resources/assets/js/collections/status-management.js',
     'resources/assets/js/collections/option.js',
+    "resources/assets/js/collections/attributes.js",
+    "resources/assets/js/collections/project-attributes.js",
+    "resources/assets/js/collections/workflow.js",
     'resources/assets/js/collections/init-collections.js'
 ], 'public/js/springintoaction.collections.js');
 mix.scripts([
@@ -160,6 +167,18 @@ mix.scripts([
     'resources/assets/js/views/option-grid-manager-container-toolbar.js',
     'resources/assets/js/views/option.js',
     'resources/assets/js/views/option-management.js',
+    "resources/assets/js/views/attributes-list-grid-manager-container-toolbar.js",
+    "resources/assets/js/views/attributes.js",
+    "resources/assets/js/views/attributes-management.js",
+    "resources/assets/js/views/project-attributes-list-grid-manager-container-toolbar.js",
+    "resources/assets/js/views/project-attributes.js",
+    "resources/assets/js/views/project-attributes-management.js",
+    "resources/assets/js/views/workflow-list-grid-manager-container-toolbar.js",
+    "resources/assets/js/views/workflow.js",
+    "resources/assets/js/views/workflow-management.js",
+    "resources/assets/js/views/project-scope-grid-manager-container-toolbar.js",
+    "resources/assets/js/views/project-scope.js",
+    "resources/assets/js/views/project-scope-management.js",
     'resources/assets/js/views/mainApp.js'
 ], 'public/js/springintoaction.views.js');
 mix.scripts([
@@ -249,14 +268,13 @@ mix.styles([
 ], 'public/css/springintoaction.packages.css');
 
 
-
-mix.copy('resources/assets/fonts','public/fonts');
+mix.copy('resources/assets/fonts', 'public/fonts');
 mix.copy('resources/assets/images', 'public/images');
 mix.copy('resources/assets/js/jquery-ui-1.12.1/images', 'public/js/jquery-ui-1.12.1/images');
 mix.copy('resources/assets/js/jquery-ui-1.12.1/images', 'packages/dhayakawa/springintoaction/src/public/js/jquery-ui-1.12.1/images');
-mix.copy('resources/assets/js/springintoaction.templates.js','public/js/springintoaction.templates.js');
-mix.copy('resources/assets/js/app-initial-models-vars-data.js','public/js/app-initial-models-vars-data.js');
-mix.copy('resources/assets/js/app-initial-collections-view-data.js','public/js/app-initial-collections-view-data.js');
+mix.copy('resources/assets/js/springintoaction.templates.js', 'public/js/springintoaction.templates.js');
+mix.copy('resources/assets/js/app-initial-models-vars-data.js', 'public/js/app-initial-models-vars-data.js');
+mix.copy('resources/assets/js/app-initial-collections-view-data.js', 'public/js/app-initial-collections-view-data.js');
 /**
  * Registration app
  */

@@ -38,4 +38,8 @@
         project_volunteer: App.PageableCollections.projectVolunteersCollection,
         project_attachment: App.PageableCollections.projectAttachmentsCollection
     };
+
+    App.Collections.attributesManagementCollection = new App.Collections.Attributes(@json($appInitialData['attributes']));
+    App.Collections.projectAttributesManagementCollection = new App.Collections.ProjectAttributes(@json($appInitialData["project_attributes"]));
+    App.Collections.workflowManagementCollection = new App.Collections.Workflow(@json($appInitialData["workflow"]));
 })(window.App);

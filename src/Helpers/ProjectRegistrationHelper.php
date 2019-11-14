@@ -16,16 +16,7 @@ use \Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
 
 trait ProjectRegistrationHelper
 {
-    public function getCurrentYear()
-    {
-        $yearNow = date('Y');
-        $month = date('n');
-
-        // need to make sure the year is for the upcoming/next spring
-        // or this spring if the month is less than may
-        return $month > 5 ? $yearNow + 1 : $yearNow;
-    }
-
+    use CurrentYearTrait;
     /**
      * @param $option_label
      *

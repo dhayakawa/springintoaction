@@ -487,6 +487,7 @@
                 self.$el.val(self.options.selectedSiteID);
                 self.options.selectedSiteID = null;
             }
+
             self.changeSelected();
         },
         render: function () {
@@ -1691,7 +1692,6 @@
 (function (App) {
     App.Views.Projects = App.Views.ManagedGrid.extend({
         viewName: 'projects-view',
-        events: {},
         initialize: function (options) {
             let self = this;
             try {
@@ -1865,9 +1865,10 @@
                     });
             }
         },
+
         getModalForm: function () {
             let self = this;
-            let template = window.template('newProjectTemplate');
+            let template = window.template('newProjectScopeTemplate');
             let contactSelect = new App.Views.Select({
                 el: '',
                 attributes: {id: 'ContactID', name: 'selectContactID', class: 'form-control'},
@@ -1882,34 +1883,27 @@
             }).get('SequenceNumber') : 1;
 
             let tplVars = {
+                projectAttributes: App.Collections.projectAttributesManagementCollection.where({workflow_id: 1}),
+                attributesOptions: App.Collections.attributesManagementCollection.getTableOptions('projects', false),
+                workflowOptions: App.Collections.workflowManagementCollection.getOptions(false),
+                projectTypeOptions: App.Models.projectModel.getSkillsNeededOptions(true, 'General'),
                 SiteID: self.sitesDropdownView.model.get(self.sitesDropdownView.model.idAttribute),
                 SiteStatusID: self.siteYearsDropdownView.model.get(self.siteYearsDropdownView.model.idAttribute),
-                yesNoIsActiveOptions: self.model.getYesNoOptions(true, 'Yes'),
-                yesNoOptions: self.model.getYesNoOptions(true),
                 contactSelect: contactSelect.getHtml(),
-                primarySkillNeededOptions: self.model.getSkillsNeededOptions(true, ''),
-                statusOptions: self.model.getStatusOptions(true, 'Pending'),
-                projectSendOptions: self.model.getSendOptions(true),
+                options: {
+                    yesNoIsActiveOptions: self.model.getYesNoOptions(true, 'Yes'),
+                    bool: self.model.getYesNoOptions(true),
+                    permit_required_status_options: self.model.getPermitRequiredStatusOptions(true),
+                    permit_required_options: self.model.getPermitRequiredOptions(true),
+                    project_skill_needed_options: self.model.getSkillsNeededOptions(true),
+                    project_status_options: self.model.getStatusOptions(true, 'Pending'),
+                    send_status_options: self.model.getSendOptions(true),
+                    when_will_project_be_completed_options: self.model.getWhenWillProjectBeCompletedOptions(true)
+                },
                 SequenceNumber: sequenceNumber + 1,
                 OriginalRequest: '',
                 ProjectDescription: '',
                 Comments: '',
-                VolunteersNeededEst: '',
-                StatusReason: '',
-                MaterialsNeeded: '',
-                EstimatedCost: '',
-                ActualCost: '',
-                BudgetAvailableForPC: '',
-                SpecialEquipmentNeeded: '',
-                PermitsOrApprovalsNeeded: '',
-                PrepWorkRequiredBeforeSIA: '',
-                SetupDayInstructions: '',
-                SIADayInstructions: '',
-                Area: '',
-                PaintOrBarkEstimate: '',
-                PaintAlreadyOnHand: '',
-                PaintOrdered: '',
-                FinalCompletionAssessment: '',
                 bSetValues: false,
                 data: {
                     Active: '',
@@ -2028,7 +2022,6 @@
             });
 
         }
-
 
 
     });
@@ -4904,6 +4897,1275 @@
             return self;
         },
 
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.AttributesGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
+        viewName: 'attributes-grid-manager-container-toolbar-view',
+        template: template('listGridManagerContainerToolbarTemplate'),
+        initialize: function (options) {
+            let self = this;
+            try {
+                _.bindAll(self, 'saveList', 'addListItem', 'toggleSaveBtn');
+            } catch (e) {
+                console.error(options, e);
+            }
+            // Required call for inherited class
+            self._initialize(options);
+            self._newListItemTemplate = '<tr id="<%= listItemId %>">' +
+                                      '    <td class="display-sequence">' +
+                                      '        <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' +
+                                      '        <input name="list_item[<%= id %>][DisplaySequence]"  data-id="<%= id %>" value="<%= DisplaySequence %>" readonly>' +
+                                      '    </td>' +
+                                      '    <td class="option-label">' +
+                                      '        <input name="list_item[<%= id %>][<%= labelAttribute %>]" data-id="<%= id %>" value="">' +
+                                      '        <span data-list-item-id="<%= listItemId %>" class="ui-icon ui-icon-trash"></span>' +
+                                      '    </td>' +
+                                      '</tr>';
+            self.listenTo(self.options.managedGridView, 'list-changed', self.toggleSaveBtn);
+            _log('App.Views.AttributesGridManagerContainerToolbar.initialize', options);
+        },
+        events: {
+            'click .btnSave': 'saveList',
+            'click .btnAdd': 'addListItem',
+        },
+        render: function () {
+            let self = this;
+            self._render();
+
+            return self;
+        },
+        /**
+         * This is a little hack to use the browsers native form validation
+         * @returns {boolean}
+         */
+        validateForm: function(){
+            let self = this;
+            let bIsValid = self.$form[0].checkValidity();
+
+            if (!bIsValid) {
+                self.$form.find('.list-item-input').on('invalid', function (e) {
+                    self.options.managedGridView.flagAsInvalid(e);
+                    $(this).off(e);
+                });
+                self.$form[0].reportValidity();
+            }
+            return bIsValid;
+        },
+        saveList: function (e) {
+            let self = this;
+            self.$form = self.options.managedGridView.$('form[name="list-items"]');
+            if (!self.validateForm()){
+                growl('Please fix form errors.', 'error');
+                return;
+            }
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            let data = {
+                deletedListItemIds: self.options.managedGridView.deletedListItemIds,
+                listItems: self.$form.serialize()
+            };
+
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: 'admin/attributes/list/' + self.options.managedGridView.options.listItemType,
+                    data: data,
+                    success: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        self.options.managedGridView.collection.url = self.managedGridView.getCollectionUrl(self.options.managedGridView.options.listItemType);
+                        $.when(
+                            self.options.managedGridView.collection.fetch({reset: true})
+                        ).then(function () {
+
+                        });
+                    },
+                    fail: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
+        },
+        addListItem: function (e) {
+            let self = this;
+            let newListItemTemplate = _.template(self._newListItemTemplate);
+            let id = _.uniqueId('new');
+            let listItemId = 'list_item_' + id;
+            let aSorted = self.options.managedGridView.$sortableElement.sortable("toArray");
+            let lastListItemId = _.last(aSorted);
+            let lastDisplaySequence = self.options.managedGridView.$sortableElement.find('[name="list_item[' + lastListItemId.replace(/list_item_/, '') + '][DisplaySequence]"]').val();
+
+            let DisplaySequence = parseInt(lastDisplaySequence) + 1;
+            self.options.managedGridView.$sortableElement.append(newListItemTemplate({
+                id: id,
+                listItemId: listItemId,
+                DisplaySequence: DisplaySequence,
+                labelAttribute: self.options.managedGridView.labelAttribute
+            }));
+            self.options.managedGridView.$sortableElement.sortable("refresh");
+
+
+        },
+        toggleSaveBtn: function (e) {
+            let self = this;
+
+            let toggleState = 'enable';
+            _log(self.viewName + '.toggleSaveBtn.event', {e: e, toggleState: toggleState});
+
+            if (toggleState === 'disable') {
+                self.$('.btnSave').addClass('disabled');
+            } else {
+                self.$('.btnSave').removeClass('disabled');
+            }
+        },
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.Attributes = App.Views.Backend.extend({
+        template: template('attributesListItemTemplate'),
+        viewName: 'attributes-list-item-view',
+        events: {
+            'click .ui-icon-trash': 'delete',
+            'change .list-item-input': 'listChanged',
+            'invalid .list-item-input': 'flagAsInvalid',
+        },
+        initialize: function (options) {
+            let self = this;
+
+            try {
+                _.bindAll(self, 'render', 'delete', 'listChanged', 'flagAsInvalid');
+            } catch (e) {
+                console.error(options, e)
+            }
+            // Required call for inherited class
+            self._initialize(options);
+            self.listenTo(self.collection, 'reset', self.render);
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+            self.$sortableElement = null;
+            self.deletedListItemIds = [];
+            self.modelIdAttribute = self.options.modelIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
+        },
+        render: function (e) {
+            let self = this;
+            self.$el.html(self.template({
+                idAttribute: self.modelIdAttribute,
+                labelAttribute: self.labelAttribute,
+                listItems: self.collection.models,
+                highestSequenceNumber: self.getHighestSequenceNumber(),
+                view: self
+            }));
+
+            self.$sortableElement = self.$el.find('.table.list-items tbody');
+            self.$sortableElement.sortable({
+                axis: 'y',
+                revert: true,
+                delay: 150,
+                update: function (event, ui) {
+                    self.$sortableElement.sortable("refreshPositions");
+                    let iSequence = 1;
+                    self.$sortableElement.find('tr').each(function (idx, tr) {
+                        let id = tr.id.replace(/list_item_/, '');
+                        if (id !== '') {
+                            //console.log({tr: tr,'tr.id': tr.id, 'data-id': id, idx: idx, iSequence: iSequence, label: $(tr).find('[name="option_label"]').val()});
+                            self.$sortableElement.find('[name="list_item[' + id + '][DisplaySequence]"]').val(iSequence++);
+                        }
+                    });
+                    self.trigger('list-changed');
+                },
+            });
+
+            return self;
+        },
+        getHighestSequenceNumber: function() {
+            let self = this;
+            let highest = 0;
+            _.each(self.collection.models, function (val,idx) {
+                if (val > highest){
+                    highest = val;
+                }
+            });
+            return highest;
+        },
+        setGridManagerContainerToolbar: function ($gridManagerContainerToolbar) {
+            let self = this;
+            self.$gridManagerContainerToolbar = $gridManagerContainerToolbar;
+        },
+        delete: function (e) {
+            let self = this;
+            let $parentRow = $(e.currentTarget).parents('tr');
+            let id = $parentRow.attr('id').replace(/list_item_/, '');
+            let listItemLabel = self.$sortableElement.find('[name="list_item[' + id + ']['+ self.labelAttribute+ ']"]').val();
+            bootbox.confirm("Do you really want to delete this item: " + listItemLabel + "?", function (bConfirmed) {
+                if (bConfirmed) {
+                    self.deletedListItemIds.push(id);
+                    $parentRow.remove();
+                    self.trigger('list-changed');
+                }
+            });
+        },
+        listChanged: function (e) {
+            let self = this;
+            // FYI- If e is undefined it has probably been called from the underscore/backbone template
+            self.trigger('list-changed');
+        },
+        flagAsInvalid: function (e) {
+            let self = this;
+            console.log('flagAsInvalid',{e:e, currentTarget:e.currentTarget})
+            $(e.currentTarget).css('border-color','red');
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.AttributesManagement = App.Views.Management.extend({
+        className: 'route-view box box-primary attributes-management-view',
+        template: template('managementTemplate'),
+        gridManagerContainerToolbarClass: App.Views.AttributesGridManagerContainerToolbar,
+        initialize: function (options) {
+            let self = this;
+            // try {
+            //     _.bindAll(self, '');
+            // } catch (e) {
+            //     console.error(options, e)
+            // }
+            // Required call for inherited class
+            this._initialize(options);
+
+            self.modelIdAttribute = self.options.modelIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
+
+        },
+        events: {},
+        render: function () {
+            let self = this;
+            // Add template to this views el now so child view el selectors exist when they are instantiated
+            self.modelNameLabel = self.options.modelNameLabel.replace(/_/g, ' ').replace(/s$/, '');
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(/ /g, '-');
+            self.$el.html(self.template({
+                modelNameLabel: self.modelNameLabel,
+                modelNameLabelLowerCase: self.modelNameLabelLowerCase
+            }));
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            self.collection.url = self.getCollectionUrl(self.options.listItemType);
+            $.when(
+                self.collection.fetch({reset: true})
+            ).then(function () {
+                let $listItem = new App.Views.Attributes({
+                    collection: self.collection,
+                    listItemType: self.options.listItemType,
+                    model: self.model,
+                    modelNameLabel: self.modelNameLabel,
+                    modelIdAttribute: self.modelIdAttribute,
+                    labelAttribute: self.labelAttribute,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector
+                });
+
+                self.gridManagerContainerToolbar = new self.gridManagerContainerToolbarClass({
+                    el: self.$('.grid-manager-container'),
+                    parentView: self,
+                    managedGridView: $listItem,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                });
+                self.gridManagerContainerToolbar.render();
+                self.childViews.push(self.gridManagerContainerToolbar);
+                $listItem.setGridManagerContainerToolbar(self.gridManagerContainerToolbar);
+
+                self.$('.backgrid-wrapper').html($listItem.render().el);
+                self.childViews.push($listItem);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
+
+            return self;
+        },
+
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.ProjectAttributesGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
+        viewName: 'project-attributes-grid-manager-container-toolbar-view',
+        template: template('listGridManagerContainerToolbarTemplate'),
+        initialize: function (options) {
+            let self = this;
+            try {
+                _.bindAll(self, 'saveList', 'addListItem', 'toggleSaveBtn');
+            } catch (e) {
+                console.error(options, e);
+            }
+            // Required call for inherited class
+            self._initialize(options);
+            self._newListItemTemplate = '<tr id="<%= listItemId %>">' +
+                                        '<td class="list-item-label required">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][attribute_id]" data-id="<%= id %>"><%= attributesOptions %></select>' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][workflow_id]" data-id="<%= id %>"><%= workflowOptions %></select>' +
+                                        '</td>' +
+                                        '<td class="list-item-label">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][project_skill_needed_option_id]" data-id="<%= id %>"><%= projectSkillNeededOptions %></select>' +
+                                        '</td>' +
+                                        '<td class="list-item-label">' +
+                                        '    <span data-list-item-id="<%= listItemId %>" class="ui-icon ui-icon-trash"></span>' +
+                                        '</td>' +
+                                        '<td></td>' +
+                                        '</table>';
+            self.listenTo(self.options.managedGridView, 'list-changed', self.toggleSaveBtn);
+            self.$form = self.options.managedGridView.$('form[name="list-items"]');
+            _log('App.Views.ProjectAttributesGridManagerContainerToolbar.initialize', options);
+        },
+        events: {
+            'click .btnSave': 'saveList',
+            'click .btnAdd': 'addListItem',
+        },
+        render: function () {
+            let self = this;
+            self._render();
+
+            return self;
+        },
+        /**
+         * This is a little hack to use the browsers native form validation
+         * @returns {boolean}
+         */
+        validateForm: function(){
+            let self = this;
+            let bIsValid = self.$form[0].checkValidity();
+
+            if (!bIsValid) {
+                self.$form.find('.list-item-input').on('invalid', function (e) {
+                    self.options.managedGridView.flagAsInvalid(e);
+                    $(this).off(e);
+                });
+                self.$form[0].reportValidity();
+            }
+            return bIsValid;
+        },
+        saveList: function (e) {
+            let self = this;
+            self.$form = self.options.managedGridView.$('form[name="list-items"]');
+            if (!self.validateForm()){
+                growl('Please fix form errors.', 'error');
+                return;
+            }
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            let data = {
+                deletedListItemIds: self.options.managedGridView.deletedListItemIds,
+                listItems: self.$form.serialize()
+            };
+
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: 'admin/project_attributes/list/' + self.options.managedGridView.options.listItemType,
+                    data: data,
+                    success: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        self.options.managedGridView.collection.url = self.managedGridView.getCollectionUrl(self.options.managedGridView.options.listItemType);
+                        $.when(
+                            self.options.managedGridView.collection.fetch({reset: true})
+                        ).then(function () {
+
+                        });
+                    },
+                    fail: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
+        },
+        addListItem: function (e) {
+            let self = this;
+            let newListItemTemplate = _.template(self._newListItemTemplate);
+            let id = _.uniqueId('new');
+            let listItemId = 'list_item_' + id;
+
+            self.options.managedGridView.$sortableElement.append(newListItemTemplate({
+                id: id,
+                listItemId: listItemId,
+                labelAttribute: self.options.managedGridView.labelAttribute,
+                attributesOptions: App.Collections.attributesManagementCollection.getTableOptions('projects', true),
+                workflowOptions: App.Collections.workflowManagementCollection.getOptions(true),
+                projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true)
+            }));
+        },
+        toggleSaveBtn: function (e) {
+            let self = this;
+
+            let toggleState = 'enable';
+            _log(self.viewName + '.toggleSaveBtn.event', {e: e, toggleState: toggleState});
+
+            if (toggleState === 'disable') {
+                self.$('.btnSave').addClass('disabled');
+            } else {
+                self.$('.btnSave').removeClass('disabled');
+            }
+        },
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.ProjectAttributes = App.Views.Backend.extend({
+        template: template('projectAttributesListItemTemplate'),
+        viewName: 'project-attributes-list-item-view',
+        events: {
+            'click .ui-icon-trash': 'delete',
+            'change .list-item-input': 'listChanged',
+        },
+        initialize: function (options) {
+            let self = this;
+
+            try {
+                _.bindAll(self, 'render', 'delete', 'listChanged');
+            } catch (e) {
+                console.error(options, e)
+            }
+            // Required call for inherited class
+            self._initialize(options);
+            self.listenTo(self.collection, 'reset', self.render);
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+            self.$sortableElement = null;
+            self.deletedListItemIds = [];
+            self.modelIdAttribute = self.options.modelIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
+        },
+        render: function (e) {
+            let self = this;
+
+            self.$el.html(self.template({
+                idAttribute: self.modelIdAttribute,
+                labelAttribute: self.labelAttribute,
+                listItems: self.collection.models,
+                attributesOptions: App.Collections.attributesManagementCollection.getTableOptions('projects', true),
+                workflowOptions: App.Collections.workflowManagementCollection.getOptions(true),
+                projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
+                view: self
+            }));
+            self.$sortableElement = self.$el.find('.table.list-items tbody');
+            return self;
+        },
+        setGridManagerContainerToolbar: function ($gridManagerContainerToolbar) {
+            let self = this;
+            self.$gridManagerContainerToolbar = $gridManagerContainerToolbar;
+        },
+        delete: function (e) {
+            let self = this;
+            let $parentRow = $(e.currentTarget).parents('tr');
+            let id = $parentRow.attr('id').replace(/list_item_/, '');
+
+            bootbox.confirm("Do you really want to delete this item?", function (bConfirmed) {
+                if (bConfirmed) {
+                    self.deletedListItemIds.push(id);
+                    $parentRow.remove();
+                    self.trigger('list-changed');
+                }
+            });
+        },
+        listChanged: function (e) {
+            let self = this;
+            // FYI- If e is undefined it has probably been called from the underscore/backbone template
+            self.trigger('list-changed');
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.ProjectAttributesManagement = App.Views.Management.extend({
+        className: 'route-view box box-primary project-attributes-management-view',
+        template: template('managementTemplate'),
+        gridManagerContainerToolbarClass: App.Views.ProjectAttributesGridManagerContainerToolbar,
+        initialize: function (options) {
+            let self = this;
+            // try {
+            //     _.bindAll(self, '');
+            // } catch (e) {
+            //     console.error(options, e)
+            // }
+            // Required call for inherited class
+            this._initialize(options);
+
+            self.modelIdAttribute = self.options.modelIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
+
+        },
+        events: {},
+        render: function () {
+            let self = this;
+            // Add template to this views el now so child view el selectors exist when they are instantiated
+            self.modelNameLabel = self.options.modelNameLabel.replace(/_/g, ' ').replace(/s$/, '');
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(/ /g, '-');
+            self.$el.html(self.template({
+                modelNameLabel: self.modelNameLabel,
+                modelNameLabelLowerCase: self.modelNameLabelLowerCase
+            }));
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            self.collection.url = self.getCollectionUrl(self.options.listItemType);
+            $.when(
+                self.collection.fetch({reset: true})
+            ).then(function () {
+                let $listItem = new App.Views.ProjectAttributes({
+                    collection: self.collection,
+                    listItemType: self.options.listItemType,
+                    model: self.model,
+                    modelNameLabel: self.modelNameLabel,
+                    modelIdAttribute: self.modelIdAttribute,
+                    labelAttribute: self.labelAttribute,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector
+                });
+
+                self.gridManagerContainerToolbar = new self.gridManagerContainerToolbarClass({
+                    el: self.$('.grid-manager-container'),
+                    parentView: self,
+                    managedGridView: $listItem,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                });
+                self.gridManagerContainerToolbar.render();
+                self.childViews.push(self.gridManagerContainerToolbar);
+                $listItem.setGridManagerContainerToolbar(self.gridManagerContainerToolbar);
+
+                self.$('.backgrid-wrapper').html($listItem.render().el);
+                self.childViews.push($listItem);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
+
+            return self;
+        },
+
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.WorkflowGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
+        viewName: 'workflow-grid-manager-container-toolbar-view',
+        template: template('listGridManagerContainerToolbarTemplate'),
+        initialize: function (options) {
+            let self = this;
+            try {
+                _.bindAll(self, 'saveList', 'addListItem', 'toggleSaveBtn');
+            } catch (e) {
+                console.error(options, e);
+            }
+            // Required call for inherited class
+            self._initialize(options);
+            self._newListItemTemplate = '<tr id="<%= listItemId %>">' +
+                                      '    <td class="display-sequence">' +
+                                      '        <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' +
+                                      '        <input name="list_item[<%= id %>][DisplaySequence]"  data-id="<%= id %>" value="<%= DisplaySequence %>" readonly>' +
+                                      '    </td>' +
+                                      '    <td class="option-label">' +
+                                      '        <input name="list_item[<%= id %>][<%= labelAttribute %>]" data-id="<%= id %>" value="">' +
+                                      '        <span data-list-item-id="<%= listItemId %>" class="ui-icon ui-icon-trash"></span>' +
+                                      '    </td>' +
+                                      '</tr>';
+            self.listenTo(self.options.managedGridView, 'list-changed', self.toggleSaveBtn);
+            self.$form = self.options.managedGridView.$('form[name="list-items"]');
+            _log('App.Views.WorkflowGridManagerContainerToolbar.initialize', options);
+        },
+        events: {
+            'click .btnSave': 'saveList',
+            'click .btnAdd': 'addListItem',
+        },
+        render: function () {
+            let self = this;
+            self._render();
+
+            return self;
+        },
+        /**
+         * This is a little hack to use the browsers native form validation
+         * @returns {boolean}
+         */
+        validateForm: function(){
+            let self = this;
+            let bIsValid = self.$form[0].checkValidity();
+
+            if (!bIsValid) {
+                self.$form.find('.list-item-input').on('invalid', function (e) {
+                    self.options.managedGridView.flagAsInvalid(e);
+                    $(this).off(e);
+                });
+                self.$form[0].reportValidity();
+            }
+            return bIsValid;
+        },
+        saveList: function (e) {
+            let self = this;
+            self.$form = self.options.managedGridView.$('form[name="list-items"]');
+            if (!self.validateForm()){
+                growl('Please fix form errors.', 'error');
+                return;
+            }
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            let data = {
+                deletedListItemIds: self.options.managedGridView.deletedListItemIds,
+                listItems: self.$form.serialize()
+            };
+
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: 'admin/workflow/list/' + self.options.managedGridView.options.listItemType,
+                    data: data,
+                    success: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        self.options.managedGridView.collection.url = self.managedGridView.getCollectionUrl(self.options.managedGridView.options.listItemType);
+                        $.when(
+                            self.options.managedGridView.collection.fetch({reset: true})
+                        ).then(function () {
+
+                        });
+                    },
+                    fail: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
+        },
+        addListItem: function (e) {
+            let self = this;
+            let newListItemTemplate = _.template(self._newListItemTemplate);
+            let id = _.uniqueId('new');
+            let listItemId = 'list_item_' + id;
+            let aSorted = self.options.managedGridView.$sortableElement.sortable("toArray");
+            let lastListItemId = _.last(aSorted);
+            let lastDisplaySequence = self.options.managedGridView.$sortableElement.find('[name="list_item[' + lastListItemId.replace(/list_item_/, '') + '][DisplaySequence]"]').val();
+
+            let DisplaySequence = parseInt(lastDisplaySequence) + 1;
+            self.options.managedGridView.$sortableElement.append(newListItemTemplate({
+                id: id,
+                listItemId: listItemId,
+                DisplaySequence: DisplaySequence,
+                labelAttribute: self.options.managedGridView.labelAttribute
+            }));
+            self.options.managedGridView.$sortableElement.sortable("refresh");
+
+
+        },
+        toggleSaveBtn: function (e) {
+            let self = this;
+
+            let toggleState = 'enable';
+            _log(self.viewName + '.toggleSaveBtn.event', {e: e, toggleState: toggleState});
+
+            if (toggleState === 'disable') {
+                self.$('.btnSave').addClass('disabled');
+            } else {
+                self.$('.btnSave').removeClass('disabled');
+            }
+        },
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.Workflow = App.Views.Backend.extend({
+        template: template('listItemTemplate'),
+        viewName: 'workflow-list-item-view',
+        events: {
+            'click .ui-icon-trash': 'delete',
+            'change .list-item-input': 'listChanged',
+        },
+        initialize: function (options) {
+            let self = this;
+
+            try {
+                _.bindAll(self, 'render', 'delete', 'listChanged');
+            } catch (e) {
+                console.error(options, e)
+            }
+            // Required call for inherited class
+            self._initialize(options);
+            self.listenTo(self.collection, 'reset', self.render);
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+            self.$sortableElement = null;
+            self.deletedListItemIds = [];
+            self.modelIdAttribute = self.options.modelIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
+        },
+        render: function (e) {
+            let self = this;
+            self.$el.html(self.template({
+                idAttribute: self.modelIdAttribute,
+                labelAttribute: self.labelAttribute,
+                listItems: self.collection.models,
+                highestSequenceNumber: self.getHighestSequenceNumber(),
+                view: self
+            }));
+
+            self.$sortableElement = self.$el.find('.table.list-items tbody');
+            self.$sortableElement.sortable({
+                axis: 'y',
+                revert: true,
+                delay: 150,
+                update: function (event, ui) {
+                    self.$sortableElement.sortable("refreshPositions");
+                    let iSequence = 1;
+                    self.$sortableElement.find('tr').each(function (idx, tr) {
+                        let id = tr.id.replace(/list_item_/, '');
+                        if (id !== '') {
+                            //console.log({tr: tr,'tr.id': tr.id, 'data-id': id, idx: idx, iSequence: iSequence, label: $(tr).find('[name="'+ self.labelAttribute+ '"]').val()});
+                            self.$sortableElement.find('[name="list_item[' + id + '][DisplaySequence]"]').val(iSequence++);
+                        }
+                    });
+                    self.trigger('list-changed');
+                },
+            });
+            return self;
+        },
+        getHighestSequenceNumber: function() {
+            let self = this;
+            let highest = 0;
+            _.each(self.collection.models, function (val,idx) {
+                if (val > highest){
+                    highest = val;
+                }
+            });
+            return highest;
+        },
+        setGridManagerContainerToolbar: function ($gridManagerContainerToolbar) {
+            let self = this;
+            self.$gridManagerContainerToolbar = $gridManagerContainerToolbar;
+        },
+        delete: function (e) {
+            let self = this;
+            let $parentRow = $(e.currentTarget).parents('tr');
+            let id = $parentRow.attr('id').replace(/list_item_/, '');
+            let listItemLabel = self.$sortableElement.find('[name="list_item[' + id + ']['+ self.labelAttribute+ ']"]').val();
+            bootbox.confirm("Do you really want to delete this item: " + listItemLabel + "?", function (bConfirmed) {
+                if (bConfirmed) {
+                    self.deletedListItemIds.push(id);
+                    $parentRow.remove();
+                    self.trigger('list-changed');
+                }
+            });
+        },
+        listChanged: function (e) {
+            let self = this;
+            // FYI- If e is undefined it has probably been called from the underscore/backbone template
+            self.trigger('list-changed');
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.WorkflowManagement = App.Views.Management.extend({
+        className: 'route-view box box-primary workflow-management-view',
+        template: template('managementTemplate'),
+        gridManagerContainerToolbarClass: App.Views.WorkflowGridManagerContainerToolbar,
+        initialize: function (options) {
+            let self = this;
+            // try {
+            //     _.bindAll(self, '');
+            // } catch (e) {
+            //     console.error(options, e)
+            // }
+            // Required call for inherited class
+            this._initialize(options);
+
+            self.modelIdAttribute = self.options.modelIdAttribute;
+            self.labelAttribute = self.options.labelAttribute;
+
+        },
+        events: {},
+        render: function () {
+            let self = this;
+            // Add template to this views el now so child view el selectors exist when they are instantiated
+            self.modelNameLabel = self.options.modelNameLabel.replace(/_/g, ' ').replace(/s$/, '');
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase().replace(/ /g, '-');
+            self.$el.html(self.template({
+                modelNameLabel: self.modelNameLabel,
+                modelNameLabelLowerCase: self.modelNameLabelLowerCase
+            }));
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            self.collection.url = self.getCollectionUrl(self.options.listItemType);
+            $.when(
+                self.collection.fetch({reset: true})
+            ).then(function () {
+                let $listItem = new App.Views.Workflow({
+                    collection: self.collection,
+                    listItemType: self.options.listItemType,
+                    model: self.model,
+                    modelNameLabel: self.modelNameLabel,
+                    modelIdAttribute: self.modelIdAttribute,
+                    labelAttribute: self.labelAttribute,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector
+                });
+
+                self.gridManagerContainerToolbar = new self.gridManagerContainerToolbarClass({
+                    el: self.$('.grid-manager-container'),
+                    parentView: self,
+                    managedGridView: $listItem,
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                });
+                self.gridManagerContainerToolbar.render();
+                self.childViews.push(self.gridManagerContainerToolbar);
+                $listItem.setGridManagerContainerToolbar(self.gridManagerContainerToolbar);
+
+                self.$('.backgrid-wrapper').html($listItem.render().el);
+                self.childViews.push($listItem);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
+
+            return self;
+        },
+
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.ProjectScopeGridManagerContainerToolbar = App.Views.GridManagerContainerToolbar.extend({
+        viewName: 'project-scope-grid-manager-container-toolbar-view',
+        template: template('projectScopeGridManagerContainerToolbarTemplate'),
+        initialize: function (options) {
+            let self = this;
+            try {
+                _.bindAll(self, 'save', 'toggleSaveBtn');
+            } catch (e) {
+                console.error(options, e);
+            }
+            // Required call for inherited class
+            self._initialize(options);
+
+            self.listenTo(self.options.managedGridView, 'changed', self.toggleSaveBtn);
+            self.$form = self.options.managedGridView.$('form[name="projectScope"]');
+            _log('App.Views.ProjectScopeGridManagerContainerToolbar.initialize', options);
+        },
+        events: {
+            'click .btnSave': 'save'
+        },
+        render: function () {
+            let self = this;
+            self._render();
+
+            return self;
+        },
+        /**
+         * This is a little hack to use the browsers native form validation
+         * @returns {boolean}
+         */
+        validateForm: function(){
+            let self = this;
+            let bIsValid = self.$form[0].checkValidity();
+
+            if (!bIsValid) {
+                self.$form.find('.list-item-input').on('invalid', function (e) {
+                    self.options.managedGridView.flagAsInvalid(e);
+                    $(this).off(e);
+                });
+                self.$form[0].reportValidity();
+            }
+            return bIsValid;
+        },
+        save: function (e) {
+            let self = this;
+            self.$form = self.options.managedGridView.$('form[name="projectScope"]');
+            if (!self.validateForm()){
+                growl('Please fix form errors.', 'error');
+                return;
+            }
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            let data = {
+                data: self.$form.serialize()
+            };
+
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: 'admin/project_scope',
+                    data: data,
+                    success: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                        self.options.managedGridView.collection.url = self.managedGridView.getCollectionUrl(self.options.managedGridView.options.listItemType);
+                        $.when(
+                            self.options.managedGridView.collection.fetch({reset: true})
+                        ).then(function () {
+
+                        });
+                    },
+                    fail: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+            });
+        },
+        toggleSaveBtn: function (e) {
+            let self = this;
+
+            let toggleState = 'enable';
+            _log(self.viewName + '.toggleSaveBtn.event', {e: e, toggleState: toggleState});
+
+            if (toggleState === 'disable') {
+                self.$('.btnSave').addClass('disabled');
+            } else {
+                self.$('.btnSave').removeClass('disabled');
+            }
+        },
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.ProjectScope = App.Views.Backend.extend({
+        template: template('projectScopeTemplate'),
+        viewName: 'project-scope-view',
+        events: {
+            'change .list-item-input': 'listChanged',
+            'invalid .list-item-input': 'flagAsInvalid',
+        },
+        initialize: function (options) {
+            let self = this;
+
+            try {
+                _.bindAll(self, 'render', 'handleProjectIDChange');
+            } catch (e) {
+                console.error(options, e)
+            }
+            // Required call for inherited class
+            self._initialize(options);
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+            self.sitesDropdownView = self.options.parentView.sitesDropdownView;
+            self.projectsDropDownView = self.options.parentView.projectsDropDownView;
+            self.listenTo(self.projectsDropDownView, "project-id-change", self.handleProjectIDChange);
+        },
+        handleProjectIDChange: function(e){
+            let self = this;
+            self.model.set('ProjectID',e.ProjectID);
+            self.render();
+        },
+        render: function (e) {
+            let self = this;
+            if (_.isUndefined(self.model.get(self.model.idAttribute)) || _.isEmpty(self.model.get(self.model.idAttribute))){
+                self.$el.html('No Projects Found');
+            } else {
+
+
+                window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+                self.model.url = self.getModelUrl(self.model.get(self.model.idAttribute));
+                $.when(
+                    self.model.fetch({reset: true})
+                ).then(function () {
+                    console.log('project scope', self.ajaxWaitingTargetClassSelector, self.model)
+                    let contactSelect = new App.Views.Select({
+                        el: '',
+                        attributes: {id: 'ContactID', name: 'selectContactID', class: 'form-control'},
+                        buildHTML: true,
+                        collection: App.Collections.contactsManagementCollection,
+                        optionValueModelAttrName: 'ContactID',
+                        optionLabelModelAttrName: ['LastName', 'FirstName', 'Title']
+                    });
+                    self.childViews.push(contactSelect);
+                    let sequenceNumber = 9;
+
+                    let tplVars = {
+                        projectAttributes: App.Collections.projectAttributesManagementCollection.where({workflow_id: 1}),
+                        attributesOptions: App.Collections.attributesManagementCollection.getTableOptions('projects', false),
+                        workflowOptions: App.Collections.workflowManagementCollection.getOptions(false),
+                        projectTypeOptions: App.Models.projectModel.getSkillsNeededOptions(true, 'General'),
+                        SiteID: self.sitesDropdownView.model.get(self.sitesDropdownView.model.idAttribute),
+                        //SiteStatusID: self.siteYearsDropdownView.model.get(self.siteYearsDropdownView.model.idAttribute),
+                        contactSelect: contactSelect.getHtml(),
+                        options: {
+                            yesNoIsActiveOptions: App.Models.projectModel.getYesNoOptions(true, 'Yes'),
+                            bool: '',
+                            permit_required_status_options: App.Models.projectModel.getPermitRequiredStatusOptions(true),
+                            permit_required_options: App.Models.projectModel.getPermitRequiredOptions(true),
+                            project_skill_needed_options: App.Models.projectModel.getSkillsNeededOptions(true),
+                            project_status_options: App.Models.projectModel.getStatusOptions(true, 'Pending'),
+                            send_status_options: App.Models.projectModel.getSendOptions(true),
+                            when_will_project_be_completed_options: App.Models.projectModel.getWhenWillProjectBeCompletedOptions(true)
+                        },
+                        SequenceNumber: sequenceNumber,
+                        OriginalRequest: '',
+                        ProjectDescription: '',
+                        Comments: '',
+                        bSetValues: false,
+                        data: {
+                            Active: '',
+                            ChildFriendly: '',
+                            PrimarySkillNeeded: '',
+                            Status: '',
+                            NeedsToBeStartedEarly: '',
+                            CostEstimateDone: '',
+                            MaterialListDone: '',
+                            BudgetAllocationDone: '',
+                            VolunteerAllocationDone: '',
+                            NeedSIATShirtsForPC: '',
+                            ProjectSend: '',
+                            FinalCompletionStatus: '',
+                            PCSeeBeforeSIA: ''
+                        }
+                    };
+                    self.$el.html(self.template(tplVars));
+                    window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+                });
+            }
+
+            return self;
+        },
+
+        setGridManagerContainerToolbar: function ($gridManagerContainerToolbar) {
+            let self = this;
+            self.$gridManagerContainerToolbar = $gridManagerContainerToolbar;
+        },
+        flagAsInvalid: function (e) {
+            let self = this;
+            console.log('flagAsInvalid', {e: e, currentTarget: e.currentTarget})
+            $(e.currentTarget).css('border-color', 'red');
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Views.ProjectScopeDropDownOption = App.Views.Backend.extend({
+        tagName: 'option',
+        initialize: function (options) {
+            _.bindAll(this, 'render');
+        },
+        render: function () {
+            let self = this;
+            this.$el.attr('value', self.model.get('ProjectID'))
+                .html('Project #:' + self.model.get('SequenceNumber'));
+            return this;
+        }
+    });
+    App.Views.ProjectScopeDropDown = App.Views.Backend.extend({
+        initialize: function (options) {
+            let self = this;
+            this.options = options;
+            this.optionsView = [];
+            this.parentView = this.options.parentView;
+            _.bindAll(this, 'addOne', 'addAll', 'changeSelected');
+            self.projectScopeSitesDropdown = self.options.projectScopeSitesDropdown;
+            self.listenTo(self.projectScopeSitesDropdown, "site-id-change", self.updateCollectionBySite);
+            self.listenTo(self.collection, "reset", self.addAll);
+        },
+        events: {
+            "change": "changeSelected"
+        },
+        updateCollectionBySite: function (e) {
+            let self = this;
+
+            self.collection.url = '/admin/project_scope/projects/' + e.SiteStatusID;
+            self.collection.fetch({reset: true});
+        },
+        addOne: function (projectDropDown) {
+            let option = new App.Views.ProjectScopeDropDownOption({model: projectDropDown});
+            this.optionsView.push(option);
+            this.$el.append(option.render().el);
+        },
+        addAll: function () {
+            _.each(this.optionsView, function (option) {
+                option.remove();
+            });
+
+            this.collection.each(this.addOne);
+            this.$el.trigger('change');
+        },
+        render: function () {
+            this.addAll();
+            return this;
+        },
+        changeSelected: function () {
+            let $option = this.$el.find(':selected');
+            if (!$option.length) {
+                $option = this.$el.find(':first-child');
+            }
+            this.setSelectedId(this.parentView.$('select#site_years option').filter(':selected').text(), this.parentView.$('select#site_years option').filter(':selected').data('site-status-id'), $option.val());
+        },
+        setSelectedId: function (SiteID, SiteStatusID, ProjectID) {
+            let self = this;
+            if (App.Vars.mainAppDoneLoading) {
+                _log('App.Views.ProjectScopeProjectsDropDown.setSelectedId.event', 'new project selected', ProjectID);
+                //console.log({SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
+                self.trigger('project-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
+            }
+        }
+    });
+    // This is the sites drop down
+    App.Views.ProjectScopeSiteOption = App.Views.Backend.extend({
+        viewName: 'sites-dropdown-option',
+        tagName: 'option',
+        initialize: function (options) {
+            let self = this;
+            _.bindAll(self, 'render');
+            self._initialize(options);
+        },
+        render: function () {
+            let self = this;
+            self.$el.attr('value',
+                self.model.get(self.model.idAttribute)).data('site-status-id', self.model.get('SiteStatusID')).html(self.model.get('SiteName'));
+            return self;
+        }
+    });
+    App.Views.ProjectScopeSitesDropdown = App.Views.Backend.extend({
+        viewName: 'sites-dropdown',
+        initialize: function (options) {
+            let self = this;
+
+            _.bindAll(self, 'addOne', 'addAll', 'render', 'changeSelected', 'setSelectedId');
+            self._initialize(options);
+            self.listenTo(self.collection, "reset", self.addAll);
+
+            self.parentView = self.options.parentView;
+
+        },
+        events: {
+            "change": "changeSelected"
+        },
+        addOne: function (site) {
+            let self = this;
+            self.$el.append(
+                new App.Views.ProjectScopeSiteOption({
+                    model: site,
+                }).render().el);
+        },
+        addAll: function () {
+            let self = this;
+            _log('App.Views.ProjectScopeSitesDropdown.addAll', 'sites dropdown');
+            self.$el.empty();
+            self.collection.each(self.addOne);
+            // Force related views to updatesite-volunteers-grid-manager-toolbar
+            //console.log({'this.options.selectedSiteID': this.options.selectedSiteID})
+            if (!_.isUndefined(self.options.selectedSiteID) && !_.isNull(self.options.selectedSiteID)) {
+                self.$el.val(self.options.selectedSiteID);
+                self.options.selectedSiteID = null;
+            }
+
+            self.changeSelected();
+        },
+        render: function () {
+            let self = this;
+            self.addAll();
+
+            return self;
+        },
+        changeSelected: function () {
+            let self = this;
+            self.setSelectedId(self.$el.val(), self.$el.find('option:selected').data('site-status-id'));
+        },
+        setSelectedId: function (SiteID, SiteStatusID) {
+            let self = this;
+            self.trigger('site-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID});
+        }
+    });
+    App.Views.ProjectScopeManagement = App.Views.Management.extend({
+        sitesDropdownViewClass: App.Views.ProjectScopeSitesDropdown,
+        projectScopeDropdownViewClass: App.Views.ProjectScopeDropDown,
+        projectScopeViewClass: App.Views.ProjectScope,
+        gridManagerContainerToolbarClass: App.Views.ProjectScopeGridManagerContainerToolbar,
+        attributes: {
+            class: 'route-view box box-primary project-scope-management-view'
+        },
+        template: template('projectScopeManagementTemplate'),
+        viewName: 'project-scope-management-view',
+        initialize: function (options) {
+            let self = this;
+            // try {
+            //     _.bindAll(self, '');
+            // } catch (e) {
+            //     console.error(options, e);
+            // }
+            // Required call for inherited class
+            self._initialize(options);
+            self.modelNameLabel = self.options.modelNameLabel;
+            self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
+        },
+        render: function () {
+            let self = this;
+            // Add template to this views el now so child view el selectors exist when they are instantiated
+            self.$el.html(this.template({
+                modelNameLabelLowerCase:self.modelNameLabelLowerCase,
+                modelNameLabel: self.modelNameLabel
+            }));
+            self.renderSiteDropdowns();
+            //model: App.Models.projectModel,
+            self.projectScopeView = new self.projectScopeViewClass({
+                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
+                collection: App.PageableCollections.projectCollection,
+                columnCollectionDefinitions: App.Vars.projectsBackgridColumnDefinitions,
+                gridManagerContainerToolbarClassName: 'grid-manager-container',
+                model: App.Models.projectScopeModel,
+                modelNameLabel: 'Project',
+                parentView: self,
+                viewName: 'project-scope'
+            });
+            self.gridManagerContainerToolbar = new self.gridManagerContainerToolbarClass({
+                el: self.$('.grid-manager-container'),
+                parentView: self,
+                managedGridView: self.projectScopeView,
+                ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+            });
+            self.gridManagerContainerToolbar.render();
+            self.childViews.push(self.gridManagerContainerToolbar);
+            self.projectScopeView.setGridManagerContainerToolbar(self.gridManagerContainerToolbar);
+
+            self.$('.backgrid-wrapper').html(self.projectScopeView.render().el);
+
+            self.childViews.push(self.projectScopeView);
+
+            return self;
+        },
+        renderSiteDropdowns: function () {
+            let self = this;
+
+            let selectedSiteID = App.Vars.appInitialData.project_manager_sites[0].SiteID;
+
+            self.sitesDropdownView = new self.sitesDropdownViewClass({
+                el: self.$('select#sites'),
+                model: new App.Models.Site(),
+                collection: new App.Collections.Site(App.Vars.appInitialData.project_manager_sites),
+                parentView: self,
+                selectedSiteID: selectedSiteID,
+            });
+            self.projectsDropDownView = new this.projectScopeDropdownViewClass({
+                el: this.$('select#projects'),
+                parentView: this,
+                projectScopeSitesDropdown: self.sitesDropdownView,
+                collection: new App.Collections.ProjectsDropDown(App.Vars.appInitialData.project_manager_projects)
+            });
+            self.projectsDropDownView.render();
+            self.listenTo(self.sitesDropdownView, 'site-id-change', self.handleSiteIDChange);
+            self.sitesDropdownView.render();
+            self.childViews.push(self.sitesDropdownView);
+            self.childViews.push(self.projectsDropDownView);
+
+
+        }
     });
 })(window.App);
 

@@ -1,0 +1,9 @@
+(function (App) {
+    App.Models.{{ListNameProperCase}} = Backbone.Model.extend({
+        idAttribute: "id",
+        url: '/admin/{{NewManagementRouteName}}',
+        defaults: {
+
+        },
+    });
+})(window.App);

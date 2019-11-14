@@ -33,4 +33,7 @@
     App.Collections.optionsManagementCollection = new App.Collections.Option();
     App.Collections.optionsManagementSiteRoleCollection = new App.Collections.SiteRoleOption();
     App.Collections.optionsManagementProjectRoleCollection = new App.Collections.ProjectRoleOption();
+    App.Collections.attributesManagementCollection = new App.Collections.Attributes();
+    App.Collections.projectAttributesManagementCollection = new App.Collections.ProjectAttributes();
+    App.Collections.workflowManagementCollection = new App.Collections.Workflow();
 })(window.App);

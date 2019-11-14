@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Dhayakawa\SpringIntoAction\Models\Volunteer;
 
-class SiteVolunteerRole extends Model
+class SiteVolunteerRole extends BaseModel
 {
     use ProjectRegistrationHelper;
 
@@ -43,6 +43,7 @@ class SiteVolunteerRole extends Model
         'Comments' => '',
         'Status' => ''
     ];
+
 
     public function getSiteVolunteer($SiteVolunteerRoleID)
     {

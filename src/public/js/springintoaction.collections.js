@@ -2213,6 +2213,51 @@
 })(window.App);
 
 (function (App) {
+    App.Collections.Attributes = Backbone.Collection.extend({
+        url: '/admin/attributes/list/all',
+        model: App.Models.Attributes,
+        getTableOptions: function (table, bReturnHtml, defaultOption) {
+            if (bReturnHtml) {
+                return _.map(this.models, function (value, key) {
+                    if (table === value.get('table')) {
+                        let selected = !_.isUndefined(defaultOption) && defaultOption === value.get('id') ? 'selected' : '';
+                        return "<option " + selected + " value='" + value.get('id') + "'>" + value.get('label') + "</option>";
+                    } else {
+                        return '';
+                    }
+                }).join('');
+            } else {
+                return this.models;
+            }
+        },
+    });
+})(window.App);
+
+(function (App) {
+    App.Collections.ProjectAttributes = Backbone.Collection.extend({
+        url: '/admin/project_attributes/list/all',
+        model: App.Models.ProjectAttributes
+    });
+})(window.App);
+
+(function (App) {
+    App.Collections.Workflow = Backbone.Collection.extend({
+        url: '/admin/workflow/list/all',
+        model: App.Models.Workflow,
+        getOptions: function (bReturnHtml, defaultOption ) {
+            if (bReturnHtml) {
+                return _.map(this.models, function (value, key) {
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value.get('id') ? 'selected' : '';
+                    return "<option " + selected + " value='" + value.get('id') + "'>" + value.get('label') + "</option>";
+                }).join('');
+            } else {
+                return this.models;
+            }
+        }
+    });
+})(window.App);
+
+(function (App) {
     App.Collections.sitesDropDownCollection = new App.Collections.Site();
     App.Collections.siteYearsDropDownCollection = new App.Collections.SiteYear();
     App.PageableCollections.projectCollection = new App.PageableCollections.Project();
@@ -2247,4 +2292,7 @@
     App.Collections.optionsManagementCollection = new App.Collections.Option();
     App.Collections.optionsManagementSiteRoleCollection = new App.Collections.SiteRoleOption();
     App.Collections.optionsManagementProjectRoleCollection = new App.Collections.ProjectRoleOption();
+    App.Collections.attributesManagementCollection = new App.Collections.Attributes();
+    App.Collections.projectAttributesManagementCollection = new App.Collections.ProjectAttributes();
+    App.Collections.workflowManagementCollection = new App.Collections.Workflow();
 })(window.App);
