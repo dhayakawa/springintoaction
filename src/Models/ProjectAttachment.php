@@ -9,7 +9,7 @@ namespace Dhayakawa\SpringIntoAction\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ProjectAttachment extends Model
+class ProjectAttachment extends BaseModel
 {
     /**
      * The table associated with the model.

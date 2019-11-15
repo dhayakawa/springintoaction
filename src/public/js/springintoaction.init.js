@@ -450,10 +450,14 @@ $('#sia-modal').modal({
     });
 
     App.Views.Backend = App.Views.BaseView.extend({
+        events: {
+            'click [data-role="switcher"]': 'toggleYesNoSwitch',
+            'change [data-role="switcher"] > input[type="checkbox"]': 'toggleYesNoSwitch',
+        },
         _initialize: function (options) {
             let self = this;
             try {
-                _.bindAll(self, 'close', 'getViewDataStore', 'setViewDataStoreValue', 'removeViewDataStore', 'removeChildViews', 'getViewClassName');
+                _.bindAll(self, 'close', 'getViewDataStore', 'setViewDataStoreValue', 'removeViewDataStore', 'removeChildViews', 'getViewClassName', 'toggleYesNoSwitch');
             } catch (e) {
                 console.error(options, e)
             }
@@ -679,6 +683,39 @@ $('#sia-modal').modal({
             let self = this;
 
             self.setViewDataStoreValue('current-site-status-id', e[self.siteYearsDropdownView.model.idAttribute]);
+        },
+        toggleYesNoSwitch: function (e) {
+            // handles click and manually setting the value
+            let $checkbox, $label;
+            if (e.currentTarget.nodeName === 'INPUT') {
+                $checkbox = $(e.currentTarget);
+                $label = $checkbox.parent().find('.admin__actions-switch-text');
+                if ($checkbox.val() === 0 || $checkbox.val() === '0') {
+                    $checkbox.prop('checked', false);
+                } else {
+                    $checkbox.prop('checked', true);
+                }
+                //console.log({'$checkbox': $checkbox, '$label': $label, e: e})
+            } else if (e.currentTarget.nodeName === 'DIV') {
+                let $switch = $(e.currentTarget);
+
+                $checkbox = $switch.find('.admin__actions-switch-checkbox');
+                $label = $switch.find('.admin__actions-switch-text');
+                // We can't trigger a click on the checkbox input to set the checked property or we'll get an event loop of click/change
+                if ($checkbox.prop('checked')) {
+                    $checkbox.prop('checked', false);
+                    $checkbox.val(0);
+                } else {
+                    $checkbox.prop('checked', true);
+                    $checkbox.val(1);
+                }
+            }
+
+            if ($checkbox.prop('checked')) {
+                $label.text('Yes');
+            } else {
+                $label.text('No');
+            }
         },
     });
 
@@ -1428,7 +1465,7 @@ $('#sia-modal').modal({
                     }
                 })
             ).then(function () {
-                window.ajaxWaiting('remove', self.ajaxWaitingSelector);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
 
         },
@@ -1616,6 +1653,7 @@ $('#sia-modal').modal({
             let self = this;
             this.childViews = [];
             if (!_.isNull(options) && !_.isUndefined(options)){
+                this.bAllowMultiple = !_.isUndefined(options.bAllowMultiple) ? options.bAllowMultiple : false;
                 this.buildHTML = !_.isUndefined(options.buildHTML) ? options.buildHTML : false;
                 this.setSelectedValue = !this.buildHTML && !_.isUndefined(options.setSelectedValue) ? options.setSelectedValue : null;
                 this.optionValueModelAttrName = options.optionValueModelAttrName;
@@ -1657,6 +1695,9 @@ $('#sia-modal').modal({
             this.addAll();
             if (this.addBlankOption) {
                 this.$el.prepend('<option value=""></option>');
+            }
+            if (this.bAllowMultiple) {
+                this.$el.prop('multiple','multiple');
             }
             if (!_.isNull(this.setSelectedValue)) {
                 this.$el.val(this.setSelectedValue);

@@ -5,12 +5,14 @@ namespace Dhayakawa\SpringIntoAction\Controllers;
 use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
 //use Illuminate\Support\Facades\Config;
 use Dhayakawa\SpringIntoAction\Models\AnnualBudget;
+use Dhayakawa\SpringIntoAction\Models\Attribute;
 use Dompdf\Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Dhayakawa\SpringIntoAction\Models\WhenWillProjectBeCompletedOptions;
 use Dhayakawa\SpringIntoAction\Models\SiteSetting;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Dhayakawa\SpringIntoAction\Models\Site;
@@ -33,24 +35,51 @@ use \Dhayakawa\SpringIntoAction\Models\VolunteerAgeRangeOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerPrimarySkillOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerSkillLevelOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
+use Dhayakawa\SpringIntoAction\Models\ProjectAttribute;
+use Dhayakawa\SpringIntoAction\Models\Workflow;
+use Dhayakawa\SpringIntoAction\Models\PermitRequiredStatusOptions;
+use Dhayakawa\SpringIntoAction\Models\PermitRequiredOptions;
+use Dhayakawa\SpringIntoAction\Models\SiteVolunteer;
+
 use \Laratrust\LaratrustPermission;
 use \Laratrust\LaratrustRole;
 
+#PHPStormUSEMARKER
 class SpringIntoActionMainAppController extends BaseController
 {
-
-
     public function index(Request $request)
     {
-        /*\Illuminate\Support\Facades\Log::debug(
-            '',
-            [
-                'File:' . __FILE__,
-                'Method:' . __METHOD__,
-                'Line:' . __LINE__,
-                bcrypt('pointamber'),
-            ]
-        );*/
+        $user = Auth::user();
+
+        $aPermissionNames = LaratrustPermission::select('name')->get()->toArray();
+        $auth = [];
+        foreach ($aPermissionNames as $permission) {
+            $key = 'bCan' . str_replace(' ', '', ucwords(str_replace('_', ' ', $permission['name'])));
+
+            $auth[$key] = Auth::guard()->user()->ability(['admin'], [$permission['name']]);
+        }
+
+        $aRoleNames = LaratrustRole::select('name')->get()->toArray();
+        foreach ($aRoleNames as $role) {
+            $key = 'bIs' . str_replace(' ', '', ucwords(str_replace('_', ' ', $role['name'])));
+
+            $auth[$key] = Auth::guard()->user()->hasRole($role['name']);
+        }
+        if($auth['bIsAdmin'] || $auth['bIsProjectManager']){
+            $pmSite = new Site();
+            if ($auth['bIsProjectManager']) {
+                $projectManagerVolunteer = Volunteer::where('email', $user->email)->get()->toArray();
+                $project_manager_sites = $pmSite->getVolunteerSites($projectManagerVolunteer[0]['VolunteerID'], 2);
+            } else {
+                $project_manager_sites = SiteStatus::join('sites','sites.SiteID','=','site_status.SiteID')->where('Year', $this->getCurrentYear())->get()->toArray();
+            }
+            $project_manager_projects = [];
+            foreach($project_manager_sites as $project_manager_site){
+                $project_manager_projects[$project_manager_site['SiteStatusID']] = Project::getSiteProjects($project_manager_site['SiteStatusID'], true);
+            }
+            $project_scopes = reset($project_manager_projects);
+            $project_scope = $project_scopes && isset($project_scopes[0]) ? $project_scopes[0] : [];
+        }
         //$this->fixProjectData();
         $year = $request->input('year');
         if (!$year) {
@@ -169,10 +198,18 @@ class SpringIntoActionMainAppController extends BaseController
                 DB::raw(
                     '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
                 )
-            )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-                'site_status.Year',
-                $Year
-            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+            )
+                                   ->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')
+                                   ->where(
+                                       'site_status.Year',
+                                       $Year
+                                   )
+                                   ->whereNull('projects.deleted_at')
+                                   ->whereNull('site_status.deleted_at')
+                                   ->where('projects.Active', 1)
+                                   ->orderBy('projects.SequenceNumber', 'asc')
+                                   ->get()
+                                   ->toArray();
         } catch (\Exception $e) {
             $all_projects = [];
 
@@ -406,6 +443,53 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
+            $aPermitRequiredOptions = [];
+            $PermitRequiredOptions =
+                PermitRequiredOptions::select('id AS option_value', 'option_label')->orderBy(
+                    'DisplaySequence',
+                    'asc'
+                )->get();
+            $PermitRequiredOptions = $PermitRequiredOptions ? $PermitRequiredOptions->toArray() : [];
+            foreach ($PermitRequiredOptions as $option) {
+                $aPermitRequiredOptions[$option['option_label']] = $option['option_value'];
+            }
+        } catch (\Exception $e) {
+            $aPermitRequiredOptions = [];
+            report($e);
+        }
+        try {
+            $aPermitRequiredStatusOptions = [];
+            $PermitRequiredStatusOptions =
+                PermitRequiredStatusOptions::select('id AS option_value', 'option_label')->orderBy(
+                    'DisplaySequence',
+                    'asc'
+                )->get();
+            $PermitRequiredStatusOptions =
+                $PermitRequiredStatusOptions ? $PermitRequiredStatusOptions->toArray() : [];
+            foreach ($PermitRequiredStatusOptions as $option) {
+                $aPermitRequiredStatusOptions[$option['option_label']] = $option['option_value'];
+            }
+        } catch (\Exception $e) {
+            $aPermitRequiredStatusOptions = [];
+            report($e);
+        }
+        try {
+            $aWhenWillProjectBeCompletedOptions = [];
+            $WhenWillProjectBeCompletedOptions =
+                WhenWillProjectBeCompletedOptions::select('id AS option_value', 'option_label')->orderBy(
+                        'DisplaySequence',
+                        'asc'
+                    )->get();
+            $WhenWillProjectBeCompletedOptions =
+                $WhenWillProjectBeCompletedOptions ? $WhenWillProjectBeCompletedOptions->toArray() : [];
+            foreach ($WhenWillProjectBeCompletedOptions as $option) {
+                $aWhenWillProjectBeCompletedOptions[$option['option_label']] = $option['option_value'];
+            }
+        } catch (\Exception $e) {
+            $aWhenWillProjectBeCompletedOptions = [];
+            report($e);
+        }
+        try {
             $site_roles = [];
             $siteRoles = SiteRole::select('SiteRoleID AS option_value', 'Role AS option_label')->orderBy(
                 'DisplaySequence',
@@ -419,6 +503,31 @@ class SpringIntoActionMainAppController extends BaseController
             $site_roles = [];
             report($e);
         }
+
+        try {
+            $aWorkflow = Workflow::get();
+            $workflow = $aWorkflow ? $aWorkflow->toArray() : [];
+        } catch (\Exception $e) {
+            $workflow = [];
+            report($e);
+        }
+        try {
+            $aAttributes = Attribute::get();
+            $attributes = $aAttributes ? $aAttributes->toArray() : [];
+            $sorted = collect($attributes)->sortBy('DisplaySequence');
+            $attributes = $sorted->values()->all();
+        } catch (\Exception $e) {
+            $attributes = [];
+            report($e);
+        }
+        try {
+            $aProjectAttributes = ProjectAttribute::get();
+            $project_attributes = $aProjectAttributes ? $aProjectAttributes->toArray() : [];
+        } catch (\Exception $e) {
+            $project_attributes = [];
+            report($e);
+        }
+        #PHPStormVarMARKER
         $bIsLocalEnv = App::environment('local');
         $random = rand(0, time());
         $select_options = [
@@ -434,21 +543,12 @@ class SpringIntoActionMainAppController extends BaseController
             'VolunteerPrimarySkillOptions' => $aVolunteerPrimarySkillOptions,
             'VolunteerSkillLevelOptions' => $aVolunteerSkillLevelOptions,
             'VolunteerStatusOptions' => $aVolunteerStatusOptions,
+            'WhenWillProjectBeCompletedOptions' => $aWhenWillProjectBeCompletedOptions,
+            'PermitRequiredOptions' => $aPermitRequiredOptions,
+            'PermitRequiredStatusOptions' => $aPermitRequiredStatusOptions,
+
         ];
-        $aPermissionNames = LaratrustPermission::select('name')->get()->toArray();
-        $auth = [];
-        foreach ($aPermissionNames as $permission) {
-            $key = 'bCan' . str_replace(' ', '', ucwords(str_replace('_', ' ', $permission['name'])));
 
-            $auth[$key] = Auth::guard()->user()->ability(['admin'], [$permission['name']]);
-        }
-
-        $aRoleNames = LaratrustRole::select('name')->get()->toArray();
-        foreach ($aRoleNames as $role) {
-            $key = 'bIs' . str_replace(' ', '', ucwords(str_replace('_', ' ', $role['name'])));
-
-            $auth[$key] = Auth::guard()->user()->hasRole($role['name']);
-        }
 
         $appInitialData = compact(
             [
@@ -462,6 +562,7 @@ class SpringIntoActionMainAppController extends BaseController
                 'siteStatus',
                 'contacts',
                 'project',
+                'project_scope',
                 'projects',
                 'all_projects',
                 'sites',
@@ -470,6 +571,8 @@ class SpringIntoActionMainAppController extends BaseController
                 'project_contacts',
                 'project_volunteers',
                 'project_attachments',
+                'project_manager_sites',
+                'project_manager_projects',
                 'volunteers',
                 'all_contacts',
                 'annual_budget',
@@ -477,7 +580,10 @@ class SpringIntoActionMainAppController extends BaseController
                 'select_options',
                 'site_volunteers',
                 'site_volunteer',
-                'status_management_records'
+                'status_management_records',
+                'workflow',
+                'attributes',
+                'project_attributes' #PHPStormInitDataMARKER
             ]
         );
         $this->makeJsFiles(compact('appInitialData'));
@@ -650,7 +756,6 @@ class SpringIntoActionMainAppController extends BaseController
                 $sql .= join(PHP_EOL, $aJoins) . PHP_EOL;
                 $sql .= "where p.ProjectID = {$oProject->ProjectID} and ({$sWhereOr}) and p.deleted_at is null;";
 
-
                 $rsMissingRecords = DB::select($sql);
 
                 foreach ($rsMissingRecords as $oProjectFixData) {
@@ -662,13 +767,12 @@ class SpringIntoActionMainAppController extends BaseController
                         if (empty($aliasColValue)) {
                             $aInsertData = [
                                 'ProjectID' => $oProjectFixData->ProjectID,
-                                $tableToUpdateForeignKeyField => $iMissingProjectForeignKeyId
+                                $tableToUpdateForeignKeyField => $iMissingProjectForeignKeyId,
                             ];
                             try {
                                 DB::table($tableToUpdate)->insert(
                                     array_merge($aInsertData, $aDefaultInsertRecordData)
                                 );
-
                             } catch (\Exception $e) {
                                 report($e);
                             }
@@ -695,7 +799,7 @@ class SpringIntoActionMainAppController extends BaseController
                 'tableToUpdate' => '',
                 'tableToUpdateForeignKeyField' => '',
                 'aDefaultInsertRecordData' => [],
-            ]
+            ],
         ];
         try {
             /**
@@ -715,9 +819,9 @@ class SpringIntoActionMainAppController extends BaseController
                     'aDefaultInsertRecordData' => [
                         'BudgetAmount' => 0.00,
                         'Status' => BudgetStatusOptions::getOptionLabelsArray()['Needs To Be Proposed'],
-                        'Comments' => 'Hayakawa- This budget source/allocation was automatically imported as a result of a database update and should be reviewed.'
+                        'Comments' => 'Hayakawa- This budget source/allocation was automatically imported as a result of a database update and should be reviewed.',
                     ],
-                ]
+                ],
             ];
             $this->fixProjectField($aConfig);
         } catch (\Exception $e) {
@@ -728,7 +832,7 @@ class SpringIntoActionMainAppController extends BaseController
             'bIsMultiValueField' => false,
             'FieldNameToFixOptionModelClass' => ProjectStatusOptions::class,
             'defaultFieldNameToFixOptionLabelText' => 'Pending',
-            'bUpdateBlankFieldNameToFixOptionId' => true
+            'bUpdateBlankFieldNameToFixOptionId' => true,
         ];
         $this->fixProjectField($aConfig);
 
@@ -737,7 +841,7 @@ class SpringIntoActionMainAppController extends BaseController
             'bIsMultiValueField' => false,
             'FieldNameToFixOptionModelClass' => ProjectSkillNeededOptions::class,
             'defaultFieldNameToFixOptionLabelText' => 'General',
-            'bUpdateBlankFieldNameToFixOptionId' => true
+            'bUpdateBlankFieldNameToFixOptionId' => true,
         ];
         $this->fixProjectField($aConfig);
 
@@ -746,7 +850,7 @@ class SpringIntoActionMainAppController extends BaseController
             'bIsMultiValueField' => false,
             'FieldNameToFixOptionModelClass' => SendStatusOptions::class,
             'defaultFieldNameToFixOptionLabelText' => 'Not Ready',
-            'bUpdateBlankFieldNameToFixOptionId' => true
+            'bUpdateBlankFieldNameToFixOptionId' => true,
         ];
         $this->fixProjectField($aConfig);
     }

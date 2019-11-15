@@ -8,11 +8,8 @@
 
 namespace Dhayakawa\SpringIntoAction\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class BudgetSourceOptions extends Model
+class BudgetSourceOptions extends BaseModel
 {
-    use \Dhayakawa\SpringIntoAction\Helpers\OptionsTrait;
     /**
      * The table associated with the model.
      *

@@ -35,6 +35,7 @@
             let self = this;
             this.childViews = [];
             if (!_.isNull(options) && !_.isUndefined(options)){
+                this.bAllowMultiple = !_.isUndefined(options.bAllowMultiple) ? options.bAllowMultiple : false;
                 this.buildHTML = !_.isUndefined(options.buildHTML) ? options.buildHTML : false;
                 this.setSelectedValue = !this.buildHTML && !_.isUndefined(options.setSelectedValue) ? options.setSelectedValue : null;
                 this.optionValueModelAttrName = options.optionValueModelAttrName;
@@ -76,6 +77,9 @@
             this.addAll();
             if (this.addBlankOption) {
                 this.$el.prepend('<option value=""></option>');
+            }
+            if (this.bAllowMultiple) {
+                this.$el.prop('multiple','multiple');
             }
             if (!_.isNull(this.setSelectedValue)) {
                 this.$el.val(this.setSelectedValue);

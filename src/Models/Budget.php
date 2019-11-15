@@ -11,7 +11,7 @@
     use Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
     use Illuminate\Database\Eloquent\Model;
 
-    class Budget extends Model {
+    class Budget extends BaseModel {
 
         use ProjectRegistrationHelper;
         use \Illuminate\Database\Eloquent\SoftDeletes;

@@ -3,6 +3,10 @@
         bAllowPreRender: true,
         dashboardViewClass: App.Views.Dashboard,
         dashboardView: null,
+        projectScopeManagementViewClass: App.Views.ProjectScopeManagement,
+        workflowManagementViewClass: App.Views.WorkflowManagement,
+        projectAttributesManagementViewClass: App.Views.ProjectAttributesManagement,
+        attributesManagementViewClass: App.Views.AttributesManagement,
         optionManagementViewClass: App.Views.OptionManagement,
         siteSettingsManagementViewClass: App.Views.SiteSettingsManagement,
         siteManagementViewClass: App.Views.SiteManagement,
@@ -21,11 +25,11 @@
             _.bindAll(self, 'dashboard', 'loadView', 'getShouldBuildView');
             App.Views.mainApp = new App.Views.MainApp;
             self.viewsToPreRender = {
-                'site_management': ['site', 'management'],
-                'project_management': ['project', 'management'],
-                'project_status': ['project', 'status'],
-                'site_contacts_management': ['site_contacts', 'management'],
-                'volunteers_management': ['volunteers', 'management']
+                // 'site_management': ['site', 'management'],
+                // 'project_management': ['project', 'management'],
+                // 'project_status': ['project', 'status'],
+                // 'site_contacts_management': ['site_contacts', 'management'],
+                // 'volunteers_management': ['volunteers', 'management']
             };
         },
         routes: {
@@ -152,60 +156,101 @@
                             new App.Models.DashboardPanel({
                                 'panelBgColor': 'maroon',
                                 'panelFAIconClass': 'fa-cogs',
-                                'panelName': 'SIA Settings Management',
+                                'panelName': 'Settings Management',
                                 'panelDescription': '',
                                 'panelLinksListView': new App.Views.DashboardPanelLinksList({
                                     collection: new App.Collections.DashboardPanelLinksListItem([
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Settings',
+                                            'linkText': 'Settings',
                                             'badgeCount': '',
                                             'route': 'view/settings/management'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Budget Source Options',
+                                            'linkText': 'Budget Source Options',
                                             'badgeCount': '',
                                             'route': 'view/option/management/budget_source_options'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Budget Status Options',
+                                            'linkText': 'Budget Status Options',
                                             'badgeCount': '',
                                             'route': 'view/option/management/budget_status_options'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Project Skill Needed Options',
+                                            'linkText': 'Project Skill Needed Options',
                                             'badgeCount': '',
                                             'route': 'view/option/management/project_skill_needed_options'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Project Status Options',
+                                            'linkText': 'Project Status Options',
                                             'badgeCount': '',
                                             'route': 'view/option/management/project_status_options'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Site Roles',
+                                            'linkText': 'Site Roles',
                                             'badgeCount': '',
                                             'route': 'view/option/management/site_roles'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Project Roles',
+                                            'linkText': 'Project Roles',
                                             'badgeCount': '',
                                             'route': 'view/option/management/project_roles'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Volunteer Status Options',
+                                            'linkText': 'Volunteer Status Options',
                                             'badgeCount': '',
                                             'route': 'view/option/management/volunteer_status_options'
                                         }),
                                         new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Update Send Status Options',
+                                            'linkText': 'Send Status Options',
                                             'badgeCount': '',
                                             'route': 'view/option/management/send_status_options'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'When Will Project Be Completed Options',
+                                            'badgeCount': '',
+                                            'route': 'view/option/management/when_will_project_be_completed_options'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Attributes',
+                                            'badgeCount': '',
+                                            'route': 'view/attributes/management'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Assign Project Attributes',
+                                            'badgeCount': '',
+                                            'route': 'view/project_attributes/management'
+                                        }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Workflow',
+                                            'badgeCount': '',
+                                            'route': 'view/workflow/management'
                                         }),
                                     ])
                                 }).render().$el.html()
                             })
                     }).render().$el.html());
                 }/**/
+                if (App.Vars.Auth.bCanProjectManagement) {
+                    aDashboardPanelViews.push(new App.Views.DashboardPanel({
+                        model:
+                            new App.Models.DashboardPanel({
+                                'panelBgColor': 'orange',
+                                'panelFAIconClass': 'fa-university',
+                                'panelName': 'Project Managers',
+                                'panelDescription': '',
+                                'panelLinksListView': new App.Views.DashboardPanelLinksList({
+                                    collection: new App.Collections.DashboardPanelLinksListItem([
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Manage Projects',
+                                            'badgeCount': '',
+                                            'route': 'view/project_scope/management'
+                                        }),
+
+                                    ])
+                                }).render().$el.html()
+                            })
+                    }).render().$el.html());
+                }
                 if (App.Vars.Auth.bCanProjectManagement) {
                     aDashboardPanelViews.push(new App.Views.DashboardPanel({
                         model:
@@ -310,7 +355,7 @@
         },
         preRenderViews: function () {
             let self = this;
-            if (!self.bAllowPreRender){
+            if (!self.bAllowPreRender) {
                 return;
             }
             App.Views.mainApp.preRenderedView = true;
@@ -356,12 +401,22 @@
             }
             try {
                 switch (self.routeRequested) {
-                    case 'settings_management':
+                    case 'project_scope_management':
+                        if (self.getShouldBuildView(self.routeRequested)) {
+                            self.managementViews[self.routeRequested] = new self.projectScopeManagementViewClass({
+                                viewName: self.routeRequested,
+                                modelNameLabel: 'Project',
+                            });
+                        }
+
+                        routeView = self.managementViews[self.routeRequested];
+                        break;
+                        case 'settings_management':
                         if (self.getShouldBuildView(self.routeRequested)) {
                             self.managementViews[self.routeRequested] = new self.siteSettingsManagementViewClass({
                                 model: App.Models.siteSettingModel,
                                 viewName: self.routeRequested,
-                                                                modelNameLabel: 'Site Settings Management',
+                                modelNameLabel: 'Site Settings Management',
                                 collection: App.Collections.siteSettingsCollection
                             });
                         }
@@ -371,7 +426,7 @@
                     case 'site_management':
                         if (self.getShouldBuildView(self.routeRequested)) {
                             self.managementViews[self.routeRequested] = new self.siteManagementViewClass({
-                                                                viewName: self.routeRequested
+                                viewName: self.routeRequested
                             });
                         }
 
@@ -380,7 +435,7 @@
                     case 'project_management':
                         if (self.getShouldBuildView(self.routeRequested)) {
                             self.managementViews[self.routeRequested] = new self.projectManagementViewClass({
-                                                                viewName: self.routeRequested
+                                viewName: self.routeRequested
 
                             });
                         }
@@ -391,7 +446,7 @@
                     case 'project_status':
                         if (self.getShouldBuildView(self.routeRequested)) {
                             self.managementViews[self.routeRequested] = new self.statusRecordManagementViewClass({
-                                                                collection: App.Collections.statusManagementCollection,
+                                collection: App.Collections.statusManagementCollection,
                                 viewName: self.routeRequested
                             });
                         }
@@ -404,8 +459,7 @@
                             self.managementViews[self.routeRequested] = new self.contactsManagementViewClass({
                                 className: 'route-view box box-primary contacts-management-view',
                                 viewClassName: 'contacts-management-view',
-
-                                                                modelNameLabel: 'Contact',
+                                modelNameLabel: 'Contact',
                                 collection: App.PageableCollections.contactsManagementCollection,
                                 columnCollectionDefinitions: App.Vars.ContactsBackgridColumnDefinitions,
                                 hideCellCnt: 0,
@@ -420,7 +474,7 @@
                             self.managementViews[self.routeRequested] = new self.volunteersManagementViewClass({
                                 className: 'route-view box box-primary volunteers-management-view',
                                 viewClassName: 'volunteers-management-view',
-                                                                modelNameLabel: 'Volunteer',
+                                modelNameLabel: 'Volunteer',
                                 collection: App.PageableCollections.volunteersManagementCollection,
                                 columnCollectionDefinitions: App.Vars.volunteersBackgridColumnDefinitions,
                                 hideCellCnt: 0,
@@ -437,7 +491,7 @@
                                 viewClassName: 'annualbudgets-management-view',
                                 model: App.Models.annualBudgetModel,
 
-                                                                modelNameLabel: 'AnnualBudget',
+                                modelNameLabel: 'AnnualBudget',
                                 collection: App.Collections.annualBudgetsManagementCollection,
                                 columnCollectionDefinitions: App.Vars.annualBudgetsBackgridColumnDefinitions,
                                 hideCellCnt: 0,
@@ -455,7 +509,7 @@
                                 viewClassName: 'reports-management-view',
                                 model: App.Models.reportModel,
 
-                                                                modelNameLabel: type.charAt(0).toUpperCase() + type.substr(1) + ' Report',
+                                modelNameLabel: type.charAt(0).toUpperCase() + type.substr(1) + ' Report',
                                 collection: App.Collections.reportsManagementCollection,
                                 columnCollectionDefinitions: [],
                                 hideCellCnt: 0,
@@ -485,12 +539,10 @@
                                 labelAttribute = 'Role';
                             }
                             self.managementViews[self.routeRequested + '-' + type] = new self.optionManagementViewClass({
-                                attributes: {
-                                    class: 'route-view box box-primary option-management-view option-management-view' + '-' + type
-                                },
+                                className: 'route-view box box-primary option-management-view option-management-view' + '-' + type,
                                 model: optionModel,
                                 viewName: self.routeRequested + '-' + type,
-                                                                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
+                                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
                                 modelNameLabel: type.charAt(0).toUpperCase() + type.substr(1),
                                 optionType: type,
                                 optionIdAttribute: optionIdAttribute,
@@ -501,6 +553,60 @@
                         }
 
                         routeView = self.managementViews[self.routeRequested + '-' + type];
+                        break;
+                    case 'attributes_management':
+                        if (self.getShouldBuildView(self.routeRequested)) {
+                            self.managementViews[self.routeRequested] = new self.attributesManagementViewClass({
+                                className: 'route-view box box-primary attributes-management-view',
+                                model: App.Models.attributesModel,
+                                viewName: self.routeRequested,
+                                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
+                                modelNameLabel: 'Attribute',
+                                listItemType: 'attributes',
+                                modelIdAttribute: App.Models.attributesModel.idAttribute,
+                                labelAttribute: 'label',
+                                collection: App.Collections.attributesManagementCollection,
+                                columnCollectionDefinitions: [],
+                            });
+                        }
+
+                        routeView = self.managementViews[self.routeRequested];
+                        break;
+                        case 'workflow_management':
+                        if (self.getShouldBuildView(self.routeRequested)) {
+                            self.managementViews[self.routeRequested] = new self.workflowManagementViewClass({
+                                className: 'route-view box box-primary workflow-management-view',
+                                model: App.Models.workflowModel,
+                                viewName: self.routeRequested,
+                                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
+                                modelNameLabel: 'Workflow',
+                                listItemType: 'workflow',
+                                modelIdAttribute: App.Models.workflowModel.idAttribute,
+                                labelAttribute: 'label',
+                                collection: App.Collections.workflowManagementCollection,
+                                columnCollectionDefinitions: [],
+                            });
+                        }
+
+                        routeView = self.managementViews[self.routeRequested];
+                        break;
+                    case 'project_attributes_management':
+                        if (self.getShouldBuildView(self.routeRequested)) {
+                            self.managementViews[self.routeRequested] = new self.projectAttributesManagementViewClass({
+                                className: 'route-view box box-primary project-attributes-management-view',
+                                model: App.Models.projectAttributesModel,
+                                viewName: self.routeRequested,
+                                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
+                                modelNameLabel: 'Project Attribute',
+                                listItemType: 'project_attributes',
+                                modelIdAttribute: App.Models.attributesModel.idAttribute,
+                                labelAttribute: 'label',
+                                collection: App.Collections.projectAttributesManagementCollection,
+                                columnCollectionDefinitions: [],
+                            });
+                        }
+
+                        routeView = self.managementViews[self.routeRequested];
                         break;
                     default:
                         routeView = null;

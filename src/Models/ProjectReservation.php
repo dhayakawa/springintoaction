@@ -5,7 +5,7 @@ namespace Dhayakawa\SpringIntoAction\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
-class ProjectReservation extends Model
+class ProjectReservation extends BaseModel
 {
     /**
      * The table associated with the model.

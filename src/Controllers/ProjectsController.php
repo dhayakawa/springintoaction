@@ -11,6 +11,7 @@ namespace Dhayakawa\SpringIntoAction\Controllers;
 use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
@@ -23,6 +24,9 @@ use \Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
 use Dhayakawa\SpringIntoAction\Models\Budget;
 use Dhayakawa\SpringIntoAction\Controllers\ajaxUploader;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttachment;
+use Dhayakawa\SpringIntoAction\Models\ProjectScope;
+use Dhayakawa\SpringIntoAction\Models\ProjectAttribute;
+use Dhayakawa\SpringIntoAction\Models\Workflow;
 
 class ProjectsController extends BaseController
 {
@@ -84,8 +88,9 @@ class ProjectsController extends BaseController
                     'BudgetAllocationDone' => 0,
                     'VolunteerAllocationDone' => 0,
                     'NeedSIATShirtsForPC' => 0,
-                    'FinalCompletionStatus' => 0];
-                if(\array_key_exists($key, $a) && $value == ''){
+                    'FinalCompletionStatus' => 0,
+                ];
+                if (\array_key_exists($key, $a) && $value == '') {
                     $value = $a[$key];
                 }
             }
@@ -100,6 +105,48 @@ class ProjectsController extends BaseController
             $response = ['success' => true, 'msg' => 'Project Creation Succeeded.', 'ProjectID' => $project->ProjectID];
         } else {
             $response = ['success' => false, 'msg' => 'Project Creation Failed.'];
+        }
+
+        return view('springintoaction::admin.main.response', $request, compact('response'));
+    }
+
+    public function getProjectScopeProject(Request $request, $ProjectID)
+    {
+        $projectScope = new ProjectScope();
+        $data = $projectScope->getProject($ProjectID, true);
+
+        return $data;
+    }
+
+    public function getProjectScopeProjectDropdownOptions(Request $request, $SiteStatusID)
+    {
+        $aSiteProjects = Project::getSiteProjects($SiteStatusID, true);
+        $aProjectsDropdown = [];
+        foreach ($aSiteProjects as $project) {
+            $aProjectsDropdown[] = [
+                'ProjectID' => $project['ProjectID'],
+                'SequenceNumber' => $project['SequenceNumber'],
+            ];
+        }
+
+        return $aProjectsDropdown;
+    }
+
+    public function scopeUpdate(Request $request, $ProjectID)
+    {
+
+        $params = $request->all();
+        $project = Project::findOrFail($ProjectID);
+        $projectModelData = $request->only($project->getFillable());
+        $projectScope = new ProjectScope();
+        $success =$projectScope->updateProjectScope($ProjectID, $params, $project, $projectModelData);
+
+        if (!isset($success)) {
+            $response = ['success' => false, 'msg' => 'Project Scope Update Not Implemented Yet.'];
+        } elseif ($success) {
+            $response = ['success' => true, 'msg' => 'Project Scope Update Succeeded.'];
+        } else {
+            $response = ['success' => false, 'msg' => 'Project Scope Update Failed.'];
         }
 
         return view('springintoaction::admin.main.response', $request, compact('response'));
@@ -141,7 +188,7 @@ class ProjectsController extends BaseController
                     'BudgetAllocationDone' => 0,
                     'VolunteerAllocationDone' => 0,
                     'NeedSIATShirtsForPC' => 0,
-                    'FinalCompletionStatus' => 0
+                    'FinalCompletionStatus' => 0,
                 ];
                 if (\array_key_exists($key, $a) && $value == '') {
                     $value = $a[$key];
@@ -240,8 +287,8 @@ class ProjectsController extends BaseController
     public function getLeadVolunteers($ProjectID)
     {
         $model = new ProjectVolunteerRole();
-        return $model->getProjectLeads($ProjectID);
 
+        return $model->getProjectLeads($ProjectID);
     }
 
     public function getBudgets($ProjectID)
@@ -277,6 +324,7 @@ class ProjectsController extends BaseController
         try {
             $model = new ProjectVolunteer();
             $project_volunteers = $model->getProjectVolunteers($ProjectID);
+
             return $project_volunteers;
         } catch (\Exception $e) {
             return [];
@@ -317,22 +365,24 @@ class ProjectsController extends BaseController
     {
         $projectModel = new Project();
         $sSqlVolunteersAssigned = $projectModel->getVolunteersAssignedSql();
-        $all_projects =
-            Project::select(
-                'projects.*',
-                DB::raw(
-                    '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
-                ),
-                DB::raw(
-                    "{$sSqlVolunteersAssigned} as VolunteersAssigned"
-                ),
-                DB::raw(
-                    '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
-                )
-            )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-                    'site_status.Year',
-                    date('Y')
-                )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+        $all_projects = Project::select(
+            'projects.*',
+            DB::raw(
+                '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
+            ),
+            DB::raw(
+                "{$sSqlVolunteersAssigned} as VolunteersAssigned"
+            ),
+            DB::raw(
+                '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
+            )
+        )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
+            'site_status.Year',
+            date('Y')
+        )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy(
+            'projects.SequenceNumber',
+            'asc'
+        )->get()->toArray();
 
         return $all_projects;
     }
@@ -346,14 +396,27 @@ class ProjectsController extends BaseController
                 $results = $model->toArray();
                 foreach ($results as $key => $attachment) {
                     $attachmentPath = $attachment['AttachmentPath'];
-                    if(\preg_match("/^.*\/storage\/app/", $attachmentPath)){
-                        $attachment['AttachmentPath'] = preg_replace("/^.*\/storage\/app/", "/admin/project_attachment/stream/storage/app", $attachment['AttachmentPath']);
+                    if (\preg_match("/^.*\/storage\/app/", $attachmentPath)) {
+                        $attachment['AttachmentPath'] =
+                            preg_replace(
+                                "/^.*\/storage\/app/",
+                                "/admin/project_attachment/stream/storage/app",
+                                $attachment['AttachmentPath']
+                            );
                         $results[$key] = $attachment;
                     }
                 }
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__, $e->getMessage()]);
+            \Illuminate\Support\Facades\Log::debug(
+                '',
+                [
+                    'File:' . __FILE__,
+                    'Method:' . __METHOD__,
+                    'Line:' . __LINE__,
+                    $e->getMessage(),
+                ]
+            );
         }
 
         return $results;

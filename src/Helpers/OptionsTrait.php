@@ -7,8 +7,20 @@
  */
 namespace Dhayakawa\SpringIntoAction\Helpers;
 
+use Dhayakawa\SpringIntoAction\Models\Attribute;
+
 trait OptionsTrait
 {
+    public static function getAttributesArray($table=null)
+    {
+        if ($table) {
+            $aAttributes = Attribute::where('table', '=', $table)->orderBy('DisplaySequence', 'asc')->get();
+        } else {
+            $aAttributes = Attribute::sortBy('DisplaySequence', 'asc')->get();
+        }
+        $attributes = $aAttributes ? $aAttributes->toArray() : [];
+        return $attributes;
+    }
     public static function getOptionLabelsArray()
     {
         $aOptionLabels = [];

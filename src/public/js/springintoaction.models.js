@@ -172,7 +172,43 @@
                 options.shift();
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
-                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
+                }).join('');
+            } else {
+                return options;
+            }
+        },
+        getPermitRequiredStatusOptions: function (bReturnHtml, defaultOption) {
+            let options = _.pairs(App.Vars.selectOptions['PermitRequiredStatusOptions']);
+
+            if (bReturnHtml) {
+                return _.map(options, function (value, key) {
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
+                }).join('');
+            } else {
+                return options;
+            }
+        },
+        getPermitRequiredOptions: function (bReturnHtml, defaultOption) {
+            let options = _.pairs(App.Vars.selectOptions['PermitRequiredOptions']);
+
+            if (bReturnHtml) {
+                return _.map(options, function (value, key) {
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
+                }).join('');
+            } else {
+                return options;
+            }
+        },
+        getWhenWillProjectBeCompletedOptions: function (bReturnHtml, defaultOption) {
+            let options = _.pairs(App.Vars.selectOptions['WhenWillProjectBeCompletedOptions']);
+
+            if (bReturnHtml) {
+                return _.map(options, function (value, key) {
+                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
                 return options;
@@ -184,7 +220,21 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
-                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
+                }).join('');
+            } else {
+                return options;
+            }
+        },
+        getSkillsNeededCheckboxList: function (bReturnHtml, defaultOption) {
+            let options = _.pairs(App.Vars.selectOptions['ProjectSkillNeededOptions']);
+
+            if (bReturnHtml) {
+                let defaultOptions = !_.isUndefined(defaultOption) ? defaultOption.split(/,/) : [];
+                return _.map(options, function (value, key) {
+                    let checked = _.indexOf(defaultOptions, value[0]) !== -1 ? 'checked' : '';
+                    let id = 'primary_skill_needed_' + value[1];
+                    return "<label class='skills-needed-checkbox-label checkbox-inline' for='"+ id+"'><input type='checkbox' " + checked + " id='"+id+"' name='primary_skill_needed[]' value='" + value[1] + "'"  + "/>" + value[0]+'</label>';
                 }).join('');
             } else {
                 return options;
@@ -195,7 +245,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
-                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
                 return options;
@@ -210,7 +260,7 @@
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
-                    return "<option " + selected +" value='" + value[1] + "'>" + value[0] + "</option>";
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
                 return options;
@@ -560,6 +610,56 @@
 })(window.App);
 
 (function (App) {
+    App.Models.Attributes = Backbone.Model.extend({
+        idAttribute: "id",
+        url: '/admin/attributes',
+        defaults: {
+            'attribute_code':'',
+            'default_value':'',
+            'input':'text',
+            'options_source':'',
+            'label':'',
+            'table':'',
+            'DisplaySequence':''
+        },
+    });
+})(window.App);
+
+(function (App) {
+    App.Models.ProjectAttributes = Backbone.Model.extend({
+        idAttribute: "id",
+        url: '/admin/project_attributes',
+        defaults: {
+            'attribute_id':'',
+            'workflow_id':'',
+            'project_skill_needed_option_id':''
+        },
+    });
+})(window.App);
+
+(function (App) {
+    App.Models.Workflow = Backbone.Model.extend({
+        idAttribute: "id",
+        url: '/admin/workflow',
+        defaults: {
+            'label':'',
+            'workflow_code':'',
+            'DisplaySequence':''
+        }
+    });
+})(window.App);
+
+(function (App) {
+    App.Models.ProjectScope = Backbone.Model.extend({
+        url: '/admin/project_scope',
+        idAttribute: "ProjectID",
+        defaults: {
+
+        }
+    });
+})(window.App);
+
+(function (App) {
     App.Models.siteSettingModel = new App.Models.SiteSetting();
     App.Models.siteModel = new App.Models.Site();
     App.Models.siteStatusModel = new App.Models.SiteStatus();
@@ -584,4 +684,8 @@
     App.Models.reportModel = new App.Models.Report();
     App.Models.statusManagementModel = new App.Models.StatusManagement();
     App.Models.optionModel = new App.Models.Option();
+    App.Models.attributesModel = new App.Models.Attributes();
+    App.Models.projectScopeModel = new App.Models.ProjectScope();
+    App.Models.projectAttributesModel = new App.Models.ProjectAttributes();
+    App.Models.workflowModel = new App.Models.Workflow();
 })(window.App);

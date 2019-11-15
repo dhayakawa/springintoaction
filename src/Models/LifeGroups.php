@@ -10,7 +10,7 @@ namespace Dhayakawa\SpringIntoAction\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class LifeGroups extends Model
+class LifeGroups extends BaseModel
 {
     /**
      * The table associated with the model.

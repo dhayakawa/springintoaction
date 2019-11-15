@@ -10,7 +10,7 @@
 
     use Illuminate\Database\Eloquent\Model;
 
-    class ProjectRole extends Model {
+    class ProjectRole extends BaseModel {
 
         /**
          * The table associated with the model.

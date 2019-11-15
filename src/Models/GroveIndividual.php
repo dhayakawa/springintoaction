@@ -10,7 +10,7 @@ namespace Dhayakawa\SpringIntoAction\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class GroveIndividual extends Model
+class GroveIndividual extends BaseModel
 {
     /**
      * The table associated with the model.

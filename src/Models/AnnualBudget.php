@@ -14,7 +14,7 @@
     use Dhayakawa\SpringIntoAction\Models\SiteStatus;
     use Dhayakawa\SpringIntoAction\Models\Budget;
 
-    class AnnualBudget extends Model {
+    class AnnualBudget extends BaseModel {
 
         use \Illuminate\Database\Eloquent\SoftDeletes;
 

@@ -10,7 +10,7 @@
 
     use Illuminate\Database\Eloquent\Model;
 
-    class SiteRole extends Model {
+    class SiteRole extends BaseModel {
 
         /**
          * The table associated with the model.

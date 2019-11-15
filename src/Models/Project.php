@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  *
  * @package Dhayakawa\SpringIntoAction\Models
  */
-class Project extends Model
+class Project extends BaseModel
 {
     use ProjectRegistrationHelper;
 
