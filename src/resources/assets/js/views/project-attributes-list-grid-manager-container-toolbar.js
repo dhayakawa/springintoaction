@@ -32,7 +32,7 @@
         },
         events: {
             'click .btnSave': 'saveList',
-            'click .btnAdd': 'addListItem',
+            'click .btnAdd': 'addListItem'
         },
         render: function () {
             let self = this;
@@ -110,8 +110,9 @@
                 labelAttribute: self.options.managedGridView.labelAttribute,
                 attributesOptions: App.Collections.attributesManagementCollection.getTableOptions('projects', true),
                 workflowOptions: App.Collections.workflowManagementCollection.getOptions(true),
-                projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true)
+                projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true, self.options.managedGridView.parentView.$('#ProjectTypesFilter').text())
             }));
+
         },
         toggleSaveBtn: function (e) {
             let self = this;

@@ -176,7 +176,7 @@
                 el: self.$('.grid-manager-container'),
                 parentView: self,
                 managedGridView: self.projectScopeView,
-                ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                ajaxWaitingTargetClassSelector: '.backgrid-wrapper',
             });
             self.gridManagerContainerToolbar.render();
             self.childViews.push(self.gridManagerContainerToolbar);

@@ -65,7 +65,8 @@
             } else {
                 return options;
             }
-        }, getPermitRequiredOptions: function (bReturnHtml, defaultOption) {
+        },
+        getPermitRequiredOptions: function (bReturnHtml, defaultOption) {
             let options = _.pairs(App.Vars.selectOptions['PermitRequiredOptions']);
 
             if (bReturnHtml) {
@@ -76,7 +77,8 @@
             } else {
                 return options;
             }
-        }, getWhenWillProjectBeCompletedOptions: function (bReturnHtml, defaultOption) {
+        },
+        getWhenWillProjectBeCompletedOptions: function (bReturnHtml, defaultOption) {
             let options = _.pairs(App.Vars.selectOptions['WhenWillProjectBeCompletedOptions']);
 
             if (bReturnHtml) {
@@ -95,6 +97,20 @@
                 return _.map(options, function (value, key) {
                     let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
+                }).join('');
+            } else {
+                return options;
+            }
+        },
+        getSkillsNeededCheckboxList: function (bReturnHtml, defaultOption) {
+            let options = _.pairs(App.Vars.selectOptions['ProjectSkillNeededOptions']);
+
+            if (bReturnHtml) {
+                let defaultOptions = !_.isUndefined(defaultOption) ? defaultOption.split(/,/) : [];
+                return _.map(options, function (value, key) {
+                    let checked = _.indexOf(defaultOptions, value[0]) !== -1 ? 'checked' : '';
+                    let id = 'primary_skill_needed_' + value[1];
+                    return "<label class='skills-needed-checkbox-label checkbox-inline' for='"+ id+"'><input type='checkbox' " + checked + " id='"+id+"' name='primary_skill_needed[]' value='" + value[1] + "'"  + "/>" + value[0]+'</label>';
                 }).join('');
             } else {
                 return options;

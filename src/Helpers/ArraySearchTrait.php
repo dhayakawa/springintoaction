@@ -45,8 +45,8 @@ trait ArraySearchTrait
     public static function searchArrayValueRecursiveByKey($key, array $aStack)
     {
         $val = [];
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveArrayIterator($aStack), RecursiveIteratorIterator::SELF_FIRST
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveArrayIterator($aStack), \RecursiveIteratorIterator::SELF_FIRST
         );
         $bShowDebugOutput = false;
         if ($bShowDebugOutput) { // just for debugging
@@ -103,8 +103,8 @@ trait ArraySearchTrait
     public static function searchArrayValueRecursiveByKeyValue($key, $needle, array $aStack)
     {
         $val = [];
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveArrayIterator($aStack), RecursiveIteratorIterator::SELF_FIRST
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveArrayIterator($aStack), \RecursiveIteratorIterator::SELF_FIRST
         );
         // just for debugging
         // $newLine = array_key_exists('SHELL', $_SERVER) ? PHP_EOL : '<br>';

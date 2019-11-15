@@ -404,6 +404,20 @@
 .sia-main-app .site-projects-tabs-view .box-footer {
   background-color: transparent;
 }
+.sia-main-app .skills-needed-checkbox-label.checkbox-inline {
+  margin-right: 10px;
+}
+.sia-main-app .skills-needed-checkbox-label.checkbox-inline + .checkbox-inline {
+  margin-left: 0 !important;
+}
+.sia-main-app .project-attributes-management-view .backgrid-wrapper {
+  overflow: unset;
+}
+.sia-main-app .project-attributes-management-view form[name="list-items"] table.list-items tbody tr.filtered {
+  position: absolute;
+  display: block;
+  left: -1000000000000000000px;
+}
 .backgrid-wrapper {
   display: block;
   position: relative;

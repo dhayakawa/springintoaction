@@ -134,16 +134,13 @@ class ProjectsController extends BaseController
 
     public function scopeUpdate(Request $request, $ProjectID)
     {
+
         $params = $request->all();
-        \Illuminate\Support\Facades\Log::debug(
-            '',
-            [
-                'File:' . __FILE__,
-                'Method:' . __METHOD__,
-                'Line:' . __LINE__,
-                $params,
-            ]
-        );
+        $project = Project::findOrFail($ProjectID);
+        $projectModelData = $request->only($project->getFillable());
+        $projectScope = new ProjectScope();
+        $success =$projectScope->updateProjectScope($ProjectID, $params, $project, $projectModelData);
+
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Scope Update Not Implemented Yet.'];
         } elseif ($success) {

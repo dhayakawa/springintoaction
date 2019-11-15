@@ -5,11 +5,11 @@
         gridManagerContainerToolbarClass: App.Views.ProjectAttributesGridManagerContainerToolbar,
         initialize: function (options) {
             let self = this;
-            // try {
-            //     _.bindAll(self, '');
-            // } catch (e) {
-            //     console.error(options, e)
-            // }
+            try {
+                _.bindAll(self, 'filterList');
+            } catch (e) {
+                console.error(options, e)
+            }
             // Required call for inherited class
             this._initialize(options);
 
@@ -17,7 +17,7 @@
             self.labelAttribute = self.options.labelAttribute;
 
         },
-        events: {},
+        events: {'change #ProjectTypesFilter': 'filterList'},
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
@@ -39,7 +39,8 @@
                     modelNameLabel: self.modelNameLabel,
                     modelIdAttribute: self.modelIdAttribute,
                     labelAttribute: self.labelAttribute,
-                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector
+                    ajaxWaitingTargetClassSelector: self.ajaxWaitingTargetClassSelector,
+                    parentView: self
                 });
 
                 self.gridManagerContainerToolbar = new self.gridManagerContainerToolbarClass({
@@ -54,11 +55,21 @@
 
                 self.$('.backgrid-wrapper').html($listItem.render().el);
                 self.childViews.push($listItem);
+                let $filter = $('<select id="ProjectTypesFilter" name="ProjectTypesFilter" class="site-management-selects form-control input-sm inline"></select>').html(App.Models.projectModel.getSkillsNeededOptions(true));
+                self.$('h3.project-attributes-management.box-title').after($filter);
+                self.filterList();
                 window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             });
 
             return self;
         },
-
+        filterList: function (e) {
+            let self = this;
+            if (self.$('#ProjectTypesFilter').length) {
+                let projectTypeId = self.$('#ProjectTypesFilter').val();
+                self.$('.list-items > tbody > tr').addClass('filtered');
+                self.$('.list-items').find('[name*="project_skill_needed_option_id"] option[value="' + projectTypeId + '"]:selected').parents('tr').removeClass('filtered');
+            }
+        },
     });
 })(window.App);

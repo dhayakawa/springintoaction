@@ -25,11 +25,11 @@
             _.bindAll(self, 'dashboard', 'loadView', 'getShouldBuildView');
             App.Views.mainApp = new App.Views.MainApp;
             self.viewsToPreRender = {
-                //'site_management': ['site', 'management'],
-                //'project_management': ['project', 'management'],
-                //'project_status': ['project', 'status'],
-                //'site_contacts_management': ['site_contacts', 'management'],
-                //'volunteers_management': ['volunteers', 'management']
+                // 'site_management': ['site', 'management'],
+                // 'project_management': ['project', 'management'],
+                // 'project_status': ['project', 'status'],
+                // 'site_contacts_management': ['site_contacts', 'management'],
+                // 'volunteers_management': ['volunteers', 'management']
             };
         },
         routes: {

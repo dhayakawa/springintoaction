@@ -410,6 +410,29 @@
             background-color: transparent;
         }
     }
+    .skills-needed-checkbox-label.checkbox-inline{
+        margin-right:10px;
+        &+ .checkbox-inline {
+            margin-left: 0 !important;
+        }
+    }
+    form[name="projectScope"] {
+        [name="estimated_total_cost"]{
+
+        }
+    }
+    .project-attributes-management-view{
+        .backgrid-wrapper{
+            overflow:unset;
+        }
+        form[name="list-items"] {
+            table.list-items tbody tr.filtered {
+                position: absolute;
+                display: block;
+                left: -999999999999999999px;
+            }
+        }
+    }
 
 }
 

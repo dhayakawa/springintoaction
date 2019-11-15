@@ -38,11 +38,13 @@ class AttributesManagementController extends BaseController
     public function getList(Request $request, $listType)
     {
         $aListItems = $this->getListItemModel($listType);
-        if($aListItems->hasColumn('DisplaySequence')){
-        $aListItems->orderBy('DisplaySequence', 'asc');
-        }
         $aResults = $aListItems->get()->toArray();
+        if($aListItems->hasColumn('DisplaySequence')){
+            $sorted = collect($aResults)->sortBy('DisplaySequence');
+            $aResults = $sorted->values()->all();
+        }
 
+        //print_r($aResults);
         return $aResults;
     }
 

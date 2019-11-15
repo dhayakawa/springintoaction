@@ -35,11 +35,11 @@
         </table>
     </form>
     <script type="text/javascript">
-        let json = '<%= JSON.stringify(listItems) %>';
-        let listItems = JSON.parse(json);
-        let listItemsCnt = listItems.length;
-        for (let i = 0; i < listItemsCnt; i++) {
-            let listItem = listItems[i];
+        window.json = '<%= JSON.stringify(listItems) %>';
+        window.listItems = JSON.parse(window.json);
+        window.listItemsCnt = window.listItems.length;
+        for (let i = 0; i < window.listItemsCnt; i++) {
+            let listItem = window.listItems[i];
             let id = listItem['<%= idAttribute %>'];
             let listItemId = 'list_item_' + id;
             let $attributeId = $('[name="list_item['+ id +'][attribute_id]"]');

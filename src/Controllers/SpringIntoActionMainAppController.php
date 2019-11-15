@@ -67,8 +67,12 @@ class SpringIntoActionMainAppController extends BaseController
         }
         if($auth['bIsAdmin'] || $auth['bIsProjectManager']){
             $pmSite = new Site();
-            $projectManagerVolunteer = Volunteer::where('email', $user->email)->get()->toArray();
-            $project_manager_sites = $pmSite->getVolunteerSites($projectManagerVolunteer[0]['VolunteerID'], 2);
+            if ($auth['bIsProjectManager']) {
+                $projectManagerVolunteer = Volunteer::where('email', $user->email)->get()->toArray();
+                $project_manager_sites = $pmSite->getVolunteerSites($projectManagerVolunteer[0]['VolunteerID'], 2);
+            } else {
+                $project_manager_sites = SiteStatus::join('sites','sites.SiteID','=','site_status.SiteID')->where('Year', $this->getCurrentYear())->get()->toArray();
+            }
             $project_manager_projects = [];
             foreach($project_manager_sites as $project_manager_site){
                 $project_manager_projects[$project_manager_site['SiteStatusID']] = Project::getSiteProjects($project_manager_site['SiteStatusID'], true);
@@ -510,6 +514,8 @@ class SpringIntoActionMainAppController extends BaseController
         try {
             $aAttributes = Attribute::get();
             $attributes = $aAttributes ? $aAttributes->toArray() : [];
+            $sorted = collect($attributes)->sortBy('DisplaySequence');
+            $attributes = $sorted->values()->all();
         } catch (\Exception $e) {
             $attributes = [];
             report($e);

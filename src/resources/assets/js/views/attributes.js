@@ -27,6 +27,7 @@
         },
         render: function (e) {
             let self = this;
+
             self.$el.html(self.template({
                 idAttribute: self.modelIdAttribute,
                 labelAttribute: self.labelAttribute,

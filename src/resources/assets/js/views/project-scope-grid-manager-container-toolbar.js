@@ -50,33 +50,24 @@
                 return;
             }
             window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
-            let data = {
-                data: self.$form.serialize()
-            };
-
+            console.log()
+            let data = $.unserialize(self.$form.serialize());
             let growlMsg = '';
             let growlType = '';
             $.when(
-                $.ajax({
-                    type: "POST",
-                    dataType: "json",
-                    url: 'admin/project_scope',
-                    data: data,
-                    success: function (response) {
-                        growlMsg = response.msg;
-                        growlType = response.success ? 'success' : 'error';
-                        self.options.managedGridView.collection.url = self.managedGridView.getCollectionUrl(self.options.managedGridView.options.listItemType);
-                        $.when(
-                            self.options.managedGridView.collection.fetch({reset: true})
-                        ).then(function () {
-
-                        });
-                    },
-                    fail: function (response) {
-                        growlMsg = response.msg;
-                        growlType = response.success ? 'success' : 'error';
-                    }
-                })
+                self.options.managedGridView.model.save(data,
+                    {
+                        success: function (model, response, options) {
+                            _log('App.Views.ProjectScope.update', self.viewName + ' save', model, response, options);
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        },
+                        error: function (model, response, options) {
+                            console.error('App.Views.ProjectScope.update', self.viewName + ' save', model, response, options);
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
             ).then(function () {
                 growl(growlMsg, growlType);
                 window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);

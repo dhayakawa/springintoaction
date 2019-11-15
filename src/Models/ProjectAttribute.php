@@ -28,6 +28,6 @@ class ProjectAttribute extends BaseModel
     protected $fillable = [
         'attribute_id',
         'workflow_id',
-        'project_skills_needed_option_id',
+        'project_skill_needed_option_id',
     ];
 }

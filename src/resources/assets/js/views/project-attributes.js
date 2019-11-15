@@ -37,6 +37,7 @@
                 view: self
             }));
             self.$sortableElement = self.$el.find('.table.list-items tbody');
+            self.parentView.filterList();
             return self;
         },
         setGridManagerContainerToolbar: function ($gridManagerContainerToolbar) {
