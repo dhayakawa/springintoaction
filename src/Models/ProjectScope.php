@@ -963,7 +963,7 @@ FROM (
             echo $e->getMessage();
         }
 
-        $this->convertRowDataToAttributeData();
+        //$this->convertRowDataToAttributeData();
 
         return $aProject;
     }
