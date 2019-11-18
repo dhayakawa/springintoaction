@@ -58,36 +58,7 @@ class ProjectScope extends BaseModel
         'OriginalRequest',
         'ProjectDescription',
         'Comments',
-        'BudgetSources',
-        'ChildFriendly',
-        'PrimarySkillNeeded',
-        'VolunteersNeededEst',
-        'Status',
-        'StatusReason',
-        'MaterialsNeeded',
-        'EstimatedCost',
-        'ActualCost',
-        'BudgetAvailableForPC',
-        'VolunteersLastYear',
-        'NeedsToBeStartedEarly',
-        'PCSeeBeforeSIA',
-        'SpecialEquipmentNeeded',
-        'PermitsOrApprovalsNeeded',
-        'PrepWorkRequiredBeforeSIA',
-        'SetupDayInstructions',
-        'SIADayInstructions',
-        'Area',
-        'PaintOrBarkEstimate',
-        'PaintAlreadyOnHand',
-        'PaintOrdered',
-        'CostEstimateDone',
-        'MaterialListDone',
-        'BudgetAllocationDone',
-        'VolunteerAllocationDone',
-        'NeedSIATShirtsForPC',
-        'ProjectSend',
-        'FinalCompletionStatus',
-        'FinalCompletionAssessment',
+
     ];
     private $defaultRecordData = [
         'ProjectID' => null,
@@ -970,9 +941,9 @@ FROM (
 
     public function convertRowDataToAttributeData()
     {
-        foreach (array_keys($this->aAttributeTables) as $t) {
-            DB::table($t)->truncate();
-        }
+        // foreach (array_keys($this->aAttributeTables) as $t) {
+        //     DB::table($t)->truncate();
+        // }
         $aFieldMap = [
             'ActualCost' => 'actual_cost',
             'Area' => 'dimensions',
