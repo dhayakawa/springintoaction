@@ -136,10 +136,10 @@ class ProjectsController extends BaseController
     {
 
         $params = $request->all();
-        $project = Project::findOrFail($ProjectID);
+        $project = ProjectScope::findOrFail($ProjectID);
         $projectModelData = $request->only($project->getFillable());
-        $projectScope = new ProjectScope();
-        $success =$projectScope->updateProjectScope($ProjectID, $params, $project, $projectModelData);
+        
+        $success = $project->updateProjectScope($ProjectID, $params, $project, $projectModelData);
 
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Scope Update Not Implemented Yet.'];

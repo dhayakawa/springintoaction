@@ -50,8 +50,8 @@ class SpringIntoActionMainAppController extends BaseController
     public function index(Request $request)
     {
         $user = Auth::user();
-        // $ProjectAttribute = new ProjectAttribute();
-        // $ProjectAttribute->manage();
+        $ProjectAttribute = new ProjectAttribute();
+        $ProjectAttribute->manage();
         $aPermissionNames = LaratrustPermission::select('name')->get()->toArray();
         $auth = [];
         foreach ($aPermissionNames as $permission) {
