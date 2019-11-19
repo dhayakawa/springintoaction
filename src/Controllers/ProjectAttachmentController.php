@@ -208,13 +208,23 @@ class ProjectAttachmentController extends BaseController
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int $id
+     *
      *
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        //
+
+        $success = ProjectAttachment::findOrFail($id)->delete();
+        if (!isset($success)) {
+            $response = ['success' => false, 'msg' => 'Project Attachment Removal Not Implemented Yet.'];
+        } elseif ($success) {
+            $response = ['success' => true, 'msg' => 'Project Attachment Removal Succeeded.'];
+        } else {
+            $response = ['success' => false, 'msg' => 'Project Attachment Removal Failed.'];
+        }
+
+        return view('springintoaction::admin.main.response', compact('response'));
     }
 
     public function batchDestroy(Request $request)

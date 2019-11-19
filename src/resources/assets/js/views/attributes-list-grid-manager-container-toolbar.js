@@ -12,14 +12,31 @@
             // Required call for inherited class
             self._initialize(options);
             self._newListItemTemplate = '<tr id="<%= listItemId %>">' +
-                                      '    <td class="display-sequence">' +
-                                      '        <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' +
-                                      '        <input name="list_item[<%= id %>][DisplaySequence]"  data-id="<%= id %>" value="<%= DisplaySequence %>" readonly>' +
-                                      '    </td>' +
-                                      '    <td class="option-label">' +
-                                      '        <input name="list_item[<%= id %>][<%= labelAttribute %>]" data-id="<%= id %>" value="">' +
-                                      '        <span data-list-item-id="<%= listItemId %>" class="ui-icon ui-icon-trash"></span>' +
-                                      '    </td>' +
+                                        '<td class="display-sequence">' +
+                                        '    <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' +
+                                        '    <input class="list-item-input" name="list_item[<%= id %>][DisplaySequence]" data-id="<%= id %>" value="<%= DisplaySequence %>" readonly>' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required pattern="([a-z_]+)" class="list-item-input" name="list_item[<%= id %>][attribute_code]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required class="list-item-input" name="list_item[<%= id %>][<%= label %>]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label">' +
+                                        '    <input class="list-item-input" name="list_item[<%= id %>][default_value]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required class="list-item-input" name="list_item[<%= id %>][input]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required class="list-item-input" name="list_item[<%= id %>][table]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required pattern="[0,1]" class="list-item-input" name="list_item[<%= id %>][is_core]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="option-label">' +
+                                        '    <span data-list-item-id="<%= listItemId %>" class="ui-icon ui-icon-trash"></span>' +
+                                        '</td>' +
                                       '</tr>';
             self.listenTo(self.options.managedGridView, 'list-changed', self.toggleSaveBtn);
             _log('App.Views.AttributesGridManagerContainerToolbar.initialize', options);

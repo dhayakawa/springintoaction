@@ -10,6 +10,7 @@
                 <th class="list-item-label-thead" style="width:125px">Default Value</th>
                 <th class="list-item-label-thead required" style="width:125px">Input Type</th>
                 <th class="list-item-label-thead required" style="width:125px">DB Table</th>
+                <th class="list-item-label-thead required" style="width:125px" title="Is shared by every project type">Is Core</th>
                 <th class="list-item-label-thead" style="width:35px">Delete</th>
             </tr>
             </thead>
@@ -42,6 +43,9 @@
                 </td>
                 <td class="list-item-label required">
                     <input required class="list-item-input" name="list_item[<%= listItems[i].attributes[idAttribute] %>][table]" data-id="<%= listItems[i].attributes[idAttribute] %>" value="<%= listItems[i].attributes['table'] %>">
+                </td>
+                <td class="list-item-label required">
+                    <input required pattern="[0,1]" class="list-item-input" name="list_item[<%= listItems[i].attributes[idAttribute] %>][is_core]" data-id="<%= listItems[i].attributes[idAttribute] %>" value="<%= listItems[i].attributes['is_core'] %>">
                 </td>
                 <td class="list-item-label">
                     <span data-list-item-id="<%= listItemId %>" class="ui-icon ui-icon-trash"></span>

@@ -32,6 +32,6 @@ class Attribute extends BaseModel
         'options_source',
         'default_value',
         'DisplaySequence',
-
+        'is_core'
     ];
 }

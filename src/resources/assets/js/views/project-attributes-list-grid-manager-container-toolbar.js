@@ -28,6 +28,7 @@
                                         '</table>';
             self.listenTo(self.options.managedGridView, 'list-changed', self.toggleSaveBtn);
             self.$form = self.options.managedGridView.$('form[name="list-items"]');
+
             _log('App.Views.ProjectAttributesGridManagerContainerToolbar.initialize', options);
         },
         events: {
@@ -103,6 +104,11 @@
             let newListItemTemplate = _.template(self._newListItemTemplate);
             let id = _.uniqueId('new');
             let listItemId = 'list_item_' + id;
+            // do not allow the ability to set the skills needed attribute
+            let aCurrentAttributeIds = [42];
+            $('.list-items tr:not(.filtered) select[name$="[attribute_id]"]').each(function (idx,el) {
+                aCurrentAttributeIds.push(parseInt($(el).val()));
+            });
 
             self.options.managedGridView.$sortableElement.append(newListItemTemplate({
                 id: id,
@@ -113,6 +119,16 @@
                 projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true, self.options.managedGridView.parentView.$('#ProjectTypesFilter').text())
             }));
 
+            let $attributeId = self.options.managedGridView.$('[name="list_item[' + id + '][attribute_id]"]');
+            $attributeId.find('option').each(function (idx, el) {
+                //console.log({optionval: parseInt($(el).attr('value')),index: _.indexOf(aCurrentAttributeIds, parseInt($(el).attr('value')))});
+                if (_.indexOf(aCurrentAttributeIds, parseInt($(el).attr('value')))!==-1){
+                    $(el).remove()
+                }
+            });
+            let $projectSkillNeededOptionId = self.options.managedGridView.$('[name="list_item[' + id + '][project_skill_needed_option_id]"]');
+            $projectSkillNeededOptionId.val(self.options.managedGridView.parentView.$('#ProjectTypesFilter').val());
+            $attributeId.trigger('change');
         },
         toggleSaveBtn: function (e) {
             let self = this;
