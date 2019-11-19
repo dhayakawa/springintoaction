@@ -79,6 +79,10 @@
                     &.list-item-label {
                         select{
                             width: 100%;
+                            &[disabled]{
+                                background: lightgray;
+                                color: #666;
+                            }
                         }
                         .ui-icon-trash {
                             cursor: pointer;

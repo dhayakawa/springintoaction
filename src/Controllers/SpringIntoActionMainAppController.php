@@ -49,6 +49,7 @@ class SpringIntoActionMainAppController extends BaseController
 {
     public function index(Request $request)
     {
+        //echo bcrypt('jack1455');
         $user = Auth::user();
         $ProjectAttribute = new ProjectAttribute();
         $ProjectAttribute->manage();
@@ -70,7 +71,7 @@ class SpringIntoActionMainAppController extends BaseController
             $pmSite = new Site();
             if ($auth['bIsProjectManager']) {
                 $projectManagerVolunteer = Volunteer::where('email', $user->email)->get()->toArray();
-                $project_manager_sites = $pmSite->getVolunteerSites($projectManagerVolunteer[0]['VolunteerID'], 2);
+                $project_manager_sites = isset($projectManagerVolunteer[0]) ? $pmSite->getVolunteerSites($projectManagerVolunteer[0]['VolunteerID'], 2) : [];
             } else {
                 $project_manager_sites = SiteStatus::join('sites','sites.SiteID','=','site_status.SiteID')->where('Year', $this->getCurrentYear())->get()->toArray();
             }

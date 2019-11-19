@@ -919,7 +919,7 @@ FROM (
             }
             $aProject['contacts'] = [];
             // Add any project contacts
-            if ($c = Project::find($ProjectID)->contacts) {
+            if ($c = ProjectScope::find($ProjectID)->contacts) {
                 $contacts = $c->toArray();
                 foreach($contacts as $contact){
                     if($contact['Active']){
@@ -927,6 +927,23 @@ FROM (
                     }
                 }
                 //print_r($contacts);
+            }
+            $aProject['project_attachments'] = [];
+            if ($attachments = ProjectScope::find($ProjectID)->attachments) {
+                $attachments = $attachments->toArray();
+                foreach ($attachments as $attachment) {
+                    if (\preg_match("/^.*\/storage\/app/", $attachment['AttachmentPath'])) {
+                        $attachment['AttachmentPath'] = preg_replace(
+                            "/^.*\/storage\/app/",
+                            "/admin/project_attachment/stream/storage/app",
+                            $attachment['AttachmentPath']
+                        );
+                    }
+                    $aProject['project_attachments'][$attachment['ProjectAttachmentID']] = $attachment['AttachmentPath'];
+                }
+
+                //print_r($contacts);
+                $aProject['project_attachments'] = json_encode($aProject['project_attachments']);
             }
             // print_r($aProject);
 
