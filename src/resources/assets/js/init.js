@@ -68,67 +68,7 @@ window.App = {
     CellEditors: {}
 };
 
-const fileStackApiKey = 'Ana2T1xQQ76feCTmPqLlSz';
-//let fileStackClient = filestack.init(fileStackApiKey);
 
-let fileStackCombOptions = {
-    "displayMode": "inline",
-    "container": ".picker-content",
-    "maxFiles": 5,
-    "accept": [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/bmp",
-        "image/gif",
-        "application/pdf"
-    ],
-    "storeTo": {
-        "container": "devportal-customers-assets",
-        "path": "user-uploads/",
-        "region": "us-east-1"
-    },
-    "fromSources": [
-        "local_file_system"
-    ],
-    "uploadInBackground": false
-};
-/**
- * let fileStackComboPicker = fileStackClient.picker(fileStackComboOptions);
- * fileStackComboPicker.open();
- */
-
-
-let fileStackDragDropOptions = {
-    "displayMode": "dropPane",
-    "container": ".picker-content",
-    "maxFiles": 4,
-    "accept": [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/bmp",
-        "image/gif",
-        "application/pdf"
-    ],
-    "storeTo": {
-        "container": "devportal-customers-assets",
-        "path": "user-uploads/",
-        "region": "us-east-1"
-    },
-    "fromSources": [
-        "local_file_system"
-    ],
-    "uploadInBackground": false,
-    "dropPane": {
-        "overlay": false
-    }
-};
-/*
- * Just Drag N Drop
- * let fileStackDragDropPicker = fileStackClient.picker(fileStackDragDropOptions);
- * fileStackDragDropPicker.open();
-*/
 
 /**
  * Needed to fix the select so when it triggers a backgrid:edited the model has been flagged as changed
