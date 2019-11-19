@@ -765,6 +765,8 @@ FROM (
                 } else {
                     continue;
                 }
+            } elseif($attributeCode === 'project_attachments'){
+                continue;
             }
 
             if(is_array($attributeCodeValue)) {
@@ -819,7 +821,6 @@ FROM (
                                     'value' => $attributeCodeValue,
                                     'updated_at' => date("Y-m-d H:i:s"),
                                     'created_at' => date("Y-m-d H:i:s"),
-
                                 ]
                             );
                         } catch (Exception $e) {
@@ -958,6 +959,7 @@ FROM (
 
     public function convertRowDataToAttributeData()
     {
+        ini_set("max_execution_time", "0");
         // foreach (array_keys($this->aAttributeTables) as $t) {
         //     DB::table($t)->truncate();
         // }
@@ -1001,71 +1003,76 @@ FROM (
         $attributes = $aAttributes ? $aAttributes->toArray() : [];
 
         $Year = $this->getCurrentYear();
-        $projects = $this->getProjectsByYear($Year, $bReturnArr = true);
-        foreach ($projects as $project) {
-            //print_r($project);
-            $projectId = $project['ProjectID'];
-            foreach ($aFieldMap as $field => $attributeCode) {
-                //echo $attributeCode.PHP_EOL;
-                $a = self::searchArrayValueRecursiveByKeyValue('attribute_code', $attributeCode, $attributes);
-                //print_r($a);
-                if ($a) {
-                    $aAttributeRecord = current(current($a));
-                    $table_field_type = $aAttributeRecord['table_field_type'];
-                    if (!empty($table_field_type)) {
-                        //echo '$table_field_type:' . $table_field_type . PHP_EOL;
+        $aYears = [2017,2018,2019];
+        //$aYears = [2019,2020];
+        foreach ($aYears as $Year) {
+            $projects = $this->getProjectsByYear($Year, $bReturnArr = true);
+            //print_r($projects);
+            foreach ($projects as $project) {
+                //print_r($project);
+                $projectId = $project['ProjectID'];
+                foreach ($aFieldMap as $field => $attributeCode) {
+                    //echo $attributeCode.PHP_EOL;
+                    $a = self::searchArrayValueRecursiveByKeyValue('attribute_code', $attributeCode, $attributes);
 
-                        $table = "project_attributes_{$table_field_type}";
-                        $model = $this->aAttributeTables[$table]::where(
-                            'attribute_id',
-                            '=',
-                            $aAttributeRecord['id']
-                        )->where('project_id', '=', $projectId)->first();
-                        if ($table_field_type === 'int' && !is_integer($project[$field])) {
-                            if (!empty($project[$field]) && !empty($aAttributeRecord['options_source'])) {
-                                $optionSource = DB::table($aAttributeRecord['options_source'])->where(
-                                    'option_label',
-                                    '=',
-                                    $project[$field]
-                                )->get();
-                            } else {
-                                if (empty($project[$field]) && $aAttributeRecord['default_value'] !== '') {
-                                    $project[$field] = $aAttributeRecord['default_value'];
+                    if ($a) {
+                        $aAttributeRecord = current(current($a));
+                        $table_field_type = $aAttributeRecord['table_field_type'];
+                        if (!empty($table_field_type)) {
+                            //echo '$table_field_type:' . $table_field_type . PHP_EOL;
+
+                            $table = "project_attributes_{$table_field_type}";
+                            $model = $this->aAttributeTables[$table]::where(
+                                'attribute_id',
+                                '=',
+                                $aAttributeRecord['id']
+                            )->where('project_id', '=', $projectId)->first();
+                            if ($table_field_type === 'int' && !is_integer($project[$field])) {
+                                if (!empty($project[$field]) && !empty($aAttributeRecord['options_source'])) {
+                                    $optionSource = DB::table($aAttributeRecord['options_source'])->where(
+                                        'option_label',
+                                        '=',
+                                        $project[$field]
+                                    )->get();
+                                } else {
+                                    if (empty($project[$field]) && $aAttributeRecord['default_value'] !== '') {
+                                        $project[$field] = $aAttributeRecord['default_value'];
+                                    }
+                                }
+                                switch ($field) {
+                                    case 'ProjectSend':
+                                        $project[$field] = 2;
+                                        break;
+                                    case 'Status':
+                                        $project[$field] = 6;
+                                        break;
                                 }
                             }
-                            switch ($field) {
-                                case 'ProjectSend':
-                                    $project[$field] = 2;
-                                    break;
-                                case 'Status':
-                                    $project[$field] = 6;
-                                    break;
-                            }
-                        }
-                        if ($model === null) {
-                            if ($table_field_type !== 'int' && $table_field_type !== 'decimal') {
-                                $project[$field] = "'$project[$field]'";
-                            }
-                            try {
-                                DB::table($table)->insert(
-                                    [
-                                        'attribute_id' => $aAttributeRecord['id'],
-                                        'project_id' => $projectId,
-                                        'value' => $project[$field],
-                                        'updated_at' => date("Y-m-d H:i:s"),
-                                        'created_at' => date("Y-m-d H:i:s"),
+                            if ($model === null) {
+                                if ($table_field_type !== 'int' && $table_field_type !== 'decimal') {
+                                    $project[$field] = "$project[$field]";
+                                }
+                                try {
+                                    DB::table($table)->insert(
+                                        [
+                                            'attribute_id' => $aAttributeRecord['id'],
+                                            'project_id' => $projectId,
+                                            'value' => $project[$field],
+                                            'updated_at' => date("Y-m-d H:i:s"),
+                                            'created_at' => date("Y-m-d H:i:s"),
 
-                                    ]
-                                );
-                            } catch (Exception $e) {
-                                echo $e->getMessage() . PHP_EOL;
-                                echo '$table_field_type:' . $table_field_type . PHP_EOL;
-                                echo $attributeCode . ":" . $field . "=" . $project[$field] . PHP_EOL;
+                                        ]
+                                    );
+                                } catch (Exception $e) {
+                                    echo $e->getMessage() . PHP_EOL;
+                                    echo '$table_field_type:' . $table_field_type . PHP_EOL;
+                                    echo $attributeCode . ":" . $field . "=" . $project[$field] . PHP_EOL;
+                                }
                             }
                         }
+                    } else {
+                        //echo "Not an attribute\n";
                     }
-                } else {
-                    //echo "Not an attribute\n";
                 }
             }
         }
