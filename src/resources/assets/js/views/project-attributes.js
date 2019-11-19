@@ -36,6 +36,46 @@
                 projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
                 view: self
             }));
+            let listItems= JSON.parse(JSON.stringify(self.collection.models));
+            let listItemsCnt = listItems.length;
+            for (let i = 0; i < listItemsCnt; i++) {
+                let listItem = listItems[i];
+                let id = listItem[self.modelIdAttribute];
+
+                let $attributeId = self.$('[name="list_item[' + id + '][attribute_id]"]');
+
+                let $workflowId = self.$('[name="list_item[' + id + '][workflow_id]"]');
+
+                let $projectSkillNeededOptionId = self.$('[name="list_item[' + id + '][project_skill_needed_option_id]"]');
+
+                $attributeId.val(listItem['attribute_id']);
+                let bIsCoreAttribute = $attributeId.find('option:selected').data('is-core');
+
+                $workflowId.val(listItem['workflow_id']);
+                $projectSkillNeededOptionId.val(listItem['project_skill_needed_option_id']);
+                let $deleteBtn = $attributeId.parents('tr').find('.ui-icon-trash');
+                //console.log({listItem: listItem, id: id, $attributeId: $attributeId, 'set attribute_id to': listItem['attribute_id'], $workflowId: $workflowId, $projectSkillNeededOptionId: $projectSkillNeededOptionId, $deleteBtn: $deleteBtn});
+                if (bIsCoreAttribute) {
+
+                    $deleteBtn.hide();
+                    $deleteBtn.parent().find('.msg').remove();
+                    $deleteBtn.parent().append('<div class="msg">Core attributes are required.</div>');
+
+                    $attributeId.attr('disabled', true);
+                    $attributeId.after($('<input type="hidden" name="' + $attributeId.attr('name') + '" data-id="' + $attributeId.data('id') + '"/>').val($attributeId.val()));
+                    $projectSkillNeededOptionId.attr('disabled', true);
+                    $projectSkillNeededOptionId.hide();
+                    $projectSkillNeededOptionId.parent().append('<div class="msg">Will be applied to every project type.</div>');
+                    $projectSkillNeededOptionId.after($('<input type="hidden" name="' + $projectSkillNeededOptionId.attr('name') + '" data-id="' + $projectSkillNeededOptionId.data('id') + '"/>').val($projectSkillNeededOptionId.val()));
+                } else {
+                    // to simplify things, only let non core options be chosen for non-core project attribute selects
+                    $attributeId.find('option').each(function (idx, el) {
+                        if ($(el).data('is-core')) {
+                            $(el).remove()
+                        }
+                    });
+                }
+            }
             self.$sortableElement = self.$el.find('.table.list-items tbody');
             self.parentView.filterList();
             return self;
@@ -68,7 +108,7 @@
                         aCurrentAttributeIds.push(parseInt($(el).val()));
                     }
                 });
-                // do not allow attribute_ids
+                // do not allow duplicate attribute_ids
                 if (_.indexOf(aCurrentAttributeIds, parseInt($(e.currentTarget).val())) !== -1) {
                     let $modelFound = self.collection.get($(e.currentTarget).data('id'));
                     // console.log({ctarget: $(e.currentTarget), $modelFound: $modelFound, models: self.collection.models})
@@ -82,13 +122,21 @@
                 let bIsCoreAttribute = $(e.currentTarget).find('option:selected').data('is-core');
                 // console.log({currentTarget: e.currentTarget, bIsCoreAttribute: bIsCoreAttribute});
                 let $projectSkillNeededOptionId = $(e.currentTarget).parents('tr').find('select[name$="[project_skill_needed_option_id]"]');
+                let $deleteBtn = $(e.currentTarget).parents('tr').find('.ui-icon-trash');
                 if (bIsCoreAttribute) {
+                    // Do not allow core attributes to be deleted
+                    $deleteBtn.hide();
+                    $deleteBtn.parent().find('.msg').remove();
+                    $deleteBtn.parent().append('<div class="msg">Core attributes are required.</div>');
+
                     $projectSkillNeededOptionId.attr('disabled', true);
                     $projectSkillNeededOptionId.hide();
                     $projectSkillNeededOptionId.parent().find('.msg').remove();
-                    $projectSkillNeededOptionId.parent().append('<div class="msg">Will be applied to every project type.</div>');
+                    $projectSkillNeededOptionId.parent().append('<div class="msg">Core attributes are applied to every project type.</div>');
                     $projectSkillNeededOptionId.after($('<input type="hidden" name="' + $projectSkillNeededOptionId.attr('name') + '" data-id="' + $projectSkillNeededOptionId.data('id') + '"/>').val('*'));
                 } else {
+                    $deleteBtn.show();
+                    $deleteBtn.parent().find('.msg').remove();
                     $projectSkillNeededOptionId.parent().find('.msg').remove();
                     $projectSkillNeededOptionId.removeAttr('disabled');
                     $projectSkillNeededOptionId.show();

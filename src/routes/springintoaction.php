@@ -380,6 +380,10 @@ Route::group(
             'project_attachment/batch/destroy',
             ['as' => 'project_attachment.batch.destroy', 'uses' => 'ProjectAttachmentController@batchDestroy']
         );
+        Route::delete(
+            'project_attachment/destroy/{id}',
+            ['as' => 'project_attachment.destroy', 'uses' => 'ProjectAttachmentController@destroy']
+        );
 
         Route::get(
             'site_volunteer/list/all/{SiteStatusID}',

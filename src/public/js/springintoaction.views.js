@@ -5395,6 +5395,46 @@
                 projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
                 view: self
             }));
+            let listItems= JSON.parse(JSON.stringify(self.collection.models));
+            let listItemsCnt = listItems.length;
+            for (let i = 0; i < listItemsCnt; i++) {
+                let listItem = listItems[i];
+                let id = listItem[self.modelIdAttribute];
+
+                let $attributeId = self.$('[name="list_item[' + id + '][attribute_id]"]');
+
+                let $workflowId = self.$('[name="list_item[' + id + '][workflow_id]"]');
+
+                let $projectSkillNeededOptionId = self.$('[name="list_item[' + id + '][project_skill_needed_option_id]"]');
+
+                $attributeId.val(listItem['attribute_id']);
+                let bIsCoreAttribute = $attributeId.find('option:selected').data('is-core');
+
+                $workflowId.val(listItem['workflow_id']);
+                $projectSkillNeededOptionId.val(listItem['project_skill_needed_option_id']);
+                let $deleteBtn = $attributeId.parents('tr').find('.ui-icon-trash');
+                //console.log({listItem: listItem, id: id, $attributeId: $attributeId, 'set attribute_id to': listItem['attribute_id'], $workflowId: $workflowId, $projectSkillNeededOptionId: $projectSkillNeededOptionId, $deleteBtn: $deleteBtn});
+                if (bIsCoreAttribute) {
+
+                    $deleteBtn.hide();
+                    $deleteBtn.parent().find('.msg').remove();
+                    $deleteBtn.parent().append('<div class="msg">Core attributes are required.</div>');
+
+                    $attributeId.attr('disabled', true);
+                    $attributeId.after($('<input type="hidden" name="' + $attributeId.attr('name') + '" data-id="' + $attributeId.data('id') + '"/>').val($attributeId.val()));
+                    $projectSkillNeededOptionId.attr('disabled', true);
+                    $projectSkillNeededOptionId.hide();
+                    $projectSkillNeededOptionId.parent().append('<div class="msg">Will be applied to every project type.</div>');
+                    $projectSkillNeededOptionId.after($('<input type="hidden" name="' + $projectSkillNeededOptionId.attr('name') + '" data-id="' + $projectSkillNeededOptionId.data('id') + '"/>').val($projectSkillNeededOptionId.val()));
+                } else {
+                    // to simplify things, only let non core options be chosen for non-core project attribute selects
+                    $attributeId.find('option').each(function (idx, el) {
+                        if ($(el).data('is-core')) {
+                            $(el).remove()
+                        }
+                    });
+                }
+            }
             self.$sortableElement = self.$el.find('.table.list-items tbody');
             self.parentView.filterList();
             return self;
@@ -5427,10 +5467,10 @@
                         aCurrentAttributeIds.push(parseInt($(el).val()));
                     }
                 });
-                // do not allow attribute_ids
+                // do not allow duplicate attribute_ids
                 if (_.indexOf(aCurrentAttributeIds, parseInt($(e.currentTarget).val())) !== -1) {
                     let $modelFound = self.collection.get($(e.currentTarget).data('id'));
-                    console.log({ctarget: $(e.currentTarget), $modelFound: $modelFound, models: self.collection.models})
+                    // console.log({ctarget: $(e.currentTarget), $modelFound: $modelFound, models: self.collection.models})
 
                     if (!_.isUndefined($modelFound)) {
                         $(e.currentTarget).val($modelFound.get('attribute_id'));
@@ -5439,15 +5479,23 @@
                     return false;
                 }
                 let bIsCoreAttribute = $(e.currentTarget).find('option:selected').data('is-core');
-                console.log({currentTarget: e.currentTarget, bIsCoreAttribute: bIsCoreAttribute});
+                // console.log({currentTarget: e.currentTarget, bIsCoreAttribute: bIsCoreAttribute});
                 let $projectSkillNeededOptionId = $(e.currentTarget).parents('tr').find('select[name$="[project_skill_needed_option_id]"]');
+                let $deleteBtn = $(e.currentTarget).parents('tr').find('.ui-icon-trash');
                 if (bIsCoreAttribute) {
+                    // Do not allow core attributes to be deleted
+                    $deleteBtn.hide();
+                    $deleteBtn.parent().find('.msg').remove();
+                    $deleteBtn.parent().append('<div class="msg">Core attributes are required.</div>');
+
                     $projectSkillNeededOptionId.attr('disabled', true);
                     $projectSkillNeededOptionId.hide();
                     $projectSkillNeededOptionId.parent().find('.msg').remove();
-                    $projectSkillNeededOptionId.parent().append('<div class="msg">Will be applied to every project type.</div>');
+                    $projectSkillNeededOptionId.parent().append('<div class="msg">Core attributes are applied to every project type.</div>');
                     $projectSkillNeededOptionId.after($('<input type="hidden" name="' + $projectSkillNeededOptionId.attr('name') + '" data-id="' + $projectSkillNeededOptionId.data('id') + '"/>').val('*'));
                 } else {
+                    $deleteBtn.show();
+                    $deleteBtn.parent().find('.msg').remove();
                     $projectSkillNeededOptionId.parent().find('.msg').remove();
                     $projectSkillNeededOptionId.removeAttr('disabled');
                     $projectSkillNeededOptionId.show();
@@ -5923,13 +5971,15 @@
             'change [name="permit_required"]': 'handlePermitRequiredChange',
             'change [name="status"]': 'handleStatusChange',
             'click .add-material-needed-and-cost': 'addMaterialAndCostRow',
-            'click .calculate-total-from-material-cost': 'calculateFromMaterialAndCost'
+            'click .calculate-total-from-material-cost': 'calculateFromMaterialAndCost',
+            'click .add-project-attachment': 'clickFileUpload',
+            'click .project-attachment-delete': 'deleteProjectAttachment'
         },
         initialize: function (options) {
             let self = this;
 
             try {
-                _.bindAll(self, 'render', 'formChanged', 'handleProjectIDChange', 'handleProjectTypeChange', 'handlePermitRequiredChange', 'addMaterialAndCostRow', 'calculateFromMaterialAndCost');
+                _.bindAll(self, 'render', 'formChanged', 'handleProjectIDChange', 'handleProjectTypeChange', 'handlePermitRequiredChange', 'addMaterialAndCostRow', 'calculateFromMaterialAndCost','saveProjectAttachments','clickFileUpload','deleteProjectAttachment');
             } catch (e) {
                 console.error(options, e)
             }
@@ -5984,7 +6034,7 @@
         },
         render: function (e) {
             let self = this;
-            if (_.isUndefined(self.model.get(self.model.idAttribute)) || _.isEmpty(self.model.get(self.model.idAttribute))) {
+            if (_.isUndefined(self.model.get(self.model.idAttribute)) || self.model.get(self.model.idAttribute) === '') {
                 self.$el.html('No Projects Found');
             } else {
                 window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
@@ -6119,6 +6169,12 @@
             // provide an empty line to be nice
             return lineCnt > 5 ? lineCnt + 1 : 5;
         },
+        geProjectAttachmentsItemCnt: function () {
+            let self = this;
+            let lineCnt = self.model.get('project_attachments') !== '' ? JSON.parse(self.model.get('project_attachments')).length : 0;
+
+            return lineCnt;
+        },
         getSkillsNeededLabel: function (id){
             let skillOpts = {};
             _.each(App.Vars.selectOptions['ProjectSkillNeededOptions'], function (val, key) {
@@ -6158,6 +6214,18 @@
             let cost = aRowValues[1];
             return '<tr><td><input data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[material][]" class="form-control material" id="' + attribute_code + '_cost_' + x + '" placeholder="" value="' + materialNeed + '"/></td><td><div class="input-group"><div class="input-group-addon">$</div><input type="number" title="Money format only please. With or without cents." data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[cost][]" class="form-control material-cost" id="' + attribute_code + '_cost_' + x + '" placeholder="0.00" value="' + cost + '" step="0.01"/></div></td></tr>';
         },
+        basename: function(path){
+            let rx1 = /(.*)\/+([^/]*)$/;  // (dir/) (optional_file)
+            let rx2 = /()(.*)$/;// ()     (file)
+            return (rx1.exec(path) || rx2.exec(path))[2];
+        },
+        getProjectAttachmentsRowHtml: function (attribute_code, x, attribute_id, aRowValues) {
+            let self = this;
+            let ProjectAttachmentID = aRowValues[0];
+            let url = aRowValues[1];
+
+            return '<tr><td><a href="'+ url+'" target="_blank">' + self.basename(url) + '</a></td><td><button class="btn btn-secondary project-attachment-delete" data-id="'+ProjectAttachmentID+'" id="' + attribute_code + '_delete_' + x + '" ><span class="ui-icon ui-icon-trash"></span></button></div></td></tr>';
+        },
         getInputHtml: function (inputType, attribute_code, attribute_id, value, optionHtml) {
             let self = this;
             let html = '';
@@ -6178,7 +6246,24 @@
                             html += self.getMaterialCostRowHtml(attribute_code, x, attribute_id, aRowValue);
                         }
                         html += '</tbody>';
-                        html += '<tfoot><tr><td colspan="2" align="right"><button class="btn btn-secondary add-material-needed-and-cost">Add another material</button></td></tr></tfoot>';
+                        html += '<tfoot><tr><td colspan="2" align="right"><button class="btn btn-secondary add-material-needed-and-cost">Add another material</input></td></tr></tfoot>';
+                        html += '</table>';
+                    } else if (attribute_code === 'project_attachments') {
+                        html = '<table class="table project-attachments">';
+                        html += '<thead><tr><th style="width:80%">Attachment</th><th></th></tr></thead>';
+                        html += '<tbody>';
+                        let aRowValues = value !== '' ? JSON.parse(value) : [];
+                        _.each(aRowValues, function (val, key) {
+                            if (val !== 'undefined') {
+                                html += self.getProjectAttachmentsRowHtml(attribute_code, key, attribute_id, [key, val]);
+                            }
+                        });
+                        for (let x = 0; x < self.geProjectAttachmentsItemCnt(); x++) {
+                            let aRowValue = !_.isUndefined(aRowValues[x]) ? aRowValues[x] : ['', ''];
+                            html += self.getProjectAttachmentsRowHtml(attribute_code, x, attribute_id, aRowValue);
+                        }
+                        html += '</tbody>';
+                        html += '<tfoot><tr><td colspan="2" align="right"><button class="btn btn-secondary add-project-attachment">Add attachment</button></td></tr></tfoot>';
                         html += '</table>';
                     }
                     break;
@@ -6227,6 +6312,137 @@
                     html = '<input data-attribute-id="' + attribute_id + '" type="text" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="" value="' + value + '"/>';
             }
             return html;
+        },
+        getAttachmentModalForm: function(){
+            let self = this;
+            let template = window.template('newProjectAttachmentTemplate');
+
+            let tplVars = {
+                ProjectID: self.model.get(self.model.idAttribute)
+            };
+
+            return template(tplVars);
+        },
+        clickFileUpload: function(e){
+            let self = this;
+            e.preventDefault();
+            self.getModalElement().one('show.bs.modal', function (event) {
+                let $fileInput = null;
+
+                // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+                // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+                let modal = $(this);
+                modal.find('.modal-title').html(self.parentView.$('h3.box-title').html());
+                modal.find('.modal-body').html(self.getAttachmentModalForm());
+                let selfView = modal.find('form[name="newProjectAttachment"]');
+
+                let sAjaxFileUploadURL = '/admin/project_attachment/upload';
+                $fileInput = $(selfView.find('input[type="file"]'));
+                $fileInput.fileupload({
+                    url: sAjaxFileUploadURL,
+                    dataType: 'json',
+                    done: function (e, data) {
+                        //console.log({e:e, data:data,filesClass: selfView.find('[name="files[]"]')})
+                        selfView.find('.progress').fadeTo(0, 'slow');
+                        selfView.find('[name="AttachmentPath"]').val('');
+                        selfView.find('.files').empty();
+                        _.each(data.jqXHR.responseJSON.files, function (file,index) {
+                            let sFileName = file.name;
+                            //let sExistingVal = selfView.find('[name="AttachmentPath"]').val().length > 0 ? selfView.find('[name="AttachmentPath"]').val() + "\n" : '';
+                            //selfView.find('[name="AttachmentPath"]').val(sExistingVal + file.url);
+                            selfView.find('.files').append(sFileName + '<br>');
+                            //console.log({fileUrl:file.url, sExistingVal: sExistingVal,textarea: selfView.find('[name="AttachmentPath"]')});
+                        });
+                        modal.find('.save.btn').trigger('click')
+                    },
+                    start: function (e) {
+                        selfView.find('.progress').fadeTo('fast', 1);
+                        selfView.find('.progress').find('.meter').removeClass('green');
+                    },
+                    progress: function (e, data) {
+                        let progress = parseInt(data.loaded / data.total * 100, 10);
+                        selfView.find('.progress .progress-bar').addClass('green').css(
+                            'width',
+                            progress + '%'
+                        ).find('p').html(progress + '%');
+                    }
+                }).prop('disabled', !$.support.fileInput)
+                    .parent().addClass($.support.fileInput ? undefined : 'disabled');
+                modal.find('.save.btn').one('click', function (e) {
+                    e.preventDefault();
+                    try {
+                        $fileInput.fileupload('destroy');
+                    } catch (e) {
+                    }
+                    let data = $.unserialize(modal.find('form').serialize());
+                    self.model.set(self.model.idAttribute, data[self.model.idAttribute]);
+                    if (modal.find('[name="AttachmentPath"]').val() !== '') {
+                        self.saveProjectAttachments(data);
+                        self.getModalElement().modal('hide');
+                    } else {
+                        self.getModalElement().modal('hide');
+                        self.render();
+                    }
+
+
+
+                });
+
+            });
+            self.getModalElement().modal('show');
+        },
+        deleteProjectAttachment: function (e) {
+            let self = this;
+            e.preventDefault();
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            let growlMsg = '';
+            let growlType = '';
+            let projectAttachment = new App.Models.ProjectAttachment();
+            projectAttachment.set(projectAttachment.idAttribute, $(e.currentTarget).data('id'));
+            projectAttachment.url = '/admin/project_attachment/destroy/'+ $(e.currentTarget).data('id');
+            $.when(projectAttachment.destroy(
+                {
+                    success: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    },
+                    error: function (model, response, options) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+
+                self.render();
+            });
+        },
+        saveProjectAttachments: function(data){
+            let self = this;
+            let projectAttachment = new App.Models.ProjectAttachment();
+            window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
+            let growlMsg = '';
+            let growlType = '';
+            //console.log({data:data})
+            projectAttachment.url = '/admin/project_attachment';
+            $.when(
+                projectAttachment.save(data,
+                    {
+                        success: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        },
+                        error: function (model, response, options) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+                self.model.set(self.model.idAttribute,data[self.model.idAttribute]);
+                self.render();
+            });
         },
         getAttributesForForm: function(projectTypeId){
             let self = this;
@@ -6292,7 +6508,7 @@
         },
         flagAsInvalid: function (e) {
             let self = this;
-            console.log('flagAsInvalid', {e: e, currentTarget: e.currentTarget})
+            //console.log('flagAsInvalid', {e: e, currentTarget: e.currentTarget})
             $(e.currentTarget).css('border-color', 'red');
         }
     });

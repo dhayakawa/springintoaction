@@ -135,9 +135,27 @@ class ProjectsController extends BaseController
     public function scopeUpdate(Request $request, $ProjectID)
     {
 
-        $params = $request->all();
+        $params = array_map(
+            function ($value) {
+                if (is_string($value)) {
+                    $value = \urldecode($value);
+                }
+
+                return $value;
+            },
+            $request->all()
+        );
         $project = ProjectScope::findOrFail($ProjectID);
-        $projectModelData = $request->only($project->getFillable());
+        $projectModelData = array_map(
+            function ($value) {
+                if (is_string($value)) {
+                    $value = \urldecode($value);
+                }
+
+                return $value;
+            },
+            $request->only($project->getFillable())
+        );
 
         $success = $project->updateProjectScope($ProjectID, $params, $project, $projectModelData);
 
