@@ -7,7 +7,7 @@
                 return _.map(this.models, function (value, key) {
                     if (table === value.get('table')) {
                         let selected = !_.isUndefined(defaultOption) && defaultOption === value.get('id') ? 'selected' : '';
-                        return "<option " + selected + " value='" + value.get('id') + "'>" + value.get('label') + "</option>";
+                        return "<option data-is-core='" + value.get('is_core') + "' " + selected + " value='" + value.get('id') + "'>" + value.get('label') + "</option>";
                     } else {
                         return '';
                     }

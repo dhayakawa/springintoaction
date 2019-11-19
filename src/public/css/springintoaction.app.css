@@ -155,6 +155,10 @@
 .sia-main-app .table.list-items tbody tr td.list-item-label select {
   width: 100%;
 }
+.sia-main-app .table.list-items tbody tr td.list-item-label select[disabled] {
+  background: lightgray;
+  color: #666;
+}
 .sia-main-app .table.list-items tbody tr td.list-item-label .ui-icon-trash {
   cursor: pointer;
 }

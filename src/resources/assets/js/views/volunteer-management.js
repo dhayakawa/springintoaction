@@ -34,7 +34,7 @@
                 gridManagerContainerToolbarClassName: 'grid-manager-container',
 
                 model: App.Models.volunteerModel,
-                modelNameLabel: 'Volunteers',
+                modelNameLabel: 'Volunteer',
                 parentView: self,
                 viewName: 'volunteers'
             });

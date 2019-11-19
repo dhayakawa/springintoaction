@@ -59,6 +59,42 @@
         },
         listChanged: function (e) {
             let self = this;
+            if ($(e.currentTarget).attr('name').match(/\[attribute_id\]$/)){
+                // do not allow the ability to set the skills needed attribute
+                let aCurrentAttributeIds = [42];
+                // collect set attribute_ids
+                $('.list-items tr:not(.filtered) select[name$="[attribute_id]"]').each(function (idx, el) {
+                    if ($(el).attr('name') !== $(e.currentTarget).attr('name')) {
+                        aCurrentAttributeIds.push(parseInt($(el).val()));
+                    }
+                });
+                // do not allow attribute_ids
+                if (_.indexOf(aCurrentAttributeIds, parseInt($(e.currentTarget).val())) !== -1) {
+                    let $modelFound = self.collection.get($(e.currentTarget).data('id'));
+                    // console.log({ctarget: $(e.currentTarget), $modelFound: $modelFound, models: self.collection.models})
+
+                    if (!_.isUndefined($modelFound)) {
+                        $(e.currentTarget).val($modelFound.get('attribute_id'));
+                    }
+                    growl('That attribute already is set. Please choose a different one.','warning');
+                    return false;
+                }
+                let bIsCoreAttribute = $(e.currentTarget).find('option:selected').data('is-core');
+                // console.log({currentTarget: e.currentTarget, bIsCoreAttribute: bIsCoreAttribute});
+                let $projectSkillNeededOptionId = $(e.currentTarget).parents('tr').find('select[name$="[project_skill_needed_option_id]"]');
+                if (bIsCoreAttribute) {
+                    $projectSkillNeededOptionId.attr('disabled', true);
+                    $projectSkillNeededOptionId.hide();
+                    $projectSkillNeededOptionId.parent().find('.msg').remove();
+                    $projectSkillNeededOptionId.parent().append('<div class="msg">Will be applied to every project type.</div>');
+                    $projectSkillNeededOptionId.after($('<input type="hidden" name="' + $projectSkillNeededOptionId.attr('name') + '" data-id="' + $projectSkillNeededOptionId.data('id') + '"/>').val('*'));
+                } else {
+                    $projectSkillNeededOptionId.parent().find('.msg').remove();
+                    $projectSkillNeededOptionId.removeAttr('disabled');
+                    $projectSkillNeededOptionId.show();
+                    $projectSkillNeededOptionId.siblings('input[type="hidden"][name="' + $projectSkillNeededOptionId.attr('name') + '"]').remove();
+                }
+            }
             // FYI- If e is undefined it has probably been called from the underscore/backbone template
             self.trigger('list-changed');
         }

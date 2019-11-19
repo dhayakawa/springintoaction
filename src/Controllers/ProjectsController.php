@@ -138,7 +138,7 @@ class ProjectsController extends BaseController
         $params = $request->all();
         $project = ProjectScope::findOrFail($ProjectID);
         $projectModelData = $request->only($project->getFillable());
-        
+
         $success = $project->updateProjectScope($ProjectID, $params, $project, $projectModelData);
 
         if (!isset($success)) {

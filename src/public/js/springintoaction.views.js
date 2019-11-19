@@ -3290,7 +3290,7 @@
                 gridManagerContainerToolbarClassName: 'grid-manager-container',
 
                 model: App.Models.volunteerModel,
-                modelNameLabel: 'Volunteers',
+                modelNameLabel: 'Volunteer',
                 parentView: self,
                 viewName: 'volunteers'
             });
@@ -4914,14 +4914,31 @@
             // Required call for inherited class
             self._initialize(options);
             self._newListItemTemplate = '<tr id="<%= listItemId %>">' +
-                                      '    <td class="display-sequence">' +
-                                      '        <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' +
-                                      '        <input name="list_item[<%= id %>][DisplaySequence]"  data-id="<%= id %>" value="<%= DisplaySequence %>" readonly>' +
-                                      '    </td>' +
-                                      '    <td class="option-label">' +
-                                      '        <input name="list_item[<%= id %>][<%= labelAttribute %>]" data-id="<%= id %>" value="">' +
-                                      '        <span data-list-item-id="<%= listItemId %>" class="ui-icon ui-icon-trash"></span>' +
-                                      '    </td>' +
+                                        '<td class="display-sequence">' +
+                                        '    <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' +
+                                        '    <input class="list-item-input" name="list_item[<%= id %>][DisplaySequence]" data-id="<%= id %>" value="<%= DisplaySequence %>" readonly>' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required pattern="([a-z_]+)" class="list-item-input" name="list_item[<%= id %>][attribute_code]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required class="list-item-input" name="list_item[<%= id %>][<%= label %>]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label">' +
+                                        '    <input class="list-item-input" name="list_item[<%= id %>][default_value]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required class="list-item-input" name="list_item[<%= id %>][input]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required class="list-item-input" name="list_item[<%= id %>][table]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <input required pattern="[0,1]" class="list-item-input" name="list_item[<%= id %>][is_core]" data-id="<%= id %>" value="">' +
+                                        '</td>' +
+                                        '<td class="option-label">' +
+                                        '    <span data-list-item-id="<%= listItemId %>" class="ui-icon ui-icon-trash"></span>' +
+                                        '</td>' +
                                       '</tr>';
             self.listenTo(self.options.managedGridView, 'list-changed', self.toggleSaveBtn);
             _log('App.Views.AttributesGridManagerContainerToolbar.initialize', options);
@@ -5223,6 +5240,7 @@
                                         '</table>';
             self.listenTo(self.options.managedGridView, 'list-changed', self.toggleSaveBtn);
             self.$form = self.options.managedGridView.$('form[name="list-items"]');
+
             _log('App.Views.ProjectAttributesGridManagerContainerToolbar.initialize', options);
         },
         events: {
@@ -5298,6 +5316,11 @@
             let newListItemTemplate = _.template(self._newListItemTemplate);
             let id = _.uniqueId('new');
             let listItemId = 'list_item_' + id;
+            // do not allow the ability to set the skills needed attribute
+            let aCurrentAttributeIds = [42];
+            $('.list-items tr:not(.filtered) select[name$="[attribute_id]"]').each(function (idx,el) {
+                aCurrentAttributeIds.push(parseInt($(el).val()));
+            });
 
             self.options.managedGridView.$sortableElement.append(newListItemTemplate({
                 id: id,
@@ -5308,6 +5331,16 @@
                 projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true, self.options.managedGridView.parentView.$('#ProjectTypesFilter').text())
             }));
 
+            let $attributeId = self.options.managedGridView.$('[name="list_item[' + id + '][attribute_id]"]');
+            $attributeId.find('option').each(function (idx, el) {
+                //console.log({optionval: parseInt($(el).attr('value')),index: _.indexOf(aCurrentAttributeIds, parseInt($(el).attr('value')))});
+                if (_.indexOf(aCurrentAttributeIds, parseInt($(el).attr('value')))!==-1){
+                    $(el).remove()
+                }
+            });
+            let $projectSkillNeededOptionId = self.options.managedGridView.$('[name="list_item[' + id + '][project_skill_needed_option_id]"]');
+            $projectSkillNeededOptionId.val(self.options.managedGridView.parentView.$('#ProjectTypesFilter').val());
+            $attributeId.trigger('change');
         },
         toggleSaveBtn: function (e) {
             let self = this;
@@ -5385,6 +5418,42 @@
         },
         listChanged: function (e) {
             let self = this;
+            if ($(e.currentTarget).attr('name').match(/\[attribute_id\]$/)){
+                // do not allow the ability to set the skills needed attribute
+                let aCurrentAttributeIds = [42];
+                // collect set attribute_ids
+                $('.list-items tr:not(.filtered) select[name$="[attribute_id]"]').each(function (idx, el) {
+                    if ($(el).attr('name') !== $(e.currentTarget).attr('name')) {
+                        aCurrentAttributeIds.push(parseInt($(el).val()));
+                    }
+                });
+                // do not allow attribute_ids
+                if (_.indexOf(aCurrentAttributeIds, parseInt($(e.currentTarget).val())) !== -1) {
+                    let $modelFound = self.collection.get($(e.currentTarget).data('id'));
+                    console.log({ctarget: $(e.currentTarget), $modelFound: $modelFound, models: self.collection.models})
+
+                    if (!_.isUndefined($modelFound)) {
+                        $(e.currentTarget).val($modelFound.get('attribute_id'));
+                    }
+                    growl('That attribute already is set. Please choose a different one.','warning');
+                    return false;
+                }
+                let bIsCoreAttribute = $(e.currentTarget).find('option:selected').data('is-core');
+                console.log({currentTarget: e.currentTarget, bIsCoreAttribute: bIsCoreAttribute});
+                let $projectSkillNeededOptionId = $(e.currentTarget).parents('tr').find('select[name$="[project_skill_needed_option_id]"]');
+                if (bIsCoreAttribute) {
+                    $projectSkillNeededOptionId.attr('disabled', true);
+                    $projectSkillNeededOptionId.hide();
+                    $projectSkillNeededOptionId.parent().find('.msg').remove();
+                    $projectSkillNeededOptionId.parent().append('<div class="msg">Will be applied to every project type.</div>');
+                    $projectSkillNeededOptionId.after($('<input type="hidden" name="' + $projectSkillNeededOptionId.attr('name') + '" data-id="' + $projectSkillNeededOptionId.data('id') + '"/>').val('*'));
+                } else {
+                    $projectSkillNeededOptionId.parent().find('.msg').remove();
+                    $projectSkillNeededOptionId.removeAttr('disabled');
+                    $projectSkillNeededOptionId.show();
+                    $projectSkillNeededOptionId.siblings('input[type="hidden"][name="' + $projectSkillNeededOptionId.attr('name') + '"]').remove();
+                }
+            }
             // FYI- If e is undefined it has probably been called from the underscore/backbone template
             self.trigger('list-changed');
         }
