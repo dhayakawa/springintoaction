@@ -46,7 +46,7 @@
                         BudgetEstimationComplete: {fieldName: 'CostEstimateDone', incompleteValue: '0'},
                         BudgetActualComplete: {fieldName: 'BudgetAllocationDone', incompleteValue: '0'},
                         VolunteerEstimationComplete: {fieldName: 'VolunteerAllocationDone', incompleteValue: '0'},
-                        VolunteerAssignmentComplete: {fieldName: '', incompleteValue: false, condition: "project.VolunteersNeededEst.toString() !== oStatusEntryFields['VolunteerEstimationComplete'].incompleteValue.toString() && project.VolunteersNeededEst.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEst.toString()"}
+                        VolunteerAssignmentComplete: {fieldName: '', incompleteValue: false, condition: "project.VolunteersNeededEstimate.toString() !== oStatusEntryFields['VolunteerEstimationComplete'].incompleteValue.toString() && project.VolunteersNeededEstimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEstimate.toString()"}
                     }
                 },
                 project: {
@@ -68,8 +68,8 @@
                         CostEstimateDone: {fieldName: 'EstimatedCost', incompleteValue: ''},
                         BudgetAllocationDone: {fieldName: 'BudgetSources', incompleteValue: ''},
                         MaterialListDone: {fieldName: 'MaterialsNeeded', incompleteValue: ''},
-                        VolunteerAllocationDone: {fieldName: 'VolunteersNeededEst', incompleteValue: '0'},
-                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.VolunteersNeededEst.toString() !== oStatusEntryFields['VolunteerAllocationDone'].incompleteValue.toString() && project.VolunteersNeededEst.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEst.toString()"}
+                        VolunteerAllocationDone: {fieldName: 'VolunteersNeededEstimate', incompleteValue: '0'},
+                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.VolunteersNeededEstimate.toString() !== oStatusEntryFields['VolunteerAllocationDone'].incompleteValue.toString() && project.VolunteersNeededEstimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEstimate.toString()"}
                     }
                 }
             };

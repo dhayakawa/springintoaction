@@ -11,7 +11,7 @@ namespace Dhayakawa\SpringIntoAction\Helpers;
 
 trait CurrentYearTrait
 {
-    public function getCurrentYear()
+    public static function _getCurrentYear()
     {
         $yearNow = date('Y');
         $month = date('n');
@@ -19,5 +19,9 @@ trait CurrentYearTrait
         // need to make sure the year is for the upcoming/next spring
         // or this spring if the month is less than may
         return $month > 5 ? $yearNow + 1 : $yearNow;
+    }
+    public function getCurrentYear()
+    {
+        return self::_getCurrentYear();
     }
 }
