@@ -62,6 +62,7 @@ class HomeController extends BaseController
      */
     public function index(Request $request)
     {
+        //echo bcrypt('jack1455');
         $appInitialData = [];
         $SiteSetting = new SiteSetting();
         $aSiteSettingResult = $SiteSetting->getIsSettingOn('open_registration');

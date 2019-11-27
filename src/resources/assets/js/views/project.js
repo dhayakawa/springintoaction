@@ -257,7 +257,7 @@
                 OriginalRequest: self.model.get("OriginalRequest"),
                 ProjectDescription: self.model.get("ProjectDescription"),
                 Comments: self.model.get("Comments"),
-                VolunteersNeededEst: self.model.get("VolunteersNeededEst"),
+                VolunteersNeededEstimate: self.model.get("VolunteersNeededEstimate"),
                 StatusReason: self.model.get("StatusReason"),
                 MaterialsNeeded: self.model.get("MaterialsNeeded"),
                 EstimatedCost: self.model.get("EstimatedCost"),

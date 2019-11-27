@@ -191,7 +191,7 @@
         renderSiteDropdowns: function () {
             let self = this;
 
-            let selectedSiteID = App.Vars.appInitialData.project_manager_sites[0].SiteID;
+            let selectedSiteID = App.Vars.appInitialData.project_manager_sites.length ? App.Vars.appInitialData.project_manager_sites[0].SiteID : null;
 
             self.sitesDropdownView = new self.sitesDropdownViewClass({
                 el: self.$('select#sites'),
