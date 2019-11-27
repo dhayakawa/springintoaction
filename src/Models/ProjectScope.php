@@ -32,6 +32,46 @@ class ProjectScope extends BaseModel
     use ProjectRegistrationHelper;
 
     use SoftDeletes;
+    /**
+     * @var array
+     */
+    public $aFieldMap = [
+        'ActualCost' => 'actual_cost',
+        'Area' => 'dimensions',
+        'BudgetAllocationDone' => 'budget_allocation_done',
+        'BudgetAvailableForPC' => 'budget_available_for_pc',
+        'BudgetSources' => 'budget_sources',
+        'ChildFriendly' => 'child_friendly',
+        'Comments' => 'comments',
+        'CostEstimateDone' => 'cost_estimate_done',
+        'EstimatedCost' => 'estimated_total_cost',
+        'FinalCompletionAssessment' => 'final_completion_assessment',
+        'FinalCompletionStatus' => 'final_completion_status',
+        'MaterialListDone' => 'material_list_done',
+        'MaterialsNeeded' => 'material_needed_and_cost',
+        'NeedSIATShirtsForPC' => 'need_sia_tshirts_for_pc',
+        'NeedsToBeStartedEarly' => 'needs_to_be_started_early',
+        'OriginalRequest' => 'original_request',
+        'PaintAlreadyOnHand' => 'paint_already_on_hand',
+        'PaintOrBarkEstimate' => 'painting_dimensions',
+        'PaintOrdered' => 'paint_ordered',
+        'PCSeeBeforeSIA' => 'pc_see_before_sia',
+        'PermitsOrApprovalsNeeded' => 'permit_required_for',
+        'PrepWorkRequiredBeforeSIA' => 'prep_work_required',
+        'PrimarySkillNeeded' => 'primary_skill_needed',
+        'ProjectDescription' => 'project_description',
+        'ProjectSend' => 'project_send',
+        'SequenceNumber' => 'sequence_number',
+        'SetupDayInstructions' => 'setup_day_instructions',
+        'SIADayInstructions' => 'sia_day_instructions',
+        'SpecialEquipmentNeeded' => 'special_equipment_needed',
+        'Status' => 'status',
+        'StatusReason' => 'status_reason',
+        'VolunteerAllocationDone' => 'volunteer_allocation_done',
+        'VolunteersLastYear' => 'volunteers_last_year',
+        'VolunteersNeededEst' => 'volunteers_needed_estimate',
+        'VolunteersNeededEstimate' => 'volunteers_needed_estimate',
+    ];
     public $aAttributeTables = [
         'project_attributes_decimal' => ProjectAttributesDecimal::class,
         'project_attributes_int' => ProjectAttributesInt::class,
@@ -666,19 +706,29 @@ FROM (
 
     public static function getSiteProjects($SiteStatusID, $bReturnArr = true)
     {
+        $projectScope = new ProjectScope();
         try {
-            $projects = self::getBaseProjectModelForQuery()->join(
-                'site_status',
-                'projects.SiteStatusID',
-                '=',
-                'site_status.SiteStatusID'
-            )->where(
+            $projects = self::getProjectScopeBaseQueryModelWithAttributes()->where(
                 'site_status.SiteStatusID',
                 $SiteStatusID
-            )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc')->get();
+            )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc');
 
-            return $bReturnArr ? $projects->toArray() : $projects;
+            /*echo '<pre>' .
+                                 \Illuminate\Support\Str::replaceArray('?',
+                                                                       $projects->getBindings(),
+                                                                       $projects->toSql()) .
+                                 '</pre>';/**/
+            $projects = $projects->get();
+            if($bReturnArr){
+                $aResult = [];
+                foreach($projects->toArray() as $key => $aProject){
+                    $aResult[$key] = $projectScope->setProjectScopeAttributeDataDefaults($aProject);
+                }
+            }
+            return $bReturnArr ? $aResult : $projects;
         } catch (Exception $e) {
+            echo $e->getMessage();
+
             return $bReturnArr ? [] : null;
         }
     }
@@ -751,25 +801,25 @@ FROM (
         $attributes = $this->getAttributesArray('projects');
         foreach ($requestData as $attributeCode => $attributeCodeValue) {
             //echo $attributeCode . ':' . (is_array($attributeCodeValue) ? print_r($attributeCodeValue, true) : $attributeCodeValue).PHP_EOL;
-            if(preg_match("/material_needed_and_cost/",$attributeCode)){
-                if($attributeCode === 'material_needed_and_cost'){
+            if (preg_match("/material_needed_and_cost/", $attributeCode)) {
+                if ($attributeCode === 'material_needed_and_cost') {
                     $aRows = [];
-                    foreach($requestData['material_needed_and_cost[material]'] as $key => $materialNeeded){
+                    foreach ($requestData['material_needed_and_cost[material]'] as $key => $materialNeeded) {
                         if ($materialNeeded !== '') {
                             $aRows[] = [$materialNeeded, $requestData['material_needed_and_cost[cost]'][$key]];
                         }
                     }
-                    if(!empty($aRows)){
+                    if (!empty($aRows)) {
                         $attributeCodeValue = $aRows;
                     }
                 } else {
                     continue;
                 }
-            } elseif($attributeCode === 'project_attachments'){
+            } elseif ($attributeCode === 'project_attachments') {
                 continue;
             }
 
-            if(is_array($attributeCodeValue)) {
+            if (is_array($attributeCodeValue)) {
                 $attributeCodeValue = json_encode($attributeCodeValue, true);
             }
             $a = self::searchArrayValueRecursiveByKeyValue('attribute_code', $attributeCode, $attributes);
@@ -787,7 +837,6 @@ FROM (
                         $aAttributeRecord['id']
                     )->where('project_id', '=', $ProjectID)->first();
                     if ($table_field_type === 'int' && !is_numeric($attributeCodeValue)) {
-
                         if (!empty($attributeCodeValue) && !empty($aAttributeRecord['options_source'])) {
                             $optionSource = DB::table($aAttributeRecord['options_source'])->where(
                                 'option_label',
@@ -814,7 +863,7 @@ FROM (
 
                     if ($model === null) {
                         try {
-                            $aModelResult[$attributeCode.'_insert__'. $table] = DB::table($table)->insert(
+                            $aModelResult[$attributeCode . '_insert__' . $table] = DB::table($table)->insert(
                                 [
                                     'attribute_id' => $aAttributeRecord['id'],
                                     'project_id' => $ProjectID,
@@ -826,12 +875,11 @@ FROM (
                         } catch (Exception $e) {
                             echo $e->getMessage() . PHP_EOL;
                             echo '$table_field_type:' . $table_field_type . PHP_EOL;
-                            echo $attributeCode . ":" . $attributeCodeValue. PHP_EOL;
+                            echo $attributeCode . ":" . $attributeCodeValue . PHP_EOL;
                         }
                     } else {
                         //$tableId = $model->get('value_id');
                         try {
-
                             $data = [
                                 'attribute_id' => $aAttributeRecord['id'],
                                 'project_id' => $ProjectID,
@@ -842,9 +890,9 @@ FROM (
                             ];
                             $model->fill(
                                 $data
-                                );
+                            );
 
-                            $aModelResult[$attributeCode . '_update__'. $table] = $model->save();
+                            $aModelResult[$attributeCode . '_update__' . $table] = $model->save();
                             // DB::table($table)->where('id', $tableId)->update(
                             //     [
                             //         'attribute_id' => $aAttributeRecord['id'],
@@ -869,20 +917,52 @@ FROM (
         $projectModel->fill($projectModelData);
         $projectModelSuccess = $projectModel->save();
 
-        return !preg_grep("/0/",$aModelResult) && $projectModelSuccess;
+        return !preg_grep("/0/", $aModelResult) && $projectModelSuccess;
     }
+
     public function getInitialProjectScopeAttributeData()
     {
-        $aProject= [];
+        $aProject = [];
         // Get all attributes related to projects
         $aAttributes = $this->getAttributesArray('projects');
         //print_r($aAttributes);
         // Set every attribute into the project with its default value
         foreach ($aAttributes as $aAttribute) {
+            if($aAttribute['table_field_type'] === 'int'){
+                $aAttribute['default_value'] =  (int) $aAttribute['default_value'];
+            } else if ($aAttribute['table_field_type'] === 'decimal') {
+                $aAttribute['default_value'] = (float) $aAttribute['default_value'];
+            }
             $aProject[$aAttribute['attribute_code']] = $aAttribute['default_value'];
         }
+
         return $aProject;
     }
+
+    public function setProjectScopeAttributeDataDefaults($aProject)
+    {
+
+        $aDefaults = $this->getInitialProjectScopeAttributeData();
+
+       // print_r($aDefaults);
+        array_walk($aProject,
+            function (&$val,$key) use ($aDefaults) {
+                $snakeCase = \Illuminate\Support\Str::snake($key);
+                //echo "key:{$key}, snakeCase:{$snakeCase}, val:{$val}".PHP_EOL;
+                if ($val === null && isset($aDefaults[strtolower($key)])) {
+                    $val = $aDefaults[strtolower($key)];
+                } else if($val === null && isset($aDefaults[$snakeCase])){
+                    $val = $aDefaults[$snakeCase];
+
+                }
+
+
+            }
+
+        );
+        return $aProject;
+    }
+
     public function getProject($ProjectID, $bReturnArr = true)
     {
         $aProject = [];
@@ -893,15 +973,16 @@ FROM (
             // Get all attributes related to projects
             $initialData = $this->getInitialProjectScopeAttributeData();
             $aProject = array_merge(
-                $initialData,[
-                'ProjectID' => $projectScope['ProjectID'],
-                'SiteStatusID' => $projectScope['SiteStatusID'],
-                'Active' => $projectScope['Active'],
-                'SequenceNumber' => $projectScope['SequenceNumber'],
-                'OriginalRequest' => $projectScope['OriginalRequest'],
-                'ProjectDescription' => $projectScope['ProjectDescription'],
-            ]);
-
+                $initialData,
+                [
+                    'ProjectID' => $projectScope['ProjectID'],
+                    'SiteStatusID' => $projectScope['SiteStatusID'],
+                    'Active' => $projectScope['Active'],
+                    'SequenceNumber' => $projectScope['SequenceNumber'],
+                    'OriginalRequest' => $projectScope['OriginalRequest'],
+                    'ProjectDescription' => $projectScope['ProjectDescription'],
+                ]
+            );
 
             // Get any attribute values set for this project and populate the result
             foreach ($this->aAttributeTables as $tableCode => $tableModelClass) {
@@ -911,19 +992,17 @@ FROM (
                     '=',
                     $tableCode . '.attribute_id'
                 )->where($tableCode . '.project_id', $ProjectID)->get()->toArray();
-                foreach($aAttributeTableData as $aAttributeTableDatum){
+                foreach ($aAttributeTableData as $aAttributeTableDatum) {
                     //echo $aAttributeTableDatum['attribute_code'] . ':' . $aAttributeTableDatum['value'] . PHP_EOL;
                     $aProject[$aAttributeTableDatum['attribute_code']] = $aAttributeTableDatum['value'];
                 }
-
-
             }
             $aProject['contacts'] = [];
             // Add any project contacts
             if ($c = ProjectScope::find($ProjectID)->contacts) {
                 $contacts = $c->toArray();
-                foreach($contacts as $contact){
-                    if($contact['Active']){
+                foreach ($contacts as $contact) {
+                    if ($contact['Active']) {
                         $aProject['contacts'][] = $contact['ContactID'];
                     }
                 }
@@ -940,7 +1019,8 @@ FROM (
                             $attachment['AttachmentPath']
                         );
                     }
-                    $aProject['project_attachments'][$attachment['ProjectAttachmentID']] = $attachment['AttachmentPath'];
+                    $aProject['project_attachments'][$attachment['ProjectAttachmentID']] =
+                        $attachment['AttachmentPath'];
                 }
 
                 //print_r($contacts);
@@ -955,6 +1035,96 @@ FROM (
         //$this->convertRowDataToAttributeData();
 
         return $aProject;
+    }
+
+    public static function getProjectScopeBaseQueryModelWithAttributes()
+    {
+        $projectScope = new ProjectScope();
+        $sSqlVolunteersAssigned = $projectScope->getVolunteersAssignedSql();
+        $aSelectColumns = [
+            'projects.ProjectID',
+            'projects.SiteStatusID',
+            'projects.Active',
+            'projects.SequenceNumber',
+            'projects.OriginalRequest',
+            'projects.ProjectDescription',
+            DB::raw(
+                '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
+            ),
+            DB::raw(
+                "{$sSqlVolunteersAssigned} as VolunteersAssigned"
+            ),
+            DB::raw(
+                '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
+            ),
+        ];
+        $aAttributes = $projectScope->getAttributesArray('projects');
+        $aFieldMap = array_flip($projectScope->aFieldMap);
+        foreach ($aAttributes as $aAttribute) {
+            if (in_array($aAttribute['attribute_code'], ['budget_sources', 'project_attachments'])) {
+                continue;
+            }
+            $fieldName =
+                isset($aFieldMap[$aAttribute['attribute_code']]) ? $aFieldMap[$aAttribute['attribute_code']] :
+                    str_replace(' ', '', ucwords(str_replace('_', ' ', $aAttribute['attribute_code'])));
+            // $fieldName =
+            //     isset($aFieldMap[$aAttribute['attribute_code']]) ? $aFieldMap[$aAttribute['attribute_code']] :
+            //         \Illuminate\Support\Str::camel($aFieldMap[$aAttribute['attribute_code']]);
+            $aSelectColumns[] = "{$aAttribute['attribute_code']}_table.value as $fieldName";
+        }
+
+        $projectScope = self::select(...$aSelectColumns);
+        $projectScope->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID');
+        foreach ($aAttributes as $aAttribute) {
+            if (in_array($aAttribute['attribute_code'], ['budget_sources', 'project_attachments'])) {
+                continue;
+            }
+            $table_field_type = $aAttribute['table_field_type'];
+            $table = "project_attributes_{$table_field_type}";
+            $tableAlias = "{$aAttribute['attribute_code']}_table";
+            // $projectScope->leftJoin("$table as $tableAlias", 'projects.ProjectID', '=', "{$tableAlias}.project_id")->where(
+            //     "{$tableAlias}.attribute_id",
+            //     "=",
+            //     $aAttribute['id']
+            // );
+            $projectScope->leftJoin(
+                "$table as $tableAlias",
+                function ($join) use ($tableAlias, $aAttribute) {
+                    $join->on('projects.ProjectID', '=', "{$tableAlias}.project_id")->where(
+                        "{$tableAlias}.attribute_id",
+                        "=",
+                        $aAttribute['id']
+                    );
+                }
+            );
+        }
+        $projectScope->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where(
+            'projects.Active',
+            1
+        )->orderBy(
+            'projects.SequenceNumber',
+            'asc'
+        );
+
+        /*echo '<pre>' .
+                     \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql()) .
+                     '</pre>';/**/
+
+        return $projectScope;
+    }
+
+    public function getAllProjects()
+    {
+        $projectScope = $this->getProjectScopeBaseQueryModelWithAttributes();
+        $projectScope->where(
+            'site_status.Year',
+            self::_getCurrentYear()
+        );
+        //echo '<pre>' . \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql()) . '</pre>';
+        $all_projects = $projectScope->get()->toArray();
+
+        // echo '<pre>' . print_r($all_projects, true) . '</pre>';
+        return $all_projects;
     }
 
     public function convertRowDataToAttributeData()
@@ -1003,7 +1173,7 @@ FROM (
         $attributes = $aAttributes ? $aAttributes->toArray() : [];
 
         $Year = $this->getCurrentYear();
-        $aYears = [2017,2018,2019];
+        $aYears = [2017, 2018, 2019];
         //$aYears = [2019,2020];
         foreach ($aYears as $Year) {
             $projects = $this->getProjectsByYear($Year, $bReturnArr = true);

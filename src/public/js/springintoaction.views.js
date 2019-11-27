@@ -1948,7 +1948,7 @@
                 OriginalRequest: self.model.get("OriginalRequest"),
                 ProjectDescription: self.model.get("ProjectDescription"),
                 Comments: self.model.get("Comments"),
-                VolunteersNeededEst: self.model.get("VolunteersNeededEst"),
+                VolunteersNeededEstimate: self.model.get("VolunteersNeededEstimate"),
                 StatusReason: self.model.get("StatusReason"),
                 MaterialsNeeded: self.model.get("MaterialsNeeded"),
                 EstimatedCost: self.model.get("EstimatedCost"),
@@ -4136,7 +4136,7 @@
                         BudgetEstimationComplete: {fieldName: 'CostEstimateDone', incompleteValue: '0'},
                         BudgetActualComplete: {fieldName: 'BudgetAllocationDone', incompleteValue: '0'},
                         VolunteerEstimationComplete: {fieldName: 'VolunteerAllocationDone', incompleteValue: '0'},
-                        VolunteerAssignmentComplete: {fieldName: '', incompleteValue: false, condition: "project.VolunteersNeededEst.toString() !== oStatusEntryFields['VolunteerEstimationComplete'].incompleteValue.toString() && project.VolunteersNeededEst.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEst.toString()"}
+                        VolunteerAssignmentComplete: {fieldName: '', incompleteValue: false, condition: "project.VolunteersNeededEstimate.toString() !== oStatusEntryFields['VolunteerEstimationComplete'].incompleteValue.toString() && project.VolunteersNeededEstimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEstimate.toString()"}
                     }
                 },
                 project: {
@@ -4158,8 +4158,8 @@
                         CostEstimateDone: {fieldName: 'EstimatedCost', incompleteValue: ''},
                         BudgetAllocationDone: {fieldName: 'BudgetSources', incompleteValue: ''},
                         MaterialListDone: {fieldName: 'MaterialsNeeded', incompleteValue: ''},
-                        VolunteerAllocationDone: {fieldName: 'VolunteersNeededEst', incompleteValue: '0'},
-                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.VolunteersNeededEst.toString() !== oStatusEntryFields['VolunteerAllocationDone'].incompleteValue.toString() && project.VolunteersNeededEst.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEst.toString()"}
+                        VolunteerAllocationDone: {fieldName: 'VolunteersNeededEstimate', incompleteValue: '0'},
+                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.VolunteersNeededEstimate.toString() !== oStatusEntryFields['VolunteerAllocationDone'].incompleteValue.toString() && project.VolunteersNeededEstimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEstimate.toString()"}
                     }
                 }
             };
@@ -6707,7 +6707,7 @@
         renderSiteDropdowns: function () {
             let self = this;
 
-            let selectedSiteID = App.Vars.appInitialData.project_manager_sites[0].SiteID;
+            let selectedSiteID = App.Vars.appInitialData.project_manager_sites.length ? App.Vars.appInitialData.project_manager_sites[0].SiteID : null;
 
             self.sitesDropdownView = new self.sitesDropdownViewClass({
                 el: self.$('select#sites'),

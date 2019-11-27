@@ -299,7 +299,7 @@ class ProjectsController extends BaseController
 
     public function getSiteProjects($SiteStatusID)
     {
-        return Project::getSiteProjects($SiteStatusID, true);
+        return ProjectScope::getSiteProjects($SiteStatusID, true);
     }
 
     public function getLeadVolunteers($ProjectID)

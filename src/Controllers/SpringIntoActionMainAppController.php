@@ -40,6 +40,7 @@ use Dhayakawa\SpringIntoAction\Models\Workflow;
 use Dhayakawa\SpringIntoAction\Models\PermitRequiredStatusOptions;
 use Dhayakawa\SpringIntoAction\Models\PermitRequiredOptions;
 use Dhayakawa\SpringIntoAction\Models\SiteVolunteer;
+use Dhayakawa\SpringIntoAction\Models\ProjectScope;
 
 use \Laratrust\LaratrustPermission;
 use \Laratrust\LaratrustRole;
@@ -49,6 +50,10 @@ class SpringIntoActionMainAppController extends BaseController
 {
     public function index(Request $request)
     {
+        /*echo '<pre>' .
+             \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql()) .
+             '</pre>';*/
+        // password
         //echo bcrypt('jack1455');
         $user = Auth::user();
         $ProjectAttribute = new ProjectAttribute();
@@ -70,8 +75,50 @@ class SpringIntoActionMainAppController extends BaseController
         if($auth['bIsAdmin'] || $auth['bIsProjectManager']){
             $pmSite = new Site();
             if ($auth['bIsProjectManager']) {
-                $projectManagerVolunteer = Volunteer::where('email', $user->email)->get()->toArray();
+                $projectManagerVolunteer = Volunteer::where('email', $user->email)->get();
+
+                if(empty($projectManagerVolunteer->toArray())){
+                    $model = new Volunteer();
+                    $contactInfo = ['Email' => $user->email,
+                        'FirstName'=> $user->first_name,
+                        'LastName'=> $user->last_name,
+                    ];
+                    $defaultData = $model->getDefaultRecordData();
+                    $contactInfo = array_merge($defaultData, $contactInfo);
+                    $contactInfo['Active'] = 1;
+                    $contactInfo['Status'] = 5;
+                    $contactInfo['FullName'] = "{$contactInfo['FirstName']} {$contactInfo['LastName']}";
+
+                    if (isset($contactInfo['PreferredSiteID']) && $contactInfo['PreferredSiteID'] === '') {
+                        $contactInfo['PreferredSiteID'] = 0;
+                    }
+                    if (isset($contactInfo['ResponseID']) && $contactInfo['ResponseID'] === '') {
+                        $contactInfo['ResponseID'] = 0;
+                    }
+                    if (isset($contactInfo['TeamLeaderWilling']) && $contactInfo['TeamLeaderWilling'] === '') {
+                        $contactInfo['TeamLeaderWilling'] = 0;
+                    }
+                    $contactInfo['IndividualID'] = empty($contactInfo['groveId']) ? 0 : $contactInfo['groveId'];
+                    array_walk(
+                        $contactInfo,
+                        function (&$value, $key) {
+                            if (is_string($value)) {
+                                $value = \urldecode($value);
+                            }
+                            if ($key === 'groveId') {
+                                $value = (int) $value;
+                            }
+                        }
+                    );
+
+                    $model->fill($contactInfo);
+                    $model->save();
+                    $projectManagerVolunteer = Volunteer::where('email', $user->email)->get();
+                }
+                $projectManagerVolunteer = $projectManagerVolunteer->toArray();
                 $project_manager_sites = isset($projectManagerVolunteer[0]) ? $pmSite->getVolunteerSites($projectManagerVolunteer[0]['VolunteerID'], 2) : [];
+                // print_r($projectManagerVolunteer);
+                // print_r($project_manager_sites);
             } else {
                 $project_manager_sites = SiteStatus::join('sites','sites.SiteID','=','site_status.SiteID')->where('Year', $this->getCurrentYear())->get()->toArray();
             }
@@ -212,6 +259,9 @@ class SpringIntoActionMainAppController extends BaseController
                                    ->orderBy('projects.SequenceNumber', 'asc')
                                    ->get()
                                    ->toArray();
+            $ps = new ProjectScope();
+            $all_projects = $ps->getAllProjects();
+
         } catch (\Exception $e) {
             $all_projects = [];
 

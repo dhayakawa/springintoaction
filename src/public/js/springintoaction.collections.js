@@ -461,7 +461,7 @@
             displayOrder: displayOrderCnt++
         },
         {
-            name: "VolunteersNeededEst",
+            name: "VolunteersNeededEstimate",
             label: "Volunteers Needed Est",
             cell: "integer",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
