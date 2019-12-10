@@ -42,13 +42,13 @@
                 </li>
                 @else
                     @env('local')
-                    <!--                <li><a href="{{ route('login') }}">Login</a></li>-->
+                                    <li><a href="{{ route('login') }}">Login</a></li>
                     <!--                <li><a href="{{ route('register') }}">Register</a></li>-->
                     @elseenv('testing')
 
                     @else
 
-                    <!--                <li><a href="{{ route('login') }}">Login</a></li>-->
+                                    <li><a href="{{ route('login') }}">Login</a></li>
                     <!--                <li><a href="{{ route('register') }}">Register</a></li>-->
                     @endenv
 
