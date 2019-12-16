@@ -6,18 +6,19 @@
         },
         render: function () {
             let self = this;
-            this.$el.attr('value', self.model.get('ProjectID'))
+            self.$el.attr('value', self.model.get('ProjectID'))
                 .html('Project #:' + self.model.get('SequenceNumber'));
-            return this;
+            return self;
         }
     });
     App.Views.ProjectScopeDropDown = App.Views.Backend.extend({
         initialize: function (options) {
             let self = this;
-            this.options = options;
-            this.optionsView = [];
-            this.parentView = this.options.parentView;
-            _.bindAll(this, 'addOne', 'addAll', 'changeSelected');
+            self.options = options;
+
+            self.optionsView = [];
+            self.parentView = self.options.parentView;
+            _.bindAll(self, 'addOne', 'addAll', 'changeSelected', 'updateCollectionBySite');
             self.projectScopeSitesDropdown = self.options.projectScopeSitesDropdown;
             self.listenTo(self.projectScopeSitesDropdown, "site-id-change", self.updateCollectionBySite);
             self.listenTo(self.collection, "reset", self.addAll);
@@ -27,39 +28,53 @@
         },
         updateCollectionBySite: function (e) {
             let self = this;
-
+            self.options.selectedProjectID = e.ProjectID;
             self.collection.url = '/admin/project_scope/projects/' + e.SiteStatusID;
-            self.collection.fetch({reset: true});
+            self.collection.fetch({reset: true})
         },
         addOne: function (projectDropDown) {
+            let self = this;
             let option = new App.Views.ProjectScopeDropDownOption({model: projectDropDown});
-            this.optionsView.push(option);
-            this.$el.append(option.render().el);
+            self.optionsView.push(option);
+            self.$el.append(option.render().el);
         },
         addAll: function () {
-            _.each(this.optionsView, function (option) {
+            let self = this;
+            _.each(self.optionsView, function (option) {
                 option.remove();
             });
 
-            this.collection.each(this.addOne);
-            this.$el.trigger('change');
+            self.collection.each(self.addOne);
+
+            self.$el.trigger('change');
         },
         render: function () {
-            this.addAll();
-            return this;
+            let self = this;
+            self.addAll();
+            return self;
         },
         changeSelected: function () {
-            let $option = this.$el.find(':selected');
-            if (!$option.length) {
-                $option = this.$el.find(':first-child');
+            let self = this;
+            let projectId = null;
+            if (!_.isUndefined(self.options.selectedProjectID) && !_.isNull(self.options.selectedProjectID)) {
+                self.$el.val(self.options.selectedProjectID);
+                projectId = self.options.selectedProjectID;
+                self.options.selectedProjectID = null;
+            } else {
+                let $option = self.$el.find(':selected');
+                if (!$option.length) {
+                    $option = self.$el.find(':first-child');
+                }
+                projectId = $option.val();
             }
-            this.setSelectedId(this.parentView.$('select#site_years option').filter(':selected').text(), this.parentView.$('select#site_years option').filter(':selected').data('site-status-id'), $option.val());
+
+            self.setSelectedId(self.parentView.$('select#site_years option').filter(':selected').text(), self.parentView.$('select#site_years option').filter(':selected').data('site-status-id'), projectId);
         },
         setSelectedId: function (SiteID, SiteStatusID, ProjectID) {
             let self = this;
             if (App.Vars.mainAppDoneLoading) {
                 _log('App.Views.ProjectScopeProjectsDropDown.setSelectedId.event', 'new project selected', ProjectID);
-                //console.log({SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
+                //console.log('trigger project-id-change',{SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
                 self.trigger('project-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
             }
         }
@@ -113,8 +128,12 @@
                 self.$el.val(self.options.selectedSiteID);
                 self.options.selectedSiteID = null;
             }
-
-            self.changeSelected();
+            let selectedProjectID = null;
+            if (!_.isUndefined(self.options.selectedProjectID) && !_.isNull(self.options.selectedProjectID)) {
+                selectedProjectID = self.options.selectedProjectID;
+                self.options.selectedProjectID = null;
+            }
+            self.changeSelected(selectedProjectID);
         },
         render: function () {
             let self = this;
@@ -122,13 +141,14 @@
 
             return self;
         },
-        changeSelected: function () {
+        changeSelected: function (selectedProjectID) {
             let self = this;
-            self.setSelectedId(self.$el.val(), self.$el.find('option:selected').data('site-status-id'));
+            self.setSelectedId(self.$el.val(), self.$el.find('option:selected').data('site-status-id'), selectedProjectID);
         },
-        setSelectedId: function (SiteID, SiteStatusID) {
+        setSelectedId: function (SiteID, SiteStatusID, selectedProjectID) {
             let self = this;
-            self.trigger('site-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID});
+            self.trigger('site-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: selectedProjectID});
+            self.trigger('site-status-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: selectedProjectID});
         }
     });
     App.Views.ProjectScopeManagement = App.Views.Management.extend({
@@ -150,6 +170,7 @@
             // }
             // Required call for inherited class
             self._initialize(options);
+            self.bReturnToProjectManagementView = false;
             self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
         },
@@ -186,33 +207,63 @@
 
             self.childViews.push(self.projectScopeView);
 
+            if (!_.isUndefined(self.options.loadProject) && !_.isNull(self.options.loadProject) && !_.isUndefined(App.Views.mainApp.router.managementViews['project_management'])) {
+                let $projectManagementView = App.Views.mainApp.router.managementViews['project_management'].$el;
+
+                if ($projectManagementView.length && $projectManagementView.is(':visible')){
+                    self.bReturnToProjectManagementView = true;
+                    $projectManagementView.hide();
+                }
+            }
+
             return self;
         },
         renderSiteDropdowns: function () {
             let self = this;
 
             let selectedSiteID = App.Vars.appInitialData.project_manager_sites.length ? App.Vars.appInitialData.project_manager_sites[0].SiteID : null;
+            let selectedProjectID = null;
 
+            if (self.options.loadProject){
+                if (self.options.loadProject.match(/_/)) {
+                    let parts = self.options.loadProject.split(/_/);
+                    selectedSiteID = parts[0];
+                    selectedProjectID = parts[1];
+                }
+            }
             self.sitesDropdownView = new self.sitesDropdownViewClass({
                 el: self.$('select#sites'),
                 model: new App.Models.Site(),
                 collection: new App.Collections.Site(App.Vars.appInitialData.project_manager_sites),
                 parentView: self,
                 selectedSiteID: selectedSiteID,
+                selectedProjectID: selectedProjectID,
             });
             self.projectsDropDownView = new this.projectScopeDropdownViewClass({
                 el: this.$('select#projects'),
                 parentView: this,
                 projectScopeSitesDropdown: self.sitesDropdownView,
-                collection: new App.Collections.ProjectsDropDown(App.Vars.appInitialData.project_manager_projects)
+                collection: new App.Collections.ProjectsDropDown(App.Vars.appInitialData.project_manager_projects),
             });
             self.projectsDropDownView.render();
+            self.listenTo(self.projectsDropDownView, 'project-id-change', self.handleProjectIDChange);
             self.listenTo(self.sitesDropdownView, 'site-id-change', self.handleSiteIDChange);
+            self.listenTo(self.sitesDropdownView, 'site-status-id-change', self.handleSiteStatusIDChange);
             self.sitesDropdownView.render();
             self.childViews.push(self.sitesDropdownView);
             self.childViews.push(self.projectsDropDownView);
 
 
-        }
+        },
+        handleSiteStatusIDChange: function (e) {
+            let self = this;
+
+            self.setViewDataStoreValue('current-site-status-id', e['SiteStatusID']);
+        },
+        handleProjectIDChange: function (e) {
+            let self = this;
+
+            self.setViewDataStoreValue('current-model-id', e['ProjectID']);
+        },
     });
 })(window.App);

@@ -35,8 +35,6 @@
         render: function (e) {
             let self = this;
 
-            // Need to set the current model id every time the view is rendered
-            self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
             self.renderGrid(e, self.viewName);
 
             return self;
@@ -65,7 +63,6 @@
                     success: function (model, response, options) {
                         //console.log('_handleSiteStatusIDChange project collection fetch success', {model: model, response: response, response_0: response[0], options: options})
                         if (!_.isUndefined(response[0])) {
-                            self.setViewDataStoreValue('current-model-id', response[0][self.model.idAttribute]);
                             self.model.set(response[0]);
                             self.refocusGridRecord();
                         } else {
@@ -174,7 +171,6 @@
                     });
             }
         },
-
         getModalForm: function () {
             let self = this;
             let template = window.template('newProjectScopeTemplate');

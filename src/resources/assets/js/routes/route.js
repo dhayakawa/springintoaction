@@ -23,7 +23,9 @@
         initialize: function (options) {
             let self = this;
             _.bindAll(self, 'dashboard', 'loadView', 'getShouldBuildView');
-            App.Views.mainApp = new App.Views.MainApp;
+            App.Views.mainApp = new App.Views.MainApp({
+                parentView: self
+            });
             self.viewsToPreRender = {
                 // 'site_management': ['site', 'management'],
                 // 'project_management': ['project', 'management'],
@@ -402,10 +404,11 @@
             try {
                 switch (self.routeRequested) {
                     case 'project_scope_management':
-                        if (self.getShouldBuildView(self.routeRequested)) {
+                        if (self.getShouldBuildView(self.routeRequested + '-' + type)) {
                             self.managementViews[self.routeRequested] = new self.projectScopeManagementViewClass({
                                 viewName: self.routeRequested,
                                 modelNameLabel: 'Project',
+                                loadProject: type
                             });
                         }
 
