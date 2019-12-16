@@ -18,6 +18,18 @@
                 this.$el.find('.btnDeleteChecked').hide();
             }
             return this;
+        },
+        editGridRow: function (e) {
+            let self = this;
+            e.preventDefault();
+            let load = self.getViewDataStore('current-site-id','project_management')+'_'+ self.getViewDataStore('current-model-id','projects');
+            window.location.href = '#/view/project_scope/management/' + load
+        },
+        addGridRow: function (e) {
+            let self = this;
+            e.preventDefault();
+            let load = self.getViewDataStore('current-site-id', 'project_management') + '_new';
+            window.location.href = '#/view/project_scope/management/' + load
         }
     });
 })(window.App);

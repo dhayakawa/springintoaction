@@ -8,6 +8,8 @@
             let self = this;
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
             _.bindAll(self, 'render', 'setRouteView', 'hideRouteView');
+            self.options = options;
+            self.router = self.options.parentView;
             self.preRenderedView = false;
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;

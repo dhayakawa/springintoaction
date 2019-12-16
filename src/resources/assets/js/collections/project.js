@@ -57,6 +57,50 @@
 
     });
 
+    let WhenWillProjectBeCompletedOptionsCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
+        // any options specific to `select2` goes here
+        select2Options: {
+            // default is false because Backgrid will save the cell's value
+            // and exit edit mode on enter
+            openOnEnter: false
+        },
+        optionValues: [{
+            values: App.Models.projectModel.getWhenWillProjectBeCompletedOptions(false)
+        }]
+
+    });
+
+let PermitRequiredOptionsCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
+        // any options specific to `select2` goes here
+        select2Options: {
+            // default is false because Backgrid will save the cell's value
+            // and exit edit mode on enter
+            openOnEnter: false
+        },
+        optionValues: [{
+            values: App.Models.projectModel.getPermitRequiredOptions(false)
+        }]
+
+    });
+
+let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
+        editor: App.CellEditors.Select2CellEditor,
+        // any options specific to `select2` goes here
+        select2Options: {
+            // default is false because Backgrid will save the cell's value
+            // and exit edit mode on enter
+            openOnEnter: false
+        },
+        optionValues: [{
+            values: App.Models.projectModel.getPermitRequiredStatusOptions(false)
+        }]
+
+    });
+
+//##DYNAMIC_CELL_TYPES
+
     let displayOrderCnt = 1;
     // Override until the textarea cell works
     //TextareaCell = 'string';
@@ -158,58 +202,108 @@
             displayOrder: displayOrderCnt++
         },
         {
-            name: "Status",
+            name: "status",
             label: "Status",
             cell: StatusCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "66",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "StatusReason",
-            label: "Status Reason",
-            cell: App.Vars.TextareaCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "BudgetSources",
-            label: "Budget Sources",
-            cell: App.Vars.budgetSourceCell,
-            editable: false,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "125",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "ChildFriendly",
-            label: "Child Friendly",
-            cell: App.Vars.yesNoCell,
+            name: "status_reason",
+            label: "Status Reason",
+            cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "50",
+            width: "88",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "PrimarySkillNeeded",
+            name: "primary_skill_needed",
             label: "Primary Skill Needed",
             cell: SkillsNeededCell.extend({multiple: true}),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "150",
+            width: "130",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "VolunteersNeededEstimate",
-            label: "Volunteers Needed Est",
+            name: "budget_sources",
+            label: "Budget Sources",
+            cell: "string",
+            editable: false,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "94",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "location",
+            label: "Location",
+            cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "58",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "dimensions",
+            label: "Dimensions",
+            cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "70",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "material_needed_and_cost",
+            label: "Material Needed and Cost",
+            cell: "string",
+            editable: false,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "154",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "estimated_total_cost",
+            label: "Estimated Total Cost",
+            cell: "number",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "130",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "special_instructions",
+            label: "Special Instructions",
+            cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "130",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "team_leaders_needed_estimate",
+            label: "Team Leaders Needed Estimate",
+            cell: "integer",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "178",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "volunteers_needed_estimate",
+            label: "Volunteers Needed Estimate",
             cell: "integer",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
@@ -218,67 +312,127 @@
             displayOrder: displayOrderCnt++
         },
         {
-            name: "VolunteersAssigned",
-            label: "Volunteers Assigned",
-            cell: "integer",
-            editable: false,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "145",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "MaterialsNeeded",
-            label: "Materials Needed",
-            cell: App.Vars.TextareaCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "EstimatedCost",
-            label: "Estimated Cost",
-            cell: "number",
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "120",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "ActualCost",
-            label: "Actual Cost",
-            cell: "number",
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "95",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "BudgetAvailableForPC",
-            label: "Budget Available For PC",
+            name: "estimated_time_to_complete",
+            label: "Estimated time to complete the project?",
             cell: "string",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "178",
+            width: "244",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "VolunteersLastYear",
-            label: "Volunteers Last Year",
+            name: "when_will_project_be_completed",
+            label: "Will this project be completed before or during Spring into Action?",
+            cell: WhenWillProjectBeCompletedOptionsCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "125",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "prep_work_required",
+            label: "Prep Work Required",
+            cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "118",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "permit_required",
+            label: "Is a permit required for this project? (Please see the SIA Manual regarding permits)",
+            cell: PermitRequiredOptionsCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "125",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "permit_required_for",
+            label: "What is the permit required for?",
+            cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "202",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "would_like_team_lead_to_contact",
+            label: "Would you like a member of the lead team to contact you regarding this project? ",
+            cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "50",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "special_equipment_needed",
+            label: "Is any special equipment needed for the project? ",
+            cell: App.Vars.TextareaCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "304",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "painting_dimensions",
+            label: "Wall Dimensions (Square feet est.) ",
+            cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "220",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "estimated_paint_cans_needed",
+            label: "Estimated Number of Paint Cans needed",
             cell: "integer",
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "153",
+            width: "232",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "NeedsToBeStartedEarly",
+            name: "estimated_paint_tape_rolls_needed",
+            label: "Estimated rolls of painters tape needed",
+            cell: "integer",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "244",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "paint_already_on_hand",
+            label: "Paint already on hand",
+            cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "136",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "paint_ordered",
+            label: "Paint ordered",
+            cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "88",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "needs_to_be_started_early",
             label: "Needs To Be Started Early",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
@@ -288,8 +442,18 @@
             displayOrder: displayOrderCnt++
         },
         {
-            name: "PCSeeBeforeSIA",
-            label: "TLSeeBeforeSIA",
+            name: "actual_cost",
+            label: "Actual Cost",
+            cell: "number",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "76",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "child_friendly",
+            label: "Child Friendly",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
@@ -298,152 +462,58 @@
             displayOrder: displayOrderCnt++
         },
         {
-            name: "SpecialEquipmentNeeded",
-            label: "Special Equipment Needed",
-            cell: App.Vars.TextareaCell,
+            name: "pc_see_before_sia",
+            label: "PC See Before SIA",
+            cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
+            width: "50",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "PermitsOrApprovalsNeeded",
-            label: "Permits Or Approvals Needed",
-            cell: App.Vars.TextareaCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "PrepWorkRequiredBeforeSIA",
-            label: "Prep Work Required Before SIA",
-            cell: App.Vars.TextareaCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "SetupDayInstructions",
+            name: "setup_day_instructions",
             label: "Setup Day Instructions",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
+            width: "142",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "SIADayInstructions",
+            name: "sia_day_instructions",
             label: "SIA Day Instructions",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
+            width: "130",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "Area",
-            label: "Area",
-            cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "PaintOrBarkEstimate",
-            label: "Paint Or Bark Estimate",
-            cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "PaintAlreadyOnHand",
-            label: "Paint Already On Hand",
-            cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "PaintOrdered",
-            label: "Paint Ordered",
-            cell: "string",
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "CostEstimateDone",
-            label: "Cost Estimate Done",
-            cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "50",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "MaterialListDone",
-            label: "Material List Done",
-            cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "50",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "BudgetAllocationDone",
-            label: "Budget Allocation Done",
-            cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "50",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "VolunteerAllocationDone",
-            label: "Volunteer Allocation Done",
-            cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "50",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "NeedSIATShirtsForPC",
+            name: "need_sia_tshirts_for_pc",
             label: "Need SIA TShirts For PC",
             cell: App.Vars.yesNoCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "ProjectSend",
+            name: "project_send",
             label: "Project Send",
             cell: App.Vars.sendCell,
-            editable: App.Vars.Auth.bCanEditProjectGridFields, resizeable: App.Vars.bAllowManagedGridColumns,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "50",
+            width: "125",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "FinalCompletionStatus",
-            label: "Project Completed",
+            name: "cost_estimate_done",
+            label: "Cost Estimate Done",
             cell: App.Vars.yesNoCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
@@ -452,28 +522,77 @@
             displayOrder: displayOrderCnt++
         },
         {
-            name: "FinalCompletionAssessment",
+            name: "material_list_done",
+            label: "Material List Done",
+            cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "50",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "volunteer_allocation_done",
+            label: "Volunteer Allocation Done",
+            cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "50",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "permits_or_approvals_done",
+            label: "Permits Or Approvals Done",
+            cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "50",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "permits_or_approvals_status",
+            label: "Permits Or Approvals Status",
+            cell: PermitRequiredStatusOptionsCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "125",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "final_completion_assessment",
             label: "Final Completion Assessment",
             cell: App.Vars.TextareaCell,
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
-            width: "255",
+            width: "172",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "updated_at",
-            label: "updated_at",
-            cell: "string",
-            editable: false,
+            name: "final_completion_status",
+            label: "Final Completion Status",
+            cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "50",
-            renderable: true,
             displayOrder: displayOrderCnt++
-        }
+        },
+        {
+            name: "project_attachments",
+            label: "Project Attachments",
+            cell: "string",
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "124",
+            displayOrder: displayOrderCnt++
+        },
 
-    ];
+];
 
     if (!App.Vars.bAllowBackgridInlineEditing) {
         _.each(App.Vars.projectsBackgridColumnDefinitions, function (value, key) {

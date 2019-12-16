@@ -215,7 +215,7 @@ class SpringIntoActionMainAppController extends BaseController
             report($e);
         }
         try {
-            $projects = Project::getSiteProjects($siteStatus['SiteStatusID'], true);
+            $projects = ProjectScope::getSiteProjects($siteStatus['SiteStatusID'], true);
 
             $project = current($projects);
 
@@ -697,6 +697,13 @@ class SpringIntoActionMainAppController extends BaseController
                 );
             }
             \file_put_contents(base_path() . "/public/js/app-initial-collections-view-data.js", $content);
+            $ps = new ProjectScope();
+            ob_start();
+            $ps->updateProjectBackboneCollectionScript();
+            $output = \ob_get_clean();
+            if (!empty($output)) {
+                echo "<pre>{$output}</pre>";
+            }
         } catch (\Exception $e) {
             report($e);
         }

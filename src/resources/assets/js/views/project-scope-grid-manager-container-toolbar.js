@@ -44,23 +44,38 @@
         },
         save: function (e) {
             let self = this;
+            let model;
             self.$form = self.options.managedGridView.$('form[name="projectScope"]');
             if (!self.validateForm()){
                 growl('Please fix form errors.', 'error');
                 return;
             }
             window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
-            console.log()
             let data = $.unserialize(self.$form.serialize());
+
+            if (self.options.managedGridView.bIsAddNew){
+                model = new App.Models.ProjectScope();
+                model.url = self.options.managedGridView.getModelUrl();
+                data.SiteStatusID = self.getViewDataStore('current-site-status-id','project_scope_management');
+                delete data.ProjectID;
+            } else {
+                model = self.options.managedGridView.model;
+            }
+
             let growlMsg = '';
             let growlType = '';
+            let newId = null;
             $.when(
-                self.options.managedGridView.model.save(data,
+                model.save(data,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectScope.update', self.viewName + ' save', model, response, options);
                             growlMsg = response.msg;
                             growlType = response.success ? 'success' : 'error';
+
+                            if (!_.isUndefined(response[model.idAttribute])){
+                                newId = response[model.idAttribute];
+                            }
                         },
                         error: function (model, response, options) {
                             console.error('App.Views.ProjectScope.update', self.viewName + ' save', model, response, options);
@@ -71,6 +86,27 @@
             ).then(function () {
                 growl(growlMsg, growlType);
                 window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+                if (self.parentView.bReturnToProjectManagementView || self.options.managedGridView.bIsAddNew){
+                    self.options.parentView.$el.hide();
+                    let SiteStatusID = _.clone(self.getViewDataStore('current-site-status-id','project_scope_management'));
+                    if (self.options.managedGridView.bIsAddNew) {
+                        if (newId){
+                            // set so it's chosen
+                            self.setViewDataStoreValue('current-model-id', newId, 'projects');
+                            self.setViewDataStoreValue('current-site-status-id', SiteStatusID, 'projects');
+                            self.setViewDataStoreValue('current-model-id', newId, 'project_scope_management');
+                        }
+
+                        // remove storage data so it is not reloaded accidentally
+                        //self.removeViewDataStore('project_scope_management');
+
+                    }
+                    window.location.href = '#/view/project/management';
+                    //console.log(App.Views.mainApp.router.managementViews)
+                    if (!_.isUndefined(App.Views.mainApp.router.managementViews['project_management'])) {
+                        App.Views.mainApp.router.managementViews['project_management'].siteYearsDropdownView.trigger('site-status-id-change', {'SiteStatusID': SiteStatusID});
+                    }
+                }
             });
         },
         toggleSaveBtn: function (e) {

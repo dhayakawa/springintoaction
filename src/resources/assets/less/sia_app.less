@@ -10,6 +10,12 @@
 .sia-main-app {
     min-height: 439px;
     width:100%;
+
+    .popover-body {
+        padding: 0.5rem 0.75rem;
+        color: #212529;
+        white-space: pre;
+    }
     .dashboard {
         // We're using the AdminLTE User widget to display the dashboard panels
         .widget-user-2 {
@@ -479,7 +485,11 @@
         thead th {
             //background-image: linear-gradient(#2F2727, #1a82f7);
             border: 1px solid #ddd;
-
+            button {
+                font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+                letter-spacing: -2px;
+                font-size:14px; // approx 6px wide
+            }
             &:nth-child(2) button {
                 &::before {
                     // eye icon
@@ -841,134 +851,127 @@
                 th:nth-child(8) {
                     width: 250px;
                 }
-
-                th:nth-child(9) {
-                    width: 66px;
-                }
-
-                th:nth-child(10) {
-                    width: 255px;
-                }
-
-                th:nth-child(11) {
+                // dynamic fields after 8
+                //BEGIN_DYNAMIC_CELLS
+th:nth-child(9) {
                     width: 125px;
                 }
-
-                th:nth-child(12) {
-                    width: 50px;
+th:nth-child(10) {
+                    width: 88px;
                 }
-
-                th:nth-child(13) {
-                    width: 150px;
+th:nth-child(11) {
+                    width: 130px;
                 }
-
-                th:nth-child(14) {
-                    width: 166px;
+th:nth-child(12) {
+                    width: 94px;
                 }
-
-                th:nth-child(15) {
-                    width: 145px;
+th:nth-child(13) {
+                    width: 58px;
                 }
-
-                th:nth-child(16) {
-                    width: 255px;
+th:nth-child(14) {
+                    width: 70px;
                 }
-
-                th:nth-child(17) {
-                    width: 120px;
+th:nth-child(15) {
+                    width: 154px;
                 }
-
-                th:nth-child(18) {
-                    width: 95px;
+th:nth-child(16) {
+                    width: 130px;
                 }
-
-                th:nth-child(19) {
+th:nth-child(17) {
+                    width: 130px;
+                }
+th:nth-child(18) {
                     width: 178px;
                 }
-
-                th:nth-child(20) {
-                    width: 153px;
+th:nth-child(19) {
+                    width: 166px;
                 }
-
-                th:nth-child(21) {
+th:nth-child(20) {
+                    width: 244px;
+                }
+th:nth-child(21) {
+                    width: 125px;
+                }
+th:nth-child(22) {
+                    width: 118px;
+                }
+th:nth-child(23) {
+                    width: 125px;
+                }
+th:nth-child(24) {
+                    width: 202px;
+                }
+th:nth-child(25) {
                     width: 50px;
                 }
-
-                th:nth-child(22) {
+th:nth-child(26) {
+                    width: 304px;
+                }
+th:nth-child(27) {
+                    width: 220px;
+                }
+th:nth-child(28) {
+                    width: 232px;
+                }
+th:nth-child(29) {
+                    width: 244px;
+                }
+th:nth-child(30) {
+                    width: 136px;
+                }
+th:nth-child(31) {
+                    width: 88px;
+                }
+th:nth-child(32) {
                     width: 50px;
                 }
-
-                th:nth-child(23) {
-                    width: 255px;
+th:nth-child(33) {
+                    width: 76px;
                 }
-
-                th:nth-child(24) {
-                    width: 255px;
-                }
-
-                th:nth-child(25) {
-                    width: 255px;
-                }
-
-                th:nth-child(26) {
-                    width: 255px;
-                }
-
-                th:nth-child(27) {
-                    width: 255px;
-                }
-
-                th:nth-child(28) {
-                    width: 255px;
-                }
-
-                th:nth-child(29) {
-                    width: 255px;
-                }
-
-                th:nth-child(30) {
-                    width: 255px;
-                }
-
-                th:nth-child(31) {
-                    width: 255px;
-                }
-
-                th:nth-child(32) {
+th:nth-child(34) {
                     width: 50px;
                 }
-
-                th:nth-child(33) {
+th:nth-child(35) {
                     width: 50px;
                 }
-
-                th:nth-child(34) {
+th:nth-child(36) {
+                    width: 142px;
+                }
+th:nth-child(37) {
+                    width: 130px;
+                }
+th:nth-child(38) {
                     width: 50px;
                 }
-
-                th:nth-child(35) {
+th:nth-child(39) {
+                    width: 125px;
+                }
+th:nth-child(40) {
                     width: 50px;
                 }
-
-                th:nth-child(36) {
+th:nth-child(41) {
                     width: 50px;
                 }
-
-                th:nth-child(37) {
+th:nth-child(42) {
                     width: 50px;
                 }
-
-                th:nth-child(38) {
+th:nth-child(43) {
                     width: 50px;
                 }
-
-                th:nth-child(39) {
-                    width: 255px;
+th:nth-child(44) {
+                    width: 125px;
                 }
-
-                th:nth-child(40) {
+th:nth-child(45) {
+                    width: 172px;
+                }
+th:nth-child(46) {
+                    width: 50px;
+                }
+th:nth-child(47) {
                     width: auto;
                 }
+
+//END_DYNAMIC_CELLS
             }
         }
     }
