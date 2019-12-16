@@ -1685,6 +1685,18 @@
                 this.$el.find('.btnDeleteChecked').hide();
             }
             return this;
+        },
+        editGridRow: function (e) {
+            let self = this;
+            e.preventDefault();
+            let load = self.getViewDataStore('current-site-id','project_management')+'_'+ self.getViewDataStore('current-model-id','projects');
+            window.location.href = '#/view/project_scope/management/' + load
+        },
+        addGridRow: function (e) {
+            let self = this;
+            e.preventDefault();
+            let load = self.getViewDataStore('current-site-id', 'project_management') + '_new';
+            window.location.href = '#/view/project_scope/management/' + load
         }
     });
 })(window.App);
@@ -1726,8 +1738,6 @@
         render: function (e) {
             let self = this;
 
-            // Need to set the current model id every time the view is rendered
-            self.setViewDataStoreValue('current-model-id', self.collection.length ? self.collection.at(0).get(self.model.idAttribute) : null);
             self.renderGrid(e, self.viewName);
 
             return self;
@@ -1756,7 +1766,6 @@
                     success: function (model, response, options) {
                         //console.log('_handleSiteStatusIDChange project collection fetch success', {model: model, response: response, response_0: response[0], options: options})
                         if (!_.isUndefined(response[0])) {
-                            self.setViewDataStoreValue('current-model-id', response[0][self.model.idAttribute]);
                             self.model.set(response[0]);
                             self.refocusGridRecord();
                         } else {
@@ -1865,7 +1874,6 @@
                     });
             }
         },
-
         getModalForm: function () {
             let self = this;
             let template = window.template('newProjectScopeTemplate');
@@ -5916,23 +5924,38 @@
         },
         save: function (e) {
             let self = this;
+            let model;
             self.$form = self.options.managedGridView.$('form[name="projectScope"]');
             if (!self.validateForm()){
                 growl('Please fix form errors.', 'error');
                 return;
             }
             window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
-            console.log()
             let data = $.unserialize(self.$form.serialize());
+
+            if (self.options.managedGridView.bIsAddNew){
+                model = new App.Models.ProjectScope();
+                model.url = self.options.managedGridView.getModelUrl();
+                data.SiteStatusID = self.getViewDataStore('current-site-status-id','project_scope_management');
+                delete data.ProjectID;
+            } else {
+                model = self.options.managedGridView.model;
+            }
+
             let growlMsg = '';
             let growlType = '';
+            let newId = null;
             $.when(
-                self.options.managedGridView.model.save(data,
+                model.save(data,
                     {
                         success: function (model, response, options) {
                             _log('App.Views.ProjectScope.update', self.viewName + ' save', model, response, options);
                             growlMsg = response.msg;
                             growlType = response.success ? 'success' : 'error';
+
+                            if (!_.isUndefined(response[model.idAttribute])){
+                                newId = response[model.idAttribute];
+                            }
                         },
                         error: function (model, response, options) {
                             console.error('App.Views.ProjectScope.update', self.viewName + ' save', model, response, options);
@@ -5943,6 +5966,27 @@
             ).then(function () {
                 growl(growlMsg, growlType);
                 window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
+                if (self.parentView.bReturnToProjectManagementView || self.options.managedGridView.bIsAddNew){
+                    self.options.parentView.$el.hide();
+                    let SiteStatusID = _.clone(self.getViewDataStore('current-site-status-id','project_scope_management'));
+                    if (self.options.managedGridView.bIsAddNew) {
+                        if (newId){
+                            // set so it's chosen
+                            self.setViewDataStoreValue('current-model-id', newId, 'projects');
+                            self.setViewDataStoreValue('current-site-status-id', SiteStatusID, 'projects');
+                            self.setViewDataStoreValue('current-model-id', newId, 'project_scope_management');
+                        }
+
+                        // remove storage data so it is not reloaded accidentally
+                        //self.removeViewDataStore('project_scope_management');
+
+                    }
+                    window.location.href = '#/view/project/management';
+                    //console.log(App.Views.mainApp.router.managementViews)
+                    if (!_.isUndefined(App.Views.mainApp.router.managementViews['project_management'])) {
+                        App.Views.mainApp.router.managementViews['project_management'].siteYearsDropdownView.trigger('site-status-id-change', {'SiteStatusID': SiteStatusID});
+                    }
+                }
             });
         },
         toggleSaveBtn: function (e) {
@@ -5966,6 +6010,7 @@
         viewName: 'project-scope-view',
         events: {
             'change input,textarea,select': 'formChanged',
+            'click .admin__actions-switch': 'formChanged',
             'invalid .list-item-input': 'flagAsInvalid',
             'click [name^="primary_skill_needed"]': 'handleProjectTypeChange',
             'change [name="permit_required"]': 'handlePermitRequiredChange',
@@ -5985,6 +6030,7 @@
             }
             // Required call for inherited class
             self._initialize(options);
+            self.bIsAddNew = false;
             self.bDoneLoadingForm = false;
             self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
@@ -6030,6 +6076,9 @@
             let self = this;
             self.model.set('ProjectID', e.ProjectID);
             self.bDoneLoadingForm = false;
+            if (e.ProjectID === 'new'){
+                self.bIsAddNew = true;
+            }
             self.render();
         },
         render: function (e) {
@@ -6043,6 +6092,14 @@
                     self.model.fetch({reset: true})
                 ).then(function () {
                     //console.log('project scope model', self.model)
+
+                    if (self.model.get(self.model.idAttribute) === null && self.model.get("SequenceNumber") === 99999) {
+                        let sequenceNumber = self.projectsDropDownView.collection.models.length > 0 ? _.max(self.projectsDropDownView.collection.models, function (project) {
+                            return parseInt(project.get("SequenceNumber"));
+                        }).get('SequenceNumber') : 1;
+
+                        self.model.set('SequenceNumber', sequenceNumber + 1);
+                    }
                     self.projectScopeContacts = self.model.get('contacts');
                     let contactSelect = new App.Views.Select({
                         el: '',
@@ -6072,8 +6129,14 @@
                     if (self.$('[name="Comments"]').val() === '') {
                         self.$('[name="Comments"]').attr('rows', 3);
                     }
+
                     self.finishRenderingForm();
 
+                    if (self.bIsAddNew) {
+                        self.sitesDropdownView.$el.prop('disabled', true);
+                        self.projectsDropDownView.$el.prepend('<option>New Project</option>');
+                        self.projectsDropDownView.$el.prop('disabled', true);
+                    }
                 });
             }
 
@@ -6127,7 +6190,7 @@
             });
             let removed = _.difference(self.currentTypes,aIds);
             if (removed.length){
-                console.log('removed',removed)
+
                 _.each(removed, function (project_type_id, idx) {
                     _.each(self.getProjectTypeAttributes(project_type_id), function (pta, idx) {
                         let attribute = _.where(self.attributesOptions, {id: pta.attribute_id});
@@ -6522,18 +6585,19 @@
         },
         render: function () {
             let self = this;
-            this.$el.attr('value', self.model.get('ProjectID'))
+            self.$el.attr('value', self.model.get('ProjectID'))
                 .html('Project #:' + self.model.get('SequenceNumber'));
-            return this;
+            return self;
         }
     });
     App.Views.ProjectScopeDropDown = App.Views.Backend.extend({
         initialize: function (options) {
             let self = this;
-            this.options = options;
-            this.optionsView = [];
-            this.parentView = this.options.parentView;
-            _.bindAll(this, 'addOne', 'addAll', 'changeSelected');
+            self.options = options;
+
+            self.optionsView = [];
+            self.parentView = self.options.parentView;
+            _.bindAll(self, 'addOne', 'addAll', 'changeSelected', 'updateCollectionBySite');
             self.projectScopeSitesDropdown = self.options.projectScopeSitesDropdown;
             self.listenTo(self.projectScopeSitesDropdown, "site-id-change", self.updateCollectionBySite);
             self.listenTo(self.collection, "reset", self.addAll);
@@ -6543,39 +6607,53 @@
         },
         updateCollectionBySite: function (e) {
             let self = this;
-
+            self.options.selectedProjectID = e.ProjectID;
             self.collection.url = '/admin/project_scope/projects/' + e.SiteStatusID;
-            self.collection.fetch({reset: true});
+            self.collection.fetch({reset: true})
         },
         addOne: function (projectDropDown) {
+            let self = this;
             let option = new App.Views.ProjectScopeDropDownOption({model: projectDropDown});
-            this.optionsView.push(option);
-            this.$el.append(option.render().el);
+            self.optionsView.push(option);
+            self.$el.append(option.render().el);
         },
         addAll: function () {
-            _.each(this.optionsView, function (option) {
+            let self = this;
+            _.each(self.optionsView, function (option) {
                 option.remove();
             });
 
-            this.collection.each(this.addOne);
-            this.$el.trigger('change');
+            self.collection.each(self.addOne);
+
+            self.$el.trigger('change');
         },
         render: function () {
-            this.addAll();
-            return this;
+            let self = this;
+            self.addAll();
+            return self;
         },
         changeSelected: function () {
-            let $option = this.$el.find(':selected');
-            if (!$option.length) {
-                $option = this.$el.find(':first-child');
+            let self = this;
+            let projectId = null;
+            if (!_.isUndefined(self.options.selectedProjectID) && !_.isNull(self.options.selectedProjectID)) {
+                self.$el.val(self.options.selectedProjectID);
+                projectId = self.options.selectedProjectID;
+                self.options.selectedProjectID = null;
+            } else {
+                let $option = self.$el.find(':selected');
+                if (!$option.length) {
+                    $option = self.$el.find(':first-child');
+                }
+                projectId = $option.val();
             }
-            this.setSelectedId(this.parentView.$('select#site_years option').filter(':selected').text(), this.parentView.$('select#site_years option').filter(':selected').data('site-status-id'), $option.val());
+
+            self.setSelectedId(self.parentView.$('select#site_years option').filter(':selected').text(), self.parentView.$('select#site_years option').filter(':selected').data('site-status-id'), projectId);
         },
         setSelectedId: function (SiteID, SiteStatusID, ProjectID) {
             let self = this;
             if (App.Vars.mainAppDoneLoading) {
                 _log('App.Views.ProjectScopeProjectsDropDown.setSelectedId.event', 'new project selected', ProjectID);
-                //console.log({SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
+                //console.log('trigger project-id-change',{SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
                 self.trigger('project-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
             }
         }
@@ -6629,8 +6707,12 @@
                 self.$el.val(self.options.selectedSiteID);
                 self.options.selectedSiteID = null;
             }
-
-            self.changeSelected();
+            let selectedProjectID = null;
+            if (!_.isUndefined(self.options.selectedProjectID) && !_.isNull(self.options.selectedProjectID)) {
+                selectedProjectID = self.options.selectedProjectID;
+                self.options.selectedProjectID = null;
+            }
+            self.changeSelected(selectedProjectID);
         },
         render: function () {
             let self = this;
@@ -6638,13 +6720,14 @@
 
             return self;
         },
-        changeSelected: function () {
+        changeSelected: function (selectedProjectID) {
             let self = this;
-            self.setSelectedId(self.$el.val(), self.$el.find('option:selected').data('site-status-id'));
+            self.setSelectedId(self.$el.val(), self.$el.find('option:selected').data('site-status-id'), selectedProjectID);
         },
-        setSelectedId: function (SiteID, SiteStatusID) {
+        setSelectedId: function (SiteID, SiteStatusID, selectedProjectID) {
             let self = this;
-            self.trigger('site-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID});
+            self.trigger('site-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: selectedProjectID});
+            self.trigger('site-status-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: selectedProjectID});
         }
     });
     App.Views.ProjectScopeManagement = App.Views.Management.extend({
@@ -6666,6 +6749,7 @@
             // }
             // Required call for inherited class
             self._initialize(options);
+            self.bReturnToProjectManagementView = false;
             self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
         },
@@ -6702,34 +6786,64 @@
 
             self.childViews.push(self.projectScopeView);
 
+            if (!_.isUndefined(self.options.loadProject) && !_.isNull(self.options.loadProject) && !_.isUndefined(App.Views.mainApp.router.managementViews['project_management'])) {
+                let $projectManagementView = App.Views.mainApp.router.managementViews['project_management'].$el;
+
+                if ($projectManagementView.length && $projectManagementView.is(':visible')){
+                    self.bReturnToProjectManagementView = true;
+                    $projectManagementView.hide();
+                }
+            }
+
             return self;
         },
         renderSiteDropdowns: function () {
             let self = this;
 
             let selectedSiteID = App.Vars.appInitialData.project_manager_sites.length ? App.Vars.appInitialData.project_manager_sites[0].SiteID : null;
+            let selectedProjectID = null;
 
+            if (self.options.loadProject){
+                if (self.options.loadProject.match(/_/)) {
+                    let parts = self.options.loadProject.split(/_/);
+                    selectedSiteID = parts[0];
+                    selectedProjectID = parts[1];
+                }
+            }
             self.sitesDropdownView = new self.sitesDropdownViewClass({
                 el: self.$('select#sites'),
                 model: new App.Models.Site(),
                 collection: new App.Collections.Site(App.Vars.appInitialData.project_manager_sites),
                 parentView: self,
                 selectedSiteID: selectedSiteID,
+                selectedProjectID: selectedProjectID,
             });
             self.projectsDropDownView = new this.projectScopeDropdownViewClass({
                 el: this.$('select#projects'),
                 parentView: this,
                 projectScopeSitesDropdown: self.sitesDropdownView,
-                collection: new App.Collections.ProjectsDropDown(App.Vars.appInitialData.project_manager_projects)
+                collection: new App.Collections.ProjectsDropDown(App.Vars.appInitialData.project_manager_projects),
             });
             self.projectsDropDownView.render();
+            self.listenTo(self.projectsDropDownView, 'project-id-change', self.handleProjectIDChange);
             self.listenTo(self.sitesDropdownView, 'site-id-change', self.handleSiteIDChange);
+            self.listenTo(self.sitesDropdownView, 'site-status-id-change', self.handleSiteStatusIDChange);
             self.sitesDropdownView.render();
             self.childViews.push(self.sitesDropdownView);
             self.childViews.push(self.projectsDropDownView);
 
 
-        }
+        },
+        handleSiteStatusIDChange: function (e) {
+            let self = this;
+
+            self.setViewDataStoreValue('current-site-status-id', e['SiteStatusID']);
+        },
+        handleProjectIDChange: function (e) {
+            let self = this;
+
+            self.setViewDataStoreValue('current-model-id', e['ProjectID']);
+        },
     });
 })(window.App);
 
@@ -6743,6 +6857,8 @@
             let self = this;
             _log('App.Views.mainApp.initialize', 'MainApp', 'initialize');
             _.bindAll(self, 'render', 'setRouteView', 'hideRouteView');
+            self.options = options;
+            self.router = self.options.parentView;
             self.preRenderedView = false;
             self.routeView              = null;
             self.bOnlyRenderRouteView   = false;

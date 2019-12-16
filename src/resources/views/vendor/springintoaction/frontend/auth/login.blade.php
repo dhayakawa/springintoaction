@@ -2,13 +2,20 @@
     'title' => __('springintoaction::auth.login.title'),
     'bodyClass' => 'hold-transition login-page'
 ])
-
+@push('js')
+<script type="text/javascript">
+    if (window.location.hash.length) {
+        $('#redirect_to').val(window.location.hash);
+    }
+</script>
+@endpush
 @include('boilerplate::load.icheck')
 
 @section('content')
     @component('springintoaction::frontend.auth.loginbox')
         <p class="login-box-msg">{{ __('springintoaction::auth.login.intro') }}</p>
         {!! Form::open(['route' => 'login', 'method' => 'post', 'autocomplete'=> 'off']) !!}
+        <input type="hidden" id="redirect_to" name="redirect_to" />
         <div class="form-group has-feedback">
             <div class="form-group {{ $errors->has('email') ? 'has-error' : '' }}">
                 {{ Form::email('email', old('email'), ['class' => 'form-control', 'placeholder' => __('springintoaction::auth.fields.email'), 'required', 'autofocus']) }}
@@ -40,5 +47,6 @@
         @if(config('springintoaction.auth.register'))
             <a href="{{ route('register') }}" class="text-center">{{ __('springintoaction::auth.login.register') }}</a>
         @endif
+
     @endcomponent
 @endsection

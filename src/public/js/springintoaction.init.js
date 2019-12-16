@@ -465,12 +465,14 @@ $('#sia-modal').modal({
             let self = this;
             let viewName = !_.isUndefined(_viewName) ? _viewName : self.viewName;
             let dataStore = localStorage.getItem(viewName);
-
+            //console.log('getViewDataStore', {self: self, viewName: viewName, _viewName: _viewName, dataStore: dataStore, data: data})
             if (dataStore) {
                 dataStore = JSON.parse(dataStore);
-                if (!_.isUndefined(data) && !_.isUndefined(dataStore[data])) {
+                if (data === null && !_.isUndefined(_viewName)) {
+                    return dataStore;
+                } else if (!_.isUndefined(data) && !_.isUndefined(dataStore[data])) {
                     return dataStore[data];
-                } else if (!_.isUndefined(data)){
+                } else if (!_.isUndefined(data)) {
                     return null;
                 }
             } else {
@@ -481,16 +483,24 @@ $('#sia-modal').modal({
         },
         setViewDataStoreValue: function (data, value, _viewName) {
             let self = this;
-            let origDataStore = self.getViewDataStore();
-            let dataStore = self.getViewDataStore();
+            let viewName = !_.isUndefined(_viewName) ? _viewName : self.viewName;
+            let origDataStore = self.getViewDataStore(null, viewName);
+            let dataStore = self.getViewDataStore(null, viewName);
             if (_.isNull(dataStore)) {
                 dataStore = {};
             }
-            let viewName = !_.isUndefined(_viewName) ? _viewName : self.viewName;
+            if (_.isString(value)) {
+                if (value.match(/^\d+$/)) {
+                    value = parseInt(value);
+                } else if (value.match(/^\d*\.\d+$/)) {
+                    value = parseFloat(value);
+                }
+            }
             dataStore[data] = value;
+            //console.log('setViewDataStoreValue', {self: self, viewName: viewName, origDataStore: origDataStore, data: data, value: value})
             localStorage.setItem(viewName, JSON.stringify(dataStore));
             if (_.isUndefined(viewName)) {
-                console.error('setViewDataStoreValue', {self:self, origDataStore: origDataStore, data: data, value: value})
+                console.error('setViewDataStoreValue', {self: self, origDataStore: origDataStore, data: data, value: value})
             }
         },
         removeViewDataStore: function (_viewName) {
@@ -680,7 +690,7 @@ $('#sia-modal').modal({
         },
         renderSiteDropdowns: function () {
             let self = this;
-
+            //console.log({'current-site-id': self.getViewDataStore('current-site-id'), 'current-site-status-id': self.getViewDataStore('current-site-status-id')})
             self.sitesDropdownView = new self.sitesDropdownViewClass({
                 el: self.$('select#sites'),
                 model: new App.Models.Site(),
@@ -992,7 +1002,7 @@ $('#sia-modal').modal({
             self.rowBgColor = 'lightYellow';
             self.$currentRow = null;
             self.currentModelID = null;
-
+            self.bInitialGridLoadDone = false;
             if (_.isUndefined(self.options.ajaxWaitingTargetClassSelector)) {
                 console.error("options.ajaxWaitingTargetClassSelector is a required option", self);
                 throw "options.ajaxWaitingTargetClassSelector is a required option";
@@ -1071,6 +1081,7 @@ $('#sia-modal').modal({
             self.listenTo(self.backgrid, 'backgrid:rendered', function (e) {
                 //console.log('set current row and set current-model-id in storage when backgrid:rendered',self.viewName)
                 let currentModelID = self.setCurrentRow(e);
+                // console.log('skipped setting current-model-id from backgrid:rendered',{e:e, currentModelID: currentModelID})
                 self.setViewDataStoreValue('current-model-id', currentModelID);
             });
 
@@ -1119,33 +1130,7 @@ $('#sia-modal').modal({
             self.listenTo(self.backgrid.collection, 'backgrid:selected', self.toggleDeleteBtn);
 
             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            //_log('App.Views.ProjectTab.render', self.options.tab, 'Set the current model id on the tab so we can reference it in other views. self.model:', self.model);
-
-            // Show a popup of the text that has been truncated
-            self.$gridContainer.find('table tbody tr td[class^="text"],table tbody tr td[class^="string"],table tbody tr td[class^="number"],table tbody tr td[class^="integer"]').popover({
-                placement: 'auto right',
-                padding: 0,
-                container: 'body',
-                content: function () {
-                    return $(this).text()
-                }
-            });
-            // hide popover if it is not overflown
-            let $cells = self.$gridContainer.find('td[class^="text"],td[class^="string"],td[class^="number"],td[class^="integer"]');
-            self.listenTo($cells, 'show.bs.popover', function (e) {
-                let element = this;
-
-                let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
-                if (!bOverflown) {
-                    self.$gridContainer.find('td.renderable').popover('hide')
-                }
-            });
-
-            let $cell = self.$gridContainer.find('td');
-            self.listenTo($cell, 'click', function (e) {
-                self.$gridContainer.find('td.renderable').popover('hide')
-            });
-
+            
             self.childViews.push(self.backgrid);
             self.childViews.push(self.paginator);
             if (App.Vars.bAllowManagedGridColumns) {
@@ -1169,9 +1154,10 @@ $('#sia-modal').modal({
             currentModelID = self.setCurrentRow(e);
 
             self.positionOverlays(self.backgrid);
+
             //$('#' + this.options.tab).data('current-model-id')
-            //console.log('_refreshView current row should be set', {viewName:self.viewName});
-            //console.log('_refreshView current model id should be set to currentModelID value in storage', {viewName:self.viewName, currentModelID:currentModelID});
+            // console.log('_refreshView current row should be set', {viewName:self.viewName});
+            // console.log('_refreshView current model id should be set to currentModelID value in storage', {viewName:self.viewName, currentModelID:currentModelID});
             if (App.Vars.mainAppDoneLoading && currentModelID && self.getViewDataStore('current-model-id') !== currentModelID) {
                 window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
                 // Refresh tabs on new row select
@@ -1195,7 +1181,6 @@ $('#sia-modal').modal({
                 //console.log('_refreshView set current-model-id in storage but did not fetch new model', self.viewName, currentModelID, self.model)
                 self.setViewDataStoreValue('current-model-id', currentModelID);
             }
-
         },
         setCurrentRow: function (e) {
             let self = this;
@@ -1220,12 +1205,26 @@ $('#sia-modal').modal({
                 $RadioElement = $TableRowElement.find('input[type="radio"][name="' + self.model.idAttribute + '"]');
             } else if (typeof e === 'object' && !_.isUndefined(e.$el) && e.$el.hasClass('backgrid')) {
 
-                if (!_.isNumber(self.getViewDataStore('current-model-id')) || _.isUndefined(self.$gridContainer)) {
-                    $TableRowElement = e.$el.find('tbody tr:first-child');
-                    $RadioElement = $TableRowElement.find('input[type="radio"][name="' + self.model.idAttribute + '"]');
+                if (_.isUndefined(self.$gridContainer)) {
+                    if (_.isNumber(self.getViewDataStore('current-model-id'))) {
+                        $RadioElement = e.$el.find('input[type="radio"][name="' + self.model.idAttribute + '"][value="' + self.getViewDataStore('current-model-id') + '"]');
+                        $TableRowElement = $RadioElement.parents('tr');
+                        //console.log('current current-model-id used', {vname: self.viewName, 'current-model-id': self.getViewDataStore('current-model-id')})
+                    } else {
+                        $TableRowElement = e.$el.find('tbody tr:first-child');
+                        $RadioElement = $TableRowElement.find('input[type="radio"][name="' + self.model.idAttribute + '"]');
+                        //console.log('current current-model-id not used', {vname: self.viewName,'current-model-id': self.getViewDataStore('current-model-id'), 'undefGridCont': _.isUndefined(self.$gridContainer)})
+                    }
                 } else {
-                    $RadioElement = self.$gridContainer.find('input[type="radio"][name="' + self.model.idAttribute + '"][value="' + self.getViewDataStore('current-model-id') + '"]');
-                    $TableRowElement = $RadioElement.parents('tr');
+                    if (_.isNumber(self.getViewDataStore('current-model-id'))) {
+                        //console.log('current current-model-id used', {vname: self.viewName, 'current-model-id': self.getViewDataStore('current-model-id')})
+                        $RadioElement = self.$gridContainer.find('input[type="radio"][name="' + self.model.idAttribute + '"][value="' + self.getViewDataStore('current-model-id') + '"]');
+                        $TableRowElement = $RadioElement.parents('tr');
+                    } else {
+                        //console.log('current current-model-id not used', {vname: self.viewName, 'current-model-id': self.getViewDataStore('current-model-id')})
+                        $TableRowElement = self.$gridContainer.find('tbody tr:first-child');
+                        $RadioElement = $TableRowElement.find('input[type="radio"][name="' + self.model.idAttribute + '"]');
+                    }
                 }
 
             }
@@ -1340,7 +1339,9 @@ $('#sia-modal').modal({
 
             let $element = $(e.currentTarget);
             let element = e.currentTarget;
-
+            if ($element.hasClass('select2-cell')) {
+                return false;
+            }
             let bOverflown = element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
             if (bOverflown) {
                 $element.popover({
@@ -1372,7 +1373,7 @@ $('#sia-modal').modal({
             let selectedModels = self.backgrid.getSelectedModels();
             let toggleState = selectedModels.length === 0 ? 'disable' : 'enable';
             _log(self.viewName + '.toggleDeleteBtn.event', {'selectedModels.length':selectedModels.length, e:e, toggleState: toggleState});
-            console.log({viewName:self.viewName, toggleState: toggleState, gridManagerContainerToolbar: self.$gridManagerContainerToolbar})
+            //console.log({viewName:self.viewName, toggleState: toggleState, gridManagerContainerToolbar: self.$gridManagerContainerToolbar})
             if (toggleState === 'disable') {
                 self.$gridManagerContainerToolbar.$('.btnDeleteChecked').addClass('disabled');
             } else {
@@ -1413,7 +1414,7 @@ $('#sia-modal').modal({
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
-                console.log('update',{'self.model.idAttribute': self.model.idAttribute,'e.attributes[self.model.idAttribute]': e.attributes[self.model.idAttribute],e:e})
+                //console.log('update',{'self.model.idAttribute': self.model.idAttribute,'e.attributes[self.model.idAttribute]': e.attributes[self.model.idAttribute],e:e})
                 let currentModelID = e.attributes[self.model.idAttribute];
                 self.model.url = self.getModelUrl(currentModelID);
                 $.when(

@@ -55,49 +55,38 @@ class ProjectsController extends BaseController
         return view('admin.projects.edit', $request, compact('project'));
     }
 
+    public function storeProjectScope(Request $request)
+    {
+        return $this->store($request);
+    }
+
     public function store(Request $request)
     {
-        $project = new Project;
-        $data = array_map(
+        $project = new ProjectScope;
+        $requestData = array_map(
             function ($value) {
-                if (is_array($value)) {
-                    return join(',', $value);
+                if (is_string($value)) {
+                    $value = \urldecode($value);
+                }
+
+                return $value;
+            },
+            $request->all()
+        );
+
+        $projectModelData = array_map(
+            function ($value) {
+                if (is_string($value)) {
+                    $value = \urldecode($value);
+                } elseif (is_array($value)) {
+                    $value = join(',', $value);
                 }
 
                 return $value;
             },
             $request->only($project->getFillable())
         );
-        array_walk(
-            $data,
-            function (&$value, $key) {
-                if (is_string($value)) {
-                    $value = \urldecode($value);
-                }
-                $a = [
-                    'ChildFriendly' => 0,
-                    'VolunteersNeededEst' => 0,
-                    'EstimatedCost' => null,
-                    'ActualCost' => 0.00,
-                    'BudgetAvailableForPC' => 0.00,
-                    'VolunteersLastYear' => 0,
-                    'NeedsToBeStartedEarly' => 0,
-                    'PCSeeBeforeSIA' => 0,
-                    'CostEstimateDone' => 0,
-                    'MaterialListDone' => 0,
-                    'BudgetAllocationDone' => 0,
-                    'VolunteerAllocationDone' => 0,
-                    'NeedSIATShirtsForPC' => 0,
-                    'FinalCompletionStatus' => 0,
-                ];
-                if (\array_key_exists($key, $a) && $value == '') {
-                    $value = $a[$key];
-                }
-            }
-        );
-
-        $project->fill($data);
-        $success = $project->save();
+        $success = $project->createProjectScope($requestData, $project, $projectModelData);
 
         if (!isset($success)) {
             $response = ['success' => false, 'msg' => 'Project Creation Not Implemented Yet.'];
@@ -134,7 +123,6 @@ class ProjectsController extends BaseController
 
     public function scopeUpdate(Request $request, $ProjectID)
     {
-
         $params = array_map(
             function ($value) {
                 if (is_string($value)) {
@@ -150,6 +138,8 @@ class ProjectsController extends BaseController
             function ($value) {
                 if (is_string($value)) {
                     $value = \urldecode($value);
+                } elseif (is_array($value)) {
+                    $value = join(',', $value);
                 }
 
                 return $value;
@@ -170,59 +160,16 @@ class ProjectsController extends BaseController
         return view('springintoaction::admin.main.response', $request, compact('response'));
     }
 
+    /**
+     * @param Request $request
+     * @param         $ProjectID
+     *
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @deprecated use scopeUpdate
+     */
     public function update(Request $request, $ProjectID)
     {
-        $project = Project::findOrFail($ProjectID);
-
-        // Assumes if field value is an array that we need to format for multi-select drop down values
-        $data = array_map(
-            function ($value) {
-                if (is_array($value)) {
-                    return join(',', $value);
-                }
-
-                return $value;
-            },
-            $request->only($project->getFillable())
-        );
-
-        array_walk(
-            $data,
-            function (&$value, $key) {
-                if (is_string($value)) {
-                    $value = \urldecode($value);
-                }
-                $a = [
-                    'ChildFriendly' => 0,
-                    'VolunteersNeededEst' => 0,
-                    'EstimatedCost' => null,
-                    'ActualCost' => 0.00,
-                    'BudgetAvailableForPC' => 0.00,
-                    'VolunteersLastYear' => 0,
-                    'NeedsToBeStartedEarly' => 0,
-                    'PCSeeBeforeSIA' => 0,
-                    'CostEstimateDone' => 0,
-                    'MaterialListDone' => 0,
-                    'BudgetAllocationDone' => 0,
-                    'VolunteerAllocationDone' => 0,
-                    'NeedSIATShirtsForPC' => 0,
-                    'FinalCompletionStatus' => 0,
-                ];
-                if (\array_key_exists($key, $a) && $value == '') {
-                    $value = $a[$key];
-                }
-            }
-        );
-        $project->fill($data);
-        $success = $project->save();
-
-        if ($success) {
-            $response = ['success' => true, 'msg' => 'Project Update Succeeded.'];
-        } else {
-            $response = ['success' => false, 'msg' => 'Project Update Failed.'];
-        }
-
-        return view('springintoaction::admin.main.response', $request, compact('response'));
+        return $this->scopeUpdate($request, $ProjectID);
     }
 
     public function reSequenceList($SiteStatusID)
@@ -415,12 +362,11 @@ class ProjectsController extends BaseController
                 foreach ($results as $key => $attachment) {
                     $attachmentPath = $attachment['AttachmentPath'];
                     if (\preg_match("/^.*\/storage\/app/", $attachmentPath)) {
-                        $attachment['AttachmentPath'] =
-                            preg_replace(
-                                "/^.*\/storage\/app/",
-                                "/admin/project_attachment/stream/storage/app",
-                                $attachment['AttachmentPath']
-                            );
+                        $attachment['AttachmentPath'] = preg_replace(
+                            "/^.*\/storage\/app/",
+                            "/admin/project_attachment/stream/storage/app",
+                            $attachment['AttachmentPath']
+                        );
                         $results[$key] = $attachment;
                     }
                 }

@@ -4,6 +4,7 @@
         viewName: 'project-scope-view',
         events: {
             'change input,textarea,select': 'formChanged',
+            'click .admin__actions-switch': 'formChanged',
             'invalid .list-item-input': 'flagAsInvalid',
             'click [name^="primary_skill_needed"]': 'handleProjectTypeChange',
             'change [name="permit_required"]': 'handlePermitRequiredChange',
@@ -23,6 +24,7 @@
             }
             // Required call for inherited class
             self._initialize(options);
+            self.bIsAddNew = false;
             self.bDoneLoadingForm = false;
             self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
@@ -68,6 +70,9 @@
             let self = this;
             self.model.set('ProjectID', e.ProjectID);
             self.bDoneLoadingForm = false;
+            if (e.ProjectID === 'new'){
+                self.bIsAddNew = true;
+            }
             self.render();
         },
         render: function (e) {
@@ -81,6 +86,14 @@
                     self.model.fetch({reset: true})
                 ).then(function () {
                     //console.log('project scope model', self.model)
+
+                    if (self.model.get(self.model.idAttribute) === null && self.model.get("SequenceNumber") === 99999) {
+                        let sequenceNumber = self.projectsDropDownView.collection.models.length > 0 ? _.max(self.projectsDropDownView.collection.models, function (project) {
+                            return parseInt(project.get("SequenceNumber"));
+                        }).get('SequenceNumber') : 1;
+
+                        self.model.set('SequenceNumber', sequenceNumber + 1);
+                    }
                     self.projectScopeContacts = self.model.get('contacts');
                     let contactSelect = new App.Views.Select({
                         el: '',
@@ -110,8 +123,14 @@
                     if (self.$('[name="Comments"]').val() === '') {
                         self.$('[name="Comments"]').attr('rows', 3);
                     }
+
                     self.finishRenderingForm();
 
+                    if (self.bIsAddNew) {
+                        self.sitesDropdownView.$el.prop('disabled', true);
+                        self.projectsDropDownView.$el.prepend('<option>New Project</option>');
+                        self.projectsDropDownView.$el.prop('disabled', true);
+                    }
                 });
             }
 
@@ -165,7 +184,7 @@
             });
             let removed = _.difference(self.currentTypes,aIds);
             if (removed.length){
-                console.log('removed',removed)
+
                 _.each(removed, function (project_type_id, idx) {
                     _.each(self.getProjectTypeAttributes(project_type_id), function (pta, idx) {
                         let attribute = _.where(self.attributesOptions, {id: pta.attribute_id});
