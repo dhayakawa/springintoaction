@@ -68,12 +68,12 @@
                 projectId = $option.val();
             }
 
-            self.setSelectedId(self.parentView.$('select#site_years option').filter(':selected').text(), self.parentView.$('select#site_years option').filter(':selected').data('site-status-id'), projectId);
+            self.setSelectedId(self.parentView.$('select#sites option').filter(':selected').val(), self.parentView.$('select#sites option').filter(':selected').data('site-status-id'), projectId);
         },
         setSelectedId: function (SiteID, SiteStatusID, ProjectID) {
             let self = this;
             if (App.Vars.mainAppDoneLoading) {
-                _log('App.Views.ProjectScopeProjectsDropDown.setSelectedId.event', 'new project selected', ProjectID);
+                _log('App.Views.ProjectScopeProjectsDropDown.setSelectedId.event', 'new project selected', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
                 //console.log('trigger project-id-change',{SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
                 self.trigger('project-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
             }
@@ -122,8 +122,7 @@
             _log('App.Views.ProjectScopeSitesDropdown.addAll', 'sites dropdown');
             self.$el.empty();
             self.collection.each(self.addOne);
-            // Force related views to updatesite-volunteers-grid-manager-toolbar
-            //console.log({'this.options.selectedSiteID': this.options.selectedSiteID})
+
             if (!_.isUndefined(self.options.selectedSiteID) && !_.isNull(self.options.selectedSiteID)) {
                 self.$el.val(self.options.selectedSiteID);
                 self.options.selectedSiteID = null;
@@ -143,6 +142,11 @@
         },
         changeSelected: function (selectedProjectID) {
             let self = this;
+            // selectedProjectID might be an event
+            if (!_.isNull(selectedProjectID) && !_.isUndefined(selectedProjectID.originalEvent)){
+                selectedProjectID = null;
+            }
+            //console.log({SiteID: self.$el.val(),selectedOption: self.$el.find('option:selected'), SiteStatusID: self.$el.find('option:selected').data('site-status-id'), ProjectID: selectedProjectID})
             self.setSelectedId(self.$el.val(), self.$el.find('option:selected').data('site-status-id'), selectedProjectID);
         },
         setSelectedId: function (SiteID, SiteStatusID, selectedProjectID) {
