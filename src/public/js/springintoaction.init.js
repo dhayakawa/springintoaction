@@ -813,7 +813,7 @@ $('#sia-modal').modal({
                     $('#file_chosen_' + self.id).empty()
                     $.each(data.files, function (index, file) {
                         let sFileName = file.name
-                        let sExistingVal = $('#file_' + self.id).val().length > 0 ? $('#file_' + self.id).val() + ',' : ''
+                        let sExistingVal = $('#file_' + self.id).val().length > 0 ? $('#file_' + self.id).val() + ',' : '';
                         $('#file_' + self.id).val(sExistingVal + sFileName)
                         $('#file_chosen_' + self.id).append(sFileName + '<br>')
                     });
@@ -1130,7 +1130,7 @@ $('#sia-modal').modal({
             self.listenTo(self.backgrid.collection, 'backgrid:selected', self.toggleDeleteBtn);
 
             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-            
+
             self.childViews.push(self.backgrid);
             self.childViews.push(self.paginator);
             if (App.Vars.bAllowManagedGridColumns) {
