@@ -6273,9 +6273,9 @@
             self.$('.help-block.special-instructions').html(msg);
         },
         getMaterialCostRowHtml: function (attribute_code, x, attribute_id, aRowValues) {
-            let materialNeed = aRowValues[0];
+            let materialNeed = decodeURIComponent(aRowValues[0]).replace('"','&#34;');
             let cost = aRowValues[1];
-            return '<tr><td><input data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[material][]" class="form-control material" id="' + attribute_code + '_cost_' + x + '" placeholder="" value="' + materialNeed + '"/></td><td><div class="input-group"><div class="input-group-addon">$</div><input type="number" title="Money format only please. With or without cents." data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[cost][]" class="form-control material-cost" id="' + attribute_code + '_cost_' + x + '" placeholder="0.00" value="' + cost + '" step="0.01"/></div></td></tr>';
+            return '<tr><td><input data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[material][]" class="form-control material" id="' + attribute_code + '_material_' + x + '" placeholder="" value="' + materialNeed + '"/></td><td><div class="input-group"><div class="input-group-addon">$</div><input type="number" title="Money format only please. With or without cents." data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[cost][]" class="form-control material-cost" id="' + attribute_code + '_cost_' + x + '" placeholder="0.00" value="' + cost + '" step="0.01"/></div></td></tr>';
         },
         basename: function(path){
             let rx1 = /(.*)\/+([^/]*)$/;  // (dir/) (optional_file)
