@@ -6190,18 +6190,18 @@
             });
             let removed = _.difference(self.currentTypes,aIds);
             if (removed.length){
-
                 _.each(removed, function (project_type_id, idx) {
                     _.each(self.getProjectTypeAttributes(project_type_id), function (pta, idx) {
                         let attribute = _.where(self.attributesOptions, {id: pta.attribute_id});
-                        // console.log(project_type_id, pta.attribute_id,attribute)
-                        self.$('[name="'+ attribute[0].attribute_code+'"]').val(attribute[0].default_value);
+                        //console.log(self.$('[name="'+ attribute[0].attribute_code+'"]'),project_type_id, pta.attribute_id,attribute)
+                        let defaultValue = attribute.input === 'input' || attribute.input === 'textarea' ? self.cleanTextInputValue(attribute[0].default_value) : attribute[0].default_value;
+                        self.$('[name="'+ attribute[0].attribute_code+'"]').val(defaultValue);
                     });
                 })
             }
 
             self.currentTypes = aIds;
-            self.buildFormElements(aIds);
+            self.buildFormElements(self.currentTypes);
         },
         finishRenderingForm: function () {
             let self = this;
@@ -6273,8 +6273,9 @@
             self.$('.help-block.special-instructions').html(msg);
         },
         getMaterialCostRowHtml: function (attribute_code, x, attribute_id, aRowValues) {
-            let materialNeed = decodeURIComponent(aRowValues[0]).replace('"','&#34;');
-            let cost = aRowValues[1];
+            let self = this;
+            let materialNeed = self.cleanTextInputValue(aRowValues[0]);
+            let cost = self.cleanTextInputValue(aRowValues[1]);
             return '<tr><td><input data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[material][]" class="form-control material" id="' + attribute_code + '_material_' + x + '" placeholder="" value="' + materialNeed + '"/></td><td><div class="input-group"><div class="input-group-addon">$</div><input type="number" title="Money format only please. With or without cents." data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[cost][]" class="form-control material-cost" id="' + attribute_code + '_cost_' + x + '" placeholder="0.00" value="' + cost + '" step="0.01"/></div></td></tr>';
         },
         basename: function(path){
@@ -6331,7 +6332,7 @@
                     }
                     break;
                 case 'text':
-                    html += '<input type="text" data-attribute-id="' + attribute_id + '" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="' + placeholder + '" ' + pattern + ' value="' + value + '"/>';
+                    html += '<input type="text" data-attribute-id="' + attribute_id + '" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="' + placeholder + '" ' + pattern + ' value="' + self.cleanTextInputValue(value) + '"/>';
                     break;
                 case 'textarea':
                     if (attribute_code === 'special_instructions') {
@@ -6339,7 +6340,7 @@
                         helpBlock = '<p class="help-block special-instructions"></p>';
                     }
                     let rowsVisible = value === '' ? 3 : 5;
-                    html = '<textarea style="resize:vertical" rows="' + rowsVisible + '" data-attribute-id="' + attribute_id + '" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="' + placeholder + '">' + value + '</textarea>' + helpBlock;
+                    html = '<textarea style="resize:vertical" rows="' + rowsVisible + '" data-attribute-id="' + attribute_id + '" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="' + placeholder + '">' + self.cleanTextInputValue(value) + '</textarea>' + helpBlock;
                     break;
                 case 'select':
                     html = '<select data-attribute-id="' + attribute_id + '" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '">' + optionHtml + '</select>';
@@ -6372,7 +6373,7 @@
                     html += helpBlock;
                     break;
                 default:
-                    html = '<input data-attribute-id="' + attribute_id + '" type="text" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="" value="' + value + '"/>';
+                    html = '<input data-attribute-id="' + attribute_id + '" type="text" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="" value="' + self.cleanTextInputValue(value) + '"/>';
             }
             return html;
         },
@@ -6533,9 +6534,10 @@
 
             for (let i = 0; i < self.attributesOptionsCnt; i++) {
                 let attribute = self.attributesOptions[i];
+                let attributeFormGroupClassname = 'form-group-' + attribute.attribute_code.replace('_','-');
+                // only add or show attribute form element that is applicable to the currently chosen project types
                 if (_.where(aProjectTypeAttributes, {attribute_id: attribute.id}).length) {
-
-                    if (self.$('[name^="' + attribute.attribute_code + '"]').length === 0) {
+                    if (self.$('.' + attributeFormGroupClassname).length === 0) {
                         let value = self.model.get(attribute.attribute_code);
                         let optionHtml = attribute.options_source !== '' && !_.isUndefined(self.selectOptions[attribute.options_source]) ? self.selectOptions[attribute.options_source] : '';
 
@@ -6543,7 +6545,7 @@
                         if ('status_reason' === attribute.attribute_code || 'permit_required_for' === attribute.attribute_code || 'would_like_team_lead_to_contact' === attribute.attribute_code) {
                             hideClass = 'hide';
                         }
-                        let row = '<div class="dynamic form-group ' + hideClass + '">' +
+                        let row = '<div class="dynamic form-group ' + attributeFormGroupClassname + ' ' + hideClass + '">' +
                                   '    <label for="' + attribute.attribute_code + '">' + attribute.label + '</label>' +
                                   self.getInputHtml(attribute.input, attribute.attribute_code, attribute.id, value, optionHtml) +
                                   '</div>';
@@ -6554,12 +6556,11 @@
                             self.$('[name="' + attribute.attribute_code + '"]').prop('checked', value === 1);
                         }
                     } else {
-
-                        self.$('[name="' + attribute.attribute_code + '"]').parents('.dynamic').show();
+                        self.$('.' + attributeFormGroupClassname).show();
                     }
                 } else {
-                    if (self.$('[name="' + attribute.attribute_code + '"]').length) {
-                        self.$('[name="' + attribute.attribute_code + '"]').parents('.dynamic').hide();
+                    if (self.$('.' + attributeFormGroupClassname).length) {
+                        self.$('.' + attributeFormGroupClassname).hide();
                     }
                 }
             }
