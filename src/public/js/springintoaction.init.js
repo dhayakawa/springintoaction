@@ -667,6 +667,9 @@ $('#sia-modal').modal({
                 $label.text('No');
             }
         },
+        cleanTextInputValue: function (val){
+            return decodeURIComponent(val).replace('"','&#34;');
+        },
     });
 
     App.Views.Management = App.Views.Backend.extend({
