@@ -253,6 +253,19 @@
     }
 
     .reports-management-view {
+        fieldset.attributes{
+          legend{
+            a{
+              font-weight:normal;
+              display:inline-block;
+            }
+          }
+          label{
+            &.hilite-attribute-label{
+              background:yellow;
+            }
+          }
+        }
         .report-download {
             padding: 0 5px;
         }

@@ -104,7 +104,7 @@
                 collection: App.Collections.projectsDropDownCollection
             });
             this.projectsDropDownView.render();
-            
+            //console.log({reportType:this.reportType})
 
             if (this.reportType !== 'projects') {
                 this.$('.project-dropdown').hide();
@@ -115,6 +115,13 @@
             if (this.reportType === 'sites') {
                 this.$('.site-management-selects').hide();
             }
+            if (this.reportType === 'projects_full') {
+                self.$('.download-spreadsheet').hide();
+                self.$('.download-pdf').hide();
+                self.$('.download-csv').hide();
+                this.addProjectAttributesFilters();
+            }
+
             this.$('.site-management-selects').hide();
             this.$('.project-dropdown').hide();
             this.handleSiteStatusIDChange();
@@ -129,6 +136,145 @@
             } else {
                 self.setIFrame(this.$('select#site_years option').filter(':selected').text(), this.$('select#sites').val());
             }
+        },
+        addProjectAttributesFilters: function(){
+            let self = this;
+            let cols = 3;
+            let colCnt = 0;
+            let attrCnt = 0;
+            let currentCol = 1;
+
+            self.attributesOptions = JSON.parse(JSON.stringify(App.Collections.attributesManagementCollection.getTableOptions('projects', false)));
+            // add project model fields
+            self.attributesOptions.unshift({id:0,attribute_code:'PeopleNeeded',label:'People Needed'});
+            self.attributesOptions.unshift({id:0,attribute_code:'HasAttachments',label:'Has Attachments'});
+            self.attributesOptions.unshift({id:0,attribute_code:'VolunteersAssigned',label:'Volunteers Assigned'});
+            self.attributesOptions.unshift({id:0,attribute_code:'BudgetSources',label:'Budget Sources'});
+            self.attributesOptions.unshift({id:0,attribute_code:'Comments',label:'Additional Notes'});
+            self.attributesOptions.unshift({id:0,attribute_code:'ProjectDescription',label:'Project Description'});
+            self.attributesOptions.unshift({id:0,attribute_code:'OriginalRequest',label:'Original Request'});
+            self.attributesOptions.unshift({id:0,attribute_code:'SequenceNumber',label:'Project#'});
+            self.attributesOptions.unshift({id:0,attribute_code:'Active',label:'Active'});
+
+            self.projectAttributes = JSON.parse(JSON.stringify(App.Collections.projectAttributesManagementCollection.where({workflow_id: 1})));
+            let skillsNeededOptions = App.Models.projectModel.getSkillsNeededOptions(false);
+            let generalSkillsOptionId;
+            _.each(skillsNeededOptions, function(val,idx){
+                if(val[0]==='General'){
+                    generalSkillsOptionId = val[1];
+                }
+            });
+            self.generalProjectAttributeIds = _.pluck(_.where(self.projectAttributes, {project_skill_needed_option_id: parseInt(generalSkillsOptionId)}),'attribute_id');
+            let primarySkillNeededAttribute = _.findWhere(self.attributesOptions, {attribute_code: "primary_skill_needed"});
+            self.generalProjectAttributeIds.push(primarySkillNeededAttribute.id)
+            self.generalProjectAttributeIds.sort(function(a, b) {
+                return a - b;
+            });
+            self.$el.find('.report-wrapper').before('<fieldset class="attributes" style="border:1px solid beige;padding:10px"><legend style="border:0;font-size:14px;font-weight:bold">Include in report &nbsp;&nbsp;&nbsp;<a href="#" class="uncheck-all">uncheck all</a> :: <a href="#" class="check-all">check all</a> :: <a href="#"  class="check-only-general">check only attributes shared by all projects that are in the scope workflow</a> :: <a href="#" class="check-only-statuses">check only statuses</a></legend></fieldset>');
+            let colsHtml = '';
+            let colWidth = 12 / cols;
+            for(let x=1;x<=cols;x++){
+                colsHtml += '<div class="col-xs-'+colWidth+' attr-col'+x+'"></div>';
+            }
+            self.$el.find('fieldset.attributes').append('<form name="project_attributes" action="" method="GET"><div class="row">'+colsHtml+'</div></form>');
+
+            let perCol = Math.floor(self.attributesOptions.length / cols);
+
+            //console.log({cols:cols,attributesOptionsCnt:self.attributesOptions.length,perCol:perCol})
+            //console.log({attributesOptions:self.attributesOptions,primarySkillNeededAttribute:primarySkillNeededAttribute});
+            _.each(self.attributesOptions, function (attribute){
+                if(attribute.attribute_code !== 'project_attachments' && attribute.attribute_code !== 'budget_sources'){
+                    let checked = 'checked';
+
+                    //console.log({perCol:perCol,attrCnt:attrCnt,mod:attrCnt % perCol,currentCol:currentCol})
+                    if(attrCnt < perCol){
+                        currentCol = 1;
+                    } else if(currentCol !== cols && attrCnt % perCol === 0){
+                        currentCol++;
+                    }
+                    let col = self.$el.find('form[name="project_attributes"] .attr-col' + currentCol);
+                    let checkIdentifierClasses = '';
+                    if(attribute.id === 0 || _.indexOf(self.generalProjectAttributeIds,attribute.id,true)!==-1){
+                        checkIdentifierClasses += ' general-attribute ';
+                    }
+                    if(attribute.attribute_code.match(/(SequenceNumber|ProjectDescription|done|status|send)/)){
+                        checkIdentifierClasses += ' status-attribute ';
+                    }
+                    col.append('<label class="project-attribute-checkbox-label checkbox-inline '+ checkIdentifierClasses +'" for="project_attribute_'+attribute.attribute_code+'"><input type="checkbox" '+checked+' id="project_attribute_'+attribute.attribute_code+'" name="project_attributes[]" value="'+attribute.attribute_code+'">'+attribute.label+'</label><br>');
+                    attrCnt++;
+                }
+
+            });
+            self.$('.attributes legend .uncheck-all').on('click', function(e){
+                e.preventDefault();
+                let $checkboxes = self.$el.find('form[name="project_attributes"]').find('input[type="checkbox"]');
+                $checkboxes.each(function(idx,el){
+                    $(el).prop('checked', false);
+                    $(el).removeAttr('checked');
+                })
+            }).hover(function(e){
+                self.$el.find('form[name="project_attributes"]').find('label').addClass('hilite-attribute-label');
+            },function(e){
+                self.$el.find('form[name="project_attributes"]').find('label').removeClass('hilite-attribute-label');
+            });
+            self.$('.attributes legend .check-all').on('click', function(e){
+                e.preventDefault();
+                let $checkboxes = self.$el.find('form[name="project_attributes"]').find('input[type="checkbox"]');
+                $checkboxes.each(function(idx,el){
+                    $(el).prop('checked', true);
+                    $(el).attr('checked','checked');
+                })
+            }).hover(function(e){
+                self.$el.find('form[name="project_attributes"]').find('label').addClass('hilite-attribute-label');
+            },function(e){
+                self.$el.find('form[name="project_attributes"]').find('label').removeClass('hilite-attribute-label');
+            });
+
+
+            self.$('.attributes legend .check-only-general').on('click', function(e){
+                e.preventDefault();
+                let $checkboxes = self.$el.find('form[name="project_attributes"]').find('input[type="checkbox"]');
+                $checkboxes.each(function(idx,el){
+                    $(el).prop('checked', false);
+                    $(el).removeAttr('checked');
+                });
+
+                $checkboxes = self.$el.find('form[name="project_attributes"]').find('.general-attribute input[type="checkbox"]');
+                $checkboxes.each(function(idx,el){
+                    $(el).prop('checked', true);
+                    $(el).attr('checked','checked');
+                })
+            }).hover(function(e){
+                self.$el.find('form[name="project_attributes"]').find('label.general-attribute').addClass('hilite-attribute-label');
+            },function(e){
+                self.$el.find('form[name="project_attributes"]').find('label.general-attribute').removeClass('hilite-attribute-label');
+            });
+
+            self.$('.attributes legend .check-only-statuses').on('click', function(e){
+                e.preventDefault();
+                let $checkboxes = self.$el.find('form[name="project_attributes"]').find('input[type="checkbox"]');
+                $checkboxes.each(function(idx,el){
+                    $(el).prop('checked', false);
+                    $(el).removeAttr('checked');
+                });
+
+                $checkboxes = self.$el.find('form[name="project_attributes"]').find('.status-attribute input[type="checkbox"]');
+                $checkboxes.each(function(idx,el){
+                    $(el).prop('checked', true);
+                    $(el).attr('checked','checked');
+                })
+            }).hover(function(e){
+                self.$el.find('form[name="project_attributes"]').find('label.status-attribute').addClass('hilite-attribute-label');
+            },function(e){
+                self.$el.find('form[name="project_attributes"]').find('label.status-attribute').removeClass('hilite-attribute-label');
+            });
+
+            // the link will be return in the initial response
+            self.$el.on('click','.must-download-spreadsheet', function(e){
+                e.preventDefault();
+                self.$el.find('form[name="project_attributes"]').attr('action',this.href);
+                self.$el.find('form[name="project_attributes"]').trigger('submit');
+            })
         },
         setIFrame: function (Year, SiteID, ProjectID) {
             let self = this;

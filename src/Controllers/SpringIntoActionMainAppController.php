@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
-use Dhayakawa\SpringIntoAction\Models\WhenWillProjectBeCompletedOptions;
+
 use Dhayakawa\SpringIntoAction\Models\SiteSetting;
 use Dhayakawa\SpringIntoAction\Models\Project;
 use Dhayakawa\SpringIntoAction\Models\Site;
@@ -26,6 +26,7 @@ use Dhayakawa\SpringIntoAction\Models\SiteVolunteerRole;
 use Dhayakawa\SpringIntoAction\Models\Volunteer;
 use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
 use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
+use Dhayakawa\SpringIntoAction\Models\WhenWillProjectBeCompletedOptions;
 use \Dhayakawa\SpringIntoAction\Models\BudgetSourceOptions;
 use \Dhayakawa\SpringIntoAction\Models\BudgetStatusOptions;
 use \Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
@@ -35,13 +36,12 @@ use \Dhayakawa\SpringIntoAction\Models\VolunteerAgeRangeOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerPrimarySkillOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerSkillLevelOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
-use Dhayakawa\SpringIntoAction\Models\ProjectAttribute;
-use Dhayakawa\SpringIntoAction\Models\Workflow;
 use Dhayakawa\SpringIntoAction\Models\PermitRequiredStatusOptions;
 use Dhayakawa\SpringIntoAction\Models\PermitRequiredOptions;
 use Dhayakawa\SpringIntoAction\Models\SiteVolunteer;
 use Dhayakawa\SpringIntoAction\Models\ProjectScope;
-
+use Dhayakawa\SpringIntoAction\Models\ProjectAttribute;
+use Dhayakawa\SpringIntoAction\Models\Workflow;
 use \Laratrust\LaratrustPermission;
 use \Laratrust\LaratrustRole;
 

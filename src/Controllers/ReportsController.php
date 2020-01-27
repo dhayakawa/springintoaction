@@ -9,6 +9,7 @@
 namespace Dhayakawa\SpringIntoAction\Controllers;
 
 use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
+use Dhayakawa\SpringIntoAction\Models\ProjectScope;
 use Illuminate\Support\Facades\Log;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -37,6 +38,9 @@ use \Dhayakawa\SpringIntoAction\Models\VolunteerAgeRangeOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerPrimarySkillOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerSkillLevelOptions;
 use \Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class ReportsController extends BaseController
 {
@@ -65,7 +69,7 @@ class ReportsController extends BaseController
     ) {
         $SiteID = !is_numeric($SiteID) ? null : $SiteID;
         $ProjectID = !is_numeric($ProjectID) ? null : $ProjectID;
-        $bReturnArray = $downloadType === 'csv';
+        $bReturnArray = $downloadType === 'csv' || $downloadType === 'spreadsheet';
         $html = $bReturnArray ? [] : '';
         $reportHtml = $bReturnArray ? [] : '';
         $date = date('l, F d, Y');
@@ -74,12 +78,12 @@ class ReportsController extends BaseController
         switch ($ReportType) {
             case 'projects_full':
                 $reportName = 'Project Report by Year, Site and Project';
-                $reportHtml =
-                    $this->getYearSiteProjectFullReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray);
+                $reportHtml = $this->getYearSiteProjectFullReport($Year, $SiteID, $ProjectID,
+                                                                  $bReturnArray);
                 break;
             case 'projects':
                 $reportName = 'Project Report by Year, Site and Project';
-                $reportHtml = $this->getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray);
+                $reportHtml = $this->getYearSiteProjectReport($Year, $SiteID, $ProjectID, $bReturnArray);
                 break;
             case 'budget':
                 $reportName = 'Budget Allocation';
@@ -156,7 +160,11 @@ class ReportsController extends BaseController
             }
         }
         if ($bReturnArray) {
-            $html = array_merge(["Spring Into Action $Year $date"], $reportHtml);
+            if ($ReportType !== 'projects_full') {
+                $html = array_merge(["Spring Into Action $Year", $reportName, $date, " "], $reportHtml);
+            } else {
+                $html = $reportHtml;
+            }
         } else {
             $html .= '<h2 class="report-title" style="text-align:center;">Spring Into Action ' .
                      $Year .
@@ -171,7 +179,11 @@ class ReportsController extends BaseController
         } elseif (!empty($this->downloadType) && $this->downloadType === 'csv') {
             return $this->getCSV($html, $reportName);
         } elseif (!empty($this->downloadType) && $this->downloadType === 'spreadsheet') {
-            return $this->getSpreadsheet($html, $reportName);
+            if ($ReportType === 'projects_full') {
+                return $this->getProjectsFullSpreadsheet($html, $reportName);
+            } else {
+                return $this->getSpreadsheet($html, $reportName);
+            }
         } else {
             return $html;
         }
@@ -534,7 +546,229 @@ class ReportsController extends BaseController
         return $html;
     }
 
-    public function getYearSiteProjectFullReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
+    public function getYearSiteProjectFullReport($Year, $SiteID, $ProjectID, $bReturnArray)
+    {
+        $aWorksheets = $bReturnArray ? [] : '';
+
+        if ($bReturnArray) {
+            $aProjectAttributesToRemove = [];
+            $aIncludeProjectAttributes = isset($_GET['project_attributes']) ? $_GET['project_attributes'] : [];
+
+            $projectModel = new ProjectScope();
+            $aProjects = $projectModel->getReportProjects($Year, [], null);
+
+            $aAttributes = ProjectScope::getAttributesByCodeArray('projects');
+            $aFilterableAttributes = array_keys($aAttributes);
+            $aFilterableAttributes[] = 'PeopleNeeded';
+            $aFilterableAttributes[] = 'HasAttachments';
+            $aFilterableAttributes[] = 'VolunteersAssigned';
+            $aFilterableAttributes[] = 'BudgetSources';
+            $aFilterableAttributes[] = 'Comments';
+            $aFilterableAttributes[] = 'ProjectDescription';
+            $aFilterableAttributes[] = 'OriginalRequest';
+            $aFilterableAttributes[] = 'SequenceNumber';
+            $aFilterableAttributes[] = 'Active';
+            if (!empty($aIncludeProjectAttributes)) {
+                $aProjectAttributesToRemove = array_diff($aFilterableAttributes, $aIncludeProjectAttributes);
+            } else {
+                $aProjectAttributesToRemove = $aFilterableAttributes;
+            }
+
+            //echo "<pre>" . print_r($aAttributes, true) . "</pre>";
+            foreach ($aProjects as $idx => $aProject) {
+                foreach ($aProject as $field => $value) {
+                    if (isset($aAttributes[$field])) {
+                        if (($value === null || $value === '') && in_array(
+                                $aAttributes[$field]['input'],
+                                [
+                                    'select',
+                                    'bool',
+                                    'number',
+                                    'checkbox'
+                                ]
+                            )
+                        ) {
+                            $value = $aAttributes[$field]['default_value'];
+                        }
+                        if ($aAttributes[$field]['input'] === 'bool') {
+                            $aProjects[$idx][$field] = $value ? 'Yes' : 'No';
+                        } elseif (($aAttributes[$field]['input'] === 'select' ||
+                                   $aAttributes[$field]['input'] === 'checkbox') && !empty
+                            (
+                            $aAttributes[$field]['options_source']
+                            )
+                        ) {
+                            if ($value !== '') {
+                                $model = ProjectScope::getOptionsSourceModel($aAttributes[$field]['options_source']);
+                                if ($model) {
+                                    //echo "$field $value ";
+                                    if (preg_match("/^\[.*?\]$/", $value)) {
+                                        $value = json_decode($value, true);
+                                    } else {
+                                        $value = [$value];
+                                    }
+                                    //echo print_r($value, true);
+
+                                    $aValues = [];
+                                    foreach ($value as $val) {
+                                        $rs = $model::find($val);
+                                        if ($rs) {
+                                            $aValues[] = $rs->option_label;
+                                        }
+                                    }
+                                    if (!empty($aValues)) {
+                                        $aProjects[$idx][$field] = join('/', $aValues);
+                                    }
+                                    //echo " " . $aProjects[$idx][$field] . "<br>";
+                                }
+                            }
+                        } elseif ($aAttributes[$field]['input'] === 'table') {
+                            if ($field === 'material_needed_and_cost' && !empty($value)) {
+                                $aMat = json_decode($value, true);
+                                //echo "<pre>" . print_r($aMat, true) . "</pre>";
+                                $aMatList = [];
+                                foreach ($aMat as $aMatCost) {
+                                    $aMatList[] = $aMatCost[0] . ":$" . $aMatCost[1];
+                                }
+                                $aProjects[$idx][$field] = join(', ', $aMatList);
+                            }
+                        }
+                    } else {
+                        switch ($field) {
+                            case 'HasAttachments':
+                                $aProjects[$idx][$field] = $value ? 'Yes' : 'No';
+                                break;
+                            case 'BudgetSources':
+
+                                if ($value !== null && $value !== '') {
+                                    if (preg_match("/^\[.*?\]$/", $value)) {
+                                        $value = json_decode($value, true);
+                                    } else {
+                                        $value = [$value];
+                                    }//echo print_r($value, true);
+                                    $aBSourceValues = [];
+                                    foreach ($value as $val) {
+                                        $rs = Budget::find($val);
+                                        if ($rs) {
+                                            $aBSourceValues[] = $rs->BudgetSource;
+                                        }
+                                    }
+                                    $aValues = [];
+                                    $model = ProjectScope::getOptionsSourceModel('budget_source_options');
+                                    foreach ($aBSourceValues as $val) {
+                                        $rs = $model::find($val);
+                                        if ($rs) {
+                                            $aValues[] = $rs->option_label;
+                                        }
+                                    }
+                                    if (!empty($aValues)) {
+                                        $aProjects[$idx][$field] = join(', ', $aValues);
+                                    }
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            $this->deleteColumn($aProjects, 'ProjectID');
+            $this->deleteColumn($aProjects, 'SiteStatusID');
+            foreach ($aProjectAttributesToRemove as $attributesToRemove) {
+                $this->deleteColumn($aProjects, $attributesToRemove);
+            }
+
+            $aAttributeLabels = ProjectScope::getAttributesLabelsArray('projects');
+            $aKeys = array_keys($aProjects[0]);
+            $colNames = [];
+            foreach ($aKeys as $sKeyStr):
+                //echo "$sKeyStr<br>";
+                if (isset($aAttributeLabels[$sKeyStr])) {
+                    $colNames[] = $aAttributeLabels[$sKeyStr];
+                } else {
+                    if ($sKeyStr === 'SequenceNumber') {
+                        $sKeyStr = 'Project#';
+                    }
+                    $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
+                    $colNames[] = $colName;
+                }
+
+            endforeach;
+            $date = date('l, F d, Y');
+            $aWorksheets['Project Report'] = ['header_year'=>"Spring Into Action $Year",'header_report_name'=> 'Project Report',
+                'header_date'=>$date,'column_names'=>$colNames,'table_data'=>$aProjects];
+
+            $aProjectManagers = $this->getRegisteredProjectManagerEmailsReport($Year, $SiteID, $ProjectID, true);
+            $aKeys = !empty($aProjectManagers) ? array_keys($aProjectManagers[0]) : [];
+            $colNames = [];
+            foreach ($aKeys as $sKeyStr):
+                //echo "$sKeyStr<br>";
+                if (isset($aAttributeLabels[$sKeyStr])) {
+                    $colNames[] = $aAttributeLabels[$sKeyStr];
+                } else {
+                    if ($sKeyStr === 'SequenceNumber') {
+                        $sKeyStr = 'Project#';
+                    }
+                    $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
+                    $colNames[] = $colName;
+                }
+
+            endforeach;
+            $aWorksheets['Project Mgr & Site Coor'] = ['header_year'=>"Spring Into Action $Year",
+                'header_report_name'=> 'Project Manager & Site Coordinator',
+                'header_date'=>$date,'column_names'=>$colNames,'table_data'=>$aProjectManagers];
+
+            $aTeamLeaders = $this->getRegisteredTeamLeaderEmailsReport($Year, $SiteID, $ProjectID, true);
+            $aKeys = !empty($aTeamLeaders) ? array_keys($aTeamLeaders[0]) : [];
+            $colNames = [];
+            foreach ($aKeys as $sKeyStr):
+                //echo "$sKeyStr<br>";
+                if (isset($aAttributeLabels[$sKeyStr])) {
+                    $colNames[] = $aAttributeLabels[$sKeyStr];
+                } else {
+                    if ($sKeyStr === 'SequenceNumber') {
+                        $sKeyStr = 'Project#';
+                    }
+                    $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
+                    $colNames[] = $colName;
+                }
+
+            endforeach;
+            $aWorksheets['Team Leaders'] = ['header_year'=>"Spring Into Action $Year",'header_report_name'=> 'Team Leaders',
+                'header_date'=>$date,'column_names'=>$colNames,'table_data'=>$aTeamLeaders];
+
+            $aVolunteers = $this->getVolunteerAssignmentForPacketsReport($Year, true);
+            $aKeys = !empty($aVolunteers) ? array_keys($aVolunteers[0]) : [];
+            $colNames = [];
+            foreach ($aKeys as $sKeyStr):
+                //echo "$sKeyStr<br>";
+                if (isset($aAttributeLabels[$sKeyStr])) {
+                    $colNames[] = $aAttributeLabels[$sKeyStr];
+                } else {
+                    if ($sKeyStr === 'SequenceNumber') {
+                        $sKeyStr = 'Project#';
+                    }
+                    $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
+                    $colNames[] = $colName;
+                }
+
+            endforeach;
+            $aWorksheets['Volunteers'] = ['header_year'=>"Spring Into Action $Year",
+                'header_report_name'=> 'Volunteers',
+                'header_date'=>$date,'column_names'=>$colNames,'table_data'=>$aVolunteers];
+
+        } else {
+            $response =
+                "<div style='width:100%;text-align:center;font-size:20px'>This report must be <a href=\"/admin/report/projects_full/{$Year}/{$SiteID}/{$ProjectID}/spreadsheet\" class=\"must-download-spreadsheet\">downloaded</a></div>
+                <div style='width:100%;text-align:center;font-size:14px'>Before you click the [downloaded] link, check or uncheck the project attributes above to customize this report</div>
+                ";
+
+            $aWorksheets .= $response;
+        }
+
+        //echo "<pre>" . print_r($html, true) . "</pre>";die;
+        return $aWorksheets;
+    }
+
+    public function getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
         $html = $bReturnArray ? [] : '';
         //'Project Report by Year, Site and Project'
@@ -546,48 +780,37 @@ class ReportsController extends BaseController
         // )->where(
         //     'site_status.Year',
         //     $Year
-        // )->orderBy('SiteName', 'asc');
+        // )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
         // if ($SiteID) {
         //     //$site->where('sites.SiteID', $SiteID);
         // }
-        //$aSites = $site->get()->toArray();
-        $projectModel = new Project();
-        $aProjects = $projectModel->getReportProjects($Year, [], null);
-        if ($bReturnArray) {
-            $aKeys = array_keys($aProjects[0]);
-            $colNames = [];
-            foreach ($aKeys as $sKeyStr):
-                $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
-                $colNames[] = $colName;
-            endforeach;
-
-            $html = array_merge($html, [$colNames], $aProjects);
-        } else {
-            $response = "This report must be downloaded";
-            $html .= $response;
-        }
+        // $aSites = $site->get()->toArray();
         // foreach ($aSites as $site) {
-        // $aProjects = Project::select(
-        //     'projects.SequenceNumber as Proj Num',
-        //     'projects.OriginalRequest',
-        //     'projects.Comments',
-        //     'project_status_options.option_label as Status',
-        //     'projects.StatusReason'
-        // )->join(
-        //     'site_status',
-        //     'projects.SiteStatusID',
-        //     '=',
-        //     'site_status.SiteStatusID'
-        // )->join(
-        //     'project_status_options',
-        //     'projects.Status',
-        //     '=',
-        //     'project_status_options.id'
-        // )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
-        //     'projects.SequenceNumber',
-        //     'asc'
-        // )->get()->toArray();
-
+        //
+        //     $aProjects = ProjectScope::getSiteProjects($site['SiteStatusID'], true);
+        //     // site, projnum, desc, status, comments, child friendly,primary skill needed,vol needed, volun reg, mat
+        //     // needed, budget src, est total cost, final cost, special equipment
+        //     // $aProjects = Project::select(
+        //     //     'projects.SequenceNumber as Proj Num',
+        //     //     'projects.OriginalRequest',
+        //     //     'projects.Comments',
+        //     //     'project_status_options.option_label as Status',
+        //     //     'projects.StatusReason'
+        //     // )->join(
+        //     //     'site_status',
+        //     //     'projects.SiteStatusID',
+        //     //     '=',
+        //     //     'site_status.SiteStatusID'
+        //     // )->join(
+        //     //     'project_status_options',
+        //     //     'projects.Status',
+        //     //     '=',
+        //     //     'project_status_options.id'
+        //     // )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
+        //     //     'projects.SequenceNumber',
+        //     //     'asc'
+        //     // )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->get()->toArray();
+        //
         //     if ($bReturnArray) {
         //         $html[] = $site['SiteName'];
         //         $html = array_merge($html, $aProjects);
@@ -597,57 +820,14 @@ class ReportsController extends BaseController
         //         $html .= $response;
         //     }
         // }
-
-        return $html;
-    }
-
-    public function getYearSiteProjectReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
-    {
-        $html = $bReturnArray ? [] : '';
-        //'Project Report by Year, Site and Project'
-        $site = Site::join(
-            'site_status',
-            'sites.SiteID',
-            '=',
-            'site_status.SiteID'
-        )->where(
-            'site_status.Year',
-            $Year
-        )->whereNull('sites.deleted_at')->orderBy('SiteName', 'asc');
-        if ($SiteID) {
-            //$site->where('sites.SiteID', $SiteID);
-        }
-        $aSites = $site->get()->toArray();
-        foreach ($aSites as $site) {
-            $aProjects = Project::select(
-                'projects.SequenceNumber as Proj Num',
-                'projects.OriginalRequest',
-                'projects.Comments',
-                'project_status_options.option_label as Status',
-                'projects.StatusReason'
-            )->join(
-                'site_status',
-                'projects.SiteStatusID',
-                '=',
-                'site_status.SiteStatusID'
-            )->join(
-                'project_status_options',
-                'projects.Status',
-                '=',
-                'project_status_options.id'
-            )->where('site_status.SiteStatusID', $site['SiteStatusID'])->orderBy(
-                'projects.SequenceNumber',
-                'asc'
-            )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->get()->toArray();
-
-            if ($bReturnArray) {
-                $html[] = $site['SiteName'];
-                $html = array_merge($html, $aProjects);
-            } else {
-                $response = $this->getResultsHtmlTable($aProjects);
-                $html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
-                $html .= $response;
-            }
+        $projectScope = new ProjectScope();
+        $aProjects = $projectScope->getAllProjects();
+        if ($bReturnArray) {
+            $html = $aProjects;
+        } else {
+            $response = $this->getResultsHtmlTable($aProjects);
+            //$html .= "<h3 style=\"page-break-before: always;\">{$site['SiteName']}</h3>";
+            $html .= $response;
         }
 
         return $html;
@@ -941,14 +1121,16 @@ class ReportsController extends BaseController
     public function getRegisteredTeamLeaderEmailsReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
         $aVolunteers = Volunteer::select(
-            'volunteers.Email',
-            'volunteers.FirstName as First Name',
-            'volunteers.LastName as Last Name',
             'sites.SiteName as Site Name',
             'projects.SequenceNumber as Proj Num',
             'projects.ProjectDescription as Project Description',
+            'volunteers.LastName as Last Name',
+            'volunteers.FirstName as First Name',
+            'volunteers.Email',
+            'volunteers.MobilePhoneNumber',
+            'volunteers.HomePhoneNumber',
+            'volunteers.TeamLeaderWilling',
             'project_volunteers.created_at',
-            'volunteers.TeamLeaderWilling'
         )
                                 ->join(
                                     'project_volunteers',
@@ -1011,11 +1193,12 @@ class ReportsController extends BaseController
     public function getRegisteredProjectManagerEmailsReport($Year, $SiteID = null, $ProjectID = null, $bReturnArray)
     {
         $aSites = Site::select(
-            'volunteers.Email',
-            'volunteers.FirstName as First Name',
-            'volunteers.LastName as Last Name',
             'sites.SiteName as Site Name',
-            'site_volunteers.created_at'
+            'volunteers.LastName as Last Name',
+            'volunteers.FirstName as First Name',
+            'volunteers.Email',
+            'volunteers.MobilePhoneNumber',
+            'volunteers.HomePhoneNumber'
         )
                       ->join(
                           'site_status',
@@ -1036,10 +1219,9 @@ class ReportsController extends BaseController
                                   'site_volunteer_role.SiteVolunteerID',
                                   '=',
                                   'site_volunteers.SiteVolunteerID'
-                              )->where(
+                              )->whereIn(
                                   'site_volunteer_role.SiteRoleID',
-                                  '=',
-                                  2
+                                  [1,2]
                               );
                           }
                       )
@@ -1453,23 +1635,299 @@ CSS;
         flush();
     }
 
-    public function getSpreadsheet($html, $reportName)
+    public function getSpreadsheetColumnLetters()
     {
-        ob_start();
+        $alphabet = [
+            'A',
+            'B',
+            'C',
+            'D',
+            'E',
+            'F',
+            'G',
+            'H',
+            'I',
+            'J',
+            'K',
+            'L',
+            'M',
+            'N',
+            'O',
+            'P',
+            'Q',
+            'R',
+            'S',
+            'T',
+            'U',
+            'V',
+            'W',
+            'X',
+            'Y',
+            'Z'
+        ];
+        $aColLetters = $alphabet;
+        foreach ($aColLetters as $letter) {
+            foreach ($alphabet as $alpha) {
+                $aColLetters[] = $letter . $alpha;
+            }
+        }
+
+        return $aColLetters;
+    }
+
+    public function getProjectsFullSpreadsheet($aWorksheets, $reportName)
+    {
+        $aColLetters = $this->getSpreadsheetColumnLetters();
+        $Header1FontSize = 18;
+        $Header2FontSize = 17;
+        $Header3FontSize = 15;
+        $iHeaderColCellFontSize = 10;
+        $iCellFontSize = 10;
+        $thumbDimensions = [50, 50];
+
+
+        $spreadsheet = new Spreadsheet();
+
+
+        $workSheetCnt = 0;
+        foreach ($aWorksheets as $worksheetTitle => $aData) {
+            if ($workSheetCnt !== 0) {
+                if (!$spreadsheet->getSheetByName($worksheetTitle)) {
+                    $spreadsheet->createSheet()->setTitle($worksheetTitle);
+                }
+                $sheetIndex = $spreadsheet->getIndex(
+                    $spreadsheet->getSheetByName($worksheetTitle)
+                );
+                $spreadsheet->setActiveSheetIndex($sheetIndex);
+            } else {
+                $spreadsheet->setActiveSheetIndex(0);
+                $spreadsheet->getActiveSheet()->setTitle($worksheetTitle);
+            }
+
+
+            $activeWorkSheet = $spreadsheet->getActiveSheet();
+
+            $aColumnHeaders = $aData['column_names'];
+            $aRows = $aData['table_data'];
+            if (!empty($aRows)) {
+                $aFirstRow = current($aRows);
+                $aCells = [];
+                $cellIdx = 0;
+                foreach ($aFirstRow as $fieldName => $val) {
+                    $aCells[$fieldName] = ['cell' => $aColLetters[$cellIdx], 'label' => $aColumnHeaders[$cellIdx]];
+                    switch ($fieldName) {
+                        case 'Active':
+                        case 'SequenceNumber':
+                        case 'status':
+                            $width = 10;
+                            break;
+                        default:
+                            $width = 30;
+                    }
+                    $activeWorkSheet->getColumnDimension($aColLetters[$cellIdx])->setWidth($width);
+                    $cellIdx++;
+                }
+            }
+            $rowCnt = 1;
+            $activeWorkSheet->setCellValue('A' . $rowCnt, $aData['header_year']);
+            $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setSize(
+                $Header1FontSize
+            );
+            $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setBold(true);
+            $activeWorkSheet->mergeCells("A{$rowCnt}:{$aColLetters[$cellIdx-1]}{$rowCnt}");
+            $rowCnt++;
+            $activeWorkSheet->setCellValue('A' . $rowCnt, $aData['header_report_name']);
+            $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setSize(
+                $Header2FontSize
+            );
+            $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setBold(true);
+            $activeWorkSheet->mergeCells("A{$rowCnt}:{$aColLetters[$cellIdx-1]}{$rowCnt}");
+            $rowCnt++;
+            $activeWorkSheet->setCellValue('A' . $rowCnt, $aData['header_date']);
+            $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setSize(
+                $Header3FontSize
+            );
+            $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setBold(true);
+            $activeWorkSheet->mergeCells("A{$rowCnt}:{$aColLetters[$cellIdx-1]}{$rowCnt}");
+            $rowCnt++;
+            // create an empty row
+            $activeWorkSheet->setCellValue('A' . $rowCnt, " ");
+            $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setSize(
+                $iCellFontSize
+            );
+            $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setBold(true);
+            $rowCnt++;
+            $columnHeaderRow = $rowCnt;
+
+            if (!empty($aRows)) {
+                // Set the first row of column headers
+                foreach ($aCells as $fieldName => $aCell) {
+                    $activeWorkSheet->setCellValue($aCell['cell'] . $rowCnt, $aCell['label']);
+                    $activeWorkSheet->getStyle($aCell['cell'] . $rowCnt)->getFont()->setSize(
+                        $iHeaderColCellFontSize
+                    );
+                    $activeWorkSheet->getStyle($aCell['cell'] . $rowCnt)->getFont()->setBold(true);
+                    //$activeWorkSheet->getColumnDimension($aCell['cell'])->setWidth($aCell['width']);
+                }
+                $rowCnt++;
+                foreach ($aRows as $aRow) {
+                    foreach ($aRow as $fieldName => $fieldValue) {
+                        $activeWorkSheet->setCellValue($aCells[$fieldName]['cell'] . $rowCnt, urldecode($fieldValue));
+                        $activeWorkSheet->getStyle($aCells[$fieldName]['cell'] . $rowCnt)->getAlignment()->setWrapText(
+                            true
+                        );
+                        $activeWorkSheet->getStyle($aCells[$fieldName]['cell'] . $rowCnt)->getFont()->setSize(
+                            $iCellFontSize
+                        );
+                    }
+                    $rowCnt++;
+                }
+                $activeWorkSheet->setAutoFilter("A{$columnHeaderRow}:{$aColLetters[$cellIdx-1]}{$columnHeaderRow}");
+            }
+            $workSheetCnt++;
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+
         if (headers_sent()) {
             die("Unable to stream spreadsheet: headers already sent");
         }
         header_remove("Content-Type");
         header("Cache-Control: private");
-        header("Content-Type: application/vnd.ms-excel");
-        header("Content-Length: " . mb_strlen($html, "8bit"));
 
-        $filename = self::getDownloadFileName($reportName) . ".xls";
-        $attachment = "attachment";
-        header(self::buildContentDispositionHeader($attachment, $filename));
+        $filename = self::getDownloadFileName($reportName) . ".xlsx";
 
-        echo $html;
-        flush();
+        // Redirect output to a client’s web browser (Xlsx)
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        // If you're serving to IE 9, then the following may be needed
+        header('Cache-Control: max-age=1');
+
+        // If you're serving to IE over SSL, then the following may be needed
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+        header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+        header('Pragma: public'); // HTTP/1.0
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function getSpreadsheet($aRows, $reportName)
+    {
+        $aColLetters = $this->getSpreadsheetColumnLetters();
+        $Header1FontSize = 18;
+        $Header2FontSize = 17;
+        $Header3FontSize = 15;
+        $iHeaderColCellFontSize = 10;
+        $iCellFontSize = 10;
+        $thumbDimensions = [50, 50];
+
+        $aHeader1 = array_shift($aRows);
+        $aHeader2 = array_shift($aRows);
+        $aHeader3 = array_shift($aRows);
+        $aHeader4 = array_shift($aRows);
+        $aColumnHeaders = array_shift($aRows);
+        $aFirstRow = current($aRows);
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->setActiveSheetIndex(0);
+        $activeWorkSheet = $spreadsheet->getActiveSheet();
+
+        $aCells = [];
+        $cellIdx = 0;
+        foreach ($aFirstRow as $fieldName => $val) {
+            $aCells[$fieldName] = ['cell' => $aColLetters[$cellIdx], 'label' => $aColumnHeaders[$cellIdx]];
+            switch ($fieldName) {
+                case 'Active':
+                case 'SequenceNumber':
+                case 'status':
+                    $width = 10;
+                    break;
+                default:
+                    $width = 30;
+            }
+            $activeWorkSheet->getColumnDimension($aColLetters[$cellIdx])->setWidth($width);
+            $cellIdx++;
+        }
+
+        $rowCnt = 1;
+
+        $activeWorkSheet->setCellValue('A' . $rowCnt, $aHeader1);
+        $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setSize(
+            $Header1FontSize
+        );
+        $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setBold(true);
+        $activeWorkSheet->mergeCells("A{$rowCnt}:{$aColLetters[$cellIdx-1]}{$rowCnt}");
+        $rowCnt++;
+        $activeWorkSheet->setCellValue('A' . $rowCnt, $aHeader2);
+        $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setSize(
+            $Header2FontSize
+        );
+        $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setBold(true);
+        $activeWorkSheet->mergeCells("A{$rowCnt}:{$aColLetters[$cellIdx-1]}{$rowCnt}");
+        $rowCnt++;
+        $activeWorkSheet->setCellValue('A' . $rowCnt, $aHeader3);
+        $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setSize(
+            $Header3FontSize
+        );
+        $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setBold(true);
+        $activeWorkSheet->mergeCells("A{$rowCnt}:{$aColLetters[$cellIdx-1]}{$rowCnt}");
+        $rowCnt++;
+        $activeWorkSheet->setCellValue('A' . $rowCnt, $aHeader4);
+        $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setSize(
+            $iCellFontSize
+        );
+        $activeWorkSheet->getStyle('A' . $rowCnt)->getFont()->setBold(true);
+        $rowCnt++;
+        $columnHeaderRow = $rowCnt;
+        // Set the first row of column headers
+        foreach ($aCells as $fieldName => $aCell) {
+            $activeWorkSheet->setCellValue($aCell['cell'] . $rowCnt, $aCell['label']);
+            $activeWorkSheet->getStyle($aCell['cell'] . $rowCnt)->getFont()->setSize(
+                $iHeaderColCellFontSize
+            );
+            $activeWorkSheet->getStyle($aCell['cell'] . $rowCnt)->getFont()->setBold(true);
+            //$activeWorkSheet->getColumnDimension($aCell['cell'])->setWidth($aCell['width']);
+        }
+
+        $rowCnt++;
+        foreach ($aRows as $aRow) {
+            foreach ($aRow as $fieldName => $fieldValue) {
+                $activeWorkSheet->setCellValue($aCells[$fieldName]['cell'] . $rowCnt, urldecode($fieldValue));
+                $activeWorkSheet->getStyle($aCells[$fieldName]['cell'] . $rowCnt)->getAlignment()->setWrapText(true);
+                $activeWorkSheet->getStyle($aCells[$fieldName]['cell'] . $rowCnt)->getFont()->setSize(
+                    $iCellFontSize
+                );
+            }
+            $rowCnt++;
+        }
+        $activeWorkSheet->setAutoFilter("A{$columnHeaderRow}:{$aColLetters[$cellIdx-1]}{$columnHeaderRow}");
+        if (headers_sent()) {
+            die("Unable to stream spreadsheet: headers already sent");
+        }
+        header_remove("Content-Type");
+        header("Cache-Control: private");
+
+        $filename = self::getDownloadFileName($reportName) . ".xlsx";
+
+        // Redirect output to a client’s web browser (Xlsx)
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        // If you're serving to IE 9, then the following may be needed
+        header('Cache-Control: max-age=1');
+
+        // If you're serving to IE over SSL, then the following may be needed
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+        header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+        header('Pragma: public'); // HTTP/1.0
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
     }
 
     /**
