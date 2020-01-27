@@ -1130,7 +1130,7 @@ class ReportsController extends BaseController
             'volunteers.MobilePhoneNumber',
             'volunteers.HomePhoneNumber',
             'volunteers.TeamLeaderWilling',
-            'project_volunteers.created_at',
+            'project_volunteers.created_at'
         )
                                 ->join(
                                     'project_volunteers',
