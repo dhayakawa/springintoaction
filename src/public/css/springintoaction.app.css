@@ -290,6 +290,13 @@
 .sia-main-app .site-settings-management-view .form-group.site-setting-value-label {
   margin-bottom: 0;
 }
+.sia-main-app .reports-management-view fieldset.attributes legend a {
+  font-weight: normal;
+  display: inline-block;
+}
+.sia-main-app .reports-management-view fieldset.attributes label.hilite-attribute-label {
+  background: yellow;
+}
 .sia-main-app .reports-management-view .report-download {
   padding: 0 5px;
 }

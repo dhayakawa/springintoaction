@@ -273,71 +273,71 @@
                                             'badgeCount': '',
                                             'route': 'view/reports/management/projects_full'
                                         }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Project List',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/projects'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Budget Allocation',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/budget'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Budget and Volunteer Estimates',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/budget_and_volunteer'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Early Start',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/early_start'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Project List - Final Completion Assessment',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/projects_final_completion_assessment'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteer Assignment - Alpha Order - For Packets',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/volunteer_assignment_for_packets'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteer Assignment - For Mailmerge - Packets',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/volunteer_assignment_for_mailmerge'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Registered Volunteer Emails',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/registered_volunteer_emails'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Registered Team Leader Emails',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/registered_team_leader_emails'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Registered Project Manager Emails',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/registered_project_manager_emails'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteer Assignment',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/volunteer_assignment'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Volunteers Needed',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/volunteers_needed'
-                                        }),
-                                        new App.Models.DashboardPanelLinksListItem({
-                                            'linkText': 'Scout-Liaison Estimator',
-                                            'badgeCount': '',
-                                            'route': 'view/reports/management/scout_liaison_estimator'
-                                        }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Project List',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/projects'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Budget Allocation',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/budget'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Budget and Volunteer Estimates',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/budget_and_volunteer'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Early Start',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/early_start'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Project List - Final Completion Assessment',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/projects_final_completion_assessment'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Volunteer Assignment - Alpha Order - For Packets',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/volunteer_assignment_for_packets'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Volunteer Assignment - For Mailmerge - Packets',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/volunteer_assignment_for_mailmerge'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Registered Volunteer Emails',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/registered_volunteer_emails'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Registered Team Leader Emails',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/registered_team_leader_emails'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Registered Project Manager Emails',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/registered_project_manager_emails'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Volunteer Assignment',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/volunteer_assignment'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Volunteers Needed',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/volunteers_needed'
+                                        // }),
+                                        // new App.Models.DashboardPanelLinksListItem({
+                                        //     'linkText': 'Scout-Liaison Estimator',
+                                        //     'badgeCount': '',
+                                        //     'route': 'view/reports/management/scout_liaison_estimator'
+                                        // }),
                                     ])
                                 }).render().$el.html()
                             })

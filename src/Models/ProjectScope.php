@@ -108,36 +108,6 @@ class ProjectScope extends BaseModel
         'OriginalRequest' => '',
         'ProjectDescription' => '',
         'Comments' => '',
-        'BudgetSources' => '',
-        'ChildFriendly' => 0,
-        'PrimarySkillNeeded' => '',
-        'VolunteersNeededEst' => 0,
-        'Status' => 6,
-        'StatusReason' => '',
-        'MaterialsNeeded' => '',
-        'EstimatedCost' => null,
-        'ActualCost' => 0.00,
-        'BudgetAvailableForPC' => 0.00,
-        'VolunteersLastYear' => 0,
-        'NeedsToBeStartedEarly' => 0,
-        'PCSeeBeforeSIA' => 0,
-        'SpecialEquipmentNeeded' => '',
-        'PermitsOrApprovalsNeeded' => '',
-        'PrepWorkRequiredBeforeSIA' => '',
-        'SetupDayInstructions' => '',
-        'SIADayInstructions' => '',
-        'Area' => '',
-        'PaintOrBarkEstimate' => '',
-        'PaintAlreadyOnHand' => '',
-        'PaintOrdered' => '',
-        'CostEstimateDone' => 0,
-        'MaterialListDone' => 0,
-        'BudgetAllocationDone' => 0,
-        'VolunteerAllocationDone' => 0,
-        'NeedSIATShirtsForPC' => 0,
-        'ProjectSend' => 2,
-        'FinalCompletionStatus' => 0,
-        'FinalCompletionAssessment' => '',
     ];
     /**
      * @var array
@@ -409,7 +379,7 @@ FROM (
                str_replace('projects.', 'p.', $this->getVolunteersAssignedSql()) .
                " + " .
                str_replace('projects.', 'p.', $this->getVolunteersAssignedSql()) .
-               ") / p.VolunteersNeededEst) >= {$this->requiredPercentage})";
+               ") / `volunteers_needed_estimate_table`.`value`) >= {$this->requiredPercentage})";
     }
 
     public function getVolunteersNeededSql($Year)
@@ -417,9 +387,9 @@ FROM (
         $SiteSetting = new SiteSetting();
 
         if ($SiteSetting->getSettingValue('require_min_registrations')) {
-            return "IF({$this->getProjectsAtReqPercSql($Year)} = {$this->getActiveProjectsSql($Year)}, projects.VolunteersNeededEst, CEILING(projects.VolunteersNeededEst * {$this->requiredPercentage}))";
+            return "IF({$this->getProjectsAtReqPercSql($Year)} = {$this->getActiveProjectsSql($Year)}, `volunteers_needed_estimate_table`.`value`, CEILING(`volunteers_needed_estimate_table`.`value` * {$this->requiredPercentage}))";
         } else {
-            return "projects.VolunteersNeededEst";
+            return "`volunteers_needed_estimate_table`.`value`";
         }
     }
 
@@ -462,9 +432,20 @@ FROM (
         }
 
         $sSqlVolunteersAssigned = $this->getVolunteersAssignedSql();
-        $sSqlVolunteersNeeded = $this->getVolunteersNeededSql($Year);
+        // $sSqlVolunteersNeeded = $this->getVolunteersNeededSql($Year);
         $sSqlPeopleNeeded = $this->getPeopleNeededSql($Year);
 
+        $projectScope = $this->getProjectScopeBaseQueryModelWithAttributes(true);
+        //$projectScope->addSelect(DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"));
+        $projectScope->addSelect(DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"));
+        $projectScope->where(
+            'site_status.Year',
+            $Year
+        );
+        // echo '<pre>' . \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql
+        // ()) . '</pre>';
+        //$all_projects = $projectScope->get()->toArray();
+/*
         $projects = self::select(
             [
                 'projects.ProjectID',
@@ -522,9 +503,9 @@ FROM (
             '=',
             'sites.SiteID'
         )->where('projects.ProjectDescription', 'NOT REGEXP', 'Test');
-
-        if (!empty($filter) && is_array($filter)) {
-            $projects->where(
+*/
+        if (false && !empty($filter) && is_array($filter)) {
+            $projectScope->where(
                 function ($query) use ($filter, $sSqlPeopleNeeded) {
                     $iFilterCnt = 0;
                     $bForceFilterRequiredToShowInList = true;
@@ -583,12 +564,12 @@ FROM (
                 }
             );
         }
-        foreach ($orderBy as $order) {
-            $projects->orderBy(
-                $order['field'],
-                $order['direction']
-            );
-        }
+        // foreach ($orderBy as $order) {
+        //     $projectScope->orderBy(
+        //         $order['field'],
+        //         $order['direction']
+        //     );
+        // }
         // \Illuminate\Support\Facades\Log::debug(
         //     '',
         //     [
@@ -599,13 +580,13 @@ FROM (
         //     ]
         // );
 
-        $all_projects = $projects->get()->toArray();
-        if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
-            $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
-        }
-        $all_projects = $this->setProjectSkillNeededLabels($all_projects);
-
-        return $all_projects;
+        $all_projects = $projectScope->get()->toArray();
+        // if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
+        //     $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
+        // }
+        // $all_projects = $this->setProjectSkillNeededLabels($all_projects);
+//echo $projectScope->toSql();
+        return  $all_projects;
     }
 
     public function setProjectSkillNeededLabels($all_projects)
@@ -1089,7 +1070,7 @@ FROM (
         return $aProject;
     }
 
-    public static function getProjectScopeBaseQueryModelWithAttributes()
+    public static function getProjectScopeBaseQueryModelWithAttributes($bIncludeSiteName = false)
     {
         $projectScope = new ProjectScope();
         $sSqlVolunteersAssigned = $projectScope->getVolunteersAssignedSql();
@@ -1111,6 +1092,10 @@ FROM (
                 '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
             ),
         ];
+        if($bIncludeSiteName){
+             array_unshift($aSelectColumns,'sites.SiteName');
+        }
+
         $aAttributes = $projectScope->getAttributesArray('projects');
         $aFieldMap = array_flip($projectScope->aFieldMap);
         foreach ($aAttributes as $aAttribute) {
@@ -1131,6 +1116,9 @@ FROM (
 
         $projectScope = self::select(...$aSelectColumns);
         $projectScope->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID');
+        if ($bIncludeSiteName) {
+            $projectScope->join('sites', 'sites.SiteID', '=', 'site_status.SiteID');
+        }
         foreach ($aAttributes as $aAttribute) {
             if (in_array($aAttribute['attribute_code'], ['budget_sources', 'project_attachments'])) {
                 continue;
@@ -1185,119 +1173,119 @@ FROM (
 
     public function convertRowDataToAttributeData()
     {
-        ini_set("max_execution_time", "0");
-        // foreach (array_keys($this->aAttributeTables) as $t) {
-        //     DB::table($t)->truncate();
-        // }
-        $aFieldMap = [
-            'ActualCost' => 'actual_cost',
-            'Area' => 'dimensions',
-            'BudgetAllocationDone' => 'budget_allocation_done',
-            'BudgetAvailableForPC' => 'budget_available_for_pc',
-            'BudgetSources' => 'budget_sources',
-            'ChildFriendly' => 'child_friendly',
-            'Comments' => 'comments',
-            'CostEstimateDone' => 'cost_estimate_done',
-            'EstimatedCost' => 'estimated_total_cost',
-            'FinalCompletionAssessment' => 'final_completion_assessment',
-            'FinalCompletionStatus' => 'final_completion_status',
-            'MaterialListDone' => 'material_list_done',
-            'MaterialsNeeded' => 'material_needed_and_cost',
-            'NeedSIATShirtsForPC' => 'need_sia_t_shirts_for_pc',
-            'NeedsToBeStartedEarly' => 'needs_to_be_started_early',
-            'OriginalRequest' => 'original_request',
-            'PaintAlreadyOnHand' => 'paint_already_on_hand',
-            'PaintOrBarkEstimate' => 'painting_dimensions',
-            'PaintOrdered' => 'paint_ordered',
-            'PCSeeBeforeSIA' => 'pc_see_before_sia',
-            'PermitsOrApprovalsNeeded' => 'permit_required_for',
-            'PrepWorkRequiredBeforeSIA' => 'prep_work_required',
-            'PrimarySkillNeeded' => 'primary_skill_needed',
-            'ProjectDescription' => 'project_description',
-            'ProjectSend' => 'project_send',
-            'SequenceNumber' => 'sequence_number',
-            'SetupDayInstructions' => 'setup_day_instructions',
-            'SIADayInstructions' => 'sia_day_instructions',
-            'SpecialEquipmentNeeded' => 'special_equipment_needed',
-            'Status' => 'status',
-            'StatusReason' => 'status_reason',
-            'VolunteerAllocationDone' => 'volunteer_allocation_done',
-            'VolunteersLastYear' => 'volunteers_last_year',
-            'VolunteersNeededEst' => 'volunteers_needed_est',
-        ];
-        $aAttributes = Attribute::get();
-        $attributes = $aAttributes ? $aAttributes->toArray() : [];
+        $bAllow=false;
+        if ($bAllow) {
+            ini_set("max_execution_time", "0");// foreach (array_keys($this->aAttributeTables) as $t) {
+            //     DB::table($t)->truncate();
+            // }
+            $aFieldMap = [
+                'ActualCost' => 'actual_cost',
+                'Area' => 'dimensions',
+                'BudgetAllocationDone' => 'budget_allocation_done',
+                'BudgetAvailableForPC' => 'budget_available_for_pc',
+                'BudgetSources' => 'budget_sources',
+                'ChildFriendly' => 'child_friendly',
+                'Comments' => 'comments',
+                'CostEstimateDone' => 'cost_estimate_done',
+                'EstimatedCost' => 'estimated_total_cost',
+                'FinalCompletionAssessment' => 'final_completion_assessment',
+                'FinalCompletionStatus' => 'final_completion_status',
+                'MaterialListDone' => 'material_list_done',
+                'MaterialsNeeded' => 'material_needed_and_cost',
+                'NeedSIATShirtsForPC' => 'need_sia_t_shirts_for_pc',
+                'NeedsToBeStartedEarly' => 'needs_to_be_started_early',
+                'OriginalRequest' => 'original_request',
+                'PaintAlreadyOnHand' => 'paint_already_on_hand',
+                'PaintOrBarkEstimate' => 'painting_dimensions',
+                'PaintOrdered' => 'paint_ordered',
+                'PCSeeBeforeSIA' => 'pc_see_before_sia',
+                'PermitsOrApprovalsNeeded' => 'permit_required_for',
+                'PrepWorkRequiredBeforeSIA' => 'prep_work_required',
+                'PrimarySkillNeeded' => 'primary_skill_needed',
+                'ProjectDescription' => 'project_description',
+                'ProjectSend' => 'project_send',
+                'SequenceNumber' => 'sequence_number',
+                'SetupDayInstructions' => 'setup_day_instructions',
+                'SIADayInstructions' => 'sia_day_instructions',
+                'SpecialEquipmentNeeded' => 'special_equipment_needed',
+                'Status' => 'status',
+                'StatusReason' => 'status_reason',
+                'VolunteerAllocationDone' => 'volunteer_allocation_done',
+                'VolunteersLastYear' => 'volunteers_last_year',
+                'VolunteersNeededEst' => 'volunteers_needed_est',
+            ];
+            $aAttributes = Attribute::get();
+            $attributes = $aAttributes ? $aAttributes->toArray() : [];
+            $Year = $this->getCurrentYear();
+            $aYears = [2017, 2018, 2019];//$aYears = [2019,2020];
+            foreach ($aYears as $Year) {
+                $projects = $this->getProjectsByYear($Year, $bReturnArr = true);
+                //print_r($projects);
+                foreach ($projects as $project) {
+                    //print_r($project);
+                    $projectId = $project['ProjectID'];
+                    foreach ($aFieldMap as $field => $attributeCode) {
+                        //echo $attributeCode.PHP_EOL;
+                        $a = self::searchArrayValueRecursiveByKeyValue('attribute_code', $attributeCode, $attributes);
 
-        $Year = $this->getCurrentYear();
-        $aYears = [2017, 2018, 2019];
-        //$aYears = [2019,2020];
-        foreach ($aYears as $Year) {
-            $projects = $this->getProjectsByYear($Year, $bReturnArr = true);
-            //print_r($projects);
-            foreach ($projects as $project) {
-                //print_r($project);
-                $projectId = $project['ProjectID'];
-                foreach ($aFieldMap as $field => $attributeCode) {
-                    //echo $attributeCode.PHP_EOL;
-                    $a = self::searchArrayValueRecursiveByKeyValue('attribute_code', $attributeCode, $attributes);
+                        if ($a) {
+                            $aAttributeRecord = current(current($a));
+                            $table_field_type = $aAttributeRecord['table_field_type'];
+                            if (!empty($table_field_type)) {
+                                //echo '$table_field_type:' . $table_field_type . PHP_EOL;
 
-                    if ($a) {
-                        $aAttributeRecord = current(current($a));
-                        $table_field_type = $aAttributeRecord['table_field_type'];
-                        if (!empty($table_field_type)) {
-                            //echo '$table_field_type:' . $table_field_type . PHP_EOL;
-
-                            $table = "project_attributes_{$table_field_type}";
-                            $model = $this->aAttributeTables[$table]::where(
-                                'attribute_id',
-                                '=',
-                                $aAttributeRecord['id']
-                            )->where('project_id', '=', $projectId)->first();
-                            if ($table_field_type === 'int' && !is_integer($project[$field])) {
-                                if (!empty($project[$field]) && !empty($aAttributeRecord['options_source'])) {
-                                    $optionSource = DB::table($aAttributeRecord['options_source'])->where(
-                                        'option_label',
-                                        '=',
-                                        $project[$field]
-                                    )->get();
-                                } else {
-                                    if (empty($project[$field]) && $aAttributeRecord['default_value'] !== '') {
-                                        $project[$field] = $aAttributeRecord['default_value'];
+                                $table = "project_attributes_{$table_field_type}";
+                                $model = $this->aAttributeTables[$table]::where(
+                                    'attribute_id',
+                                    '=',
+                                    $aAttributeRecord['id']
+                                )->where('project_id', '=', $projectId)->first();
+                                if ($table_field_type === 'int' && !is_integer($project[$field])) {
+                                    if (!empty($project[$field]) && !empty($aAttributeRecord['options_source'])) {
+                                        $optionSource = DB::table($aAttributeRecord['options_source'])->where(
+                                            'option_label',
+                                            '=',
+                                            $project[$field]
+                                        )->get();
+                                    } else {
+                                        if (empty($project[$field]) && $aAttributeRecord['default_value'] !== '') {
+                                            $project[$field] = $aAttributeRecord['default_value'];
+                                        }
+                                    }
+                                    switch ($field) {
+                                        case 'ProjectSend':
+                                            $project[$field] = 2;
+                                            break;
+                                        case 'Status':
+                                            $project[$field] = 6;
+                                            break;
                                     }
                                 }
-                                switch ($field) {
-                                    case 'ProjectSend':
-                                        $project[$field] = 2;
-                                        break;
-                                    case 'Status':
-                                        $project[$field] = 6;
-                                        break;
-                                }
-                            }
-                            if ($model === null) {
-                                if ($table_field_type !== 'int' && $table_field_type !== 'decimal') {
-                                    $project[$field] = "$project[$field]";
-                                }
-                                try {
-                                    DB::table($table)->insert(
-                                        [
-                                            'attribute_id' => $aAttributeRecord['id'],
-                                            'project_id' => $projectId,
-                                            'value' => $project[$field],
-                                            'updated_at' => date("Y-m-d H:i:s"),
-                                            'created_at' => date("Y-m-d H:i:s"),
+                                if ($model === null) {
+                                    if ($table_field_type !== 'int' && $table_field_type !== 'decimal') {
+                                        $project[$field] = "$project[$field]";
+                                    }
+                                    try {
+                                        DB::table($table)->insert(
+                                            [
+                                                'attribute_id' => $aAttributeRecord['id'],
+                                                'project_id' => $projectId,
+                                                'value' => $project[$field],
+                                                'updated_at' => date("Y-m-d H:i:s"),
+                                                'created_at' => date("Y-m-d H:i:s"),
 
-                                        ]
-                                    );
-                                } catch (Exception $e) {
-                                    echo $e->getMessage() . PHP_EOL;
-                                    echo '$table_field_type:' . $table_field_type . PHP_EOL;
-                                    echo $attributeCode . ":" . $field . "=" . $project[$field] . PHP_EOL;
+                                            ]
+                                        );
+                                    } catch (Exception $e) {
+                                        echo $e->getMessage() . PHP_EOL;
+                                        echo '$table_field_type:' . $table_field_type . PHP_EOL;
+                                        echo $attributeCode . ":" . $field . "=" . $project[$field] . PHP_EOL;
+                                    }
                                 }
                             }
+                        } else {
+                            //echo "Not an attribute\n";
                         }
-                    } else {
-                        //echo "Not an attribute\n";
                     }
                 }
             }
@@ -1670,7 +1658,7 @@ OPTIONS_TEMPLATE;
             }
         }
     }
-    private function dropFields()
+    private function dropOldFields()
     {
         $sql = <<<SQL
 alter table projects drop column BudgetSources;
