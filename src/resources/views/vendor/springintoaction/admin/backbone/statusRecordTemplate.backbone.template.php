@@ -1,4 +1,4 @@
-<% /*console.log(model)*/ %>
+<% console.log(model) %>
 <div class="col-sm-12 status-record">
     <div class="row">
         <div class="col-sm-4 col-md-5">

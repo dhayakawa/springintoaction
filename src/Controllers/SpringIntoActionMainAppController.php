@@ -267,8 +267,8 @@ class SpringIntoActionMainAppController extends BaseController
 
             report($e);
         }
-
-        $status_management_records = $projectModel->getStatusManagementRecords();
+        $projectScopeModel = new ProjectScope();
+        $status_management_records = $projectScopeModel->getStatusManagementRecords();
         try {
             $contacts = Site::find($site['SiteID'])->contacts;
             $contacts = $contacts ? $contacts->toArray() : [];

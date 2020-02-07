@@ -562,6 +562,16 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
             displayOrder: displayOrderCnt++
         },
         {
+            name: "budget_allocation_done",
+            label: "Budget Allocation Done",
+            cell: App.Vars.yesNoCell,
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "50",
+            displayOrder: displayOrderCnt++
+        },
+        {
             name: "final_completion_assessment",
             label: "Final Completion Assessment",
             cell: App.Vars.TextareaCell,
