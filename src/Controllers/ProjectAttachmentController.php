@@ -78,6 +78,21 @@ class ProjectAttachmentController extends BaseController
         return view('springintoaction::admin.main.response', $request, compact('response'));
     }
 
+    public function getSafeFileName($fileName)
+    {
+        $fileName = str_replace('#','', $fileName);
+        $fileName = str_replace('/','', $fileName);
+        $fileName = str_replace(';','', $fileName);
+        $fileName = str_replace(':','', $fileName);
+        $fileName = str_replace('%','', $fileName);
+        $fileName = str_replace(' ','-', $fileName);
+        $fileName = str_replace('&','-', $fileName);
+        $fileName = str_replace('*','-', $fileName);
+        $fileName = preg_replace('/-{2,}/','-', $fileName);
+
+
+        return strtolower($fileName);
+    }
     public function upload(Request $request)
     {
         $Year = date('Y');
@@ -87,7 +102,7 @@ class ProjectAttachmentController extends BaseController
         $aProjectAttachments = $request->file('files');
         if (is_array($aProjectAttachments)) {
             foreach ($aProjectAttachments as $ProjectAttachment) {
-                $newFileName = $timeStamp . '-' . $ProjectAttachment->getClientOriginalName();
+                $newFileName = $timeStamp . '-' . $this->getSafeFileName($ProjectAttachment->getClientOriginalName());
                 $siaPath = "{$Year}/{$ProjectID}";
                 $newFilePath = $siaPath . '/' . $newFileName;
                 Storage::disk('local')->put($newFilePath, File::get($ProjectAttachment));
@@ -145,12 +160,17 @@ class ProjectAttachmentController extends BaseController
     public function streamAttachment($AttachmentPath)
     {
         try {
+
             if ($model = ProjectAttachment::where("AttachmentPath", "REGEXP", $AttachmentPath . "$")) {
                 $attachment = $model->first()->toArray();
                 if (!empty($attachment)) {
-                    $pathPrefix = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
+                    $pathPrefix = Storage::disk('local')->getDriver()
+                                                                                             ->getAdapter()->getPathPrefix();
                     $relativePath = str_replace($pathPrefix, '', $attachment['AttachmentPath']);
                     $exists = Storage::disk('local')->exists($relativePath);
+                    echo $AttachmentPath.'<br>';
+                    echo $pathPrefix.'<br>';
+                    echo $relativePath.'<br>';
                     if ($exists) {
                         return Storage::response($relativePath);
                     }

@@ -749,14 +749,9 @@ FROM (
             'sites.SiteName',
             'asc'
         )->get()->toArray();
-
+        $initialProjectsAttributeData = $this->getInitialProjectScopeAttributeData();
         foreach ($sites as $key => $data) {
-            $sites[$key]['projects'] = self::getBaseProjectModelForQuery()->join(
-                'site_status',
-                'projects.SiteStatusID',
-                '=',
-                'site_status.SiteStatusID'
-            )->addSelect(
+            $aProjects = $this->getProjectScopeBaseQueryModelWithAttributes()->addSelect(
                 DB::raw(
                     "(select CONCAT(volunteers.FirstName, ' ', volunteers.LastName)
                             from project_volunteer_role pvr
@@ -769,6 +764,37 @@ FROM (
                 'site_status.SiteStatusID',
                 $data['SiteStatusID']
             )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
+
+            foreach($aProjects as $projIdx => $aProject){
+
+
+                foreach($aProject as $attribute_code => $attribute_value){
+                    if($attribute_value === null && isset($initialProjectsAttributeData[$attribute_code])){
+                        // echo "$attribute_code is null and will be set to
+                        // {$initialProjectsAttributeData[$attribute_code]}<br>";
+                        $aProject[$attribute_code]=$initialProjectsAttributeData[$attribute_code];
+                    } elseif($attribute_value === null){
+                        //echo "$attribute_code is null and is not an attribute<br>";
+                        if($attribute_code === 'BudgetSources'){
+                            $aProject[$attribute_code]='';
+                        }
+                        switch($attribute_code){
+                            case 'BudgetSources':
+                            case 'PM':
+                            $aProject[$attribute_code]='';
+                                break;
+                        }
+                    }
+                }
+                $aProjects[$projIdx]=$aProject;
+                // echo "<pre>" . print_r($initialData, true) . "</pre>";
+                //echo "<pre>" . print_r($aProject, true) . "</pre>";
+                // echo "<pre>" . print_r($aMergedProject, true) . "</pre>";
+                //echo "<hr>";
+
+
+            }
+            $sites[$key]['projects'] = $aProjects;
         }
 
         return $sites;
