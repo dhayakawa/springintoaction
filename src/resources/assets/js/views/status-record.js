@@ -43,14 +43,14 @@
                     },
                     oStatusEntryFieldsMap: {
                         ProjectDescriptionComplete: {fieldName: 'ProjectDescription', incompleteValue: ''},
-                        BudgetEstimationComplete: {fieldName: 'CostEstimateDone', incompleteValue: '0'},
-                        BudgetActualComplete: {fieldName: 'BudgetAllocationDone', incompleteValue: '0'},
-                        VolunteerEstimationComplete: {fieldName: 'VolunteerAllocationDone', incompleteValue: '0'},
-                        VolunteerAssignmentComplete: {fieldName: '', incompleteValue: false, condition: "project.VolunteersNeededEstimate.toString() !== oStatusEntryFields['VolunteerEstimationComplete'].incompleteValue.toString() && project.VolunteersNeededEstimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEstimate.toString()"}
+                        BudgetEstimationComplete: {fieldName: 'cost_estimate_done', incompleteValue: '0'},
+                        BudgetActualComplete: {fieldName: 'budget_allocation_done', incompleteValue: '0'},
+                        VolunteerEstimationComplete: {fieldName: 'volunteer_allocation_done', incompleteValue: '0'},
+                        VolunteerAssignmentComplete: {fieldName: '', incompleteValue: false, condition: "project.volunteers_needed_estimate.toString() !== oStatusEntryFields['VolunteerEstimationComplete'].incompleteValue.toString() && project.volunteers_needed_estimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.volunteers_needed_estimate.toString()"}
                     }
                 },
                 project: {
-                    aFields: ['ProjectDescription', 'Status', 'CostEstimateDone', 'BudgetAllocationDone', 'MaterialListDone', 'VolunteerAllocationDone', 'ProjectSend', 'FinalCompletionStatus'],
+                    aFields: ['ProjectDescription', 'status', 'cost_estimate_done', 'budget_allocation_done', 'material_list_done', 'volunteer_allocation_done', 'project_send', 'final_completion_status'],
                     oValidation: {
                         default: ['1'],
                         Status: [],
@@ -63,13 +63,13 @@
                         VolunteerAllocationDone: {fieldCntsKey: 'iVolunteerEstimationCompleteCnt'}
                     },
                     oStatusEntryFieldsMap: {
-                        ReadyForRegistration: {fieldName: '', incompleteValue: false, condition: "project.CostEstimateDone.toString() === 1 && project.BudgetAllocationDone.toString() === 1 && project.MaterialListDone.toString() === 1 && project.VolunteerAllocationDone.toString() === 1"},
+                        ReadyForRegistration: {fieldName: '', incompleteValue: false, condition: "project.cost_estimate_done.toString() === 1 && project.budget_allocation_done.toString() === 1 && project.material_list_done.toString() === 1 && project.volunteer_allocation_done.toString() === 1"},
                         ProjectDescription: {fieldName: 'ProjectDescription', incompleteValue: ''},
-                        CostEstimateDone: {fieldName: 'EstimatedCost', incompleteValue: ''},
+                        CostEstimateDone: {fieldName: 'estimated_total_cost', incompleteValue: ''},
                         BudgetAllocationDone: {fieldName: 'BudgetSources', incompleteValue: ''},
-                        MaterialListDone: {fieldName: 'MaterialsNeeded', incompleteValue: ''},
-                        VolunteerAllocationDone: {fieldName: 'VolunteersNeededEstimate', incompleteValue: '0'},
-                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.VolunteersNeededEstimate.toString() !== oStatusEntryFields['VolunteerAllocationDone'].incompleteValue.toString() && project.VolunteersNeededEstimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.VolunteersNeededEstimate.toString()"}
+                        MaterialListDone: {fieldName: 'material_needed_and_cost', incompleteValue: ''},
+                        VolunteerAllocationDone: {fieldName: 'volunteers_needed_estimate', incompleteValue: '0'},
+                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.volunteers_needed_estimate.toString() !== oStatusEntryFields['VolunteerAllocationDone'].incompleteValue.toString() && project.volunteers_needed_estimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.volunteers_needed_estimate.toString()"}
                     }
                 }
             };
@@ -170,7 +170,7 @@
             let self = this;
             let oMappedFieldCnts = self.oStatusManagementRecordModels.project.oFieldCntsMap;
             let oStatusEntryFields = self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap;
-
+            console.log('setProjectStatusStates',{project:project,oFieldCnts:oFieldCnts,oStatusEntryFields:oStatusEntryFields});
             _.each(self.oStatusManagementRecordModels.project.aFields, function (sFieldName, key) {
                 let bFlaggedAsComplete = null;
                 let sStateKey = self.buildStateKey(sFieldName);
@@ -182,8 +182,11 @@
                 if (!_.isNull(sStatusEntryField) && _.isNull(project[sStatusEntryField])) {
                     project[sStatusEntryField] = sIncompleteStatusEntryValue;
                 }
+                if(_.isUndefined(project[sFieldName])){
+                    console.log('setProjectStatusStates missing fieldName error',{undefinedFieldName:sFieldName});
+                }
                 switch (sFieldName) {
-                    case 'Status':
+                    case 'status':
                         switch (project[sFieldName].toString()) {
                             case '1':
                                 project[sStateKey] = self.notDoneIcon + ' blank';
@@ -214,7 +217,7 @@
                         }
                         project[sToolTipKey] = self.cleanForToolTip(self.getProjectStatusOptionLabel(project[sFieldName]));
                         break;
-                    case 'ProjectSend':
+                    case 'project_send':
                         switch (project[sFieldName].toString()) {
                             case '3':
                                 project[sStateKey] = self.validateIcon + ' ready-state';
@@ -240,7 +243,7 @@
                         }
 
                         break;
-                    case 'BudgetAllocationDone':
+                    case 'budget_allocation_done':
                         let budgetTotal = 0.00;
                         let budgetToolTip = "<table class='tooltip-table table table-condensed'>";
                         budgetToolTip += '<thead><tr><th>Amt</th><th>Source</th><th>Comment</th></tr></thead><tbody>';
@@ -254,6 +257,7 @@
 
                         project[sToolTipKey] = self.cleanForToolTip(budgetToolTip);
                     default:
+
                         bFlaggedAsComplete = project[sFieldName].toString() === '1';
                         // Has ability to be validated
                         // console.log({sFieldName: sFieldName, sStatusEntryField: sStatusEntryField, sIncompleteStatusEntryValue: sIncompleteStatusEntryValue, project_sStatusEntryField: project[sStatusEntryField],project: project})
