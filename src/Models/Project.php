@@ -179,7 +179,7 @@ FROM (
         } else {
             $aTmpOrderBy = $orderBy;
             $orderBy = [];
-            list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
+            [$sortField, $direction] = preg_split("/_/", $aTmpOrderBy);
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
@@ -204,11 +204,14 @@ FROM (
             DB::raw("{$sSqlPeopleNeeded}"),
             '>',
             0
-        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->where('projects.Status', $this->getProjectStatusApprovedOptionID());
+        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->where(
+            'projects.Status',
+            $this->getProjectStatusApprovedOptionID()
+        );
 
         if (!empty($filter) && is_array($filter)) {
             $projects->where(
-                function ($query) use ($filter, $sSqlPeopleNeeded){
+                function ($query) use ($filter, $sSqlPeopleNeeded) {
                     $iFilterCnt = 0;
                     $bForceFilterRequiredToShowInList = true;
                     foreach ($filter as $filterType => $aFilterValue) {
@@ -292,16 +295,16 @@ FROM (
 
     public function getProjectStatusApprovedOptionID()
     {
-        if($this->ProjectStatusApprovedOptionID === null){
+        if ($this->ProjectStatusApprovedOptionID === null) {
             $projectStatusOptions = new ProjectStatusOptions();
             $this->ProjectStatusApprovedOptionID = $projectStatusOptions->getOptionIDByLabel('Approved');
         }
+
         return $this->ProjectStatusApprovedOptionID;
     }
 
     public function getActiveProjectsSql($Year)
     {
-
         return "(select count(*) from projects p
                    join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$this->getProjectStatusApprovedOptionID()} and `p`.`deleted_at` is null)";
     }
@@ -333,12 +336,12 @@ FROM (
         } else {
             return "projects.VolunteersNeededEst";
         }
-
     }
 
     public function getProjectReservationsSql()
     {
         $reservationLifeTime = config('springintoaction.registration.reservation_lifetime_minutes');
+
         return "(IFNULL((select sum(`pr`.`reserve`) from project_reservations pr where pr.ProjectID = projects.ProjectID AND TIMESTAMPDIFF(MINUTE, pr.updated_at, NOW()) < {$reservationLifeTime}),0))";
     }
 
@@ -369,7 +372,7 @@ FROM (
         } else {
             $aTmpOrderBy = $orderBy;
             $orderBy = [];
-            list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
+            [$sortField, $direction] = preg_split("/_/", $aTmpOrderBy);
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
@@ -394,7 +397,9 @@ FROM (
                 DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"),
                 DB::raw("{$sSqlVolunteersAssigned} as VolunteersAssigned"),
                 DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"),
-                DB::raw('(select pso.option_label from project_status_options pso where pso.id = projects.Status) as Status'),
+                DB::raw(
+                    '(select pso.option_label from project_status_options pso where pso.id = projects.Status) as Status'
+                ),
                 'projects.StatusReason',
                 'projects.MaterialsNeeded',
                 'projects.EstimatedCost',
@@ -416,7 +421,9 @@ FROM (
                 'projects.BudgetAllocationDone',
                 'projects.VolunteerAllocationDone',
                 'projects.NeedSIATShirtsForPC',
-                DB::raw("(select sso.option_label from send_status_options sso where sso.id = projects.ProjectSend) as ProjectSend"),
+                DB::raw(
+                    "(select sso.option_label from send_status_options sso where sso.id = projects.ProjectSend) as ProjectSend"
+                ),
                 'projects.FinalCompletionStatus',
                 'projects.FinalCompletionAssessment'
 
@@ -424,7 +431,12 @@ FROM (
         )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
             'site_status.Year',
             $Year
-        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->join('sites', 'site_status.SiteID', '=', 'sites.SiteID')->where('projects.ProjectDescription','NOT REGEXP','Test');
+        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->join(
+            'sites',
+            'site_status.SiteID',
+            '=',
+            'sites.SiteID'
+        )->where('projects.ProjectDescription', 'NOT REGEXP', 'Test');
 
         if (!empty($filter) && is_array($filter)) {
             $projects->where(
@@ -507,26 +519,31 @@ FROM (
             $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
         }
         $all_projects = $this->setProjectSkillNeededLabels($all_projects);
+
         return $all_projects;
     }
 
-    public function setProjectSkillNeededLabels($all_projects){
-        $ProjectSkillNeededOptions = ProjectSkillNeededOptions::select('id','option_label')->get();
+    public function setProjectSkillNeededLabels($all_projects)
+    {
+        $ProjectSkillNeededOptions = ProjectSkillNeededOptions::select('id', 'option_label')->get();
         $ProjectSkillNeededOptions = $ProjectSkillNeededOptions ? $ProjectSkillNeededOptions->toArray() : [];
         $aProjectSkillNeededOptions = [];
         foreach ($ProjectSkillNeededOptions as $option) {
             $aProjectSkillNeededOptions[$option['id']] = $option['option_label'];
         }
-        array_walk($all_projects, function(&$data) use($aProjectSkillNeededOptions) {
-            $skills = $data['PrimarySkillNeeded'];
-            $aSkills = explode(',', $skills);
-            $aLabels = [];
-            foreach($aSkills as $skillId){
-                $aLabels[]= $aProjectSkillNeededOptions[$skillId];
+        array_walk(
+            $all_projects,
+            function (&$data) use ($aProjectSkillNeededOptions) {
+                $skills = $data['PrimarySkillNeeded'];
+                $aSkills = explode(',', $skills);
+                $aLabels = [];
+                foreach ($aSkills as $skillId) {
+                    $aLabels[] = $aProjectSkillNeededOptions[$skillId];
+                }
+                $data['PrimarySkillNeeded'] = join(',', $aLabels);
             }
-            $data['PrimarySkillNeeded'] = join(',', $aLabels);
+        );
 
-        });
         return $all_projects;
     }
 
@@ -587,6 +604,7 @@ FROM (
     {
         $projectModel = new Project();
         $sSqlVolunteersAssigned = $projectModel->getVolunteersAssignedSql();
+
         return self::select(
             'projects.*',
             DB::raw(
@@ -631,7 +649,10 @@ FROM (
             )->where(
                 'site_status.Year',
                 $Year
-            )->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy('projects.SequenceNumber', 'asc')->get();
+            )->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy(
+                'projects.SequenceNumber',
+                'asc'
+            )->get();
 
             return $bReturnArr ? $projects->toArray() : $projects;
         } catch (Exception $e) {
@@ -639,7 +660,11 @@ FROM (
         }
     }
 
-    public function getStatusManagementRecords()
+    /**
+     * @deprecated Use \Dhayakawa\SpringIntoAction\Models\ProjectScope::getStatusManagementRecords instead
+     * @return mixed
+     */
+    public function _getStatusManagementRecords()
     {
         $Year = $this->getCurrentYear();
         $sites = SiteStatus::join(
@@ -647,7 +672,10 @@ FROM (
             'sites.SiteID',
             '=',
             'site_status.SiteID'
-        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('Year', $Year)->orderBy('sites.SiteName', 'asc')->get()->toArray();
+        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('Year', $Year)->orderBy(
+            'sites.SiteName',
+            'asc'
+        )->get()->toArray();
 
         foreach ($sites as $key => $data) {
             $sites[$key]['projects'] = self::getBaseProjectModelForQuery()->join(
