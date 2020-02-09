@@ -80,6 +80,13 @@
                 return options;
             }
         },
+        getSkillsNeededIdList: function () {
+            let options = _.pairs(App.Vars.selectOptions['ProjectSkillNeededOptions']);
+
+            return _.map(options, function (value, key) {
+                return {id:value[1].toString(),label:value[0]};
+            });
+        },
         getSendOptions: function (bReturnHtml, defaultOption) {
             let options = _.pairs(App.Vars.selectOptions['SendStatusOptions']);
             if (bReturnHtml) {

@@ -211,7 +211,7 @@ mix.scripts([
 mix.scripts([
     'resources/assets/js/frontend/registration/collections/project.js',
     'resources/assets/js/frontend/registration/collections/volunteer.js',
-    'resources/assets/js/frontend/registration/models/init-collections.js'
+    'resources/assets/js/frontend/registration/collections/init-collections.js'
 ], 'public/js/frontend/registration/springintoaction.collections.js');
 mix.scripts([
     'resources/assets/js/frontend/registration/views/project.js',

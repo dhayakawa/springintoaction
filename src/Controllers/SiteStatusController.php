@@ -5,7 +5,7 @@
     use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Models\SiteStatus;
-    use Dhayakawa\SpringIntoAction\Models\Project;
+    use Dhayakawa\SpringIntoAction\Models\ProjectScope;
 
     class SiteStatusController extends BaseController {
 
@@ -116,7 +116,7 @@
 
         public function getStatusManagementRecords(){
             //\Illuminate\Support\Facades\Log::debug('getting latest records', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__]);
-            $projectModel = new Project();
+            $projectModel = new ProjectScope();
             return $projectModel->getStatusManagementRecords();
         }
     }

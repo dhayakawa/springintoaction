@@ -340,20 +340,20 @@
             let $oModel = null;
             if ($icon.data('model-type') === 'project') {
                 switch ($icon.data('field')) {
-                    case 'CostEstimateDone':
-                    case 'BudgetAllocationDone':
-                    case 'MaterialListDone':
-                    case 'VolunteerAllocationDone':
+                    case 'cost_estimate_done':
+                    case 'budget_allocation_done':
+                    case 'material_list_done':
+                    case 'volunteer_allocation_done':
                     case 'VolunteerEstimationComplete':
                     case 'VolunteerAssignmentComplete':
                     case 'ProjectDescriptionComplete':
                     case 'BudgetEstimationComplete':
                         aOptions = App.Models.projectModel.getYesNoOptions();
                         break;
-                    case 'Status':
+                    case 'status':
                         aOptions = App.Models.projectModel.getStatusOptions();
                         break;
-                    case 'ProjectSend':
+                    case 'project_send':
                         aOptions = App.Models.projectModel.getSendOptions();
                         break;
                 }

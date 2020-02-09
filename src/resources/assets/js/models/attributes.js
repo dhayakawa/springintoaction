@@ -11,5 +11,8 @@
             'table':'',
             'DisplaySequence':''
         },
+        getAttributesDataByTable: function(table){
+            return JSON.parse(JSON.stringify(App.Collections.attributesManagementCollection.getTableOptions(table, false)));
+        },
     });
 })(window.App);
