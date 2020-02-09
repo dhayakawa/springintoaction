@@ -596,13 +596,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Location",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -653,12 +653,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -673,13 +673,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Dimensions",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -730,12 +730,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -750,13 +750,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Material Needed and Cost",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -807,12 +807,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -832,8 +832,8 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -889,10 +889,10 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('NumberCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
-                }),
+                    }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -919,164 +919,8 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
-                            if (editable) {
-                        
-                              this.currentEditor = new this.editor({
-                                column: this.column,
-                                model: this.model,
-                                formatter: this.formatter
-                              });
-                        
-                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
-                              // Need to redundantly undelegate events for Firefox
-                              this.undelegateEvents();
-                              this.$el.empty();
-                              this.$el.append(this.currentEditor.$el);
-                              this.currentEditor.render();
-                              this.$el.addClass('editor');
-                        
-                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
-                            }
-                        },
-                        render: function () {
-                            var $el = this.$el;
-                            $el.empty();
-                            var model = this.model;
-                            var columnName = this.column.get('name');
-                            let skillIds = []
-                            let primarySkillNeeded = model.get('primary_skill_needed');
-                            if (primarySkillNeeded.match(/^\[.*\]$/)) {
-                                skillIds = JSON.parse(primarySkillNeeded);
-                            } else {
-                                // look for old non-json values from before
-                                primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
-                                if(primarySkillNeeded.match(/,/)){
-                                    skillIds = primarySkillNeeded.split(',');
-                                } else {
-                                    if (primarySkillNeeded.trim() !== '') {
-                                        skillIds.push(primarySkillNeeded);
-                                    }
-                                }
-        
-                            }
-                            let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
-                            this.bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
-                            if(!this.bIsApplicable){
-                                $el.addClass('attribute-not-applicable');
-                                $el.attr('title','Not applicable to this project');
-                            } else {
-                                $el.removeClass('attribute-not-applicable');
-                                $el.removeAttr('title');
-                                
-                            }
-                            
-                            $el.text(this.formatter.fromRaw(model.get(columnName), model));
-                            $el.addClass(columnName);
-                            this.updateStateClassesMaybe();
-                            this.delegateEvents();
-                            console.log('IntegerCell render 1',{el:$el,model:model,id:model.get(model.idAttribute), attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class'),this:this});
-                            return this;
-                        }
-                    }),
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "178",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "volunteers_needed_estimate",
-            label: "Volunteers Needed Estimate",
-            cell: Backgrid.IntegerCell.extend({
-                        bIsApplicable: true,
-                        enterEditMode: function () {
-                            var model = this.model;
-                            var column = this.column;
-                        
-                            var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
-                            if (editable) {
-                        
-                              this.currentEditor = new this.editor({
-                                column: this.column,
-                                model: this.model,
-                                formatter: this.formatter
-                              });
-                        
-                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
-                              // Need to redundantly undelegate events for Firefox
-                              this.undelegateEvents();
-                              this.$el.empty();
-                              this.$el.append(this.currentEditor.$el);
-                              this.currentEditor.render();
-                              this.$el.addClass('editor');
-                        
-                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
-                            }
-                        },
-                        render: function () {
-                            var $el = this.$el;
-                            $el.empty();
-                            var model = this.model;
-                            var columnName = this.column.get('name');
-                            let skillIds = []
-                            let primarySkillNeeded = model.get('primary_skill_needed');
-                            if (primarySkillNeeded.match(/^\[.*\]$/)) {
-                                skillIds = JSON.parse(primarySkillNeeded);
-                            } else {
-                                // look for old non-json values from before
-                                primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
-                                if(primarySkillNeeded.match(/,/)){
-                                    skillIds = primarySkillNeeded.split(',');
-                                } else {
-                                    if (primarySkillNeeded.trim() !== '') {
-                                        skillIds.push(primarySkillNeeded);
-                                    }
-                                }
-        
-                            }
-                            let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
-                            this.bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
-                            if(!this.bIsApplicable){
-                                $el.addClass('attribute-not-applicable');
-                                $el.attr('title','Not applicable to this project');
-                            } else {
-                                $el.removeClass('attribute-not-applicable');
-                                $el.removeAttr('title');
-                                
-                            }
-                            
-                            $el.text(this.formatter.fromRaw(model.get(columnName), model));
-                            $el.addClass(columnName);
-                            this.updateStateClassesMaybe();
-                            this.delegateEvents();
-                            console.log('IntegerCell render 1',{el:$el,model:model,id:model.get(model.idAttribute), attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class'),this:this});
-                            return this;
-                        }
-                    }),
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "166",
-            displayOrder: displayOrderCnt++
-        },
-        {
-            name: "estimated_time_to_complete",
-            label: "Estimated time to complete the project?",
-            cell: Backgrid.StringCell.extend({
-                    bIsApplicable: true,
-                    enterEditMode: function () {
-                            var model = this.model;
-                            var column = this.column;
-                        
-                            var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1127,12 +971,166 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        return this;
+                    }
+                    }),
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "178",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "volunteers_needed_estimate",
+            label: "Volunteers Needed Estimate",
+            cell: Backgrid.IntegerCell.extend({
+                        bIsApplicable: true,
+                        enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
                         
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        return this;
+                    }
+                    }),
+            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "166",
+            displayOrder: displayOrderCnt++
+        },
+        {
+            name: "estimated_time_to_complete",
+            label: "Estimated time to complete the project?",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                        enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -1177,13 +1175,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "What is the permit required for?",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1234,12 +1232,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -1274,13 +1272,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Wall Dimensions (Square feet est.) ",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1331,12 +1329,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -1351,13 +1349,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Estimated Number of Paint Cans needed",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1408,12 +1406,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -1428,13 +1426,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Estimated rolls of painters tape needed",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1485,12 +1483,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -1505,13 +1503,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Paint already on hand",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1562,12 +1560,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -1582,13 +1580,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Paint ordered",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1639,12 +1637,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -1674,8 +1672,8 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1731,10 +1729,10 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('NumberCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
-                }),
+                    }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -1866,13 +1864,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Budget Sources",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -1923,12 +1921,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
@@ -1963,13 +1961,13 @@ App.Vars.projectsBackgridColumnDefinitions = [
             label: "Project Attachments",
             cell: Backgrid.StringCell.extend({
                     bIsApplicable: true,
-                    enterEditMode: function () {
+                        enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
                         
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
-                            editable = editable && this.bIsApplicable;
-                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            editable = editable && !this.$el.hasClass('attribute-not-applicable');
+                            //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
                         
                               this.currentEditor = new this.editor({
@@ -2020,12 +2018,12 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
+                        
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
                         this.delegateEvents();
-                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
-                        
+                        //console.log('Cell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
                         return this;
                     }
                 }),
