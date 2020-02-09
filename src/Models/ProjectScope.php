@@ -234,7 +234,7 @@ FROM (
         } else {
             $aTmpOrderBy = $orderBy;
             $orderBy = [];
-            list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
+            [$sortField, $direction] = preg_split("/_/", $aTmpOrderBy);
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
@@ -427,7 +427,7 @@ FROM (
         } else {
             $aTmpOrderBy = $orderBy;
             $orderBy = [];
-            list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
+            [$sortField, $direction] = preg_split("/_/", $aTmpOrderBy);
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
@@ -750,6 +750,7 @@ FROM (
             'asc'
         )->get()->toArray();
         $initialProjectsAttributeData = $this->getInitialProjectScopeAttributeData();
+        //echo "<pre>" . print_r($initialProjectsAttributeData, true) . "</pre>";
         foreach ($sites as $key => $data) {
             $aProjects = $this->getProjectScopeBaseQueryModelWithAttributes()->addSelect(
                 DB::raw(
@@ -787,10 +788,10 @@ FROM (
                     }
                 }
                 $aProjects[$projIdx]=$aProject;
-                // echo "<pre>" . print_r($initialData, true) . "</pre>";
-                //echo "<pre>" . print_r($aProject, true) . "</pre>";
-                // echo "<pre>" . print_r($aMergedProject, true) . "</pre>";
-                //echo "<hr>";
+
+                // echo "<pre>" . print_r($aProject, true) . "</pre>";
+                //
+                // echo "<hr>";
 
 
             }
@@ -1513,19 +1514,224 @@ OPTIONS_TEMPLATE;
                     break;
                 case 'checkbox':
                     if ($aAttribute['attribute_code'] === 'primary_skill_needed') {
-                        $cellType = 'SkillsNeededCell.extend({multiple: true})';
+                        $cellType = 'SkillsNeededCell.extend()';
                     }
                     break;
                 case 'number':
                     if ($aAttribute['table_field_type'] === 'decimal') {
                         $cellType = '"number"';
+                        $cellType = "Backgrid.NumberCell.extend({
+                        bIsApplicable: true,
+                        enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.\$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.\$el.empty();
+                              this.\$el.append(this.currentEditor.\$el);
+                              this.currentEditor.render();
+                              this.\$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var \$el = this.\$el;
+                        \$el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/\"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            \$el.addClass('attribute-not-applicable');
+                            \$el.attr('title','Not applicable to this project');
+                        } else {
+                            \$el.removeClass('attribute-not-applicable');
+                            \$el.removeAttr('title');
+                        }
+                        
+                        \$el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        \$el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('NumberCell render 1',{el:\$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.\$el.attr('class'),this:this});
+                        return this;
+                    }
+                })";
                     } else {
                         $cellType = '"integer"';
+                        $cellType = "Backgrid.IntegerCell.extend({
+                        bIsApplicable: true,
+                        enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.\$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.\$el.empty();
+                              this.\$el.append(this.currentEditor.\$el);
+                              this.currentEditor.render();
+                              this.\$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                        render: function () {
+                            var \$el = this.\$el;
+                            \$el.empty();
+                            var model = this.model;
+                            var columnName = this.column.get('name');
+                            let skillIds = []
+                            let primarySkillNeeded = model.get('primary_skill_needed');
+                            if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                                skillIds = JSON.parse(primarySkillNeeded);
+                            } else {
+                                // look for old non-json values from before
+                                primarySkillNeeded = primarySkillNeeded.replace(/\"/g,'');
+                                if(primarySkillNeeded.match(/,/)){
+                                    skillIds = primarySkillNeeded.split(',');
+                                } else {
+                                    if (primarySkillNeeded.trim() !== '') {
+                                        skillIds.push(primarySkillNeeded);
+                                    }
+                                }
+        
+                            }
+                            let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                            this.bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                            if(!this.bIsApplicable){
+                                \$el.addClass('attribute-not-applicable');
+                                \$el.attr('title','Not applicable to this project');
+                            } else {
+                                \$el.removeClass('attribute-not-applicable');
+                                \$el.removeAttr('title');
+                                
+                            }
+                            
+                            \$el.text(this.formatter.fromRaw(model.get(columnName), model));
+                            \$el.addClass(columnName);
+                            this.updateStateClassesMaybe();
+                            this.delegateEvents();
+                            console.log('IntegerCell render 1',{el:\$el,model:model,id:model.get(model.idAttribute), attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:this.bIsApplicable,classes:this.\$el.attr('class'),this:this});
+                            return this;
+                        }
+                    })";
                     }
 
                     break;
                 default:
-                    $cellType = '"string"';
+                    //$cellType = '"string"';
+                    $cellType = "Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.\$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.\$el.empty();
+                              this.\$el.append(this.currentEditor.\$el);
+                              this.currentEditor.render();
+                              this.\$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var \$el = this.\$el;
+                        \$el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/\"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            \$el.addClass('attribute-not-applicable');
+                            \$el.attr('title','Not applicable to this project');
+                        } else {
+                            \$el.removeClass('attribute-not-applicable');
+                            \$el.removeAttr('title');
+                        }
+                        \$el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        \$el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:\$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.\$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                })";
             }
             $col = str_replace('{{CELL_TYPE}}', $cellType, $col);
             $labelStrlength = strlen($aAttribute['label']);
@@ -1542,11 +1748,11 @@ OPTIONS_TEMPLATE;
                 $lessWidth = "{$width}px";
             }
             $sLessCss .= "th:nth-child({$lessCellIdx}) {
-                    width: {$lessWidth};
+                    width: {$lessWidth}; // {$aAttribute['label']}
                 }\n";
             $lessCellIdx++;
             $col = str_replace('{{WIDTH}}', $width, $col);
-            if (in_array($aAttribute['attribute_code'],['material_needed_and_cost','budget_sources'])) {
+            if (in_array($aAttribute['attribute_code'],['primary_skill_needed','material_needed_and_cost','budget_sources'])) {
                 $col = str_replace(
                     'editable: App.Vars.Auth.bCanEditProjectGridFields,',
                     'editable: false,', $col
@@ -1575,8 +1781,8 @@ OPTIONS_TEMPLATE;
             $origAppVarsDefinition = $matches[0];
             //echo $appVarsDefinition . PHP_EOL;
             $updatedProjectCollectionPackageFileContents = preg_replace(
-                "/App\.Vars\.projectsBackgridColumnDefinitions = \\[(.*?)\\];/ms",
-                $appVarsDefinition,
+                "~//##STARTBACKGRIDCOLUMNDEFINITIONS.*//##ENDBACKGRIDCOLUMNDEFINITIONS~ms",
+                "//##STARTBACKGRIDCOLUMNDEFINITIONS\n{$appVarsDefinition}\n//##ENDBACKGRIDCOLUMNDEFINITIONS",
                 $updatedProjectCollectionPackageFileContents
             );
             $updatedProjectModelPackageFileContents = $projectModelPackageFileContents;

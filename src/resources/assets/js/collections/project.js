@@ -11,33 +11,48 @@
         },
         mode: "client" // page entirely on the client side
     });
-    let SkillsNeededCell = Backgrid.Extension.Select2Cell.extend({
-        editor: App.CellEditors.Select2CellEditor,
-        // any options specific to `select2` goes here
-        select2Options: {
-            // default is false because Backgrid will save the cell's value
-            // and exit edit mode on enter
-            openOnEnter: false,
-            multiple: true
-        },
-        optionValues: [{
-            values: App.Models.projectModel.getSkillsNeededOptions(false)
-        }],
-        formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
 
-            /**
-             Normalizes raw scalar or array values to an array.
+    let SkillsNeededCell = Backgrid.StringCell.extend({
+        formatter: _.extend({}, Backgrid.StringFormatter.prototype, {
 
-             @member Backgrid.SelectFormatter
-             @param {*} rawValue
-             @param {Backbone.Model} model Used for more complicated formatting
-             @return {Array.<*>}
-             */
             fromRaw: function (rawValue, model) {
-                if (_.isString(rawValue) && rawValue.match(/,/)) {
-                    rawValue = rawValue.split(',');
+                if (_.isString(rawValue)) {
+                    let skillsList = [];
+                    let skillIds = [];
+                    let aSkills = App.Models.projectModel.getSkillsNeededIdList();
+                    rawValue = rawValue.trim();
+                    // look for json array
+                    if (rawValue.match(/^\[.*\]$/)) {
+                        skillIds = JSON.parse(rawValue);
+                    } else {
+                        // look for old non-json values from before
+                        rawValue = rawValue.replace(/"/g, '');
+                        if (rawValue.match(/,/)) {
+                            skillIds = rawValue.split(',');
+                        } else {
+                            if (rawValue.trim() !== '') {
+                                skillIds.push(rawValue);
+                            }
+                        }
+
+                    }
+                    if (skillIds.length) {
+                        _.each(skillIds, function (val, key) {
+                            let skill = _.findWhere(aSkills, {id: val});
+
+                            if (!_.isUndefined(skill)) {
+                                skillsList.push(skill.label);
+                            }
+                        });
+                    }
+                    if (skillsList.length) {
+                        rawValue = skillsList.join(',');
+                    } else {
+                        rawValue = '';
+                    }
                 }
-                return _.isArray(rawValue) ? rawValue : rawValue != null ? [rawValue] : [];
+
+                return rawValue + '';
             }
         })
 
@@ -71,7 +86,7 @@
 
     });
 
-let PermitRequiredOptionsCell = Backgrid.Extension.Select2Cell.extend({
+    let PermitRequiredOptionsCell = Backgrid.Extension.Select2Cell.extend({
         editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
         select2Options: {
@@ -85,7 +100,7 @@ let PermitRequiredOptionsCell = Backgrid.Extension.Select2Cell.extend({
 
     });
 
-let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
+    let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         editor: App.CellEditors.Select2CellEditor,
         // any options specific to `select2` goes here
         select2Options: {
@@ -95,8 +110,99 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         },
         optionValues: [{
             values: App.Models.projectModel.getPermitRequiredStatusOptions(false)
-        }]
+        }],
+        formatter: _.extend({}, Backgrid.SelectFormatter.prototype, {
+            fromRaw: function (rawValue, model) {
+                // force cell to be blank so a status isn't shown if a permit is not required
+                if (model.get('permit_required') !== 2) {
+                    return "0";
+                }
+                return rawValue + '';
+            }
+        })
+    });
 
+    let NumberCell = Backgrid.NumberCell.extend({
+        bIsApplicable: true,
+        enterEditMode: function () {
+            var model = this.model;
+            var column = this.column;
+
+            var editable = Backgrid.callByNeed(column.editable(), column, model);
+            editable = editable && this.bIsApplicable;
+            console.log('enterEditMode', {
+                id: model.get(model.idAttribute),
+                editable: editable,
+                bIsApplicable: this.bIsApplicable,
+                classes: this.$el.attr('class')
+            })
+            if (editable) {
+
+                this.currentEditor = new this.editor({
+                    column: this.column,
+                    model: this.model,
+                    formatter: this.formatter
+                });
+
+                model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+
+                // Need to redundantly undelegate events for Firefox
+                this.undelegateEvents();
+                this.$el.empty();
+                this.$el.append(this.currentEditor.$el);
+                this.currentEditor.render();
+                this.$el.addClass('editor');
+
+                model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+            }
+        },
+        render: function () {
+            var $el = this.$el;
+            $el.empty();
+            var model = this.model;
+            var columnName = this.column.get('name');
+            let skillIds = []
+            let primarySkillNeeded = model.get('primary_skill_needed');
+            if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                skillIds = JSON.parse(primarySkillNeeded);
+            } else {
+                // look for old non-json values from before
+                primarySkillNeeded = primarySkillNeeded.replace(/\"/g, '');
+                if (primarySkillNeeded.match(/,/)) {
+                    skillIds = primarySkillNeeded.split(',');
+                } else {
+                    if (primarySkillNeeded.trim() !== '') {
+                        skillIds.push(primarySkillNeeded);
+                    }
+                }
+
+            }
+            let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+            let bIsApplicable = _.indexOf(aAttributeCodes, columnName, true) !== -1;
+            if (!bIsApplicable) {
+                $el.addClass('attribute-not-applicable');
+                $el.attr('title', 'Not applicable to this project');
+            } else {
+                $el.removeClass('attribute-not-applicable');
+                $el.removeAttr('title');
+            }
+
+            $el.text(this.formatter.fromRaw(model.get(columnName), model));
+            $el.addClass(columnName);
+            this.updateStateClassesMaybe();
+            this.delegateEvents();
+            console.log('NumberCell render 1', {
+                el: $el,
+                model: model,
+                id: model.get(model.idAttribute),
+                attribute_code: columnName,
+                aAttributeCodes: aAttributeCodes,
+                bIsApplicable: bIsApplicable,
+                classes: this.$el.attr('class'),
+                this: this
+            });
+            return this;
+        }
     });
 
 //##DYNAMIC_CELL_TYPES
@@ -105,7 +211,8 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
     // Override until the textarea cell works
     //TextareaCell = 'string';
     // Resizeable columns must have a pixel width defined
-    App.Vars.projectsBackgridColumnDefinitions = [
+//##STARTBACKGRIDCOLUMNDEFINITIONS
+App.Vars.projectsBackgridColumnDefinitions = [
         {
             // name is a required parameter, but you don't really want one on a select all column
             name: "",
@@ -224,27 +331,84 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "primary_skill_needed",
             label: "Primary Skill Needed",
-            cell: SkillsNeededCell.extend({multiple: true}),
-            editable: App.Vars.Auth.bCanEditProjectGridFields,
+            cell: SkillsNeededCell.extend(),
+            editable: false,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
             width: "130",
             displayOrder: displayOrderCnt++
         },
         {
-            name: "budget_sources",
-            label: "Budget Sources",
-            cell: "string",
-            editable: false,
-            resizeable: App.Vars.bAllowManagedGridColumns,
-            orderable: App.Vars.bAllowManagedGridColumns,
-            width: "94",
-            displayOrder: displayOrderCnt++
-        },
-        {
             name: "location",
             label: "Location",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -254,7 +418,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "dimensions",
             label: "Dimensions",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -264,7 +495,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "material_needed_and_cost",
             label: "Material Needed and Cost",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: false,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -274,7 +572,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "estimated_total_cost",
             label: "Estimated Total Cost",
-            cell: "number",
+            cell: Backgrid.NumberCell.extend({
+                        bIsApplicable: true,
+                        enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('NumberCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -294,7 +659,75 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "team_leaders_needed_estimate",
             label: "Team Leaders Needed Estimate",
-            cell: "integer",
+            cell: Backgrid.IntegerCell.extend({
+                        bIsApplicable: true,
+                        enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                        render: function () {
+                            var $el = this.$el;
+                            $el.empty();
+                            var model = this.model;
+                            var columnName = this.column.get('name');
+                            let skillIds = []
+                            let primarySkillNeeded = model.get('primary_skill_needed');
+                            if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                                skillIds = JSON.parse(primarySkillNeeded);
+                            } else {
+                                // look for old non-json values from before
+                                primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                                if(primarySkillNeeded.match(/,/)){
+                                    skillIds = primarySkillNeeded.split(',');
+                                } else {
+                                    if (primarySkillNeeded.trim() !== '') {
+                                        skillIds.push(primarySkillNeeded);
+                                    }
+                                }
+        
+                            }
+                            let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                            this.bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                            if(!this.bIsApplicable){
+                                $el.addClass('attribute-not-applicable');
+                                $el.attr('title','Not applicable to this project');
+                            } else {
+                                $el.removeClass('attribute-not-applicable');
+                                $el.removeAttr('title');
+                                
+                            }
+                            
+                            $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                            $el.addClass(columnName);
+                            this.updateStateClassesMaybe();
+                            this.delegateEvents();
+                            console.log('IntegerCell render 1',{el:$el,model:model,id:model.get(model.idAttribute), attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class'),this:this});
+                            return this;
+                        }
+                    }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -304,7 +737,75 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "volunteers_needed_estimate",
             label: "Volunteers Needed Estimate",
-            cell: "integer",
+            cell: Backgrid.IntegerCell.extend({
+                        bIsApplicable: true,
+                        enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                        render: function () {
+                            var $el = this.$el;
+                            $el.empty();
+                            var model = this.model;
+                            var columnName = this.column.get('name');
+                            let skillIds = []
+                            let primarySkillNeeded = model.get('primary_skill_needed');
+                            if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                                skillIds = JSON.parse(primarySkillNeeded);
+                            } else {
+                                // look for old non-json values from before
+                                primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                                if(primarySkillNeeded.match(/,/)){
+                                    skillIds = primarySkillNeeded.split(',');
+                                } else {
+                                    if (primarySkillNeeded.trim() !== '') {
+                                        skillIds.push(primarySkillNeeded);
+                                    }
+                                }
+        
+                            }
+                            let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                            this.bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                            if(!this.bIsApplicable){
+                                $el.addClass('attribute-not-applicable');
+                                $el.attr('title','Not applicable to this project');
+                            } else {
+                                $el.removeClass('attribute-not-applicable');
+                                $el.removeAttr('title');
+                                
+                            }
+                            
+                            $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                            $el.addClass(columnName);
+                            this.updateStateClassesMaybe();
+                            this.delegateEvents();
+                            console.log('IntegerCell render 1',{el:$el,model:model,id:model.get(model.idAttribute), attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class'),this:this});
+                            return this;
+                        }
+                    }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -314,7 +815,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "estimated_time_to_complete",
             label: "Estimated time to complete the project?",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -354,7 +922,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "permit_required_for",
             label: "What is the permit required for?",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -384,7 +1019,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "painting_dimensions",
             label: "Wall Dimensions (Square feet est.) ",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -394,7 +1096,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "estimated_paint_cans_needed",
             label: "Estimated Number of Paint Cans needed",
-            cell: "integer",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -404,7 +1173,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "estimated_paint_tape_rolls_needed",
             label: "Estimated rolls of painters tape needed",
-            cell: "integer",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -414,7 +1250,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "paint_already_on_hand",
             label: "Paint already on hand",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -424,7 +1327,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "paint_ordered",
             label: "Paint ordered",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -444,7 +1414,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "actual_cost",
             label: "Actual Cost",
-            cell: "number",
+            cell: Backgrid.NumberCell.extend({
+                        bIsApplicable: true,
+                        enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('NumberCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -572,6 +1609,83 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
             displayOrder: displayOrderCnt++
         },
         {
+            name: "budget_sources",
+            label: "Budget Sources",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
+            editable: false,
+            resizeable: App.Vars.bAllowManagedGridColumns,
+            orderable: App.Vars.bAllowManagedGridColumns,
+            width: "94",
+            displayOrder: displayOrderCnt++
+        },
+        {
             name: "final_completion_assessment",
             label: "Final Completion Assessment",
             cell: App.Vars.TextareaCell,
@@ -594,7 +1708,74 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         {
             name: "project_attachments",
             label: "Project Attachments",
-            cell: "string",
+            cell: Backgrid.StringCell.extend({
+                    bIsApplicable: true,
+                    enterEditMode: function () {
+                            var model = this.model;
+                            var column = this.column;
+                        
+                            var editable = Backgrid.callByNeed(column.editable(), column, model);
+                            editable = editable && this.bIsApplicable;
+                            console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
+                            if (editable) {
+                        
+                              this.currentEditor = new this.editor({
+                                column: this.column,
+                                model: this.model,
+                                formatter: this.formatter
+                              });
+                        
+                              model.trigger('backgrid:edit', model, column, this, this.currentEditor);
+                        
+                              // Need to redundantly undelegate events for Firefox
+                              this.undelegateEvents();
+                              this.$el.empty();
+                              this.$el.append(this.currentEditor.$el);
+                              this.currentEditor.render();
+                              this.$el.addClass('editor');
+                        
+                              model.trigger('backgrid:editing', model, column, this, this.currentEditor);
+                            }
+                        },
+                    render: function () {
+                        var $el = this.$el;
+                        $el.empty();
+                        var model = this.model;
+                        var columnName = this.column.get('name');
+                        let skillIds = []
+                        let primarySkillNeeded = model.get('primary_skill_needed');
+                        if (primarySkillNeeded.match(/^\[.*\]$/)) {
+                            skillIds = JSON.parse(primarySkillNeeded);
+                        } else {
+                            // look for old non-json values from before
+                            primarySkillNeeded = primarySkillNeeded.replace(/"/g,'');
+                            if(primarySkillNeeded.match(/,/)){
+                                skillIds = primarySkillNeeded.split(',');
+                            } else {
+                                if (primarySkillNeeded.trim() !== '') {
+                                    skillIds.push(primarySkillNeeded);
+                                }
+                            }
+    
+                        }
+                        let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
+                        let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
+                        if(!bIsApplicable){
+                            $el.addClass('attribute-not-applicable');
+                            $el.attr('title','Not applicable to this project');
+                        } else {
+                            $el.removeClass('attribute-not-applicable');
+                            $el.removeAttr('title');
+                        }
+                        $el.text(this.formatter.fromRaw(model.get(columnName), model));
+                        $el.addClass(columnName);
+                        this.updateStateClassesMaybe();
+                        this.delegateEvents();
+                        console.log('StringCell render 1',{el:$el,model:model,id:model.get(model.idAttribute),attribute_code:columnName,aAttributeCodes:aAttributeCodes,bIsApplicable:bIsApplicable,classes:this.$el.attr('class'),this:this});
+                        
+                        return this;
+                    }
+                }),
             editable: App.Vars.Auth.bCanEditProjectGridFields,
             resizeable: App.Vars.bAllowManagedGridColumns,
             orderable: App.Vars.bAllowManagedGridColumns,
@@ -603,7 +1784,7 @@ let PermitRequiredStatusOptionsCell = Backgrid.Extension.Select2Cell.extend({
         },
 
 ];
-
+//##ENDBACKGRIDCOLUMNDEFINITIONS
     if (!App.Vars.bAllowBackgridInlineEditing) {
         _.each(App.Vars.projectsBackgridColumnDefinitions, function (value, key) {
             value.editable = false;

@@ -133,6 +133,7 @@ class ProjectsController extends BaseController
             },
             $request->all()
         );
+        /** @var ProjectScope $project */
         $project = ProjectScope::findOrFail($ProjectID);
         $projectModelData = array_map(
             function ($value) {
