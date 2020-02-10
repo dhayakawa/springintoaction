@@ -53,23 +53,23 @@
                     aFields: ['ProjectDescription', 'status', 'cost_estimate_done', 'budget_allocation_done', 'material_list_done', 'volunteer_allocation_done', 'project_send', 'final_completion_status'],
                     oValidation: {
                         default: ['1'],
-                        Status: [],
-                        ProjectSend: [] // doesn't need validation
+                        status: [],
+                        project_send: [] // doesn't need validation
                     },
                     oFieldCntsMap: {
                         ProjectDescription: {fieldCntsKey: 'iProjectDescriptionCompleteCnt'},
-                        CostEstimateDone: {fieldCntsKey: 'iBudgetEstimationCompleteCnt'},
-                        BudgetAllocationDone: {fieldCntsKey: 'iBudgetActualCompleteCnt'},
-                        VolunteerAllocationDone: {fieldCntsKey: 'iVolunteerEstimationCompleteCnt'}
+                        cost_estimate_done: {fieldCntsKey: 'iBudgetEstimationCompleteCnt'},
+                        budget_allocation_done: {fieldCntsKey: 'iBudgetActualCompleteCnt'},
+                        volunteer_allocation_done: {fieldCntsKey: 'iVolunteerEstimationCompleteCnt'}
                     },
                     oStatusEntryFieldsMap: {
                         ReadyForRegistration: {fieldName: '', incompleteValue: false, condition: "project.cost_estimate_done.toString() === 1 && project.budget_allocation_done.toString() === 1 && project.material_list_done.toString() === 1 && project.volunteer_allocation_done.toString() === 1"},
                         ProjectDescription: {fieldName: 'ProjectDescription', incompleteValue: ''},
-                        CostEstimateDone: {fieldName: 'estimated_total_cost', incompleteValue: ''},
-                        BudgetAllocationDone: {fieldName: 'BudgetSources', incompleteValue: ''},
-                        MaterialListDone: {fieldName: 'material_needed_and_cost', incompleteValue: ''},
-                        VolunteerAllocationDone: {fieldName: 'volunteers_needed_estimate', incompleteValue: '0'},
-                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.volunteers_needed_estimate.toString() !== oStatusEntryFields['VolunteerAllocationDone'].incompleteValue.toString() && project.volunteers_needed_estimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.volunteers_needed_estimate.toString()"}
+                        cost_estimate_done: {fieldName: 'estimated_total_cost', incompleteValue: ''},
+                        budget_allocation_done: {fieldName: 'BudgetSources', incompleteValue: ''},
+                        material_list_done: {fieldName: 'material_needed_and_cost', incompleteValue: ''},
+                        volunteer_allocation_done: {fieldName: 'volunteers_needed_estimate', incompleteValue: '0'},
+                        VolunteerAssignmentComplete: {fieldName: '', completeValue: true, condition: "project.volunteers_needed_estimate.toString() !== oStatusEntryFields['volunteer_allocation_done'].incompleteValue.toString() && project.volunteers_needed_estimate.toString() !== '0' && project.VolunteersAssigned.toString() === project.volunteers_needed_estimate.toString()"}
                     }
                 }
             };
@@ -81,15 +81,22 @@
             'change [name="value"]': 'enableSave',
             'inserted.bs.popover [data-popover="true"]': 'setPopOverContent',
             'click .popover-status-management-form .cancel': 'cancelSaveStatusManagementOption',
-            'click .popover-status-management-form .save': 'saveStatusManagementOption'
+            'click .popover-status-management-form .save': 'saveStatusManagementOption',
+            'click .edit-project': 'editProject'
         },
         render: function () {
             let self = this;
             //console.log(self.model.attributes)
             let $statusManagementRecord = self.template({model: self.setTemplateVars(self.model.attributes)});
             $(self.el).append($statusManagementRecord);
-
+            // /view/project_scope/management/16_635
             return this;
+        },
+        editProject: function (e) {
+            let self = this;
+            let $icon = $(e.currentTarget);
+            let load = $icon.data('site-id')+'_'+ $icon.data('id');
+            window.location.href = '#/view/project_scope/management/' + load
         },
         setTemplateVars: function (modelAttributes) {
             let self = this;
@@ -170,12 +177,13 @@
             let self = this;
             let oMappedFieldCnts = self.oStatusManagementRecordModels.project.oFieldCntsMap;
             let oStatusEntryFields = self.oStatusManagementRecordModels.project.oStatusEntryFieldsMap;
-            console.log('setProjectStatusStates',{project:project,oFieldCnts:oFieldCnts,oStatusEntryFields:oStatusEntryFields});
+            //console.log('setProjectStatusStates',{project:project,oFieldCnts:oFieldCnts,oStatusEntryFields:oStatusEntryFields});
             _.each(self.oStatusManagementRecordModels.project.aFields, function (sFieldName, key) {
                 let bFlaggedAsComplete = null;
                 let sStateKey = self.buildStateKey(sFieldName);
                 let sStatusEntryField = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].fieldName : null;
-                let sIncompleteStatusEntryValue = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].incompleteValue : '';
+                //let sIncompleteStatusEntryValue = typeof oStatusEntryFields[sFieldName] !== 'undefined' ? oStatusEntryFields[sFieldName].incompleteValue : '';
+                let sIncompleteStatusEntryValue = typeof oStatusEntryFields[sFieldName] !== 'undefined' && !_.isUndefined(oStatusEntryFields[sFieldName].incompleteValue) ? oStatusEntryFields[sFieldName].incompleteValue : '';
                 let sToolTipKey = self.buildToolTipContentKey(sFieldName);
 
                 // If the db value is null set it to its expected incomplete value
@@ -244,45 +252,107 @@
 
                         break;
                     case 'budget_allocation_done':
-                        let budgetTotal = 0.00;
-                        let budgetToolTip = "<table class='tooltip-table table table-condensed'>";
-                        budgetToolTip += '<thead><tr><th>Amt</th><th>Source</th><th>Comment</th></tr></thead><tbody>';
-                        let aBudgets = App.Collections.annualBudgetsManagementCollection.where({ProjectID: project.ProjectID});
-                        _.each(aBudgets, function (budget, idx) {
-                            budgetTotal += parseFloat(budget.get('BudgetAmount'));
-                            budgetToolTip += '<tr><td>' + budget.get('BudgetAmount') + '</td><td>' + self.getBudgetSourceOptionLabel(budget.get('BudgetSource')) + '</td><td class=\'hide-overflow\'>' + budget.get('Comments') + '</td></tr>';
-                        });
-                        budgetToolTip += '<tr><td>' + budgetTotal.toString() + '</td><td colspan=\'2\'><strong>Total</strong></td></tr>';
-                        budgetToolTip += '</tbody></table>';
+                        if (project.BudgetSources !== '') {
+                            //console.group('budget_allocation_done ' + project.ProjectID);
+                            //console.log({project:project,oFieldCnts:oFieldCnts,oStatusEntryFields:oStatusEntryFields});
+                            let $oSiteStatusManagementModel = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt(project.SiteStatusID)});
+                            //console.log({oSiteStatusManagementModel:$oSiteStatusManagementModel,SiteName:$oSiteStatusManagementModel.get('SiteName')});
+                            let aAnnualBudgetsManagementSites = App.Collections.annualBudgetsManagementCollection.find('Sites').get('Sites');
+                            //console.log({aAnnualBudgetsManagementSites:aAnnualBudgetsManagementSites})
+                            let aSiteProjects = aAnnualBudgetsManagementSites[$oSiteStatusManagementModel.get('SiteName')].Projects;
+                            //console.log({psn:project.SequenceNumber, aSiteProjects:aSiteProjects});
+                            let aBudgets = !_.isUndefined(aSiteProjects[project.SequenceNumber]) && !_.isUndefined(aSiteProjects[project.SequenceNumber]['Budget Source']) ? aSiteProjects[project.SequenceNumber]['Budget Source'] : [];
 
-                        project[sToolTipKey] = self.cleanForToolTip(budgetToolTip);
-                    default:
+                            //console.log({aBudgets:aBudgets});
+                            if (aBudgets.length) {
+                                let budgetTotal = 0.00;
+                                let budgetToolTip = "<table class='last-row-remove-bottom-border tooltip-table table table-condensed'>";
+                                budgetToolTip += '<thead><tr><th style=\'width:75%;\'>Source</th><th>Amt</th></tr></thead><tbody>';
+                                _.each(aBudgets, function (budget, idx) {
+                                    let budgetSrcLabel = budget[0];
+                                    let budgetAmt = budget[1];
+                                    budgetTotal += parseFloat(budgetAmt);
+                                    budgetToolTip += '<tr><td class=\'hide-overflow\'>' + budgetSrcLabel + '</td><td>' + budgetAmt + '</td></tr>';
+                                });
+                                budgetToolTip += '</tbody><tfoot style=\'border-top:thin solid rgba(255, 255, 255, 0.5);\'>';
+                                budgetToolTip += '<tr><td  style=\'text-align:right\'><strong>Total</strong></td><td>' + budgetTotal.toString() + '</td></tr>';
+                                budgetToolTip += '</tfoot></table>';
 
-                        bFlaggedAsComplete = project[sFieldName].toString() === '1';
-                        // Has ability to be validated
-                        // console.log({sFieldName: sFieldName, sStatusEntryField: sStatusEntryField, sIncompleteStatusEntryValue: sIncompleteStatusEntryValue, project_sStatusEntryField: project[sStatusEntryField],project: project})
+                                project[sToolTipKey] = self.cleanForToolTip(budgetToolTip);
+                            }
+                            //console.groupEnd();
+                        }
 
-                        if (sStatusEntryField !== null && (project[sStatusEntryField].toString() !== sIncompleteStatusEntryValue.toString() && !bFlaggedAsComplete)) {
-                            project[sStateKey] = self.validateIcon;
+                        break;
+                    case 'material_list_done':
+
+                        if(project.material_needed_and_cost !== ''){
+                            //console.group('material_list_done ' + project.ProjectID);
+                            //console.log({project:project,oFieldCnts:oFieldCnts,oStatusEntryFields:oStatusEntryFields});
+                            try {
+                                //console.log('project.material_list_done', project.material_needed_and_cost);
+                                let aTableRows = JSON.parse(project.material_needed_and_cost);
+                                if (aTableRows.length) {
+                                    //console.log({aTableRows:aTableRows})
+                                    let materialsCostTotal = 0;
+                                    let materialsToolTip = "<table class='last-row-remove-bottom-border tooltip-table table table-condensed'>";
+                                    materialsToolTip += '<thead><tr><th style=\'width:75%;\'>Materials</th><th>Cost</th></tr></thead><tbody>';
+                                    _.each(aTableRows,function(aRow,idx){
+                                        //console.log({aRow:aRow})
+                                        let material = aRow[0].replace(/"/,'&quot;');
+                                        let cost = aRow[1].trim();
+                                        if (cost === '') {
+                                            cost = '&nbsp;'
+                                        } else{
+                                            materialsCostTotal += parseFloat(cost);
+                                        }
+                                        materialsToolTip += '<tr><td class=\'hide-overflow\'>' + material + '</td><td>' + cost + '</td></tr>';
+                                    });
+
+                                    materialsToolTip += '</tbody><tfoot style=\'border-top:thin solid rgba(255, 255, 255, 0.5);\'>';
+                                    materialsToolTip += '<tr><td style=\'text-align:right\'><strong>Total Cost:</strong></td><td>' + materialsCostTotal.toString() + '</td></tr>';
+                                    materialsToolTip += '</tfoot></table>';
+                                    project[sToolTipKey] = self.cleanForToolTip(materialsToolTip);
+                                } else {
+                                    // set to blank so it matches its incompleteValue
+                                    project.material_needed_and_cost = '';
+                                }
+                            } catch (e) {
+                                // set to blank so it matches its incompleteValue
+                                project.material_needed_and_cost = '';
+                            }
+                            //console.groupEnd();
+                        }
+
+                        break;
+                }
+
+                if(_.isUndefined(project[sStateKey])){
+                    bFlaggedAsComplete = project[sFieldName].toString() === '1';
+                    // Has ability to be validated
+                    // console.log({sFieldName: sFieldName, sStatusEntryField: sStatusEntryField, sIncompleteStatusEntryValue: sIncompleteStatusEntryValue, project_sStatusEntryField: project[sStatusEntryField],project: project})
+
+                    if (sStatusEntryField !== null && (project[sStatusEntryField].toString() !== sIncompleteStatusEntryValue.toString() && !bFlaggedAsComplete)) {
+                        project[sStateKey] = self.validateIcon;
+                    } else {
+                        project[sStateKey] = (bFlaggedAsComplete ? self.doneIcon : self.notDoneIcon);
+                        if (bFlaggedAsComplete) {
+                            if (typeof oMappedFieldCnts[sFieldName] !== 'undefined' && oMappedFieldCnts[sFieldName] !== null) {
+                                oFieldCnts = self.incrementFieldCnt(oMappedFieldCnts[sFieldName].fieldCntsKey, oFieldCnts);
+                            }
                         } else {
-                            project[sStateKey] = (bFlaggedAsComplete ? self.doneIcon : self.notDoneIcon);
-                            if (bFlaggedAsComplete) {
-                                if (typeof oMappedFieldCnts[sFieldName] !== 'undefined' && oMappedFieldCnts[sFieldName] !== null) {
-                                    oFieldCnts = self.incrementFieldCnt(oMappedFieldCnts[sFieldName].fieldCntsKey, oFieldCnts);
-                                }
-                            } else {
-                                if (sStatusEntryField !== null && sIncompleteStatusEntryValue.toString() === '' && (project[sStatusEntryField].toString() === sIncompleteStatusEntryValue.toString())) {
-                                    project[sToolTipKey] = self.cleanForToolTip(sStatusEntryField.split(/(?=[A-Z])/).join(" ") + ' is empty.');
-                                }
+                            if (sStatusEntryField !== null && sIncompleteStatusEntryValue.toString() === '' && (project[sStatusEntryField].toString() === sIncompleteStatusEntryValue.toString())) {
+                                project[sToolTipKey] = self.cleanForToolTip(self.makeTitleFromFieldName(sStatusEntryField) + ' is empty.');
                             }
                         }
-                        if (typeof project[sToolTipKey] === 'undefined') {
-                            if (sStatusEntryField !== null) {
-                                project[sToolTipKey] = self.cleanForToolTip(project[sStatusEntryField]);
-                            } else {
-                                project[sToolTipKey] = self.cleanForToolTip(self.getYesNoOptionLabel(project[sFieldName]));
-                            }
-                        }
+                    }
+                }
+                if (_.isUndefined(project[sToolTipKey])) {
+                    if (sStatusEntryField !== null) {
+                        project[sToolTipKey] = self.cleanForToolTip(project[sStatusEntryField]);
+                    } else {
+                        project[sToolTipKey] = self.cleanForToolTip(self.getYesNoOptionLabel(project[sFieldName]));
+                    }
                 }
             });
 
@@ -333,6 +403,24 @@
                 return '&#' + i.charCodeAt(0) + ';';
             }).replace('"', '&quot;');
         },
+        getStatusManagementProjectModel: function(ProjectID) {
+            // The project model in the allProjectsCollection does not have attribute default values set but we can use it to find the SiteStatusID
+            let $oProjectModel = App.Collections.allProjectsCollection.get(parseInt(ProjectID));
+            let $oSiteStatusManagementModel = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt($oProjectModel.get('SiteStatusID'))});
+            let projectModelData = _.find($oSiteStatusManagementModel.get('projects'),{ProjectID:parseInt(ProjectID)});
+            return new App.Models.Project(projectModelData);
+        },
+        makeTitleFromFieldName: function(str) {
+            if(str.match(/_/)){
+                str = str.split(/_/).join(" ").replace(/^(.)|\s+(.)/g, function ($1) {
+                    return $1.toUpperCase()
+                });
+            } else {
+                str = str.split(/(?=[A-Z])/).join(" ")
+            }
+
+            return str;
+        },
         setPopOverContent: function (e) {
             let self = this;
             let aOptions = [];
@@ -357,17 +445,21 @@
                         aOptions = App.Models.projectModel.getSendOptions();
                         break;
                 }
-                $oModel = App.Collections.allProjectsCollection.get(parseInt($icon.data('id')));
+                $oModel = self.getStatusManagementProjectModel($icon.data('id'));
             } else if ($icon.data('model-type') === 'sitestatus') {
                 aOptions = App.Models.projectModel.getYesNoOptions();
                 $oModel = App.Collections.statusManagementCollection.find({SiteStatusID: parseInt($icon.data('id'))});
             }
+            //console.log('setPopOverContent',{oModel:$oModel,field:$icon.data('field'),modelFieldIsUndefined:_.isUndefined($oModel.get($icon.data('field'))),modelFieldIsNull:_.isNull($oModel.get($icon.data('field')))});
             // Remove the empty option if it exists
             if (typeof aOptions[0][''] !== 'undefined') {
                 aOptions.shift();
             }
             let $popover = $icon.siblings('.popover');
-            $popover.find('.popover-title').html('<strong>' + $icon.data('field').split(/(?=[A-Z])/).join(" ") + '</strong>');
+            let popOverTitle = self.makeTitleFromFieldName($icon.data('field'));
+
+
+            $popover.find('.popover-title').html('<strong>' + popOverTitle + '</strong>');
             let sOptions = _.map(aOptions, function (option, key) {
                 let checked = $oModel !== null && $oModel.get($icon.data('field')).toString() === option[1].toString() ? 'checked' : '';
                 return '<div class="radio"><label><input type="radio" ' + checked + ' name="' + $icon.data('field') + '" value="' + option[1] + '"/>' + option[0] + '</label></div>';
