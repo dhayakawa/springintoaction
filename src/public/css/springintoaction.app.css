@@ -250,12 +250,20 @@
 .sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td i:hover {
   cursor: pointer;
 }
-.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-info-circle {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-info-circle,
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-edit {
   position: relative;
   top: 3px;
 }
-.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-info-circle:hover {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-info-circle:hover,
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-edit:hover {
   cursor: default;
+}
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-edit {
+  margin-right: 5px;
+}
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table td .fa-edit:hover {
+  cursor: pointer;
 }
 .sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .table.project-status td:nth-of-type(1) {
   width: 75px;
@@ -279,7 +287,13 @@
 .sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table td {
   text-align: left;
 }
-.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table tr:last-child td {
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table.last-row-remove-border tr:last-child td {
+  border: 0;
+}
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table.last-row-remove-bottom-border tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+.sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table.last-row-remove-bottom-border tfoot td {
   border: 0;
 }
 .sia-main-app .status-record-management-view .status-record-management-wrapper .status-record .tooltip-table td.hide-overflow {

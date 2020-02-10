@@ -755,10 +755,11 @@ FROM (
             $aProjects = $this->getProjectScopeBaseQueryModelWithAttributes()->addSelect(
                 DB::raw(
                     "(select CONCAT(volunteers.FirstName, ' ', volunteers.LastName)
-                            from project_volunteer_role pvr
-                                   join project_roles pr on pr.ProjectRoleID = pvr.ProjectRoleID and pr.Role = 'Project Manager' and pr.deleted_at is null
-                                   join volunteers on volunteers.VolunteerID = pvr.VolunteerID  and volunteers.deleted_at is null 
-                                   where pvr.ProjectID = projects.ProjectID and pvr.deleted_at is null
+                            from site_volunteer_role svr
+                                   join site_roles sr on sr.SiteRoleID = svr.SiteRoleID and sr.Role = 'Project Manager'
+                                   join site_volunteers sv on sv.SiteVolunteerID = svr.SiteVolunteerID
+                                   join volunteers on volunteers.VolunteerID = sv.VolunteerID  and volunteers.deleted_at is null 
+                                   where svr.SiteStatusID = {$data['SiteStatusID']} limit 1
                            ) as `PM`"
                 )
             )->where(
@@ -767,8 +768,6 @@ FROM (
             )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
 
             foreach($aProjects as $projIdx => $aProject){
-
-
                 foreach($aProject as $attribute_code => $attribute_value){
                     if($attribute_value === null && isset($initialProjectsAttributeData[$attribute_code])){
                         // echo "$attribute_code is null and will be set to
@@ -784,19 +783,19 @@ FROM (
                             case 'PM':
                             $aProject[$attribute_code]='';
                                 break;
+                            default:
+                                echo "unknown attribute code:$attribute_code<br>\n";
                         }
                     }
                 }
                 $aProjects[$projIdx]=$aProject;
-
                 // echo "<pre>" . print_r($aProject, true) . "</pre>";
                 //
                 // echo "<hr>";
-
-
             }
             $sites[$key]['projects'] = $aProjects;
         }
+        //echo "<pre>" . htmlentities(print_r($sites, true)) . "</pre>";
 
         return $sites;
     }

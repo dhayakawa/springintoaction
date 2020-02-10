@@ -52,6 +52,7 @@ mix.scripts([
     'resources/assets/js/frontend/registration/siaModal.jquery.js',
     'resources/assets/js/frontend/registration/carasel.bootstrap.js',
     'resources/assets/js/jquery.sticky.js',
+    'resources/assets/js/sia-bs-tooltip.js',
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
     'resources/assets/js/jquery-ui-1.12.1/jquery-ui.min.js',
@@ -84,6 +85,7 @@ mix.scripts([
     'resources/assets/js/frontend/registration/siaModal.jquery.js',
     'resources/assets/js/frontend/registration/carasel.bootstrap.js',
     'resources/assets/js/jquery.sticky.js',
+    'resources/assets/js/sia-bs-tooltip.js',
 ], 'public/js/springintoaction.packages.min.js');
 mix.scripts([
     'resources/assets/js/models/dashboard.js',
