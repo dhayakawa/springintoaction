@@ -450,7 +450,8 @@
                         if (self.getShouldBuildView(self.routeRequested)) {
                             self.managementViews[self.routeRequested] = new self.statusRecordManagementViewClass({
                                 collection: App.Collections.statusManagementCollection,
-                                viewName: self.routeRequested
+                                viewName: self.routeRequested,
+                                ajaxWaitingTargetClassSelector: '.status-record-management-wrapper'
                             });
                         }
 

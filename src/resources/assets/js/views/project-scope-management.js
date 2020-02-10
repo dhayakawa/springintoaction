@@ -175,6 +175,7 @@
             // Required call for inherited class
             self._initialize(options);
             self.bReturnToProjectManagementView = false;
+            self.bReturnToProjectStatusManagementView = false;
             self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
         },
@@ -217,6 +218,13 @@
                 if ($projectManagementView.length && $projectManagementView.is(':visible')){
                     self.bReturnToProjectManagementView = true;
                     $projectManagementView.hide();
+                }
+            } else if (!_.isUndefined(self.options.loadProject) && !_.isNull(self.options.loadProject) && !_.isUndefined(App.Views.mainApp.router.managementViews['project_status'])) {
+                let $projectStatusManagementView = App.Views.mainApp.router.managementViews['project_status'].$el;
+
+                if ($projectStatusManagementView.length && $projectStatusManagementView.is(':visible')){
+                    self.bReturnToProjectStatusManagementView = true;
+                    $projectStatusManagementView.hide();
                 }
             }
 

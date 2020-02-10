@@ -106,6 +106,12 @@
                     if (!_.isUndefined(App.Views.mainApp.router.managementViews['project_management'])) {
                         App.Views.mainApp.router.managementViews['project_management'].siteYearsDropdownView.trigger('site-status-id-change', {'SiteStatusID': SiteStatusID});
                     }
+                } else if(self.parentView.bReturnToProjectStatusManagementView){
+                    self.options.parentView.$el.hide();
+                    window.location.href = '#/view/project/status';
+                    if (!_.isUndefined(App.Views.mainApp.router.managementViews['project_status'])) {
+                        App.Views.mainApp.router.managementViews['project_status'].trigger('refresh-collection');
+                    }
                 }
             });
         },

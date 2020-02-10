@@ -566,7 +566,13 @@
                 growl('Automatically resetting ' + self.managedGridView.modelNameLabel + ' columns is not possible at the moment, Sorry. If you know how to, you can manually clear your browsers local storage using your browsers Dev Tool inspector or you can clear your browser history cache.', 'error');
             }
         },
-        editGridRow: function (e) {
+        /**
+         *
+         * @param e
+         * @private
+         * @deprecated
+         */
+        _editGridRow: function (e) {
             let self = this;
             e.preventDefault();
             self.getModalElement().off().one('show.bs.modal', function (event) {
