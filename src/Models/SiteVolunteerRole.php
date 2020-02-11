@@ -125,6 +125,16 @@ class SiteVolunteerRole extends BaseModel
             'site_volunteer_role.SiteVolunteerID',
             '=',
             'site_volunteers.SiteVolunteerID'
+        )->join(
+            'site_status',
+            'site_volunteer_role.SiteStatusID',
+            '=',
+            'site_status.SiteStatusID'
+        )->join(
+            'sites',
+            'sites.SiteID',
+            '=',
+            'site_status.SiteID'
         )->join('site_roles', 'site_volunteer_role.SiteRoleID', '=', 'site_roles.SiteRoleID')->select(
             [
                 'site_volunteers.SiteVolunteerID',
@@ -132,6 +142,8 @@ class SiteVolunteerRole extends BaseModel
                 'site_volunteer_role.*',
                 'volunteers.VolunteerID',
                 'volunteers.Active',
+                'sites.SiteName',
+                'site_roles.Role',
                 'volunteers.LastName',
                 'volunteers.FirstName',
                 'volunteers.MobilePhoneNumber',

@@ -12,13 +12,15 @@
             'click .add-material-needed-and-cost': 'addMaterialAndCostRow',
             'click .calculate-total-from-material-cost': 'calculateFromMaterialAndCost',
             'click .add-project-attachment': 'clickFileUpload',
-            'click .project-attachment-delete': 'deleteProjectAttachment'
+            'click .project-attachment-delete': 'deleteProjectAttachment',
+            'click .email-project-report': 'emailProjectReport',
+            'click .check-all-leadership': 'checkAllLeadership'
         },
         initialize: function (options) {
             let self = this;
 
             try {
-                _.bindAll(self, 'render', 'formChanged', 'handleProjectIDChange', 'handleProjectTypeChange', 'handlePermitRequiredChange', 'addMaterialAndCostRow', 'calculateFromMaterialAndCost','saveProjectAttachments','clickFileUpload','deleteProjectAttachment');
+                _.bindAll(self, 'render', 'formChanged', 'handleProjectIDChange', 'handleProjectTypeChange', 'handlePermitRequiredChange', 'addMaterialAndCostRow', 'calculateFromMaterialAndCost','saveProjectAttachments','clickFileUpload','deleteProjectAttachment','emailProjectReport','checkAllLeadership');
             } catch (e) {
                 console.error(options, e)
             }
@@ -48,6 +50,7 @@
                 when_will_project_be_completed_options: App.Models.projectModel.getWhenWillProjectBeCompletedOptions(true)
             };
             self.projectScopeContacts = [];
+            self.projectScopeTeam = [];
 
         },
         formChanged: function() {
@@ -115,6 +118,7 @@
                     let tplVars = {
                         projectTypeCheckboxList: App.Models.projectModel.getSkillsNeededCheckboxList(true, defaultOptions.join(',')),
                         SiteID: self.sitesDropdownView.model.get(self.sitesDropdownView.model.idAttribute),
+                        teamMembers: self.getTeamMembersList(),
                         contactSelect: contactSelect.getHtml(),
                         project: self.model
                     };
@@ -135,6 +139,104 @@
             }
 
             return self;
+        },
+        checkAllLeadership: function(e){
+            let self = this;
+            let $checkbox = $(e.currentTarget);
+
+            if($checkbox.prop('checked')){
+                self.$('[name="email_team_member[]"]').each(function(idx,el){
+                    let $el = $(el);
+                    if(!$el.prop('checked')){
+                        $el.prop('checked',true);
+                        $el.attr('checked','checked');
+                    }
+                })
+            } else {
+                self.$('[name="email_team_member[]"]').each(function(idx,el){
+                    let $el = $(el);
+                    if($el.prop('checked')){
+                        $el.prop('checked',false);
+                        $el.removeAttr('checked');
+                    }
+                })
+            }
+        },
+        emailProjectReport: function(e){
+            let self = this;
+            e.preventDefault();
+
+            let emails = [];
+            $('[name="email_team_member[]"]').each(function(idx,el){
+                if ($(el).prop('checked')) {
+                    emails.push($(el).val());
+                }
+            });
+            //console.log({emails:emails,siteId:self.getViewDataStore('current-site-id','project_scope_management'),sitestatusid:self.getViewDataStore('current-site-status-id','project_scope_management'),modelid:self.getViewDataStore('current-model-id','project_scope_management')});
+            if (emails.length) {
+                let $btn = $(e.currentTarget);
+                $btn.siblings('.spinner').remove();
+                $btn.before(App.Vars.spinnerHtml);
+
+                let data = {
+                    SiteID: self.getViewDataStore('current-site-id', 'project_scope_management'),
+                    SiteStatusID: self.getViewDataStore('current-site-status-id', 'project_scope_management'),
+                    ProjectID: self.getViewDataStore('current-model-id', 'project_scope_management'),
+                    emails: emails,
+                    site_wide: false
+                };
+
+                let growlMsg = '';
+                let growlType = '';
+                $.when(
+                    $.ajax({
+                        type: "POST",
+                        dataType: "json",
+                        url: 'admin/project_scope/email_report',
+                        data: data,
+                        success: function (response) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+
+                        },
+                        fail: function (response) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+                ).then(function () {
+                    growl(growlMsg, growlType);
+                    $btn.siblings('.spinner').remove();
+                });
+            } else {
+                growl('Please check a team member to be emailed.', 'error');
+            }
+        },
+        getTeamMembersList: function(){
+            let self = this;
+            let html = '';
+            self.projectScopeTeam = self.model.get('team');
+            html = '<table class="table team">';
+            html += '<thead><tr><th style="width:auto">Role</th><th>Name</th><th>Mobile</th><th>Home</th><th>Email</th><th>Status</th></tr></thead>';
+            html += '<tbody>';
+            for (let x = 0; x < self.projectScopeTeam.length; x++) {
+                let mobilePhone = !_.isNull(self.projectScopeTeam[x]['MobilePhoneNumber']) ? self.projectScopeTeam[x]['MobilePhoneNumber'] : '';
+                let homePhone = !_.isNull(self.projectScopeTeam[x]['HomePhoneNumber']) ? self.projectScopeTeam[x]['HomePhoneNumber'] : '';
+                let email = !_.isNull(self.projectScopeTeam[x]['Email']) ? self.projectScopeTeam[x]['Email'] : '';
+                let fname = !_.isNull(self.projectScopeTeam[x]['FirstName']) ? self.projectScopeTeam[x]['FirstName'] : '';
+                let lname = !_.isNull(self.projectScopeTeam[x]['LastName']) ? self.projectScopeTeam[x]['LastName'] : '';
+
+                html += '<tr><td><label class="checkbox-inline"><input type="checkbox" name="email_team_member[]" value="'+email+'"/>&nbsp;'+ self.projectScopeTeam[x]['Role'] +'</label></td><td>'+ fname + ' ' + lname +'</td><td>'+ mobilePhone +'</td><td>'+ homePhone +'</td><td><a target="_blank" href="mailto:'+ email +'">'+email+'</a></td><td>'+ self.projectScopeTeam[x]['ProjectVolunteerRoleStatusLabel'] +'</td></tr>';
+                if (self.projectScopeTeam[x]['Comments']!=='') {
+                    html += '<tr><td class="comments-row" colspan="6"><strong>Comments:</strong> ' + self.projectScopeTeam[x]['Comments'] + '</td></tr>';
+                }
+            }
+            html += '</tbody>';
+            if (self.projectScopeTeam.length) {
+                html += '<tfoot><tr><td colspan="2"><label class="checkbox-inline"><input type="checkbox" class="check-all-leadership" name="check-all-leadership"/> Select all</label></td><td colspan="4" align="right"><button class="btn btn-primary email-project-report">Email Project Report to checked leadership team members</button></td></tr></tfoot>';
+            }
+            html += '</table>';
+            return html;
         },
         addMaterialAndCostRow: function (e) {
             let self = this;

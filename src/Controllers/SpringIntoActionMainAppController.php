@@ -286,7 +286,7 @@ class SpringIntoActionMainAppController extends BaseController
 
         try {
             $model = new ProjectVolunteerRole();
-            $project_leads = $model->getProjectLeads($project['ProjectID']);
+            $project_leads = $model->getProjectTeam($project['ProjectID']);
         } catch (\Exception $e) {
             $project_leads = [];
             if (!empty($project)) {

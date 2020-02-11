@@ -5,6 +5,10 @@
         <input type="hidden" name="SiteID" value="<%= SiteID %>"/>
         <input type="hidden" name="SiteStatusID" value="<%= project.get('SiteStatusID') %>"/>
         <div class="form-group">
+            <label for="team">Leadership members</label>
+            <%= teamMembers %>
+        </div>
+        <div class="form-group">
             <label for="inputSequenceNumber">Project ID</label>
             <input type="text" readonly name="SequenceNumber" class="form-control" id="inputSequenceNumber"
                 value="<%= project.get('SequenceNumber') %>"/>

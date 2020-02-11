@@ -21,6 +21,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectAttributesInt;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttributesDecimal;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttributesText;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttributesVarchar;
+use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
 
 /**
  * Class ProjectScope
@@ -407,12 +408,14 @@ FROM (
 
     /**
      * @param       $Year
+     * @param null  $SiteID
+     * @param null  $ProjectID
      * @param array $filter
      * @param null  $orderBy
      *
      * @return mixed
      */
-    public function getReportProjects($Year, $filter = [], $orderBy = null)
+    public function getReportProjects($Year, $SiteID = null, $ProjectID = null, $filter = [], $orderBy = null)
     {
         // handle possible sql injection
         if (!is_numeric($Year) || strlen($Year) !== 4) {
@@ -427,7 +430,7 @@ FROM (
         } else {
             $aTmpOrderBy = $orderBy;
             $orderBy = [];
-            [$sortField, $direction] = preg_split("/_/", $aTmpOrderBy);
+            list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
@@ -435,75 +438,87 @@ FROM (
         // $sSqlVolunteersNeeded = $this->getVolunteersNeededSql($Year);
         $sSqlPeopleNeeded = $this->getPeopleNeededSql($Year);
 
-        $projectScope = $this->getProjectScopeBaseQueryModelWithAttributes(true);
+        $projectScope = $this->getProjectScopeBaseQueryModelWithAttributes(true, true);
         //$projectScope->addSelect(DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"));
         $projectScope->addSelect(DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"));
         $projectScope->where(
             'site_status.Year',
             $Year
         );
+        if($SiteID !== null){
+            $projectScope->where(
+                'site_status.SiteID',
+                $SiteID
+            );
+        }
+        if($ProjectID !== null){
+            $projectScope->where(
+                'projects.ProjectID',
+                $ProjectID
+            );
+        }
         // echo '<pre>' . \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql
         // ()) . '</pre>';
         //$all_projects = $projectScope->get()->toArray();
-/*
-        $projects = self::select(
-            [
-                'projects.ProjectID',
-                'sites.SiteName',
-                'projects.Active',
-                'projects.SequenceNumber',
-                'projects.OriginalRequest',
-                'projects.ProjectDescription',
-                'projects.Comments',
-                DB::raw(
-                    '(SELECT GROUP_CONCAT(distinct bso.option_label SEPARATOR \',\') FROM budgets join budget_source_options bso on bso.id = budgets.BudgetSource where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
-                ),
-                'projects.ChildFriendly',
-                'projects.PrimarySkillNeeded',
-                DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"),
-                DB::raw("{$sSqlVolunteersAssigned} as VolunteersAssigned"),
-                DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"),
-                DB::raw(
-                    '(select pso.option_label from project_status_options pso where pso.id = projects.Status) as Status'
-                ),
-                'projects.StatusReason',
-                'projects.MaterialsNeeded',
-                'projects.EstimatedCost',
-                'projects.ActualCost',
-                'projects.BudgetAvailableForPC',
-                'projects.NeedsToBeStartedEarly',
-                'projects.PCSeeBeforeSIA',
-                'projects.SpecialEquipmentNeeded',
-                'projects.PermitsOrApprovalsNeeded',
-                'projects.PrepWorkRequiredBeforeSIA',
-                'projects.SetupDayInstructions',
-                'projects.SIADayInstructions',
-                'projects.Area',
-                'projects.PaintOrBarkEstimate',
-                'projects.PaintAlreadyOnHand',
-                'projects.PaintOrdered',
-                'projects.CostEstimateDone',
-                'projects.MaterialListDone',
-                'projects.BudgetAllocationDone',
-                'projects.VolunteerAllocationDone',
-                'projects.NeedSIATShirtsForPC',
-                DB::raw(
-                    "(select sso.option_label from send_status_options sso where sso.id = projects.ProjectSend) as ProjectSend"
-                ),
-                'projects.FinalCompletionStatus',
-                'projects.FinalCompletionAssessment',
+        /*
+                $projects = self::select(
+                    [
+                        'projects.ProjectID',
+                        'sites.SiteName',
+                        'projects.Active',
+                        'projects.SequenceNumber',
+                        'projects.OriginalRequest',
+                        'projects.ProjectDescription',
+                        'projects.Comments',
+                        DB::raw(
+                            '(SELECT GROUP_CONCAT(distinct bso.option_label SEPARATOR \',\') FROM budgets join budget_source_options bso on bso.id = budgets.BudgetSource where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
+                        ),
+                        'projects.ChildFriendly',
+                        'projects.PrimarySkillNeeded',
+                        DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"),
+                        DB::raw("{$sSqlVolunteersAssigned} as VolunteersAssigned"),
+                        DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"),
+                        DB::raw(
+                            '(select pso.option_label from project_status_options pso where pso.id = projects.Status) as Status'
+                        ),
+                        'projects.StatusReason',
+                        'projects.MaterialsNeeded',
+                        'projects.EstimatedCost',
+                        'projects.ActualCost',
+                        'projects.BudgetAvailableForPC',
+                        'projects.NeedsToBeStartedEarly',
+                        'projects.PCSeeBeforeSIA',
+                        'projects.SpecialEquipmentNeeded',
+                        'projects.PermitsOrApprovalsNeeded',
+                        'projects.PrepWorkRequiredBeforeSIA',
+                        'projects.SetupDayInstructions',
+                        'projects.SIADayInstructions',
+                        'projects.Area',
+                        'projects.PaintOrBarkEstimate',
+                        'projects.PaintAlreadyOnHand',
+                        'projects.PaintOrdered',
+                        'projects.CostEstimateDone',
+                        'projects.MaterialListDone',
+                        'projects.BudgetAllocationDone',
+                        'projects.VolunteerAllocationDone',
+                        'projects.NeedSIATShirtsForPC',
+                        DB::raw(
+                            "(select sso.option_label from send_status_options sso where sso.id = projects.ProjectSend) as ProjectSend"
+                        ),
+                        'projects.FinalCompletionStatus',
+                        'projects.FinalCompletionAssessment',
 
-            ]
-        )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-            'site_status.Year',
-            $Year
-        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->join(
-            'sites',
-            'site_status.SiteID',
-            '=',
-            'sites.SiteID'
-        )->where('projects.ProjectDescription', 'NOT REGEXP', 'Test');
-*/
+                    ]
+                )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
+                    'site_status.Year',
+                    $Year
+                )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->join(
+                    'sites',
+                    'site_status.SiteID',
+                    '=',
+                    'sites.SiteID'
+                )->where('projects.ProjectDescription', 'NOT REGEXP', 'Test');
+        */
         if (false && !empty($filter) && is_array($filter)) {
             $projectScope->where(
                 function ($query) use ($filter, $sSqlPeopleNeeded) {
@@ -564,12 +579,12 @@ FROM (
                 }
             );
         }
-        // foreach ($orderBy as $order) {
-        //     $projectScope->orderBy(
-        //         $order['field'],
-        //         $order['direction']
-        //     );
-        // }
+        foreach ($orderBy as $order) {
+            $projectScope->orderBy(
+                $order['field'],
+                $order['direction']
+            );
+        }
         // \Illuminate\Support\Facades\Log::debug(
         //     '',
         //     [
@@ -579,14 +594,15 @@ FROM (
         //         $projects->toSql(),
         //     ]
         // );
-
+        // echo '<pre>' . \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql
+        // ()) . '</pre>';
         $all_projects = $projectScope->get()->toArray();
         // if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
         //     $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
         // }
         // $all_projects = $this->setProjectSkillNeededLabels($all_projects);
-//echo $projectScope->toSql();
-        return  $all_projects;
+        //echo $projectScope->toSql();
+        return $all_projects;
     }
 
     public function setProjectSkillNeededLabels($all_projects)
@@ -688,9 +704,9 @@ FROM (
     public static function getSiteProjects($SiteStatusID, $bReturnArr = true)
     {
         $aResult = [];
-        $projectScope = new ProjectScope();
+        // $projectScope = new ProjectScope();
         try {
-            $projects = self::getProjectScopeBaseQueryModelWithAttributes()->where(
+            $projectsCollection = self::getProjectScopeBaseQueryModelWithAttributes()->where(
                 'site_status.SiteStatusID',
                 $SiteStatusID
             )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc');
@@ -700,11 +716,16 @@ FROM (
                                                                        $projects->getBindings(),
                                                                        $projects->toSql()) .
                                  '</pre>';/**/
-            $projects = $projects->get();
-            if ($bReturnArr) {
-                foreach ($projects->toArray() as $key => $aProject) {
-                    $aResult[$key] = $projectScope->setProjectScopeAttributeDataDefaults($aProject);
+
+            $projects = $projectsCollection->get()->map(
+                function ($project, $key) {
+                    $projectScope = new ProjectScope();
+
+                    return $projectScope->getProject($project->ProjectID, false);
                 }
+            );
+            if ($bReturnArr) {
+                $aResult = $projects->toArray();
             }
 
             return $bReturnArr ? $aResult : $projects;
@@ -767,34 +788,35 @@ FROM (
                 $data['SiteStatusID']
             )->whereNull('site_status.deleted_at')->orderBy('projects.SequenceNumber', 'asc')->get()->toArray();
 
-            foreach($aProjects as $projIdx => $aProject){
-                foreach($aProject as $attribute_code => $attribute_value){
-                    if($attribute_value === null && isset($initialProjectsAttributeData[$attribute_code])){
+            foreach ($aProjects as $projIdx => $aProject) {
+                foreach ($aProject as $attribute_code => $attribute_value) {
+                    if ($attribute_value === null && isset($initialProjectsAttributeData[$attribute_code])) {
                         // echo "$attribute_code is null and will be set to
                         // {$initialProjectsAttributeData[$attribute_code]}<br>";
-                        $aProject[$attribute_code]=$initialProjectsAttributeData[$attribute_code];
-                    } elseif($attribute_value === null){
+                        $aProject[$attribute_code] = $initialProjectsAttributeData[$attribute_code];
+                    } elseif ($attribute_value === null) {
                         //echo "$attribute_code is null and is not an attribute<br>";
-                        if($attribute_code === 'BudgetSources'){
-                            $aProject[$attribute_code]='';
+                        if ($attribute_code === 'BudgetSources') {
+                            $aProject[$attribute_code] = '';
                         }
-                        switch($attribute_code){
+                        switch ($attribute_code) {
                             case 'BudgetSources':
                             case 'PM':
-                            $aProject[$attribute_code]='';
+                                $aProject[$attribute_code] = '';
                                 break;
                             default:
                                 echo "unknown attribute code:$attribute_code<br>\n";
                         }
                     }
                 }
-                $aProjects[$projIdx]=$aProject;
+                $aProjects[$projIdx] = $aProject;
                 // echo "<pre>" . print_r($aProject, true) . "</pre>";
                 //
                 // echo "<hr>";
             }
             $sites[$key]['projects'] = $aProjects;
         }
+
         //echo "<pre>" . htmlentities(print_r($sites, true)) . "</pre>";
 
         return $sites;
@@ -815,7 +837,7 @@ FROM (
                                 $aRows[] = [$materialNeeded, $requestData['material_needed_and_cost[cost]'][$key]];
                             }
                         }
-                    } elseif(isset($requestData['material_needed_and_cost'])){
+                    } elseif (isset($requestData['material_needed_and_cost'])) {
                         $attributeCodeValue = $requestData['material_needed_and_cost'];
                     }
                     if (!empty($aRows)) {
@@ -958,7 +980,7 @@ FROM (
      *
      * @return bool
      */
-    public function createProjectScope($requestData, & $projectModel, $projectModelData)
+    public function createProjectScope($requestData, &$projectModel, $projectModelData)
     {
         $projectModel->fill($projectModelData);
         $projectModelSuccess = $projectModel->save();
@@ -973,6 +995,7 @@ FROM (
 
         return !preg_grep("/0/", $aModelResult) && $projectModelSuccess;
     }
+
     public function getInitialProjectScopeAttributeData()
     {
         $aProject = [];
@@ -1059,6 +1082,17 @@ FROM (
                     }
                 }
             }
+            $aProject['team'] = [];
+            // Add any project contacts
+            $projectVolunteerRole = new ProjectVolunteerRole();
+            if ($ProjectID !== 'new' && $team = $projectVolunteerRole->getProjectTeam($ProjectID)) {
+                foreach ($team as $teamMember) {
+                    if ($teamMember['Active']) {
+                        $aProject['team'][] = $teamMember;
+                    }
+                }
+            }
+
             $aProject['contacts'] = [];
             // Add any project contacts
             if ($ProjectID !== 'new' && $c = ProjectScope::find($ProjectID)->contacts) {
@@ -1091,12 +1125,11 @@ FROM (
             echo $e->getMessage();
         }
 
-
-
         return $aProject;
     }
 
-    public static function getProjectScopeBaseQueryModelWithAttributes($bIncludeSiteName = false)
+    public static function getProjectScopeBaseQueryModelWithAttributes($bIncludeSiteName = false,
+                                                                       $bSkipOrderBySequence = false)
     {
         $projectScope = new ProjectScope();
         $sSqlVolunteersAssigned = $projectScope->getVolunteersAssignedSql();
@@ -1118,8 +1151,8 @@ FROM (
                 '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
             ),
         ];
-        if($bIncludeSiteName){
-             array_unshift($aSelectColumns,'sites.SiteName');
+        if ($bIncludeSiteName) {
+            array_unshift($aSelectColumns, 'sites.SiteName');
         }
 
         $aAttributes = $projectScope->getAttributesArray('projects');
@@ -1171,10 +1204,13 @@ FROM (
         $projectScope->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where(
             'projects.Active',
             1
-        )->orderBy(
-            'projects.SequenceNumber',
-            'asc'
         );
+        if (!$bSkipOrderBySequence) {
+            $projectScope->orderBy(
+                'projects.SequenceNumber',
+                'asc'
+            );
+        }
 
         /*echo '<pre>' .
                      \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql()) .
@@ -1199,7 +1235,7 @@ FROM (
 
     public function convertRowDataToAttributeData()
     {
-        $bAllow=false;
+        $bAllow = false;
         if ($bAllow) {
             ini_set("max_execution_time", "0");// foreach (array_keys($this->aAttributeTables) as $t) {
             //     DB::table($t)->truncate();
@@ -1621,10 +1657,15 @@ OPTIONS_TEMPLATE;
                 }\n";
             $lessCellIdx++;
             $col = str_replace('{{WIDTH}}', $width, $col);
-            if (in_array($aAttribute['attribute_code'],['primary_skill_needed','material_needed_and_cost','budget_sources'])) {
+            if (in_array(
+                $aAttribute['attribute_code'],
+                ['primary_skill_needed', 'material_needed_and_cost', 'budget_sources']
+            )
+            ) {
                 $col = str_replace(
                     'editable: App.Vars.Auth.bCanEditProjectGridFields,',
-                    'editable: false,', $col
+                    'editable: false,',
+                    $col
                 );
             }
             $dynamicCols .= $col . PHP_EOL;
@@ -1759,6 +1800,7 @@ OPTIONS_TEMPLATE;
             }
         }
     }
+
     private function dropOldFields()
     {
         $sql = <<<SQL
@@ -1824,6 +1866,5 @@ alter table projects drop column FinalCompletionAssessment;
 
 
 SQL;
-
     }
 }
