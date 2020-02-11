@@ -6292,13 +6292,15 @@
             'click .add-material-needed-and-cost': 'addMaterialAndCostRow',
             'click .calculate-total-from-material-cost': 'calculateFromMaterialAndCost',
             'click .add-project-attachment': 'clickFileUpload',
-            'click .project-attachment-delete': 'deleteProjectAttachment'
+            'click .project-attachment-delete': 'deleteProjectAttachment',
+            'click .email-project-report': 'emailProjectReport',
+            'click .check-all-leadership': 'checkAllLeadership'
         },
         initialize: function (options) {
             let self = this;
 
             try {
-                _.bindAll(self, 'render', 'formChanged', 'handleProjectIDChange', 'handleProjectTypeChange', 'handlePermitRequiredChange', 'addMaterialAndCostRow', 'calculateFromMaterialAndCost','saveProjectAttachments','clickFileUpload','deleteProjectAttachment');
+                _.bindAll(self, 'render', 'formChanged', 'handleProjectIDChange', 'handleProjectTypeChange', 'handlePermitRequiredChange', 'addMaterialAndCostRow', 'calculateFromMaterialAndCost','saveProjectAttachments','clickFileUpload','deleteProjectAttachment','emailProjectReport','checkAllLeadership');
             } catch (e) {
                 console.error(options, e)
             }
@@ -6328,6 +6330,7 @@
                 when_will_project_be_completed_options: App.Models.projectModel.getWhenWillProjectBeCompletedOptions(true)
             };
             self.projectScopeContacts = [];
+            self.projectScopeTeam = [];
 
         },
         formChanged: function() {
@@ -6395,6 +6398,7 @@
                     let tplVars = {
                         projectTypeCheckboxList: App.Models.projectModel.getSkillsNeededCheckboxList(true, defaultOptions.join(',')),
                         SiteID: self.sitesDropdownView.model.get(self.sitesDropdownView.model.idAttribute),
+                        teamMembers: self.getTeamMembersList(),
                         contactSelect: contactSelect.getHtml(),
                         project: self.model
                     };
@@ -6415,6 +6419,104 @@
             }
 
             return self;
+        },
+        checkAllLeadership: function(e){
+            let self = this;
+            let $checkbox = $(e.currentTarget);
+
+            if($checkbox.prop('checked')){
+                self.$('[name="email_team_member[]"]').each(function(idx,el){
+                    let $el = $(el);
+                    if(!$el.prop('checked')){
+                        $el.prop('checked',true);
+                        $el.attr('checked','checked');
+                    }
+                })
+            } else {
+                self.$('[name="email_team_member[]"]').each(function(idx,el){
+                    let $el = $(el);
+                    if($el.prop('checked')){
+                        $el.prop('checked',false);
+                        $el.removeAttr('checked');
+                    }
+                })
+            }
+        },
+        emailProjectReport: function(e){
+            let self = this;
+            e.preventDefault();
+
+            let emails = [];
+            $('[name="email_team_member[]"]').each(function(idx,el){
+                if ($(el).prop('checked')) {
+                    emails.push($(el).val());
+                }
+            });
+            //console.log({emails:emails,siteId:self.getViewDataStore('current-site-id','project_scope_management'),sitestatusid:self.getViewDataStore('current-site-status-id','project_scope_management'),modelid:self.getViewDataStore('current-model-id','project_scope_management')});
+            if (emails.length) {
+                let $btn = $(e.currentTarget);
+                $btn.siblings('.spinner').remove();
+                $btn.before(App.Vars.spinnerHtml);
+
+                let data = {
+                    SiteID: self.getViewDataStore('current-site-id', 'project_scope_management'),
+                    SiteStatusID: self.getViewDataStore('current-site-status-id', 'project_scope_management'),
+                    ProjectID: self.getViewDataStore('current-model-id', 'project_scope_management'),
+                    emails: emails,
+                    site_wide: false
+                };
+
+                let growlMsg = '';
+                let growlType = '';
+                $.when(
+                    $.ajax({
+                        type: "POST",
+                        dataType: "json",
+                        url: 'admin/project_scope/email_report',
+                        data: data,
+                        success: function (response) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+
+                        },
+                        fail: function (response) {
+                            growlMsg = response.msg;
+                            growlType = response.success ? 'success' : 'error';
+                        }
+                    })
+                ).then(function () {
+                    growl(growlMsg, growlType);
+                    $btn.siblings('.spinner').remove();
+                });
+            } else {
+                growl('Please check a team member to be emailed.', 'error');
+            }
+        },
+        getTeamMembersList: function(){
+            let self = this;
+            let html = '';
+            self.projectScopeTeam = self.model.get('team');
+            html = '<table class="table team">';
+            html += '<thead><tr><th style="width:auto">Role</th><th>Name</th><th>Mobile</th><th>Home</th><th>Email</th><th>Status</th></tr></thead>';
+            html += '<tbody>';
+            for (let x = 0; x < self.projectScopeTeam.length; x++) {
+                let mobilePhone = !_.isNull(self.projectScopeTeam[x]['MobilePhoneNumber']) ? self.projectScopeTeam[x]['MobilePhoneNumber'] : '';
+                let homePhone = !_.isNull(self.projectScopeTeam[x]['HomePhoneNumber']) ? self.projectScopeTeam[x]['HomePhoneNumber'] : '';
+                let email = !_.isNull(self.projectScopeTeam[x]['Email']) ? self.projectScopeTeam[x]['Email'] : '';
+                let fname = !_.isNull(self.projectScopeTeam[x]['FirstName']) ? self.projectScopeTeam[x]['FirstName'] : '';
+                let lname = !_.isNull(self.projectScopeTeam[x]['LastName']) ? self.projectScopeTeam[x]['LastName'] : '';
+
+                html += '<tr><td><label class="checkbox-inline"><input type="checkbox" name="email_team_member[]" value="'+email+'"/>&nbsp;'+ self.projectScopeTeam[x]['Role'] +'</label></td><td>'+ fname + ' ' + lname +'</td><td>'+ mobilePhone +'</td><td>'+ homePhone +'</td><td><a target="_blank" href="mailto:'+ email +'">'+email+'</a></td><td>'+ self.projectScopeTeam[x]['ProjectVolunteerRoleStatusLabel'] +'</td></tr>';
+                if (self.projectScopeTeam[x]['Comments']!=='') {
+                    html += '<tr><td class="comments-row" colspan="6"><strong>Comments:</strong> ' + self.projectScopeTeam[x]['Comments'] + '</td></tr>';
+                }
+            }
+            html += '</tbody>';
+            if (self.projectScopeTeam.length) {
+                html += '<tfoot><tr><td colspan="2"><label class="checkbox-inline"><input type="checkbox" class="check-all-leadership" name="check-all-leadership"/> Select all</label></td><td colspan="4" align="right"><button class="btn btn-primary email-project-report">Email Project Report to checked leadership team members</button></td></tr></tfoot>';
+            }
+            html += '</table>';
+            return html;
         },
         addMaterialAndCostRow: function (e) {
             let self = this;
@@ -6927,7 +7029,11 @@
         setSelectedId: function (SiteID, SiteStatusID, ProjectID) {
             let self = this;
             if (App.Vars.mainAppDoneLoading) {
-                _log('App.Views.ProjectScopeProjectsDropDown.setSelectedId.event', 'new project selected', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
+                _log('App.Views.ProjectScopeProjectsDropDown.setSelectedId.event', 'new project selected', {
+                    SiteID: SiteID,
+                    SiteStatusID: SiteStatusID,
+                    ProjectID: ProjectID
+                });
                 //console.log('trigger project-id-change',{SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
                 self.trigger('project-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
             }
@@ -6997,7 +7103,7 @@
         changeSelected: function (selectedProjectID) {
             let self = this;
             // selectedProjectID might be an event
-            if (!_.isNull(selectedProjectID) && !_.isUndefined(selectedProjectID.originalEvent)){
+            if (!_.isNull(selectedProjectID) && !_.isUndefined(selectedProjectID.originalEvent)) {
                 selectedProjectID = null;
             }
             //console.log({SiteID: self.$el.val(),selectedOption: self.$el.find('option:selected'), SiteStatusID: self.$el.find('option:selected').data('site-status-id'), ProjectID: selectedProjectID})
@@ -7006,7 +7112,11 @@
         setSelectedId: function (SiteID, SiteStatusID, selectedProjectID) {
             let self = this;
             self.trigger('site-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: selectedProjectID});
-            self.trigger('site-status-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: selectedProjectID});
+            self.trigger('site-status-id-change', {
+                SiteID: SiteID,
+                SiteStatusID: SiteStatusID,
+                ProjectID: selectedProjectID
+            });
         }
     });
     App.Views.ProjectScopeManagement = App.Views.Management.extend({
@@ -7021,11 +7131,11 @@
         viewName: 'project-scope-management-view',
         initialize: function (options) {
             let self = this;
-            // try {
-            //     _.bindAll(self, '');
-            // } catch (e) {
-            //     console.error(options, e);
-            // }
+            try {
+                _.bindAll(self, 'emailProjectReport');
+            } catch (e) {
+                console.error(options, e);
+            }
             // Required call for inherited class
             self._initialize(options);
             self.bReturnToProjectManagementView = false;
@@ -7033,11 +7143,14 @@
             self.modelNameLabel = self.options.modelNameLabel;
             self.modelNameLabelLowerCase = self.modelNameLabel.toLowerCase();
         },
+        events: {
+            'click .email-sitewide-project-reports': 'emailProjectReport'
+        },
         render: function () {
             let self = this;
             // Add template to this views el now so child view el selectors exist when they are instantiated
             self.$el.html(this.template({
-                modelNameLabelLowerCase:self.modelNameLabelLowerCase,
+                modelNameLabelLowerCase: self.modelNameLabelLowerCase,
                 modelNameLabel: self.modelNameLabel
             }));
             self.renderSiteDropdowns();
@@ -7069,14 +7182,14 @@
             if (!_.isUndefined(self.options.loadProject) && !_.isNull(self.options.loadProject) && !_.isUndefined(App.Views.mainApp.router.managementViews['project_management'])) {
                 let $projectManagementView = App.Views.mainApp.router.managementViews['project_management'].$el;
 
-                if ($projectManagementView.length && $projectManagementView.is(':visible')){
+                if ($projectManagementView.length && $projectManagementView.is(':visible')) {
                     self.bReturnToProjectManagementView = true;
                     $projectManagementView.hide();
                 }
             } else if (!_.isUndefined(self.options.loadProject) && !_.isNull(self.options.loadProject) && !_.isUndefined(App.Views.mainApp.router.managementViews['project_status'])) {
                 let $projectStatusManagementView = App.Views.mainApp.router.managementViews['project_status'].$el;
 
-                if ($projectStatusManagementView.length && $projectStatusManagementView.is(':visible')){
+                if ($projectStatusManagementView.length && $projectStatusManagementView.is(':visible')) {
                     self.bReturnToProjectStatusManagementView = true;
                     $projectStatusManagementView.hide();
                 }
@@ -7084,13 +7197,51 @@
 
             return self;
         },
+        emailProjectReport: function (e) {
+            let self = this;
+            e.preventDefault();
+
+            //console.log({emails:emails,siteId:self.getViewDataStore('current-site-id','project_scope_management'),sitestatusid:self.getViewDataStore('current-site-status-id','project_scope_management'),modelid:self.getViewDataStore('current-model-id','project_scope_management')});
+            let $btn = $(e.currentTarget);
+            $btn.siblings('.spinner').remove();
+            $btn.after(App.Vars.spinnerHtml);
+            let data = {
+                SiteID: self.getViewDataStore('current-site-id', 'project_scope_management'),
+                SiteStatusID: self.getViewDataStore('current-site-status-id', 'project_scope_management'),
+                ProjectID: self.getViewDataStore('current-model-id', 'project_scope_management'),
+                site_wide: true
+            };
+
+            let growlMsg = '';
+            let growlType = '';
+            $.when(
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: 'admin/project_scope/email_report',
+                    data: data,
+                    success: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+
+                    },
+                    fail: function (response) {
+                        growlMsg = response.msg;
+                        growlType = response.success ? 'success' : 'error';
+                    }
+                })
+            ).then(function () {
+                growl(growlMsg, growlType);
+                $btn.siblings('.spinner').remove();
+            });
+        },
         renderSiteDropdowns: function () {
             let self = this;
 
             let selectedSiteID = App.Vars.appInitialData.project_manager_sites.length ? App.Vars.appInitialData.project_manager_sites[0].SiteID : null;
             let selectedProjectID = null;
 
-            if (self.options.loadProject){
+            if (self.options.loadProject) {
                 if (self.options.loadProject.match(/_/)) {
                     let parts = self.options.loadProject.split(/_/);
                     selectedSiteID = parts[0];

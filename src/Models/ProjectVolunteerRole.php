@@ -43,7 +43,6 @@ class ProjectVolunteerRole extends BaseModel
         'Status' => '',
     ];
 
-
     public function site()
     {
         return $this->belongsTo('Dhayakawa\SpringIntoAction\Models\Site', 'SiteID');
@@ -59,24 +58,28 @@ class ProjectVolunteerRole extends BaseModel
         return $this->belongsTo('Dhayakawa\SpringIntoAction\Models\Project', 'ProjectID');
     }
 
-    public function getProjectLead($ProjectVolunteerRoleID){
+    public function getProjectLead($ProjectVolunteerRoleID)
+    {
         return $this->getProjectVolunteerByRoleId($ProjectVolunteerRoleID, false);
     }
 
-    public function getSelectFields($bReturnWorker) {
+    public function getSelectFields($bReturnWorker)
+    {
         $aSelectFields = [
             'project_volunteers.ProjectVolunteerID',
             'project_volunteer_role.*',
             'project_volunteer_role.Status as ProjectVolunteerRoleStatus',
         ];
         $aLeaderSelectFields = [
+            'project_roles.Role',
             'volunteers.VolunteerID',
             'volunteers.Active',
             'volunteers.LastName',
             'volunteers.FirstName',
+            'volunteers.Email',
             'volunteers.MobilePhoneNumber',
             'volunteers.HomePhoneNumber',
-            'volunteers.Email',
+            'volunteer_status_options.option_label as ProjectVolunteerRoleStatusLabel',
         ];
         $aWorkerSelectFields = [
             'volunteers.*'
@@ -86,39 +89,45 @@ class ProjectVolunteerRole extends BaseModel
         } else {
             $aSelectFields = array_merge($aSelectFields, $aLeaderSelectFields);
         }
+
         return $aSelectFields;
     }
+
     public function getProjectVolunteerByRoleId($ProjectVolunteerRoleID, $bReturnWorker = true)
     {
-
         $collection = ProjectVolunteerRole::select(
             $aSelectFields = $this->getSelectFields($bReturnWorker)
         )->join(
-                'project_volunteers',
-                function ($join) {
-                    $join->on(
-                        'project_volunteer_role.VolunteerID',
-                        '=',
-                        'project_volunteers.VolunteerID'
-                    )->whereRaw(
-                        'project_volunteers.ProjectID=project_volunteer_role.ProjectID'
-                    );
-                }
-            )->join(
-                'project_roles',
-                'project_volunteer_role.ProjectRoleID',
-                '=',
-                'project_roles.ProjectRoleID'
-            )->join(
-                'volunteers',
-                'volunteers.VolunteerID',
-                '=',
-                'project_volunteer_role.VolunteerID'
-            )->where(
-                'project_volunteer_role.ProjectVolunteerRoleID',
-                '=',
-                $ProjectVolunteerRoleID
-            )->whereNull('project_volunteers.deleted_at')->whereNull('project_volunteer_role.deleted_at');
+            'project_volunteers',
+            function ($join) {
+                $join->on(
+                    'project_volunteer_role.VolunteerID',
+                    '=',
+                    'project_volunteers.VolunteerID'
+                )->whereRaw(
+                    'project_volunteers.ProjectID=project_volunteer_role.ProjectID'
+                );
+            }
+        )->join(
+            'project_roles',
+            'project_volunteer_role.ProjectRoleID',
+            '=',
+            'project_roles.ProjectRoleID'
+        )->join(
+            'volunteers',
+            'volunteers.VolunteerID',
+            '=',
+            'project_volunteer_role.VolunteerID'
+        )->join(
+            'volunteer_status_options',
+            'volunteer_status_options.id',
+            '=',
+            'project_volunteer_role.Status'
+        )->where(
+            'project_volunteer_role.ProjectVolunteerRoleID',
+            '=',
+            $ProjectVolunteerRoleID
+        )->whereNull('project_volunteers.deleted_at')->whereNull('project_volunteer_role.deleted_at');
         // \Illuminate\Support\Facades\Log::debug(
         //     '',
         //     [
@@ -133,15 +142,20 @@ class ProjectVolunteerRole extends BaseModel
         return current($collection->get()->toArray());
     }
 
-    public function getProjectLeads($ProjectID) {
-        return $this->getProjectVolunteers($ProjectID, false);
+    public function getProjectTeam($ProjectID = null, $Year = null, $SiteID = null)
+    {
+        return $this->getProjectVolunteers($ProjectID, false, $Year, $SiteID);
     }
-    public function getProjectVolunteers($ProjectID, $bReturnWorkers = true)
+
+    public function getProjectVolunteers($ProjectID = null, $bReturnWorkers = true, $Year = null, $SiteID = null)
     {
         $sWorkerCondition = $bReturnWorkers ? '=' : '!=';
-
+        $aSelectFields = $this->getSelectFields($bReturnWorkers);
+        if($Year || $SiteID){
+            $aSelectFields=array_merge(['sites.SiteName'],$aSelectFields);
+        }
         $collection = ProjectVolunteerRole::select(
-            $aSelectFields = $this->getSelectFields($bReturnWorkers)
+            $aSelectFields
         )->join(
             'project_volunteers',
             function ($join) {
@@ -155,13 +169,24 @@ class ProjectVolunteerRole extends BaseModel
             }
         )->join(
             'project_roles',
-            function ($join) use ($sWorkerCondition){
+            function ($join) use ($sWorkerCondition) {
                 $join->on(
                     'project_volunteer_role.ProjectRoleID',
                     '=',
                     'project_roles.ProjectRoleID'
                 )->whereRaw(
-                    'project_roles.role '. $sWorkerCondition. ' \'Worker\''
+                    'project_roles.role ' . $sWorkerCondition . ' \'Worker\''
+                );
+            }
+        )->join(
+            'projects',
+            function ($join) {
+                $join->on(
+                    'project_volunteer_role.ProjectID',
+                    '=',
+                    'projects.ProjectID'
+                )->where(
+                    'projects.Active','=','1'
                 );
             }
         )->join(
@@ -169,21 +194,61 @@ class ProjectVolunteerRole extends BaseModel
             'volunteers.VolunteerID',
             '=',
             'project_volunteer_role.VolunteerID'
-        )->where(
-            'project_volunteer_role.ProjectID',
+        )->join(
+            'volunteer_status_options',
+            'volunteer_status_options.id',
             '=',
-            $ProjectID
+            'project_volunteer_role.Status'
         )->whereNull('project_volunteers.deleted_at')->whereNull('project_volunteer_role.deleted_at');
-
+        if($ProjectID){
+            $collection->where(
+                'project_volunteer_role.ProjectID',
+                '=',
+                $ProjectID
+            );
+        } elseif($Year){
+            $collection->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->join(
+                'sites',
+                'sites.SiteID',
+                '=',
+                'site_status.SiteID'
+            )->where(
+                'site_status.Year',
+                $Year
+            )->whereNull('site_status.deleted_at');
+        } elseif($SiteID){
+            $collection->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->join(
+                'sites',
+                'sites.SiteID',
+                '=',
+                'site_status.SiteID'
+            )->where(
+                'site_status.SiteID',
+                $SiteID
+            )->whereNull('site_status.deleted_at');
+        }
         return $collection->get()->toArray();
     }
 
-    public function getAllProjectLeads() {
+    public function getAllProjectLeads()
+    {
         return $this->getAllProjectVolunteers(false);
     }
+
     public function getAllProjectVolunteers($bReturnWorkers = true)
     {
         $sWorkerCondition = $bReturnWorkers ? '=' : '!=';
+
         return Volunteer::join(
             'project_volunteers',
             'volunteers.VolunteerID',

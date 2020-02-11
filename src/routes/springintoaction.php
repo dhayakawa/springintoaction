@@ -165,9 +165,10 @@ Route::group(
         );
         //Route::resource('projects', 'ProjectsController');
         Route::put('project_scope/{ProjectID}', ['as' => 'project.scope.update', 'uses' => 'ProjectsController@scopeUpdate']);
-        Route::get('project_scope/list/all/{SiteStatusID}', ['as' => 'project.scope.list.all', 'uses' => 'ProjectsController@getSiteProjectScopes']);
+        Route::get('project_scope/list/all/{SiteStatusID}', ['as' => 'project.scope.list.all', 'uses' => 'ProjectsController@getSiteProjects']);
         Route::get('project_scope/projects/{SiteStatusID}', ['as' => 'project.scope.dropdown', 'uses' => 'ProjectsController@getProjectScopeProjectDropdownOptions']);
         Route::get('project_scope/{ProjectID}', ['as' => 'project.scope.project', 'uses' => 'ProjectsController@getProjectScopeProject']);
+        Route::post('project_scope/email_report', ['as' => 'project.scope.email_report', 'uses' => 'ProjectsController@emailReport']);
         Route::post('project_scope', ['as' => 'project.scope.store', 'uses' => 'ProjectsController@storeProjectScope']);
 
         Route::put('project/{ProjectID}', ['as' => 'project.update', 'uses' => 'ProjectsController@update']);
@@ -259,7 +260,7 @@ Route::group(
         );
         Route::get(
             'project/project_leads/{ProjectID}',
-            ['as' => 'project.project_leads', 'uses' => 'ProjectsController@getLeadVolunteers']
+            ['as' => 'project.project_leads', 'uses' => 'ProjectsController@getProjectTeam']
         );
         Route::get(
             'project/volunteers/{ProjectID}',
@@ -277,7 +278,7 @@ Route::group(
         );
         Route::get(
             'project_lead/list/all/{ProjectID}',
-            ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getProjectLeads']
+            ['as' => 'project_lead', 'uses' => 'ProjectVolunteerRoleController@getProjectTeam']
         );
         Route::get(
             'project_lead/{ProjectVolunteerRoleID}',

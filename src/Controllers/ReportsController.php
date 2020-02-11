@@ -65,7 +65,8 @@ class ReportsController extends BaseController
         $Year,
         $SiteID = null,
         $ProjectID = null,
-        $downloadType = ''
+        $downloadType = '',
+        $bSaveAsFile = null
     ) {
         $SiteID = !is_numeric($SiteID) ? null : $SiteID;
         $ProjectID = !is_numeric($ProjectID) ? null : $ProjectID;
@@ -78,8 +79,12 @@ class ReportsController extends BaseController
         switch ($ReportType) {
             case 'projects_full':
                 $reportName = 'Project Report by Year, Site and Project';
-                $reportHtml = $this->getYearSiteProjectFullReport($Year, $SiteID, $ProjectID,
-                                                                  $bReturnArray);
+                $reportHtml = $this->getYearSiteProjectFullReport(
+                    $Year,
+                    $SiteID,
+                    $ProjectID,
+                    $bReturnArray
+                );
                 break;
             case 'projects':
                 $reportName = 'Project Report by Year, Site and Project';
@@ -180,7 +185,7 @@ class ReportsController extends BaseController
             return $this->getCSV($html, $reportName);
         } elseif (!empty($this->downloadType) && $this->downloadType === 'spreadsheet') {
             if ($ReportType === 'projects_full') {
-                return $this->getProjectsFullSpreadsheet($html, $reportName);
+                return $this->getProjectsFullSpreadsheet($html, $reportName, $bSaveAsFile);
             } else {
                 return $this->getSpreadsheet($html, $reportName);
             }
@@ -555,7 +560,7 @@ class ReportsController extends BaseController
             $aIncludeProjectAttributes = isset($_GET['project_attributes']) ? $_GET['project_attributes'] : [];
 
             $projectModel = new ProjectScope();
-            $aProjects = $projectModel->getReportProjects($Year, [], null);
+            $aProjects = $projectModel->getReportProjects($Year, $SiteID, $ProjectID, [], null);
 
             $aAttributes = ProjectScope::getAttributesByCodeArray('projects');
             $aFilterableAttributes = array_keys($aAttributes);
@@ -569,7 +574,9 @@ class ReportsController extends BaseController
             $aFilterableAttributes[] = 'SequenceNumber';
             $aFilterableAttributes[] = 'Active';
             if (!empty($aIncludeProjectAttributes)) {
-                $aProjectAttributesToRemove = array_diff($aFilterableAttributes, $aIncludeProjectAttributes);
+                if ($aIncludeProjectAttributes !== '*') {
+                    $aProjectAttributesToRemove = array_diff($aFilterableAttributes, $aIncludeProjectAttributes);
+                }
             } else {
                 $aProjectAttributesToRemove = $aFilterableAttributes;
             }
@@ -693,10 +700,27 @@ class ReportsController extends BaseController
 
             endforeach;
             $date = date('l, F d, Y');
-            $aWorksheets['Project Report'] = ['header_year'=>"Spring Into Action $Year",'header_report_name'=> 'Project Report',
-                'header_date'=>$date,'column_names'=>$colNames,'table_data'=>$aProjects];
-
-            $aProjectManagers = $this->getRegisteredProjectManagerEmailsReport($Year, $SiteID, $ProjectID, true);
+            $aWorksheets['Project Report'] = [
+                'header_year' => "Spring Into Action $Year",
+                'header_report_name' => 'Project Report',
+                'header_date' => $date,
+                'column_names' => $colNames,
+                'table_data' => $aProjects
+            ];
+            $siteVolunteerRole = new SiteVolunteerRole();
+            $aProjectManagers = $siteVolunteerRole->getAllSiteVolunteers();
+            $this->deleteColumn($aProjectManagers, 'SiteStatusID');
+            $this->deleteColumn($aProjectManagers, 'SiteVolunteerID');
+            $this->deleteColumn($aProjectManagers, 'SiteVolunteerRoleID');
+            $this->deleteColumn($aProjectManagers, 'VolunteerID');
+            $this->deleteColumn($aProjectManagers, 'Comments');
+            $this->deleteColumn($aProjectManagers, 'Status');
+            $this->deleteColumn($aProjectManagers, 'created_at');
+            $this->deleteColumn($aProjectManagers, 'updated_at');
+            $this->deleteColumn($aProjectManagers, 'SiteRoleID');
+            $this->deleteColumn($aProjectManagers, 'SiteVolunteerRoleStatus');
+            $this->deleteColumn($aProjectManagers, 'Active');
+            //$aProjectManagers = $this->getRegisteredProjectManagerEmailsReport($Year, $SiteID, $ProjectID, true);
             $aKeys = !empty($aProjectManagers) ? array_keys($aProjectManagers[0]) : [];
             $colNames = [];
             foreach ($aKeys as $sKeyStr):
@@ -712,11 +736,42 @@ class ReportsController extends BaseController
                 }
 
             endforeach;
-            $aWorksheets['Project Mgr & Site Coor'] = ['header_year'=>"Spring Into Action $Year",
-                'header_report_name'=> 'Project Manager & Site Coordinator',
-                'header_date'=>$date,'column_names'=>$colNames,'table_data'=>$aProjectManagers];
+            $aWorksheets['Project Mgr & Site Coor'] = [
+                'header_year' => "Spring Into Action $Year",
+                'header_report_name' => 'Project Manager & Site Coordinator',
+                'header_date' => $date,
+                'column_names' => $colNames,
+                'table_data' => $aProjectManagers
+            ];
 
-            $aTeamLeaders = $this->getRegisteredTeamLeaderEmailsReport($Year, $SiteID, $ProjectID, true);
+            /**
+             * 'sites.SiteName as Site Name',
+             * 'projects.SequenceNumber as Proj Num',
+             * 'projects.ProjectDescription as Project Description',
+             * 'volunteers.LastName as Last Name',
+             * 'volunteers.FirstName as First Name',
+             * 'volunteers.Email',
+             * 'volunteers.MobilePhoneNumber',
+             * 'volunteers.HomePhoneNumber',
+             * 'volunteers.TeamLeaderWilling',
+             * 'project_volunteers.created_at'
+             */
+            $model = new ProjectVolunteerRole();
+
+            $aTeamLeaders = $model->getProjectTeam(null, $Year, null);
+            $this->deleteColumn($aTeamLeaders, 'ProjectVolunteerID');
+            $this->deleteColumn($aTeamLeaders, 'ProjectVolunteerRoleID');
+            $this->deleteColumn($aTeamLeaders, 'ProjectID');
+            $this->deleteColumn($aTeamLeaders, 'VolunteerID');
+            $this->deleteColumn($aTeamLeaders, 'Comments');
+            $this->deleteColumn($aTeamLeaders, 'Status');
+            $this->deleteColumn($aTeamLeaders, 'created_at');
+            $this->deleteColumn($aTeamLeaders, 'updated_at');
+            $this->deleteColumn($aTeamLeaders, 'deleted_at');
+            $this->deleteColumn($aTeamLeaders, 'ProjectRoleID');
+            $this->deleteColumn($aTeamLeaders, 'ProjectVolunteerRoleStatus');
+            $this->deleteColumn($aTeamLeaders, 'Active');
+            //$aTeamLeaders = $this->getRegisteredTeamLeaderEmailsReport($Year, $SiteID, $ProjectID, true);
             $aKeys = !empty($aTeamLeaders) ? array_keys($aTeamLeaders[0]) : [];
             $colNames = [];
             foreach ($aKeys as $sKeyStr):
@@ -732,10 +787,15 @@ class ReportsController extends BaseController
                 }
 
             endforeach;
-            $aWorksheets['Team Leaders'] = ['header_year'=>"Spring Into Action $Year",'header_report_name'=> 'Team Leaders',
-                'header_date'=>$date,'column_names'=>$colNames,'table_data'=>$aTeamLeaders];
+            $aWorksheets['Team Leaders'] = [
+                'header_year' => "Spring Into Action $Year",
+                'header_report_name' => 'Team Leaders',
+                'header_date' => $date,
+                'column_names' => $colNames,
+                'table_data' => $aTeamLeaders
+            ];
 
-            $aVolunteers = $this->getVolunteerAssignmentForPacketsReport($Year, true);
+            $aVolunteers = $this->getVolunteerAssignmentForPacketsReport($Year, true, $SiteID, $ProjectID);
             $aKeys = !empty($aVolunteers) ? array_keys($aVolunteers[0]) : [];
             $colNames = [];
             foreach ($aKeys as $sKeyStr):
@@ -751,13 +811,15 @@ class ReportsController extends BaseController
                 }
 
             endforeach;
-            $aWorksheets['Volunteers'] = ['header_year'=>"Spring Into Action $Year",
-                'header_report_name'=> 'Volunteers',
-                'header_date'=>$date,'column_names'=>$colNames,'table_data'=>$aVolunteers];
-
+            $aWorksheets['Volunteers'] = [
+                'header_year' => "Spring Into Action $Year",
+                'header_report_name' => 'Volunteers',
+                'header_date' => $date,
+                'column_names' => $colNames,
+                'table_data' => $aVolunteers
+            ];
         } else {
-            $response =
-                "<div style='width:100%;text-align:center;font-size:20px'>This report must be <a href=\"/admin/report/projects_full/{$Year}/{$SiteID}/{$ProjectID}/spreadsheet\" class=\"must-download-spreadsheet\">downloaded</a></div>
+            $response = "<div style='width:100%;text-align:center;font-size:20px'>This report must be <a href=\"/admin/report/projects_full/{$Year}/null/null/spreadsheet\" class=\"must-download-spreadsheet\">downloaded</a></div>
                 <div style='width:100%;text-align:center;font-size:14px'>Before you click the [downloaded] link, check or uncheck the project attributes above to customize this report</div>
                 ";
 
@@ -996,50 +1058,45 @@ class ReportsController extends BaseController
         return $html;
     }
 
-    public function getVolunteerAssignmentForPacketsReport($Year, $bReturnArray)
+    public function getVolunteerAssignmentForPacketsReport($Year, $bReturnArray, $SiteID = null, $ProjectID = null)
     {
-        $aVolunteers = Volunteer::select(
+        $collection = Volunteer::select(
             DB::raw("concat(volunteers.LastName,', ',volunteers.FirstName) as Name"),
             'volunteers.MobilePhoneNumber as Contact Phone',
             'sites.SiteName as Site Name',
             'projects.SequenceNumber as Proj Num',
             'projects.ProjectDescription as Project Description'
-        )
-                                ->join(
-                                    'project_volunteers',
-                                    'project_volunteers.VolunteerID',
-                                    '=',
-                                    'volunteers.VolunteerID'
-                                )
-                                ->join(
-                                    'projects',
-                                    'projects.ProjectID',
-                                    '=',
-                                    'project_volunteers.ProjectID'
-                                )
-                                ->join(
-                                    'site_status',
-                                    'projects.SiteStatusID',
-                                    '=',
-                                    'site_status.SiteStatusID'
-                                )
-                                ->join(
-                                    'sites',
-                                    'sites.SiteID',
-                                    '=',
-                                    'site_status.SiteID'
-                                )
-                                ->whereNull('volunteers.deleted_at')
-                                ->whereNull('project_volunteers.deleted_at')
-                                ->whereNull(
-                                    'projects.deleted_at'
-                                )
-                                ->whereNull('site_status.deleted_at')
-                                ->whereNull('sites.deleted_at')
-                                ->where('site_status.Year', $Year)
-                                ->orderBy('volunteers.LastName', 'asc')
-                                ->get()
-                                ->toArray();
+        )->join(
+                'project_volunteers',
+                'project_volunteers.VolunteerID',
+                '=',
+                'volunteers.VolunteerID'
+            )->join(
+                'projects',
+                'projects.ProjectID',
+                '=',
+                'project_volunteers.ProjectID'
+            )->join(
+                'site_status',
+                'projects.SiteStatusID',
+                '=',
+                'site_status.SiteStatusID'
+            )->join(
+                'sites',
+                'sites.SiteID',
+                '=',
+                'site_status.SiteID'
+            )->whereNull('volunteers.deleted_at')->whereNull('project_volunteers.deleted_at')->whereNull(
+                'projects.deleted_at'
+            )->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->where('site_status.Year', $Year);
+        if ($ProjectID) {
+            $collection->where('projects.ProjectID', $ProjectID);
+        }
+        if ($SiteID) {
+            $collection->where('sites.SiteID', $ProjectID);
+        }
+        $collection->orderBy('volunteers.LastName', 'asc');
+        $aVolunteers = $collection->get()->toArray();
 
         if ($this->downloadType === 'pdf' && count($aVolunteers) > 500) {
             return "This report is too big to download as a PDF. Please choose a different download type.";
@@ -1221,7 +1278,7 @@ class ReportsController extends BaseController
                                   'site_volunteers.SiteVolunteerID'
                               )->whereIn(
                                   'site_volunteer_role.SiteRoleID',
-                                  [1,2]
+                                  [1, 2]
                               );
                           }
                       )
@@ -1675,7 +1732,7 @@ CSS;
         return $aColLetters;
     }
 
-    public function getProjectsFullSpreadsheet($aWorksheets, $reportName)
+    public function getProjectsFullSpreadsheet($aWorksheets, $reportName, $bSaveAsFile = false)
     {
         $aColLetters = $this->getSpreadsheetColumnLetters();
         $Header1FontSize = 18;
@@ -1685,9 +1742,7 @@ CSS;
         $iCellFontSize = 10;
         $thumbDimensions = [50, 50];
 
-
         $spreadsheet = new Spreadsheet();
-
 
         $workSheetCnt = 0;
         foreach ($aWorksheets as $worksheetTitle => $aData) {
@@ -1703,7 +1758,6 @@ CSS;
                 $spreadsheet->setActiveSheetIndex(0);
                 $spreadsheet->getActiveSheet()->setTitle($worksheetTitle);
             }
-
 
             $activeWorkSheet = $spreadsheet->getActiveSheet();
 
@@ -1788,31 +1842,41 @@ CSS;
         }
 
         $spreadsheet->setActiveSheetIndex(0);
-
-        if (headers_sent()) {
-            die("Unable to stream spreadsheet: headers already sent");
-        }
-        header_remove("Content-Type");
-        header("Cache-Control: private");
-
         $filename = self::getDownloadFileName($reportName) . ".xlsx";
-
-        // Redirect output to a client’s web browser (Xlsx)
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-        // If you're serving to IE 9, then the following may be needed
-        header('Cache-Control: max-age=1');
-
-        // If you're serving to IE over SSL, then the following may be needed
-        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
-        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
-        header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
-        header('Pragma: public'); // HTTP/1.0
-
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        $writer->save('php://output');
-        exit;
+        if ($bSaveAsFile) {
+            $emailAttachmentsDirPath =
+                Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix() . 'email_attachments/';
+            if (!\file_exists($emailAttachmentsDirPath)) {
+                mkdir($emailAttachmentsDirPath);
+            }
+            $filePath = $emailAttachmentsDirPath . date('Y-m-d-H-i-s-') . $filename;
+
+            $writer->save($filePath);
+
+            return $filePath;
+        } else {
+            if (headers_sent()) {
+                die("Unable to stream spreadsheet: headers already sent");
+            }
+            header_remove("Content-Type");
+            header("Cache-Control: private");
+
+            // Redirect output to a client’s web browser (Xlsx)
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+            // If you're serving to IE 9, then the following may be needed
+            header('Cache-Control: max-age=1');
+
+            // If you're serving to IE over SSL, then the following may be needed
+            header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+            header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+            header('Pragma: public'); // HTTP/1.0
+            $writer->save('php://output');
+            exit;
+        }
     }
 
     public function getSpreadsheet($aRows, $reportName)
