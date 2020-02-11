@@ -197,9 +197,9 @@
             //
         }
 
-        public function getProjectLeads($ProjectID){
+        public function getProjectTeam($ProjectID){
             $model = new ProjectVolunteerRole();
-            return $model->getProjectLeads($ProjectID);
+            return $model->getProjectTeam($ProjectID);
         }
 
         public function getAllProjectLeads() {

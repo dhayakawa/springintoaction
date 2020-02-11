@@ -63,7 +63,8 @@ window.App = {
         appInitialData: {},
         selectOptions:{},
         devMode: true,
-        auth:[]
+        auth:[],
+        spinnerHtml: '<div class="small-spinner spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>'
     },
     CellEditors: {}
 };

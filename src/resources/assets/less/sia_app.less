@@ -1,5 +1,5 @@
 @import '_action-switcher.less';
-
+@import '_spinner.less';
 // Bootstrap 3 badge component
 .badge {
   // global override of boilerplate's bootstrap css which is based on 'Helvetica Neue' font size
@@ -476,8 +476,39 @@
       margin-left: 0 !important;
     }
   }
+  .site-management-selects{
 
+      margin-left: 5px;
+      position: relative;
+
+  }
+  .box-header.with-border{
+    .small-spinner{
+      top:5px;
+    }
+  }
+  .table.team td{
+    .small-spinner{
+      top:7px;
+    }
+  }
+  .email-project-report {
+    margin-left: 5px;
+  }
+  .email-sitewide-project-reports{
+    margin-left: 5px;
+    margin-right: 5px;
+    top: -1px;
+    position: relative;
+  }
   form[name="projectScope"] {
+    .team{
+      .comments-row{
+        padding-left:30px;
+        border-top:0;
+      }
+    }
+
     [name="estimated_total_cost"] {
 
     }

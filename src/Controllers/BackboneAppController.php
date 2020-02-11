@@ -8,6 +8,7 @@
 
 namespace Dhayakawa\SpringIntoAction\Controllers;
 
+use Dhayakawa\SpringIntoAction\Helpers\CurrentYearTrait;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -16,8 +17,7 @@ use Dhayakawa\SpringIntoAction\Helpers\ArraySearchTrait;
 
 class BackboneAppController extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, ArraySearchTrait;
-
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, ArraySearchTrait,CurrentYearTrait;
     /**
      * Create a new controller instance.
      *
@@ -37,13 +37,5 @@ class BackboneAppController extends BaseController
         return view($view, $request, $data);
     }
 
-    public function getCurrentYear()
-    {
-        $yearNow = date('Y');
-        $month = date('n');
 
-        // need to make sure the year is for the upcoming/next spring
-        // or this spring if the month is less than may
-        return $month > 5 ? $yearNow + 1 : $yearNow;
-    }
 }

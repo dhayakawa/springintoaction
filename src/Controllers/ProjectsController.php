@@ -27,6 +27,8 @@ use Dhayakawa\SpringIntoAction\Models\ProjectAttachment;
 use Dhayakawa\SpringIntoAction\Models\ProjectScope;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttribute;
 use Dhayakawa\SpringIntoAction\Models\Workflow;
+use Dhayakawa\SpringIntoAction\Mail\ProjectReport;
+use Illuminate\Support\Facades\Mail;
 
 class ProjectsController extends BaseController
 {
@@ -250,11 +252,11 @@ class ProjectsController extends BaseController
         return ProjectScope::getSiteProjects($SiteStatusID, true);
     }
 
-    public function getLeadVolunteers($ProjectID)
+    public function getProjectTeam($ProjectID)
     {
         $model = new ProjectVolunteerRole();
 
-        return $model->getProjectLeads($ProjectID);
+        return $model->getProjectTeam($ProjectID);
     }
 
     public function getBudgets($ProjectID)
@@ -385,5 +387,79 @@ class ProjectsController extends BaseController
         }
 
         return $results;
+    }
+
+    public function emailReport(Request $request)
+    {
+        $msg = '';
+        $aProjectEmails = [];
+        $params = $request->all();
+        $bSiteWide = $params['site_wide'];
+        $SiteID = $params['SiteID'];
+        $SiteStatusID = $params['SiteStatusID'];
+        if ($bSiteWide) {
+            $aSiteProjects = $this->getSiteProjects($SiteStatusID);
+            if (!empty($aSiteProjects)) {
+                foreach ($aSiteProjects as $aSiteProject) {
+                    $ProjectID = $aSiteProject['ProjectID'];
+                    $SiteStatusID = $aSiteProject['SiteStatusID'];
+                    $siteStatus = \Dhayakawa\SpringIntoAction\Models\SiteStatus::where('SiteStatusID',$SiteStatusID)
+                        ->get()->first();
+                    $site=Site::where('SiteID',$siteStatus->SiteID)->get()->first();
+
+
+                    $aEmails = [];
+                    if (isset($aSiteProject['team']) && is_array($aSiteProject['team'])) {
+                        foreach ($aSiteProject['team'] as $aTeamMember) {
+                            if ($aTeamMember['Active'] === 1 &&
+                                $aTeamMember['ProjectVolunteerRoleStatusLabel'] === 'Agreed'
+                            ) {
+                                $aEmails[] = $aTeamMember['Email'];
+                            }
+                        }
+                    }
+                    $aEmails = array_filter(array_unique($aEmails));
+                    if (!empty($aEmails)) {
+                        $aProjectEmails[$ProjectID] = ['emails'=>$aEmails,'site_name'=>$site->SiteName,
+                            'project_num'=>$aSiteProject['SequenceNumber'],'projectAttachmentPaths'=>$aSiteProject['project_attachments']];
+                    }
+                }
+            }
+            //echo "<pre>" . print_r($aSiteProjects, true) . "</pre>";
+        } else {
+            $ProjectID = $params['ProjectID'];
+            $aEmails = array_filter(array_unique($params['emails']));
+            $project = Project::where('ProjectID',$ProjectID)->get()->first();
+            $siteStatus = \Dhayakawa\SpringIntoAction\Models\SiteStatus::where('SiteStatusID',$project->SiteStatusID)
+                                                                      ->get()->first();
+            $site=Site::where('SiteID',$siteStatus->SiteID)->get()->first();
+            $aProjectEmails[$ProjectID] = ['emails'=>$aEmails,'site_name'=>$site->SiteName,
+                'project_num'=>$project->SequenceNumber,'projectAttachmentPaths'=>$project->project_attachments];
+        }
+
+        // echo "<pre>" . print_r($aProjectEmails, true) . "</pre>";
+        // $msg .= "<pre>" . print_r($params, true) . "</pre>";
+        if (!empty($aProjectEmails)) {
+            foreach ($aProjectEmails as $ProjectID => $aData) {
+                $reportsController = new \Dhayakawa\SpringIntoAction\Controllers\ReportsController();
+                $_GET['project_attributes'] = '*';
+                $aData['reportFilePath'] = $reportsController->getReport(
+                    $request,
+                    'projects_full',
+                    $this->getCurrentYear(),
+                    $SiteID,
+                    $ProjectID,
+                    'spreadsheet',
+                    true
+                );
+                $aTeamMemberEmails = $aData['emails'];
+                //echo $reportFilePath . PHP_EOL;
+                Mail::to($aTeamMemberEmails)->send(new ProjectReport($aData));
+            }
+        }
+        $msg = 'Emails sent';
+        $response = ['success' => true, 'msg' => $msg];
+
+        return view('springintoaction::admin.main.response', $request, compact('response'));
     }
 }
