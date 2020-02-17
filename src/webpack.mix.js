@@ -53,6 +53,7 @@ mix.scripts([
     'resources/assets/js/frontend/registration/carasel.bootstrap.js',
     'resources/assets/js/jquery.sticky.js',
     'resources/assets/js/sia-bs-tooltip.js',
+    'resources/assets/js/TweenMax.min.js'
 ], 'public/js/springintoaction.packages.js');
 mix.scripts([
     'resources/assets/js/jquery-ui-1.12.1/jquery-ui.min.js',
@@ -86,6 +87,7 @@ mix.scripts([
     'resources/assets/js/frontend/registration/carasel.bootstrap.js',
     'resources/assets/js/jquery.sticky.js',
     'resources/assets/js/sia-bs-tooltip.js',
+    'resources/assets/js/TweenMax.min.js'
 ], 'public/js/springintoaction.packages.min.js');
 mix.scripts([
     'resources/assets/js/models/dashboard.js',
@@ -223,7 +225,7 @@ mix.scripts([
 ], 'public/js/frontend/registration/springintoaction.views.js');
 mix.scripts([
     'resources/assets/js/frontend/registration/init.js',
-    'resources/assets/js/views/select.js'
+    'resources/assets/js/frontend/registration/views/select.js'
 ], 'public/js/frontend/registration/springintoaction.init.js');
 mix.scripts([
     'resources/assets/js/frontend/registration/routes/route.js',

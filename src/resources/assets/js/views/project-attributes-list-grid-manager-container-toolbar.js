@@ -18,6 +18,15 @@
                                         '<td class="list-item-label required">' +
                                         '    <select class="list-item-input" name="list_item[<%= id %>][workflow_id]" data-id="<%= id %>"><%= workflowOptions %></select>' +
                                         '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][workflow_requirement]" data-id="<%= id %>"><%= workflowRequirements %></select>' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][workflow_requirement_depends_on]" data-id="<%= id %>"><%= workflowRequirementsDependsOn %></select>' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][workflow_requirement_depends_on_condition]" data-id="<%= id %>"><%= workflowRequirementsDependsOnCondition %></select>' +
+                                        '</td>' +
                                         '<td class="list-item-label">' +
                                         '    <select class="list-item-input" name="list_item[<%= id %>][project_skill_needed_option_id]" data-id="<%= id %>"><%= projectSkillNeededOptions %></select>' +
                                         '</td>' +

@@ -21,7 +21,7 @@
                 SiteName: self.model.get('SiteName'),
                 ProjectDescription: self.model.get('ProjectDescription'),
                 SkillsNeeded: self.model.getSkillsNeededList(),
-                ChildFriendly: self.model.get('ChildFriendly') === 0 ? '<i title="Not Child Friendly" data-toggle="tooltip" data-placement="top" class="text-danger fas fa-child"></i>' : '<i title="Child Friendly" data-toggle="tooltip" data-placement="top" class="text-success fas fa-child"></i>',
+                ChildFriendly: self.model.get('child_friendly') === 0 ? '<i title="Not Child Friendly" data-toggle="tooltip" data-placement="top" class="text-danger fas fa-child"></i>' : '<i title="Child Friendly" data-toggle="tooltip" data-placement="top" class="text-success fas fa-child"></i>',
                 VolunteersNeeded: self.model.getVolunteersNeeded()
             };
             $(this.el).html(this.template(tplVars));
@@ -93,7 +93,8 @@
             let filterLabel = self.model.get('filterLabel');
             let filterValue = self.model.get('filterLabel');
             let inputType = 'checkbox';
-            if (self.model.get('Field').match(/projects\.PrimarySkillNeeded/)){
+
+            if (self.model.get('Field').match(/primary_skill_needed/)){
                 filterValue = self.model.get('FieldID');
                 inputType = 'checkbox';
             } else if (self.model.get('Field').match(/projects\.PeopleNeeded/)) {

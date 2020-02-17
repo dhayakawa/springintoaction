@@ -201,7 +201,7 @@
               cursor: pointer;
             }
 
-            .fa-info-circle,.fa-edit {
+            .fa-info-circle, .fa-edit {
               position: relative;
               top: 3px;
 
@@ -209,8 +209,10 @@
                 cursor: default;
               }
             }
+
             .fa-edit {
-              margin-right:5px;
+              margin-right: 5px;
+
               &:hover {
                 cursor: pointer;
               }
@@ -258,14 +260,16 @@
               }
             }
           }
+
           &.last-row-remove-bottom-border {
             tbody tr:last-child {
               td {
                 border-bottom: 0 !important;
               }
             }
-            tfoot td{
-              border:0;
+
+            tfoot td {
+              border: 0;
             }
           }
 
@@ -476,41 +480,238 @@
       margin-left: 0 !important;
     }
   }
-  .site-management-selects{
 
-      margin-left: 5px;
-      position: relative;
+  .site-management-selects {
+
+    margin-left: 5px;
+    position: relative;
 
   }
-  .box-header.with-border{
-    .small-spinner{
-      top:5px;
+
+  .box-header.with-border {
+    .small-spinner {
+      top: 5px;
     }
   }
-  .table.team td{
-    .small-spinner{
-      top:7px;
+
+  .table.team td {
+    .small-spinner {
+      top: 7px;
     }
   }
+
   .email-project-report {
     margin-left: 5px;
   }
-  .email-sitewide-project-reports{
+
+  .email-sitewide-project-reports {
     margin-left: 5px;
     margin-right: 5px;
     top: -1px;
     position: relative;
   }
+
   form[name="projectScope"] {
-    .team{
-      .comments-row{
-        padding-left:30px;
-        border-top:0;
+    fieldset.leadership-members {
+      margin-bottom: 20px;
+
+      #leadership-members-content {
+        display: none;
+
+        .table.team {
+          margin-bottom: 0;
+
+          .comments-row {
+            padding-left: 30px;
+            border-top: 0;
+          }
+        }
       }
     }
 
+    .skills-needed-checkbox-label,.bool-label {
+      &:after {
+        content: none !important;
+      }
+    }
+
+    .workflow-status-display {
+      position: relative;
+      text-align: center;
+      width: 100%;
+      max-width: 790px;
+      height: 50px;
+      font-family: "Open Sans", sans-serif;
+
+      > h4 {
+        margin: 0px 0 5px 0;
+      }
+
+      .workflow-status-display-progress-box {
+        position: relative;
+        display: -webkit-box;
+        display: flex;
+        -webkit-box-align: center;
+        align-items: center;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        flex-direction: row;
+        background: #FFF;
+        width: 100%;
+        height: 100%;
+
+        padding: 0 25px;
+        box-sizing: border-box;
+        opacity: 0;
+        -webkit-transform-origin: center;
+        transform-origin: center;
+        -webkit-transform: scale(1.2, 1.2);
+        transform: scale(1.2, 1.2);
+
+        .wf-progress {
+          position: relative;
+          display: -webkit-box;
+          display: flex;
+          -webkit-box-orient: horizontal;
+          -webkit-box-direction: normal;
+          flex-direction: row;
+          -webkit-box-pack: justify;
+          justify-content: space-between;
+          width: 100%;
+
+          .wf-bar {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            background: #E8DFD8;
+            width: 100%;
+            height: 3px;
+            border-radius: 10px;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+
+            .bar__fill {
+              display: block;
+              background: #BD8044;
+              height: 100%;
+            }
+          }
+
+          .point {
+            position: relative;
+            color: #AC9585;
+            cursor: pointer;
+
+            .wf-label {
+              position: absolute;
+              top: 100%;
+              left: 50%;
+              margin: 20px 0 0 0;
+              font-size: 0.75rem;
+              font-weight: 600;
+              text-transform: uppercase;
+              -webkit-transform: translate(-50%, 0);
+              transform: translate(-50%, 0);
+              max-width: unset;
+            }
+          }
+
+          .point:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120px;
+            height: 120px;
+            border-radius: 100%;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            -webkit-transition: 0.3s ease;
+            transition: 0.3s ease;
+          }
+
+          .show-radius .point:before {
+            background: rgba(0, 0, 0, 0.1);
+          }
+
+          .point--active {
+            color: #BA7C3F;
+          }
+
+          .point--complete {
+            color: #79a22e
+          }
+
+          .bullet {
+            z-index: 1;
+            position: relative;
+            background: #AC9585;
+            width: 8px;
+            height: 8px;
+            border-radius: 100%;
+            -webkit-transition: 0.3s ease;
+            transition: 0.3s ease;
+          }
+
+          .point--complete .bullet, .point--active .bullet {
+            background: #FFFFFF;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 6px #79a22e; //#BD8044
+          }
+
+          .point--active .bullet {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 10px #BD8044;
+          }
+        }
+      }
+    }
+
+
     [name="estimated_total_cost"] {
 
+    }
+
+    fieldset {
+      &.workflow-attributes-group {
+        margin-top: 50px;
+
+        &:nth-of-type(1) {
+          margin-top: 50px;
+        }
+      }
+
+      position: relative;
+
+      legend {
+        padding-bottom: 5px;
+        position: relative;
+
+        .label {
+          position: relative;
+          top: -1px;
+        }
+
+        .workflow-status-label {
+          float: right;
+          padding: .3em .6em .4em;
+          top: 4px;
+
+          i {
+            color: white;
+          }
+        }
+      }
+
+      &.leadership-members {
+        legend {
+          margin-bottom: 0;
+        }
+      }
+
+      .workflow-attributes-group-content {
+        margin-left: 20px;
+        //display: none;
+      }
     }
   }
 

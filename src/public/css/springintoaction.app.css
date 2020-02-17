@@ -813,9 +813,178 @@
   top: -1px;
   position: relative;
 }
-.sia-main-app form[name="projectScope"] .team .comments-row {
+.sia-main-app form[name="projectScope"] fieldset.leadership-members {
+  margin-bottom: 20px;
+}
+.sia-main-app form[name="projectScope"] fieldset.leadership-members #leadership-members-content {
+  display: none;
+}
+.sia-main-app form[name="projectScope"] fieldset.leadership-members #leadership-members-content .table.team {
+  margin-bottom: 0;
+}
+.sia-main-app form[name="projectScope"] fieldset.leadership-members #leadership-members-content .table.team .comments-row {
   padding-left: 30px;
   border-top: 0;
+}
+.sia-main-app form[name="projectScope"] .skills-needed-checkbox-label:after,
+.sia-main-app form[name="projectScope"] .bool-label:after {
+  content: none !important;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display {
+  position: relative;
+  text-align: center;
+  width: 100%;
+  max-width: 790px;
+  height: 50px;
+  font-family: "Open Sans", sans-serif;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display > h4 {
+  margin: 0px 0 5px 0;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box {
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+      align-items: center;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
+      flex-direction: row;
+  background: #FFF;
+  width: 100%;
+  height: 100%;
+  padding: 0 25px;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  opacity: 0;
+  -webkit-transform-origin: center;
+  transform-origin: center;
+  -webkit-transform: scale(1.2, 1.2);
+  transform: scale(1.2, 1.2);
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress {
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
+      flex-direction: row;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+      justify-content: space-between;
+  width: 100%;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .wf-bar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: #E8DFD8;
+  width: 100%;
+  height: 3px;
+  border-radius: 10px;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .wf-bar .bar__fill {
+  display: block;
+  background: #BD8044;
+  height: 100%;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .point {
+  position: relative;
+  color: #AC9585;
+  cursor: pointer;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .point .wf-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin: 20px 0 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  -webkit-transform: translate(-50%, 0);
+  transform: translate(-50%, 0);
+  max-width: unset;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .point:before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  border-radius: 100%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  -webkit-transition: 0.3s ease;
+  transition: 0.3s ease;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .show-radius .point:before {
+  background: rgba(0, 0, 0, 0.1);
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .point--active {
+  color: #BA7C3F;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .point--complete {
+  color: #79a22e;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .bullet {
+  z-index: 1;
+  position: relative;
+  background: #AC9585;
+  width: 8px;
+  height: 8px;
+  border-radius: 100%;
+  -webkit-transition: 0.3s ease;
+  transition: 0.3s ease;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .point--complete .bullet,
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .point--active .bullet {
+  background: #FFFFFF;
+  -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 6px #79a22e;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 6px #79a22e;
+}
+.sia-main-app form[name="projectScope"] .workflow-status-display .workflow-status-display-progress-box .wf-progress .point--active .bullet {
+  -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 10px #BD8044;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 10px #BD8044;
+}
+.sia-main-app form[name="projectScope"] fieldset {
+  position: relative;
+}
+.sia-main-app form[name="projectScope"] fieldset.workflow-attributes-group {
+  margin-top: 50px;
+}
+.sia-main-app form[name="projectScope"] fieldset.workflow-attributes-group:nth-of-type(1) {
+  margin-top: 50px;
+}
+.sia-main-app form[name="projectScope"] fieldset legend {
+  padding-bottom: 5px;
+  position: relative;
+}
+.sia-main-app form[name="projectScope"] fieldset legend .label {
+  position: relative;
+  top: -1px;
+}
+.sia-main-app form[name="projectScope"] fieldset legend .workflow-status-label {
+  float: right;
+  padding: .3em .6em .4em;
+  top: 4px;
+}
+.sia-main-app form[name="projectScope"] fieldset legend .workflow-status-label i {
+  color: white;
+}
+.sia-main-app form[name="projectScope"] fieldset.leadership-members legend {
+  margin-bottom: 0;
+}
+.sia-main-app form[name="projectScope"] fieldset .workflow-attributes-group-content {
+  margin-left: 20px;
 }
 .sia-main-app .project-attributes-management-view .backgrid-wrapper {
   overflow: unset;

@@ -45,36 +45,8 @@ trait OptionsTrait
         }
         return $aOptionsModels;
     }
-    public static function getAttributesArray($table=null)
-    {
-        if ($table) {
-            $aAttributes = Attribute::where('table', '=', $table)->orderBy('DisplaySequence', 'asc')->get();
-        } else {
-            $aAttributes = Attribute::sortBy('DisplaySequence', 'asc')->get();
-        }
-        $attributes = $aAttributes ? $aAttributes->toArray() : [];
-        return $attributes;
-    }
-    public static function getAttributesByCodeArray($table=null)
-    {
-        $aAttributeByCode = [];
-        $aAttributes = self::getAttributesArray($table);
 
-        foreach($aAttributes as $attribute){
-            $aAttributeByCode[$attribute['attribute_code']] = $attribute;
-        }
-        return $aAttributeByCode;
-    }
-    public static function getAttributesLabelsArray($table=null)
-    {
-        $aAttributeLabels = [];
-        $aAttributes = self::getAttributesArray($table);
 
-        foreach($aAttributes as $attribute){
-            $aAttributeLabels[$attribute['attribute_code']] = $attribute['label'];
-        }
-        return $aAttributeLabels;
-    }
     public static function getOptionLabelsArray()
     {
         $aOptionLabels = [];

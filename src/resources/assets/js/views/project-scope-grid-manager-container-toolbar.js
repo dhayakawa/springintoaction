@@ -46,6 +46,7 @@
             let self = this;
             let model;
             self.$form = self.options.managedGridView.$('form[name="projectScope"]');
+
             if (!self.validateForm()){
                 growl('Please fix form errors.', 'error');
                 return;
@@ -65,6 +66,7 @@
             let growlMsg = '';
             let growlType = '';
             let newId = null;
+
             $.when(
                 model.save(data,
                     {
