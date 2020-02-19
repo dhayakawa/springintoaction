@@ -44,7 +44,7 @@
               label-default"><%= initialWorkflowLabel %></span> Step <span class="workflow-status-label label
               <%= defaultWorkflowStatusLabelClass %>"><i class="fas <%= defaultWorkflowStatusIconClass
               %>"></i></span></legend>
-            <div style="display:block" class="workflow-attributes-group-content">
+            <div style="display:block" id="workflow-attributes-group-content-1" class="workflow-attributes-group-content">
                 <div data-project-type class="form-group required">
                     <label for="project_type">Project Type / Primary Skills Needed</label>
                     <div class="project-type-checkbox-list-wrapper">

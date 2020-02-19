@@ -23,7 +23,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectAttributesDecimal;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttributesText;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttributesVarchar;
 use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
-
+use Dhayakawa\SpringIntoAction\Models\Budget;
 /**
  * Class ProjectScope
  *
@@ -703,6 +703,37 @@ FROM (
                 }
             } elseif ($attributeCode === 'project_attachments') {
                 continue;
+            } elseif (preg_match("/budget_sources/", $attributeCode)) {
+                if ($attributeCode === 'budget_sources') {
+                    $aRows = [];
+                    if (isset($requestData['budget_sources[source]'])) {
+                        foreach ($requestData['budget_sources[source]'] as $key => $budgetSourceId) {
+                            if ($budgetSourceId !== '') {
+                                $aBudgetData = ['ProjectID'=>$ProjectID,
+                                    'BudgetSource'=>$budgetSourceId,
+                                    'BudgetAmount'=>$requestData['budget_sources[amount]'][$key],
+                                    'Status'=>$requestData['budget_sources[status]'][$key],
+                                    'Comments'=>$requestData['budget_sources[comment]'][$key]];
+
+                                $budgetId = $requestData['budget_sources[budgetid]'][$key];
+                                if($budgetId === 'new'){
+                                    $budgetModel = new Budget();
+                                } else {
+                                    $budgetModel = Budget::findOrFail($budgetId);
+                                }
+                                $budgetModel->fill($aBudgetData);
+                                $aModelResult["{$attributeCode}_{$budgetId}_{$key}"] = $budgetModel->save();
+                            }
+                        }
+                    } elseif (isset($requestData['material_needed_and_cost'])) {
+                        $attributeCodeValue = $requestData['material_needed_and_cost'];
+                    }
+                    if (!empty($aRows)) {
+                        $attributeCodeValue = $aRows;
+                    }
+                }
+                continue;
+
             } else {
                 $a = self::searchArrayValueRecursiveByKeyValue('attribute_code', $attributeCode, $attributes);
                 if($a){
@@ -916,8 +947,15 @@ FROM (
             // Get project record or just default record data
             if ($ProjectID === 'new') {
                 $projectScope = $this->getDefaultRecordData();
+                $bHasAttachments = false;
+                $budgetSources = json_encode([]);
             } else {
                 $projectScope = ProjectScope::findOrFail($ProjectID)->toArray();
+                $aProjectAttachment = ProjectAttachment::where('ProjectID','=',$ProjectID)->get()->toArray();
+                $bHasAttachments = count($aProjectAttachment)>0;
+                $aBudgets = Budget::where('ProjectID','=',$ProjectID)->get()->toArray();
+                $budgetSources = json_encode($aBudgets);
+                //(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR ',') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources
             }
             // Get all attributes related to projects
             $initialData = $this->getInitialProjectScopeAttributeData();
@@ -925,6 +963,7 @@ FROM (
                 [
                     'ProjectID' => $projectScope['ProjectID'],
                     'SiteStatusID' => $projectScope['SiteStatusID'],
+                    'HasAttachments' => $bHasAttachments,
                     'Active' => $projectScope['Active'],
                     'SequenceNumber' => $projectScope['SequenceNumber'],
                     'OriginalRequest' => $projectScope['OriginalRequest'],
@@ -987,7 +1026,7 @@ FROM (
             }
             $aProject['project_attachments'] = json_encode($aProject['project_attachments']);
             // print_r($aProject);
-
+            $aProject['budget_sources'] = $budgetSources;
         } catch (Exception $e) {
             echo $e->getMessage();
         }

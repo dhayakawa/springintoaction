@@ -404,13 +404,17 @@
             try {
                 switch (self.routeRequested) {
                     case 'project_scope_management':
-                        if (self.getShouldBuildView(self.routeRequested + '-' + type)) {
-                            self.managementViews[self.routeRequested] = new self.projectScopeManagementViewClass({
-                                viewName: self.routeRequested,
-                                modelNameLabel: 'Project',
-                                loadProject: type
-                            });
+                        // .project-scope-management-view
+                        let bRouteExists = !self.getShouldBuildView(self.routeRequested);
+                        if(bRouteExists){
+                            self.managementViews[self.routeRequested].remove();
                         }
+                        // We need to build a new screen every time..
+                        self.managementViews[self.routeRequested] = new self.projectScopeManagementViewClass({
+                            viewName: self.routeRequested,
+                            modelNameLabel: 'Project',
+                            loadProject: type
+                        });
 
                         routeView = self.managementViews[self.routeRequested];
                         break;

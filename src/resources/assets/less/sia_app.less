@@ -562,11 +562,10 @@
 
         padding: 0 25px;
         box-sizing: border-box;
-        opacity: 0;
+        opacity: 1;
         -webkit-transform-origin: center;
         transform-origin: center;
-        -webkit-transform: scale(1.2, 1.2);
-        transform: scale(1.2, 1.2);
+
 
         .wf-progress {
           position: relative;
@@ -638,7 +637,9 @@
           .point--active {
             color: #BA7C3F;
           }
-
+          .point--late {
+            color: #dd4b39;
+          }
           .point--complete {
             color: #79a22e
           }
@@ -652,16 +653,32 @@
             border-radius: 100%;
             -webkit-transition: 0.3s ease;
             transition: 0.3s ease;
+            &.late{
+              background: #dd4b39;
+            }
           }
-
-          .point--complete .bullet, .point--active .bullet {
+          .point--complete .bullet,.point--active .bullet,.point--late .bullet {
             background: #FFFFFF;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 6px #79a22e; //#BD8044
           }
 
           .point--active .bullet {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 10px #BD8044;
           }
+
+          .point--late .bullet {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 6px #dd4b39;
+          }
+          .point--active.point--late .bullet {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 10px #dd4b39;
+          }
+
+          .point--complete .bullet {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 6px #79a22e;
+          }
+          .point--active.point--complete .bullet {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 10px #79a22e;
+          }
+
         }
       }
     }
@@ -672,35 +689,7 @@
     }
 
     fieldset {
-      &.workflow-attributes-group {
-        margin-top: 50px;
-
-        &:nth-of-type(1) {
-          margin-top: 50px;
-        }
-      }
-
       position: relative;
-
-      legend {
-        padding-bottom: 5px;
-        position: relative;
-
-        .label {
-          position: relative;
-          top: -1px;
-        }
-
-        .workflow-status-label {
-          float: right;
-          padding: .3em .6em .4em;
-          top: 4px;
-
-          i {
-            color: white;
-          }
-        }
-      }
 
       &.leadership-members {
         legend {
@@ -708,9 +697,43 @@
         }
       }
 
-      .workflow-attributes-group-content {
-        margin-left: 20px;
-        //display: none;
+      &.workflow-attributes-group {
+        margin-top: 50px;
+
+        &:nth-of-type(1) {
+          margin-top: 50px;
+        }
+        legend {
+          padding-bottom: 5px;
+          .label {
+            position: relative;
+            top: -1px;
+          }
+
+          .workflow-status-label {
+            float: right;
+            padding: .3em .6em .4em;
+            top: 0;
+
+            i {
+              color: white;
+              &.fas{
+                line-height:18px;
+              }
+            }
+          }
+        }
+
+        .workflow-attributes-group-content {
+          margin-left: 20px;
+          display: none;
+
+          .table.budget_sources{
+            thead tr th label{
+              margin-bottom:0;
+            }
+          }
+        }
       }
     }
   }

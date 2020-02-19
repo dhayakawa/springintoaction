@@ -78,7 +78,7 @@
                     SiteStatusID: SiteStatusID,
                     ProjectID: ProjectID
                 });
-                //console.log('trigger project-id-change',{SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
+                //console.log('trigger project-id-change',{SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID, currentProjectID:self.getViewDataStore('current-model-id')});
                 self.trigger('project-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
             }
         }
@@ -323,7 +323,7 @@
         },
         handleProjectIDChange: function (e) {
             let self = this;
-
+            self.gridManagerContainerToolbar.disableSaveBtn();
             self.setViewDataStoreValue('current-model-id', e['ProjectID']);
         },
     });

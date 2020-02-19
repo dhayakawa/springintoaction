@@ -129,5 +129,9 @@
                 self.$('.btnSave').removeClass('disabled');
             }
         },
+        disableSaveBtn: function(){
+            let self = this;
+            self.$('.btnSave').addClass('disabled');
+        }
     });
 })(window.App);
