@@ -224,14 +224,14 @@
         },
         getModelRoute: function (model) {
             let self = this;
-            if (_.isUndefined(self.modelRoute)) {
+            if (_.isUndefined(self.modelRoute) || _.isNull(self.modelRoute)) {
                 self.modelRoute = self.findModelRoute(model);
             }
             return self.modelRoute;
         },
         setModelRoute: function (modelRoute) {
             let self = this;
-            if (!_.isUndefined(modelRoute)) {
+            if (!_.isUndefined(modelRoute) && !_.isNull(modelRoute)) {
                 self.modelRoute = modelRoute;
                 //console.log('setModelRoute modelRoute passed in', modelRoute, {self: self, options: self.options});
             } else{
@@ -241,7 +241,7 @@
         getModelUrl: function (modelId) {
             let self = this;
             let modelQS = '';
-            if (!_.isUndefined(modelId)) {
+            if (!_.isUndefined(modelId) && !_.isNull(modelId)) {
                 if (!_.isString(modelId)) {
                     modelId = modelId.toString();
                 }
@@ -343,7 +343,7 @@
             }
         },
         cleanTextInputValue: function (val){
-            return decodeURIComponent(val).replace('"','&#34;');
+            return decodeURIComponent(val).replace(/"/g,'&#34;');
         },
     });
 

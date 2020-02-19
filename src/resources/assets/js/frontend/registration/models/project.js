@@ -19,8 +19,8 @@
             'SiteStatusID': '',
             'SiteName': '',
             'ProjectDescription': '',
-            'ChildFriendly': '',
-            'PrimarySkillNeeded': '',
+            'child_friendly': '',
+            'primary_skill_needed': '',
             'VolunteersNeededEstimate':'',
             'VolunteersAssigned': '',
             'PeopleNeeded': '',
@@ -38,12 +38,11 @@
 
             let filtered = [];
             _.each(options, function (value,key) {
-                let regex = new RegExp(value[1]);
-                let primarySkillNeeded = self.get('PrimarySkillNeeded');
+                let primarySkillNeeded = JSON.parse(self.get('primary_skill_needed'));
                 if (primarySkillNeeded === ''){
                     primarySkillNeeded = generalOptionID.toString();
                 }
-                if (primarySkillNeeded.match(regex)) {
+                if (primarySkillNeeded.indexOf(value[1].toString()) !== -1) {
                     filtered.push(value[0]);
                 }
             });

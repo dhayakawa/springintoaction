@@ -46,6 +46,7 @@
             let self = this;
             let model;
             self.$form = self.options.managedGridView.$('form[name="projectScope"]');
+
             if (!self.validateForm()){
                 growl('Please fix form errors.', 'error');
                 return;
@@ -65,6 +66,7 @@
             let growlMsg = '';
             let growlType = '';
             let newId = null;
+
             $.when(
                 model.save(data,
                     {
@@ -127,5 +129,9 @@
                 self.$('.btnSave').removeClass('disabled');
             }
         },
+        disableSaveBtn: function(){
+            let self = this;
+            self.$('.btnSave').addClass('disabled');
+        }
     });
 })(window.App);
