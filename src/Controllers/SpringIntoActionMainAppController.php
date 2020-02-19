@@ -57,7 +57,7 @@ class SpringIntoActionMainAppController extends BaseController
         //echo bcrypt('jack1455');
         $user = Auth::user();
         $ProjectAttribute = new ProjectAttribute();
-        $ProjectAttribute->manage();
+        //$ProjectAttribute->reset();
         $aPermissionNames = LaratrustPermission::select('name')->get()->toArray();
         $auth = [];
         foreach ($aPermissionNames as $permission) {

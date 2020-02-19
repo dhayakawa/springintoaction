@@ -168,9 +168,9 @@ class ProjectAttachmentController extends BaseController
                                                                                              ->getAdapter()->getPathPrefix();
                     $relativePath = str_replace($pathPrefix, '', $attachment['AttachmentPath']);
                     $exists = Storage::disk('local')->exists($relativePath);
-                    echo $AttachmentPath.'<br>';
-                    echo $pathPrefix.'<br>';
-                    echo $relativePath.'<br>';
+                    // echo $AttachmentPath.'<br>';
+                    // echo $pathPrefix.'<br>';
+                    // echo $relativePath.'<br>';
                     if ($exists) {
                         return Storage::response($relativePath);
                     }

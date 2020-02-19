@@ -8,6 +8,7 @@
 
 namespace Dhayakawa\SpringIntoAction\Models;
 
+use Dhayakawa\SpringIntoAction\Helpers\AttributesTrait;
 use Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
 
 use Exception;
@@ -22,7 +23,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectAttributesDecimal;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttributesText;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttributesVarchar;
 use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
-
+use Dhayakawa\SpringIntoAction\Models\Budget;
 /**
  * Class ProjectScope
  *
@@ -30,13 +31,13 @@ use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
  */
 class ProjectScope extends BaseModel
 {
-    use ProjectRegistrationHelper;
+    use AttributesTrait, ProjectRegistrationHelper;
 
     use SoftDeletes;
     /**
      * @var array
      */
-    public $aFieldMap = [
+    public static $aFieldMap = [
         'ActualCost' => 'actual_cost',
         'Area' => 'dimensions',
         'BudgetAllocationDone' => 'budget_allocation_done',
@@ -231,42 +232,41 @@ FROM (
         if (empty($orderBy)) {
             $orderBy = [];
             $orderBy[] = ['field' => 'sites.SiteName', 'direction' => 'asc'];
-            $orderBy[] = ['field' => 'projects.PrimarySkillNeeded', 'direction' => 'desc'];
+            $orderBy[] = ['field' => 'primary_skill_needed_table.value', 'direction' => 'desc'];
         } else {
             $aTmpOrderBy = $orderBy;
+
             $orderBy = [];
             [$sortField, $direction] = preg_split("/_/", $aTmpOrderBy);
+            switch($sortField){
+                case 'projects.PrimarySkillNeeded':
+                    $sortField = 'primary_skill_needed_table.value';
+                    break;
+                case 'projects.ChildFriendly':
+                    $sortField = 'child_friendly_table.value';
+                    break;
+            }
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
-        $sSqlVolunteersAssigned = $this->getVolunteersAssignedSql();
-        $sSqlVolunteersNeeded = $this->getVolunteersNeededSql($Year);
         $sSqlPeopleNeeded = $this->getPeopleNeededSql($Year);
-        $projects = self::select(
-            [
-                'projects.ProjectID',
-                'sites.SiteName',
-                'projects.ProjectDescription',
-                'projects.PrimarySkillNeeded',
-                'projects.ChildFriendly',
-                DB::raw("{$sSqlVolunteersAssigned} as VolunteersAssigned"),
-                DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"),
-                DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"),
-            ]
-        )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
+        $projectScope = self::getProjectScopeBaseQueryModelWithAttributes(true, true);
+        $projectScope->addSelect(DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"));
+        $projectScope->where(
             'site_status.Year',
             $Year
-        )->join('sites', 'site_status.SiteID', '=', 'sites.SiteID')->where(
+        )->where(
             DB::raw("{$sSqlPeopleNeeded}"),
             '>',
             0
-        )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->where(
-            'projects.Status',
+        )->where(
+            'status_table.value',
             $this->getProjectStatusApprovedOptionID()
         );
 
+
         if (!empty($filter) && is_array($filter)) {
-            $projects->where(
+            $projectScope->where(
                 function ($query) use ($filter, $sSqlPeopleNeeded) {
                     $iFilterCnt = 0;
                     $bForceFilterRequiredToShowInList = true;
@@ -287,10 +287,10 @@ FROM (
                             if (is_array($aFilterValue)) {
                                 foreach ($aFilterValue as $filterValue) {
                                     if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
-                                        $query->where('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
+                                        $query->where('primary_skill_needed_table.value', 'REGEXP', $filterValue);
                                         $iFilterCnt++;
                                     } else {
-                                        $query->orWhere('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
+                                        $query->orWhere('primary_skill_needed_table.value', 'REGEXP', $filterValue);
                                         $iFilterCnt++;
                                     }
                                 }
@@ -300,10 +300,10 @@ FROM (
                                 foreach ($aFilterValue as $filterValue) {
                                     $filterValue = $filterValue === 'No' ? '0' : '1';
                                     if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
-                                        $query->where('projects.ChildFriendly', $filterValue);
+                                        $query->where('child_friendly_table.value', $filterValue);
                                         $iFilterCnt++;
                                     } else {
-                                        $query->orWhere('projects.ChildFriendly', $filterValue);
+                                        $query->orWhere('child_friendly_table.value', $filterValue);
                                         $iFilterCnt++;
                                     }
                                 }
@@ -326,7 +326,7 @@ FROM (
             );
         }
         foreach ($orderBy as $order) {
-            $projects->orderBy(
+            $projectScope->orderBy(
                 $order['field'],
                 $order['direction']
             );
@@ -341,8 +341,12 @@ FROM (
         //         $filter
         //     ]
         // );
-        $all_projects = $projects->get()->toArray();
-        if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
+        // $sql = \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql());
+        // \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$sql]);
+        $all_projects = $projectScope->get()->toArray();
+        //echo print_r($all_projects,true);
+
+        if (preg_match("/PrimarySkillNeeded/", $passedInOrderBy)) {
             $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
         }
 
@@ -362,7 +366,7 @@ FROM (
     public function getActiveProjectsSql($Year)
     {
         return "(select count(*) from projects p
-                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and p.Status = {$this->getProjectStatusApprovedOptionID()} and `p`.`deleted_at` is null)";
+                   join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL where p.Active = 1 and status_table.value = {$this->getProjectStatusApprovedOptionID()} and `p`.`deleted_at` is null)";
     }
 
     public function getVolunteersAssignedSql()
@@ -375,7 +379,7 @@ FROM (
         return "(select count(*)
             from projects p
                    join site_status ss on p.SiteStatusID = ss.SiteStatusID and ss.Year = {$Year} and ss.deleted_at IS NULL
-            where p.Active = 1 and p.Status = {$this->getProjectStatusApprovedOptionID()} and `p`.`deleted_at` is null
+            where p.Active = 1 and `status_table`.`value` = {$this->getProjectStatusApprovedOptionID()} and `p`.`deleted_at` is null
               and ((" .
                str_replace('projects.', 'p.', $this->getVolunteersAssignedSql()) .
                " + " .
@@ -430,16 +434,13 @@ FROM (
         } else {
             $aTmpOrderBy = $orderBy;
             $orderBy = [];
-            list($sortField, $direction) = preg_split("/_/", $aTmpOrderBy);
+            [$sortField, $direction] = preg_split("/_/", $aTmpOrderBy);
             $orderBy[] = ['field' => $sortField, 'direction' => $direction];
         }
 
-        $sSqlVolunteersAssigned = $this->getVolunteersAssignedSql();
-        // $sSqlVolunteersNeeded = $this->getVolunteersNeededSql($Year);
         $sSqlPeopleNeeded = $this->getPeopleNeededSql($Year);
 
         $projectScope = $this->getProjectScopeBaseQueryModelWithAttributes(true, true);
-        //$projectScope->addSelect(DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"));
         $projectScope->addSelect(DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"));
         $projectScope->where(
             'site_status.Year',
@@ -457,128 +458,8 @@ FROM (
                 $ProjectID
             );
         }
-        // echo '<pre>' . \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql
-        // ()) . '</pre>';
-        //$all_projects = $projectScope->get()->toArray();
-        /*
-                $projects = self::select(
-                    [
-                        'projects.ProjectID',
-                        'sites.SiteName',
-                        'projects.Active',
-                        'projects.SequenceNumber',
-                        'projects.OriginalRequest',
-                        'projects.ProjectDescription',
-                        'projects.Comments',
-                        DB::raw(
-                            '(SELECT GROUP_CONCAT(distinct bso.option_label SEPARATOR \',\') FROM budgets join budget_source_options bso on bso.id = budgets.BudgetSource where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
-                        ),
-                        'projects.ChildFriendly',
-                        'projects.PrimarySkillNeeded',
-                        DB::raw("{$sSqlVolunteersNeeded} as VolunteersNeededEst"),
-                        DB::raw("{$sSqlVolunteersAssigned} as VolunteersAssigned"),
-                        DB::raw("{$sSqlPeopleNeeded} as PeopleNeeded"),
-                        DB::raw(
-                            '(select pso.option_label from project_status_options pso where pso.id = projects.Status) as Status'
-                        ),
-                        'projects.StatusReason',
-                        'projects.MaterialsNeeded',
-                        'projects.EstimatedCost',
-                        'projects.ActualCost',
-                        'projects.BudgetAvailableForPC',
-                        'projects.NeedsToBeStartedEarly',
-                        'projects.PCSeeBeforeSIA',
-                        'projects.SpecialEquipmentNeeded',
-                        'projects.PermitsOrApprovalsNeeded',
-                        'projects.PrepWorkRequiredBeforeSIA',
-                        'projects.SetupDayInstructions',
-                        'projects.SIADayInstructions',
-                        'projects.Area',
-                        'projects.PaintOrBarkEstimate',
-                        'projects.PaintAlreadyOnHand',
-                        'projects.PaintOrdered',
-                        'projects.CostEstimateDone',
-                        'projects.MaterialListDone',
-                        'projects.BudgetAllocationDone',
-                        'projects.VolunteerAllocationDone',
-                        'projects.NeedSIATShirtsForPC',
-                        DB::raw(
-                            "(select sso.option_label from send_status_options sso where sso.id = projects.ProjectSend) as ProjectSend"
-                        ),
-                        'projects.FinalCompletionStatus',
-                        'projects.FinalCompletionAssessment',
 
-                    ]
-                )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
-                    'site_status.Year',
-                    $Year
-                )->whereNull('sites.deleted_at')->whereNull('site_status.deleted_at')->join(
-                    'sites',
-                    'site_status.SiteID',
-                    '=',
-                    'sites.SiteID'
-                )->where('projects.ProjectDescription', 'NOT REGEXP', 'Test');
-        */
-        if (false && !empty($filter) && is_array($filter)) {
-            $projectScope->where(
-                function ($query) use ($filter, $sSqlPeopleNeeded) {
-                    $iFilterCnt = 0;
-                    $bForceFilterRequiredToShowInList = true;
-                    foreach ($filter as $filterType => $aFilterValue) {
-                        if ($filterType === 'site') {
-                            if (is_array($aFilterValue)) {
-                                foreach ($aFilterValue as $filterValue) {
-                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
-                                        $query->where('sites.SiteName', $filterValue);
-                                        $iFilterCnt++;
-                                    } else {
-                                        $query->orWhere('sites.SiteName', $filterValue);
-                                        $iFilterCnt++;
-                                    }
-                                }
-                            }
-                        } elseif ($filterType === 'skill') {
-                            if (is_array($aFilterValue)) {
-                                foreach ($aFilterValue as $filterValue) {
-                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
-                                        $query->where('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
-                                        $iFilterCnt++;
-                                    } else {
-                                        $query->orWhere('projects.PrimarySkillNeeded', 'REGEXP', $filterValue);
-                                        $iFilterCnt++;
-                                    }
-                                }
-                            }
-                        } elseif ($filterType === 'childFriendly') {
-                            if (is_array($aFilterValue)) {
-                                foreach ($aFilterValue as $filterValue) {
-                                    $filterValue = $filterValue === 'No' ? '0' : '1';
-                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
-                                        $query->where('projects.ChildFriendly', $filterValue);
-                                        $iFilterCnt++;
-                                    } else {
-                                        $query->orWhere('projects.ChildFriendly', $filterValue);
-                                        $iFilterCnt++;
-                                    }
-                                }
-                            }
-                        } elseif ($filterType === 'peopleNeeded') {
-                            if (is_array($aFilterValue)) {
-                                foreach ($aFilterValue as $filterValue) {
-                                    if ($bForceFilterRequiredToShowInList || $iFilterCnt === 0) {
-                                        $query->whereRaw("({$sSqlPeopleNeeded}) >= ?", [$filterValue]);
-                                        $iFilterCnt++;
-                                    } else {
-                                        $query->orWhereRaw("({$sSqlPeopleNeeded}) >= ?", [$filterValue]);
-                                        $iFilterCnt++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            );
-        }
+
         foreach ($orderBy as $order) {
             $projectScope->orderBy(
                 $order['field'],
@@ -597,34 +478,8 @@ FROM (
         // echo '<pre>' . \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql
         // ()) . '</pre>';
         $all_projects = $projectScope->get()->toArray();
-        // if (preg_match("/projects\.PrimarySkillNeeded/", $passedInOrderBy)) {
-        //     $all_projects = $this->sortByProjectSkillNeeded($all_projects, $orderBy[0]['direction']);
-        // }
-        // $all_projects = $this->setProjectSkillNeededLabels($all_projects);
-        //echo $projectScope->toSql();
-        return $all_projects;
-    }
 
-    public function setProjectSkillNeededLabels($all_projects)
-    {
-        $ProjectSkillNeededOptions = ProjectSkillNeededOptions::select('id', 'option_label')->get();
-        $ProjectSkillNeededOptions = $ProjectSkillNeededOptions ? $ProjectSkillNeededOptions->toArray() : [];
-        $aProjectSkillNeededOptions = [];
-        foreach ($ProjectSkillNeededOptions as $option) {
-            $aProjectSkillNeededOptions[$option['id']] = $option['option_label'];
-        }
-        array_walk(
-            $all_projects,
-            function (&$data) use ($aProjectSkillNeededOptions) {
-                $skills = $data['PrimarySkillNeeded'];
-                $aSkills = explode(',', $skills);
-                $aLabels = [];
-                foreach ($aSkills as $skillId) {
-                    $aLabels[] = $aProjectSkillNeededOptions[$skillId];
-                }
-                $data['PrimarySkillNeeded'] = join(',', $aLabels);
-            }
-        );
+        //echo $projectScope->toSql();
 
         return $all_projects;
     }
@@ -640,8 +495,8 @@ FROM (
 
     private function custom_compare($a, $b)
     {
-        $a = array_search(substr($a["PrimarySkillNeeded"], 0, 1), $this->aSortedProjectSkillNeededOptionsOrder);
-        $b = array_search(substr($b["PrimarySkillNeeded"], 0, 1), $this->aSortedProjectSkillNeededOptionsOrder);
+        $a = array_search(substr($a["primary_skill_needed"], 2, 1), $this->aSortedProjectSkillNeededOptionsOrder);
+        $b = array_search(substr($b["primary_skill_needed"], 2, 1), $this->aSortedProjectSkillNeededOptionsOrder);
         if ($a === false && $b === false) { // both items are dont cares
             return 0;                      // a == b
         } else {
@@ -848,6 +703,45 @@ FROM (
                 }
             } elseif ($attributeCode === 'project_attachments') {
                 continue;
+            } elseif (preg_match("/budget_sources/", $attributeCode)) {
+                if ($attributeCode === 'budget_sources') {
+                    $aRows = [];
+                    if (isset($requestData['budget_sources[source]'])) {
+                        foreach ($requestData['budget_sources[source]'] as $key => $budgetSourceId) {
+                            if ($budgetSourceId !== '') {
+                                $aBudgetData = ['ProjectID'=>$ProjectID,
+                                    'BudgetSource'=>$budgetSourceId,
+                                    'BudgetAmount'=>$requestData['budget_sources[amount]'][$key],
+                                    'Status'=>$requestData['budget_sources[status]'][$key],
+                                    'Comments'=>$requestData['budget_sources[comment]'][$key]];
+
+                                $budgetId = $requestData['budget_sources[budgetid]'][$key];
+                                if($budgetId === 'new'){
+                                    $budgetModel = new Budget();
+                                } else {
+                                    $budgetModel = Budget::findOrFail($budgetId);
+                                }
+                                $budgetModel->fill($aBudgetData);
+                                $aModelResult["{$attributeCode}_{$budgetId}_{$key}"] = $budgetModel->save();
+                            }
+                        }
+                    } elseif (isset($requestData['material_needed_and_cost'])) {
+                        $attributeCodeValue = $requestData['material_needed_and_cost'];
+                    }
+                    if (!empty($aRows)) {
+                        $attributeCodeValue = $aRows;
+                    }
+                }
+                continue;
+
+            } else {
+                $a = self::searchArrayValueRecursiveByKeyValue('attribute_code', $attributeCode, $attributes);
+                if($a){
+                    $aAttributeRecord = current(current($a));
+                    if($aAttributeRecord['input'] === 'bool' && is_array($attributeCodeValue)){
+                        $attributeCodeValue = current($attributeCodeValue);
+                    }
+                }
             }
 
             if (is_array($attributeCodeValue)) {
@@ -891,7 +785,12 @@ FROM (
                     if ($table_field_type !== 'int' && $table_field_type !== 'decimal') {
                         $attributeCodeValue = "$attributeCodeValue";
                     }
-
+                    if ($table_field_type === 'int' || $table_field_type === 'decimal') {
+                        // Do not try to insert values that the user hasn't filled in or is incorrect
+                        if(!is_numeric($attributeCodeValue)){
+                            continue;
+                        }
+                    }
                     if ($model === null) {
                         try {
                             $aModelResult[$attributeCode . '_insert__' . $table] = DB::table($table)->insert(
@@ -959,9 +858,8 @@ FROM (
      */
     public function updateProjectScope($ProjectID, $requestData, $projectModel, $projectModelData)
     {
-        //echo '$ProjectID:'. $ProjectID. PHP_EOL;
-        //print_r($requestData);
-        // echo "\$ProjectID:$ProjectID\n";
+        // echo 'updateProjectScope'. PHP_EOL;
+        // echo '$ProjectID:'. $ProjectID. PHP_EOL;
         // echo '$projectModel->toArray():' . print_r($projectModel->toArray(), true) . PHP_EOL;
         // echo '$projectModelData:' . print_r($projectModelData, true) . PHP_EOL;
         // echo '$requestData:' . print_r($requestData, true) . PHP_EOL;
@@ -1005,10 +903,10 @@ FROM (
         // Set every attribute into the project with its default value
         foreach ($aAttributes as $aAttribute) {
             if ($aAttribute['table_field_type'] === 'int') {
-                $aAttribute['default_value'] = (int) $aAttribute['default_value'];
+                $aAttribute['default_value'] = $aAttribute['default_value'] !== '' ? (int) $aAttribute['default_value'] : $aAttribute['default_value'];
             } else {
                 if ($aAttribute['table_field_type'] === 'decimal') {
-                    $aAttribute['default_value'] = (float) $aAttribute['default_value'];
+                    $aAttribute['default_value'] = $aAttribute['default_value'] !== '' ? (float) $aAttribute['default_value'] : $aAttribute['default_value'];
                 }
             }
             $aProject[$aAttribute['attribute_code']] = $aAttribute['default_value'];
@@ -1049,8 +947,15 @@ FROM (
             // Get project record or just default record data
             if ($ProjectID === 'new') {
                 $projectScope = $this->getDefaultRecordData();
+                $bHasAttachments = false;
+                $budgetSources = json_encode([]);
             } else {
                 $projectScope = ProjectScope::findOrFail($ProjectID)->toArray();
+                $aProjectAttachment = ProjectAttachment::where('ProjectID','=',$ProjectID)->get()->toArray();
+                $bHasAttachments = count($aProjectAttachment)>0;
+                $aBudgets = Budget::where('ProjectID','=',$ProjectID)->get()->toArray();
+                $budgetSources = json_encode($aBudgets);
+                //(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR ',') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources
             }
             // Get all attributes related to projects
             $initialData = $this->getInitialProjectScopeAttributeData();
@@ -1058,6 +963,7 @@ FROM (
                 [
                     'ProjectID' => $projectScope['ProjectID'],
                     'SiteStatusID' => $projectScope['SiteStatusID'],
+                    'HasAttachments' => $bHasAttachments,
                     'Active' => $projectScope['Active'],
                     'SequenceNumber' => $projectScope['SequenceNumber'],
                     'OriginalRequest' => $projectScope['OriginalRequest'],
@@ -1120,7 +1026,7 @@ FROM (
             }
             $aProject['project_attachments'] = json_encode($aProject['project_attachments']);
             // print_r($aProject);
-
+            $aProject['budget_sources'] = $budgetSources;
         } catch (Exception $e) {
             echo $e->getMessage();
         }
@@ -1155,52 +1061,18 @@ FROM (
             array_unshift($aSelectColumns, 'sites.SiteName');
         }
 
-        $aAttributes = $projectScope->getAttributesArray('projects');
-        $aFieldMap = array_flip($projectScope->aFieldMap);
-        foreach ($aAttributes as $aAttribute) {
-            if (in_array($aAttribute['attribute_code'], ['budget_sources', 'project_attachments'])) {
-                continue;
-            }
-            $bUseDeprecatedCamelCasedFieldNames = false;
-            if ($bUseDeprecatedCamelCasedFieldNames) {
-                $fieldName =
-                    isset($aFieldMap[$aAttribute['attribute_code']]) ? $aFieldMap[$aAttribute['attribute_code']] :
-                        str_replace(' ', '', ucwords(str_replace('_', ' ', $aAttribute['attribute_code'])));
-            } else {
-                $fieldName = $aAttribute['attribute_code'];
-            }
 
-            $aSelectColumns[] = "{$aAttribute['attribute_code']}_table.value as $fieldName";
-        }
-
+        $aExcludeAttributeCodes =['budget_sources', 'project_attachments'];
+        $aSelectColumns = array_merge($aSelectColumns, self::getAttributesSelectColumns('projects',
+                                                                                    $aExcludeAttributeCodes));
+        /** @var ProjectScope $projectScope */
         $projectScope = self::select(...$aSelectColumns);
         $projectScope->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID');
         if ($bIncludeSiteName) {
             $projectScope->join('sites', 'sites.SiteID', '=', 'site_status.SiteID');
         }
-        foreach ($aAttributes as $aAttribute) {
-            if (in_array($aAttribute['attribute_code'], ['budget_sources', 'project_attachments'])) {
-                continue;
-            }
-            $table_field_type = $aAttribute['table_field_type'];
-            $table = "project_attributes_{$table_field_type}";
-            $tableAlias = "{$aAttribute['attribute_code']}_table";
-            // $projectScope->leftJoin("$table as $tableAlias", 'projects.ProjectID', '=', "{$tableAlias}.project_id")->where(
-            //     "{$tableAlias}.attribute_id",
-            //     "=",
-            //     $aAttribute['id']
-            // );
-            $projectScope->leftJoin(
-                "$table as $tableAlias",
-                function ($join) use ($tableAlias, $aAttribute) {
-                    $join->on('projects.ProjectID', '=', "{$tableAlias}.project_id")->where(
-                        "{$tableAlias}.attribute_id",
-                        "=",
-                        $aAttribute['id']
-                    );
-                }
-            );
-        }
+        $projectScope = self::leftJoinAttributes($projectScope,'projects','ProjectID','project_id',
+                                                 $aExcludeAttributeCodes);
         $projectScope->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where(
             'projects.Active',
             1

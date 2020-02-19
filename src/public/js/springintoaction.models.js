@@ -68,21 +68,41 @@
             'Status': '',
             'Comments': ''
         },
-        getStatusOptions: function (bReturnHtml) {
+        getStatusOptions: function (bReturnHtml, defaultOption) {
             let options = _.pairs(App.Vars.selectOptions['BudgetStatusOptions']);
             if (bReturnHtml) {
+                //options.shift();
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
                 return options;
             }
         },
-        getSourceOptions: function (bReturnHtml) {
+        getSourceOptions: function (bReturnHtml, defaultOption) {
             let options = _.pairs(App.Vars.selectOptions['BudgetSourceOptions']);
             if (bReturnHtml) {
+                //options.shift();
                 return _.map(options, function (value, key) {
-                    return "<option value='" + value[1] + "'>" + value[0] + "</option>";
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
+                    return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
                 return options;
@@ -133,9 +153,17 @@
             let options = _.pairs(App.Vars.selectOptions['ProjectStatusOptions']);
 
             if (bReturnHtml) {
-                options.shift();
+                //options.shift();
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -147,7 +175,15 @@
 
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -159,7 +195,15 @@
 
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -171,7 +215,15 @@
 
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -183,7 +235,15 @@
 
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -215,7 +275,15 @@
             let options = _.pairs(App.Vars.selectOptions['SendStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -230,7 +298,15 @@
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -595,7 +671,7 @@
         },
         getAttributesDataByTable: function(table){
             return JSON.parse(JSON.stringify(App.Collections.attributesManagementCollection.getTableOptions(table, false)));
-        },
+        }
     });
 })(window.App);
 
@@ -606,6 +682,9 @@
         defaults: {
             'attribute_id':'',
             'workflow_id':'',
+            'workflow_requirement':'1',
+            'workflow_requirement_depends_on':null,
+            'workflow_requirement_depends_on_condition':null,
             'project_skill_needed_option_id':''
         },
         aProjectAttributesData:null,

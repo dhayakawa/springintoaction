@@ -101,29 +101,41 @@ class ProjectAttributesManagementController extends BaseController
             //print_r($requestData['deletedListItemIds']);
             foreach ($requestData['deletedListItemIds'] as $deletedListItemId) {
                 $success = $this->getListItemModel($listType)->findOrFail($deletedListItemId)->delete();
-                if(!$success){
+                if (!$success) {
                     $iFailures++;
                 }
             }
         }
         $aListItemList = [];
         parse_str($requestData['listItems'], $aListItemList);
-        //print_r($aListItemList);
+        //print_r($aListItemList['list_item'][10]);
         $aCoreAttributesToUpdate = [];
         $aProjectAttributesToUpdate = [];
         foreach ($aListItemList['list_item'] as $listItemId => $listItemData) {
             if (in_array($listItemData['attribute_id'], $aCoreAttributes)) {
-                $aCoreAttributesToUpdate[$listItemData['attribute_id']] = $listItemData['workflow_id'];
+                if (!\array_key_exists($listItemData['attribute_id'], $aCoreAttributesToUpdate)) {
+                    $aCoreAttributesToUpdate[$listItemData['attribute_id']] = [
+                        'workflow_id' => $listItemData['workflow_id'],
+                        'workflow_requirement' => $listItemData['workflow_requirement'],
+                        'workflow_requirement_depends_on' => !empty($listItemData['workflow_requirement_depends_on']) ?
+                            $listItemData['workflow_requirement_depends_on'] : null,
+                        'workflow_requirement_depends_on_condition' => $listItemData['workflow_requirement_depends_on_condition'],
+                    ];
+                }
             } else {
                 //echo 'setupdate for $listItemId:'. $listItemId. ' '. print_r($listItemData, true);
                 $aProjectAttributesToUpdate[$listItemId] = [
                     'attribute_id' => $listItemData['attribute_id'],
                     'workflow_id' => $listItemData['workflow_id'],
+                    'workflow_requirement' => $listItemData['workflow_requirement'],
+                    'workflow_requirement_depends_on' => !empty($listItemData['workflow_requirement_depends_on']) ?
+                        $listItemData['workflow_requirement_depends_on'] : null,
+                    'workflow_requirement_depends_on_condition' => $listItemData['workflow_requirement_depends_on_condition'],
                     'project_skill_needed_option_id' => $listItemData['project_skill_needed_option_id'],
                 ];
             }
         }
-        // echo '$aCoreAttributesToUpdate'.print_r($aCoreAttributesToUpdate, true);
+        //echo '$aCoreAttributesToUpdate'.print_r($aCoreAttributesToUpdate, true);
         // echo '$aProjectAttributesToUpdate'.print_r($aProjectAttributesToUpdate, true);
         $volunteerPrimarySkillOptions = ProjectSkillNeededOptions::get()->toArray();
         //echo '$volunteerPrimarySkillOptions' . print_r($volunteerPrimarySkillOptions, true);
@@ -136,11 +148,16 @@ class ProjectAttributesManagementController extends BaseController
         //echo '$aVolunteerPrimarySkillOptions' . print_r($aVolunteerPrimarySkillOptions, true);
         $aAttributeModels = [];
 
-        foreach ($aCoreAttributesToUpdate as $attribute_id => $workflow_id) {
+        foreach ($aCoreAttributesToUpdate as $attribute_id => $workflow_data) {
+            $workflow_id = $workflow_data['workflow_id'];
+            $workflow_requirement = $workflow_data['workflow_requirement'];
+            $workflow_requirement_depends_on = $workflow_data['workflow_requirement_depends_on'];
+            $workflow_requirement_depends_on_condition = $workflow_data['workflow_requirement_depends_on_condition'];
             $aAttributeModels[$attribute_id] =
                 $this->getListItemModel($listType)->where('attribute_id', '=', $attribute_id)->get()->toArray();
             //echo '$aAttributeModels' . print_r($aAttributeModels, true);
             foreach ($aVolunteerPrimarySkillOptions as $volunteerPrimarySkillOptionId) {
+                // this is to find orphaned attributes
                 foreach ($aAttributeModels[$attribute_id] as $key => $aAttributeModel) {
                     if ($aAttributeModel['attribute_id'] == $attribute_id &&
                         $aAttributeModel['workflow_id'] == $workflow_id &&
@@ -150,30 +167,102 @@ class ProjectAttributesManagementController extends BaseController
                         unset($aAttributeModels[$attribute_id][$key]);
                     }
                 }
-                $model = $this->getListItemModel($listType)->where('attribute_id', '=', $attribute_id)->where(
-                    'workflow_id',
-                    '=',
-                    $workflow_id
-                )->where(
-                    'project_skill_needed_option_id',
-                    '=',
-                    $volunteerPrimarySkillOptionId
-                )->get()->toArray();
-                if (!empty($model)) {
+                // looking for an existing combo record
+                $projectAttributeCollection =
+                    $this->getListItemModel($listType)->where('attribute_id', '=', $attribute_id)->where(
+                        'workflow_id',
+                        '=',
+                        $workflow_id
+                    )->where(
+                        'project_skill_needed_option_id',
+                        '=',
+                        $volunteerPrimarySkillOptionId
+                    )->get();
+                $aProjectAttributeCollection = $projectAttributeCollection->toArray();
+                // if ($attribute_id === 9) {
+                //     echo '$aProjectAttributeCollection' . print_r($aProjectAttributeCollection, true);
+                // }
+                $aModel = current($aProjectAttributeCollection);
+                $bModelExists = !empty($aModel);
+                $bMatchesData = false;
+                if ($bModelExists) {
+                    $bMRqIsNull = $aModel['workflow_requirement'] === null;
+                    $bRRqIsNull = $workflow_requirement === null;
+                    $bRqMatches =
+                        ($bMRqIsNull &&
+                         $bRRqIsNull ||
+                         empty($aModel['workflow_requirement']) &&
+                         empty($workflow_requirement)) ||
+                        ((!$bMRqIsNull && !$bRRqIsNull) && ($aModel['workflow_requirement'] == $workflow_requirement));
+
+                    $bMDIsNull = $aModel['workflow_requirement_depends_on'] === null;
+                    $bRDIsNull = $workflow_requirement_depends_on === null;
+                    $bMDCIsNull = $aModel['workflow_requirement_depends_on_condition'] === null;
+                    $bRDCIsNull = $workflow_requirement_depends_on_condition === null;
+                    $bDMatches =
+                        ($bMDIsNull &&
+                         $bRDIsNull ||
+                         empty($aModel['workflow_requirement_depends_on']) &&
+                         empty($workflow_requirement_depends_on)) ||
+                        ((!$bMDIsNull && !$bRDIsNull) &&
+                         ($aModel['workflow_requirement_depends_on'] == $workflow_requirement_depends_on));
+
+                    $bDCMatches =
+                        ($bMDCIsNull &&
+                         $bRDCIsNull ||
+                         empty($aModel['workflow_requirement_depends_on_condition']) &&
+                         empty($workflow_requirement_depends_on_condition)) ||
+                        ((!$bMDCIsNull && !$bRDCIsNull) &&
+                         ($aModel['workflow_requirement_depends_on_condition'] ==
+                          $workflow_requirement_depends_on_condition));
+                    $bMatchesData = $bRqMatches && $bDMatches && $bDCMatches;
+                }
+
+                // if ($attribute_id === 9) {
+                //     echo "\$workflow_data:" . print_r($workflow_data, true);
+                //     echo "\$aModel:" . print_r($aModel, true);
+                //     echo "\$bRqMatches:" . (int) $bRqMatches . PHP_EOL;
+                //     echo "\$bDMatches:" . (int) $bDMatches . PHP_EOL;
+                //     echo "\$bDCMatches:" . (int) $bDCMatches . PHP_EOL;
+                //     echo "\$bMatchesData:" . (int) $bMatchesData . PHP_EOL;
+                // }
+
+                if ($bModelExists && $bMatchesData) {
                     // we don't need to do anything, the record hasn't been modified.
-                    //print_r($model);
+                    //echo print_r($model,true);
                 } else {
-                    //echo "combo does not exist:$attribute_id,$workflow_id,$volunteerPrimarySkillOptionId.\n";
-                    $projectAttribute = $this->getListItemModel($listType);
-                    $projectAttribute->fill(
-                        [
-                            'attribute_id' => $attribute_id,
-                            'workflow_id' => $workflow_id,
-                            'project_skill_needed_option_id' => $volunteerPrimarySkillOptionId,
-                        ]
-                    );
+                    if (!$bModelExists) {
+                        //echo "combo does not exist create a new one?:$attribute_id,$workflow_id,$volunteerPrimarySkillOptionId.\n";
+                        $projectAttribute = $this->getListItemModel($listType);
+                        $projectAttribute->fill(
+                            [
+                                'attribute_id' => $attribute_id,
+                                'workflow_id' => $workflow_id,
+                                'workflow_requirement' => $workflow_requirement,
+                                'workflow_requirement_depends_on' => $workflow_requirement_depends_on,
+                                'workflow_requirement_depends_on_condition' => $workflow_requirement_depends_on_condition,
+                                'project_skill_needed_option_id' => $volunteerPrimarySkillOptionId,
+                            ]
+                        );
+                    }else{
+                        //echo "update model {$aModel['id']}?".PHP_EOL;
+                        $projectAttribute = $this->getListItemModel($listType)->findOrFail($aModel['id']);
+                        $projectAttribute->fill(
+                            [
+                                'attribute_id' => $attribute_id,
+                                'workflow_id' => $workflow_id,
+                                'workflow_requirement' => $workflow_requirement,
+                                'workflow_requirement_depends_on' => $workflow_requirement_depends_on,
+                                'workflow_requirement_depends_on_condition' => $workflow_requirement_depends_on_condition,
+                                'project_skill_needed_option_id' => $volunteerPrimarySkillOptionId,
+                            ]
+                        );
+
+                    }
+
                     $success = $projectAttribute->save();
                     if (!$success) {
+                        //echo "{$projectAttribute->id} failed\n";
                         $iFailures++;
                     }
                 }
@@ -186,16 +275,23 @@ class ProjectAttributesManagementController extends BaseController
             foreach ($aMissingCoreAttributes as $attribute_id) {
                 foreach ($aVolunteerPrimarySkillOptions as $volunteerPrimarySkillOptionId) {
                     $workflow_id = 3;
+                    $workflow_requirement = 1;
+                    $workflow_requirement_depends_on = null;
+                    $workflow_requirement_depends_on_condition = null;
                     $projectAttribute = $this->getListItemModel($listType);
                     $projectAttribute->fill(
                         [
                             'attribute_id' => $attribute_id,
                             'workflow_id' => $workflow_id,
+                            'workflow_requirement' => $workflow_requirement,
+                            'workflow_requirement_depends_on' => $workflow_requirement_depends_on,
+                            'workflow_requirement_depends_on_condition' => $workflow_requirement_depends_on_condition,
                             'project_skill_needed_option_id' => $volunteerPrimarySkillOptionId,
                         ]
                     );
                     $success = $projectAttribute->save();
                     if (!$success) {
+                        //echo "{$projectAttribute->id} failed\n";
                         $iFailures++;
                     }
                 }
@@ -211,15 +307,20 @@ class ProjectAttributesManagementController extends BaseController
                         [
                             'attribute_id' => $aData['attribute_id'],
                             'workflow_id' => $aData['workflow_id'],
+                            'workflow_requirement' => $aData['workflow_requirement'],
+                            'workflow_requirement_depends_on' => $aData['workflow_requirement_depends_on'],
+                            'workflow_requirement_depends_on_condition' => $aData['workflow_requirement_depends_on_condition'],
                             'project_skill_needed_option_id' => $aData['project_skill_needed_option_id'],
                         ]
                     );
                     try {
                         $success = $projectAttribute->save();
                         if (!$success) {
+                            echo "{$projectAttribute->id} failed\n";
                             $iFailures++;
                         }
                     } catch (\Exception $e) {
+                        //echo $e->getMessage();
                         //echo '$listItemId:' . $listItemId . ' ' . print_r($aData, true);
                         $iFailures++;
                     }

@@ -9,6 +9,7 @@
 namespace Dhayakawa\SpringIntoAction\Helpers;
 
 use Dhayakawa\SpringIntoAction\Models\Project;
+use Dhayakawa\SpringIntoAction\Models\ProjectScope;
 use Dhayakawa\SpringIntoAction\Models\Site;
 use \Dhayakawa\SpringIntoAction\Models\ProjectSkillNeededOptions;
 use \Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
@@ -17,6 +18,7 @@ use \Dhayakawa\SpringIntoAction\Models\ProjectStatusOptions;
 trait ProjectRegistrationHelper
 {
     use CurrentYearTrait;
+
     /**
      * @param $option_label
      *
@@ -65,7 +67,7 @@ trait ProjectRegistrationHelper
     public function getProjectList($filters = [], $orderBy = null)
     {
         try {
-            $projectModel = new Project();
+            $projectModel = new ProjectScope();
             $all_projects = $projectModel->getRegistrationProjects($this->getCurrentYear(), $filters, $orderBy);
         } catch (\Exception $e) {
             $all_projects = [];
@@ -123,7 +125,7 @@ trait ProjectRegistrationHelper
 
         $aPrimarySkillNeeded = [];
         $aPrimarySkillNeededRaw =
-            array_values(array_unique($this->getArrayFieldValues('PrimarySkillNeeded', $all_projects)));
+            array_values(array_unique($this->getArrayFieldValues('primary_skill_needed', $all_projects)));
         if (!empty($aPrimarySkillNeededRaw)) {
             foreach ($aPrimarySkillNeededRaw as $rawSkillID) {
                 $aRawSkills = preg_split("/,/", $rawSkillID);
@@ -162,7 +164,7 @@ trait ProjectRegistrationHelper
                     'filterLabel' => $skill,
                     'filterId' => 'filter_skill_' . $skillID,
                     'FilterIsChecked' => $bFilterIsChecked,
-                    'Field' => 'projects.PrimarySkillNeeded',
+                    'Field' => 'primary_skill_needed_table.value',
                     'FieldID' => $skillID,
                 ];
                 $aSkillAdded[] = $skillID;
@@ -173,7 +175,7 @@ trait ProjectRegistrationHelper
             'Yes' => '<i title="Child Friendly" class="text-success fas fa-child"></i>',
             'No' => '<i title="Child Friendly" class="text-danger fas fa-child"></i>',
         ];
-        $aChildFriendly = array_values(array_unique($this->getArrayFieldValues('ChildFriendly', $all_projects)));
+        $aChildFriendly = array_values(array_unique($this->getArrayFieldValues('child_friendly', $all_projects)));
         sort($aChildFriendly);
         foreach ($aChildFriendly as $childFriendly) {
             $childFriendly = $childFriendly === 0 ? 'No' : 'Yes';
@@ -185,7 +187,7 @@ trait ProjectRegistrationHelper
                 'filterId' => 'filter_childFriendly_' . $childFriendly,
                 'filterLabel' => $childFriendly,
                 'FilterIsChecked' => $bFilterIsChecked,
-                'Field' => 'projects.ChildFriendly',
+                'Field' => 'child_friendly_table.value',
                 'FieldID' => '',
             ];
         }

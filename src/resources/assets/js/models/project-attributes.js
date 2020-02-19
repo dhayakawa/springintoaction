@@ -5,6 +5,9 @@
         defaults: {
             'attribute_id':'',
             'workflow_id':'',
+            'workflow_requirement':'1',
+            'workflow_requirement_depends_on':null,
+            'workflow_requirement_depends_on_condition':null,
             'project_skill_needed_option_id':''
         },
         aProjectAttributesData:null,

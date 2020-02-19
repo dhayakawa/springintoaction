@@ -9,9 +9,17 @@
             let options = _.pairs(App.Vars.selectOptions['ProjectStatusOptions']);
 
             if (bReturnHtml) {
-                options.shift();
+                //options.shift();
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -23,7 +31,15 @@
 
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -35,7 +51,15 @@
 
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -47,7 +71,15 @@
 
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -59,7 +91,15 @@
 
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -91,7 +131,15 @@
             let options = _.pairs(App.Vars.selectOptions['SendStatusOptions']);
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {
@@ -106,7 +154,15 @@
             ];
             if (bReturnHtml) {
                 return _.map(options, function (value, key) {
-                    let selected = !_.isUndefined(defaultOption) && defaultOption === value[0] ? 'selected' : '';
+                    let bMatches = false;
+                    if (!_.isUndefined(defaultOption)) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                    let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
                     return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
                 }).join('');
             } else {

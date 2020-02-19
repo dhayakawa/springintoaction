@@ -234,7 +234,7 @@ function getSIAConfirmModal(id){
 (function (App) {
     // Abstract Select View meant to be extended
 
-    App.Views.SelectOption = App.Views.Backend.extend({
+    App.Views.SelectOption = Backbone.View.extend({
         tagName: 'option',
         initialize: function (options) {
             let self = this;
@@ -262,7 +262,7 @@ function getSIAConfirmModal(id){
         }
     });
 
-    App.Views.Select = App.Views.Backend.extend({
+    App.Views.Select = Backbone.View.extend({
         tagName: 'select',
         initialize: function (options) {
             let self = this;

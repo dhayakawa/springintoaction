@@ -5506,6 +5506,15 @@
                                         '<td class="list-item-label required">' +
                                         '    <select class="list-item-input" name="list_item[<%= id %>][workflow_id]" data-id="<%= id %>"><%= workflowOptions %></select>' +
                                         '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][workflow_requirement]" data-id="<%= id %>"><%= workflowRequirements %></select>' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][workflow_requirement_depends_on]" data-id="<%= id %>"><%= workflowRequirementsDependsOn %></select>' +
+                                        '</td>' +
+                                        '<td class="list-item-label required">' +
+                                        '    <select class="list-item-input" name="list_item[<%= id %>][workflow_requirement_depends_on_condition]" data-id="<%= id %>"><%= workflowRequirementsDependsOnCondition %></select>' +
+                                        '</td>' +
                                         '<td class="list-item-label">' +
                                         '    <select class="list-item-input" name="list_item[<%= id %>][project_skill_needed_option_id]" data-id="<%= id %>"><%= projectSkillNeededOptions %></select>' +
                                         '</td>' +
@@ -5640,6 +5649,8 @@
         events: {
             'click .ui-icon-trash': 'delete',
             'change .list-item-input': 'listChanged',
+            'change .list-item-input[name$="[workflow_requirement]"]': 'setWorkflowRequirementDependsOn',
+            'change .list-item-input[name$="[workflow_requirement_depends_on]"]': 'setWorkflowRequirementDependsOnCond',
         },
         initialize: function (options) {
             let self = this;
@@ -5658,6 +5669,10 @@
             self.deletedListItemIds = [];
             self.modelIdAttribute = self.options.modelIdAttribute;
             self.labelAttribute = self.options.labelAttribute;
+            self.projectAttributes = App.Collections.attributesManagementCollection.getTableOptions('projects', false);
+            self.workflowRequirementsDependsOn = '<option data-is-core=\'0\' value=\'\'>N/A</option>' + App.Collections.attributesManagementCollection.getTableOptions('projects', true);
+            self.workflowRequirementsDependsOnCondition = '';
+
         },
         render: function (e) {
             let self = this;
@@ -5669,29 +5684,52 @@
                 attributesOptions: App.Collections.attributesManagementCollection.getTableOptions('projects', true),
                 workflowOptions: App.Collections.workflowManagementCollection.getOptions(true),
                 projectSkillNeededOptions: App.Models.projectModel.getSkillsNeededOptions(true),
+                workflowRequirements: App.Models.projectModel.getYesNoOptions(true, 'Yes') + "<option  value='3'>Yes, if depends on condition is met</option>",
+                workflowRequirementsDependsOn:self.workflowRequirementsDependsOn,
+                workflowRequirementsDependsOnCondition:self.workflowRequirementsDependsOnCondition,
                 view: self
             }));
+
             let listItems= JSON.parse(JSON.stringify(self.collection.models));
             let listItemsCnt = listItems.length;
             for (let i = 0; i < listItemsCnt; i++) {
                 let listItem = listItems[i];
                 let id = listItem[self.modelIdAttribute];
-
                 let $attributeId = self.$('[name="list_item[' + id + '][attribute_id]"]');
-
                 let $workflowId = self.$('[name="list_item[' + id + '][workflow_id]"]');
-
+                let $workflowRequirement = self.$('[name="list_item[' + id + '][workflow_requirement]"]');
                 let $projectSkillNeededOptionId = self.$('[name="list_item[' + id + '][project_skill_needed_option_id]"]');
 
                 $attributeId.val(listItem['attribute_id']);
+                let $deleteBtn = $attributeId.parents('tr').find('.ui-icon-trash');
                 let bIsCoreAttribute = $attributeId.find('option:selected').data('is-core');
 
                 $workflowId.val(listItem['workflow_id']);
-                $projectSkillNeededOptionId.val(listItem['project_skill_needed_option_id']);
-                let $deleteBtn = $attributeId.parents('tr').find('.ui-icon-trash');
-                //console.log({listItem: listItem, id: id, $attributeId: $attributeId, 'set attribute_id to': listItem['attribute_id'], $workflowId: $workflowId, $projectSkillNeededOptionId: $projectSkillNeededOptionId, $deleteBtn: $deleteBtn});
-                if (bIsCoreAttribute) {
 
+
+                // if (id===12) {
+                //     console.log({
+                //         listItem: listItem,
+                //         id: id,
+                //         $attributeId: $attributeId,
+                //         'set attribute_id to': listItem['attribute_id'],
+                //         $workflowId: $workflowId,
+                //         $projectSkillNeededOptionId: $projectSkillNeededOptionId,
+                //         $deleteBtn: $deleteBtn
+                //     });
+                // }
+                $workflowRequirement.val(listItem['workflow_requirement']);
+                if(!_.isNull(listItem['workflow_requirement_depends_on']) && listItem['workflow_requirement_depends_on'].toString().match(/^[\d]+$/)){
+                    $workflowRequirement.data('depends-on',listItem['workflow_requirement_depends_on']);
+                    $workflowRequirement.data('depends-on-cond',listItem['workflow_requirement_depends_on_condition']);
+                }
+                // show/hide/set depends on fields
+                $workflowRequirement.trigger('change');
+
+                $projectSkillNeededOptionId.val(listItem['project_skill_needed_option_id']);
+
+
+                if (bIsCoreAttribute) {
                     $deleteBtn.hide();
                     $deleteBtn.parent().find('.msg').remove();
                     $deleteBtn.parent().append('<div class="msg">Core attributes are required.</div>');
@@ -5713,7 +5751,144 @@
             }
             self.$sortableElement = self.$el.find('.table.list-items tbody');
             self.parentView.filterList();
+
             return self;
+        },
+        setWorkflowRequirementDependsOn: function(e){
+            let self = this;
+            //console.log('setWorkflowRequirementDependsOn',{e:e});
+            let $workflowRequirement = $(e.currentTarget);
+            let id = $workflowRequirement.data('id');
+            let workflowRequirementValue = $workflowRequirement.val();
+            let $workflowRequirementDependsOn = self.$('select[name="list_item[' + id + '][workflow_requirement_depends_on]"]');
+            let $workflowRequirementDependsOnCondition = self.$('[name="list_item[' + id + '][workflow_requirement_depends_on_condition]"]');
+            //console.log('setWorkflowRequirementDependsOn',{id:id,workflowRequirementValue:workflowRequirementValue,e:e});
+            //
+            if(workflowRequirementValue === '3'){
+                if (self.$('input[type="hidden"][name="list_item[' + id + '][workflow_requirement_depends_on]"]').length) {
+                    self.$('input[type="hidden"][name="list_item[' + id + '][workflow_requirement_depends_on]"]').remove();
+                }
+                $workflowRequirementDependsOn.parent().find('.msg').remove();
+                $workflowRequirementDependsOn.siblings('input[type="hidden"]').remove();
+                $workflowRequirementDependsOn.removeAttr('disabled');
+                $workflowRequirementDependsOn.val($workflowRequirement.data('depends-on'));
+                $workflowRequirementDependsOn.data('depends-on-cond',$workflowRequirement.data('depends-on-cond'));
+                $workflowRequirementDependsOn.show();
+                $workflowRequirementDependsOn.trigger('change');
+                //console.log('setWorkflowRequirementDependsOn',{depOnVal:$workflowRequirement.data('depends-on'),depOnCond:$workflowRequirement.data('depends-on-cond')});
+            } else {
+                $workflowRequirementDependsOn.val('');
+                $workflowRequirementDependsOn.attr('disabled', true);
+                $workflowRequirementDependsOn.hide();
+                $workflowRequirementDependsOn.parent().find('.msg').remove();
+                $workflowRequirementDependsOn.parent().append('<div class="msg">N/A</div>');
+                if (!self.$('input[type="hidden"][name="list_item[' + id + '][workflow_requirement_depends_on]"]').length) {
+                    $workflowRequirementDependsOn.after($('<input type="hidden" name="' + $workflowRequirementDependsOn.attr('name') + '" data-id="' + $workflowRequirementDependsOn.data('id') + '"/>').val($workflowRequirementDependsOn.val()));
+                }
+
+                let bIsHiddenInput = self.$('input[type="hidden"][name="list_item[' + id + '][workflow_requirement_depends_on_condition]"]').length;
+                $workflowRequirementDependsOnCondition.val('');
+                if (!bIsHiddenInput) {
+                    $workflowRequirementDependsOnCondition.attr('disabled', true);
+                    $workflowRequirementDependsOnCondition.hide();
+                } else {
+                    $workflowRequirementDependsOnCondition.removeAttr('disabled');
+                    $workflowRequirementDependsOnCondition.show();
+                }
+                $workflowRequirementDependsOnCondition.parent().find('.msg').remove();
+                $workflowRequirementDependsOnCondition.parent().append('<div class="msg">N/A</div>');
+                if (!bIsHiddenInput) {
+                    $workflowRequirementDependsOnCondition.after($('<input type="hidden" name="' + $workflowRequirementDependsOnCondition.attr('name') + '" data-id="' + $workflowRequirementDependsOnCondition.data('id') + '"/>').val($workflowRequirementDependsOnCondition.val()));
+                    $workflowRequirementDependsOnCondition.remove();
+                }
+
+            }
+            /**/
+        },
+        setWorkflowRequirementDependsOnCond: function(e){
+            let self = this;
+            let attributeOptionsSource = '';
+            let attributeInputType = '';
+            let $workflowRequirementDependsOn = $(e.currentTarget);
+
+            let id = $workflowRequirementDependsOn.data('id');
+            let workflowRequirementDependsOnValue = $workflowRequirementDependsOn.val() !== '' ? parseInt($workflowRequirementDependsOn.val()) : '';
+            let workflowRequirementDependsOnCondValue = $workflowRequirementDependsOn.data('depends-on-cond');
+            let $workflowRequirementDependsOnCondition = self.$('[name="list_item[' + id + '][workflow_requirement_depends_on_condition]"]');
+            let currentTagType = $workflowRequirementDependsOnCondition[0].localName;
+            let condition = '';
+            $workflowRequirementDependsOnCondition.parent().find('.msg').remove();
+            if (_.isNumber(workflowRequirementDependsOnValue)) {
+                let attribute = App.Collections.attributesManagementCollection.get(parseInt(workflowRequirementDependsOnValue));
+                attributeInputType = attribute.get('input');
+                attributeOptionsSource = attribute.get('options_source');
+            }
+            let bRequiresSelectType = (attributeInputType === 'select' || attributeInputType === 'bool');
+            if(bRequiresSelectType && currentTagType === 'input'){
+                $workflowRequirementDependsOnCondition.hide();
+                $workflowRequirementDependsOnCondition.after($('<select multiple name="' + $workflowRequirementDependsOnCondition.attr('name') + '" data-id="' + $workflowRequirementDependsOnCondition.data('id') + '"></select>'));
+                $workflowRequirementDependsOnCondition.remove();
+                $workflowRequirementDependsOnCondition = self.$('[name="list_item[' + id + '][workflow_requirement_depends_on_condition]"]');
+                $workflowRequirementDependsOnCondition.empty();
+            } else if (!bRequiresSelectType && currentTagType === 'select') {
+                $workflowRequirementDependsOnCondition.hide();
+                $workflowRequirementDependsOnCondition.after($('<input type="text" name="' + $workflowRequirementDependsOnCondition.attr('name') + '" data-id="' + $workflowRequirementDependsOnCondition.data('id') + '"/>'));
+                $workflowRequirementDependsOnCondition.remove();
+                $workflowRequirementDependsOnCondition = self.$('[name="list_item[' + id + '][workflow_requirement_depends_on_condition]"]');
+            }
+            if (!bRequiresSelectType) {
+                $workflowRequirementDependsOnCondition.attr('type','text');
+                $workflowRequirementDependsOnCondition.val(workflowRequirementDependsOnCondValue);
+            } else {
+                let selectOptions = {
+                    bool: App.Models.projectModel.getYesNoOptions(true, workflowRequirementDependsOnCondValue),
+                    permit_required_status_options: App.Models.projectModel.getPermitRequiredStatusOptions(true, workflowRequirementDependsOnCondValue),
+                    permit_required_options: App.Models.projectModel.getPermitRequiredOptions(true, workflowRequirementDependsOnCondValue),
+                    project_skill_needed_options: App.Models.projectModel.getSkillsNeededOptions(true, workflowRequirementDependsOnCondValue),
+                    project_status_options: self.addNegativeOptions(App.Models.projectModel.getStatusOptions(false), workflowRequirementDependsOnCondValue),
+                    send_status_options: App.Models.projectModel.getSendOptions(true, workflowRequirementDependsOnCondValue),
+                    when_will_project_be_completed_options: App.Models.projectModel.getWhenWillProjectBeCompletedOptions(true, workflowRequirementDependsOnCondValue)
+                };
+                if(attributeInputType === 'bool'){
+                    $workflowRequirementDependsOnCondition.append(selectOptions.bool);
+                } else if(attributeInputType === 'select'){
+                    $workflowRequirementDependsOnCondition.append(selectOptions[attributeOptionsSource]);
+                    let bIsMultipleDefaults = workflowRequirementDependsOnCondValue.split(/,/).length > 1;
+                    if(bIsMultipleDefaults){
+                        _.each(workflowRequirementDependsOnCondValue.split(/,/), function(val,key){
+                            $workflowRequirementDependsOnCondition.find('option[value="'+val+'"]').attr('selected','selected');
+                        });
+                    }
+
+                }
+            }
+            // $workflowRequirementDependsOnCondition.after($('<input type="hidden" name="' + $workflowRequirementDependsOnCondition.attr('name') + '" data-id="' + $workflowRequirementDependsOnCondition.data('id') + '"/>').val($workflowRequirementDependsOnCondition.val()));
+            // $workflowRequirementDependsOnCondition.remove();
+            //$workflowRequirementDependsOnCondition.siblings('input[type="hidden"]').remove();
+            $workflowRequirementDependsOnCondition.show();
+            //console.log('setWorkflowRequirementDependsOnCond',{id:id,workflowRequirementDependsOnValue:workflowRequirementDependsOnValue,attributeInputType:attributeInputType,currentTagType:currentTagType,workflowRequirementDependsOnCondition:$workflowRequirementDependsOnCondition, e:e});
+        },
+        addNegativeOptions: function(options, defaultOption){
+            let neg = [];
+            _.each(options, function(val,key){
+                neg.push(['Not '+val[0],'not '+val[1]]);
+            });
+            options = options.concat(neg);
+            return _.map(options, function (value, key) {
+                let bMatches = false;
+                if (!_.isUndefined(defaultOption)&&!_.isNull(defaultOption)) {
+                    let bIsMultipleDefaults = defaultOption.split(/,/).length > 1;
+                    if (!bIsMultipleDefaults) {
+                        if (!_.isNull(defaultOption) && (_.isNumber(defaultOption) || defaultOption.toString().match(/^[\d]+$/))) {
+                            bMatches = parseInt(defaultOption) === parseInt(value[1]);
+                        } else {
+                            bMatches = defaultOption === value[0];
+                        }
+                    }
+                }
+                let selected = !_.isUndefined(defaultOption) && bMatches ? 'selected' : '';
+                return "<option " + selected + " value='" + value[1] + "'>" + value[0] + "</option>";
+            }).join('');
         },
         setGridManagerContainerToolbar: function ($gridManagerContainerToolbar) {
             let self = this;
@@ -6194,6 +6369,7 @@
             let self = this;
             let model;
             self.$form = self.options.managedGridView.$('form[name="projectScope"]');
+
             if (!self.validateForm()){
                 growl('Please fix form errors.', 'error');
                 return;
@@ -6213,6 +6389,7 @@
             let growlMsg = '';
             let growlType = '';
             let newId = null;
+
             $.when(
                 model.save(data,
                     {
@@ -6275,6 +6452,10 @@
                 self.$('.btnSave').removeClass('disabled');
             }
         },
+        disableSaveBtn: function(){
+            let self = this;
+            self.$('.btnSave').addClass('disabled');
+        }
     });
 })(window.App);
 
@@ -6290,22 +6471,56 @@
             'change [name="permit_required"]': 'handlePermitRequiredChange',
             'change [name="status"]': 'handleStatusChange',
             'click .add-material-needed-and-cost': 'addMaterialAndCostRow',
+            'click .add-budget-source': 'addBudgetSourceRow',
             'click .calculate-total-from-material-cost': 'calculateFromMaterialAndCost',
             'click .add-project-attachment': 'clickFileUpload',
             'click .project-attachment-delete': 'deleteProjectAttachment',
             'click .email-project-report': 'emailProjectReport',
-            'click .check-all-leadership': 'checkAllLeadership'
+            'click .check-all-leadership': 'checkAllLeadership',
+            'click [data-widget="custom-collapse"]': 'toggleCollapse',
+            'click .workflow-status-display-progress-box .point': 'workflowScrollTo'
         },
         initialize: function (options) {
             let self = this;
-
+            // delete from project_attributes_int where attribute_id in (16,17,22,23,24,31,32,33,34,38,41) and value = 0;
             try {
-                _.bindAll(self, 'render', 'formChanged', 'handleProjectIDChange', 'handleProjectTypeChange', 'handlePermitRequiredChange', 'addMaterialAndCostRow', 'calculateFromMaterialAndCost','saveProjectAttachments','clickFileUpload','deleteProjectAttachment','emailProjectReport','checkAllLeadership');
+                _.bindAll(self,
+                    'render',
+                    'formChanged',
+                    'handleProjectIDChange',
+                    'handleProjectTypeChange',
+                    'handlePermitRequiredChange',
+                    'addMaterialAndCostRow',
+                    'addBudgetSourceRow',
+                    'calculateFromMaterialAndCost',
+                    'saveProjectAttachments',
+                    'clickFileUpload',
+                    'deleteProjectAttachment',
+                    'emailProjectReport',
+                    'checkAllLeadership',
+                    'workflowScrollTo');
             } catch (e) {
                 console.error(options, e)
             }
             // Required call for inherited class
             self._initialize(options);
+            // <i class="fas fa-tasks"></i>
+            // <i class="fas fa-exclamation-triangle"></i>
+            // <i class="far fa-check-circle"></i>
+            self.bUpdatingProjectWorkflow = false;
+            self.workflowState = {};
+            self.currentProjectTypes = null;
+            self.workflowStatusLabelWaitingClass = 'label-default';
+            self.workflowStatusLabelNotFinishClass = 'label-warning';
+            self.workflowStatusLabelLateClass = 'label-danger';
+            self.workflowStatusLabelDoneClass = 'label-success';
+            self.defaultWorkflowStatusLabelClass = self.workflowStatusLabelWaitingClass;
+
+            self.workflowStatusIconNotFinishClass = 'fa-tasks';
+            self.workflowStatusIconLateClass = 'fa-exclamation-triangle';
+            self.workflowStatusIconDoneClass = 'fa-check-circle';
+            self.defaultWorkflowStatusIconClass = self.workflowStatusIconNotFinishClass;
+
             self.bIsAddNew = false;
             self.bDoneLoadingForm = false;
             self.modelNameLabel = self.options.modelNameLabel;
@@ -6313,12 +6528,23 @@
             self.sitesDropdownView = self.options.parentView.sitesDropdownView;
             self.projectsDropDownView = self.options.parentView.projectsDropDownView;
             self.listenTo(self.projectsDropDownView, "project-id-change", self.handleProjectIDChange);
-
-            self.projectAttributes = JSON.parse(JSON.stringify(App.Collections.projectAttributesManagementCollection.where({workflow_id: 1})));
+            self.workflowOptions = JSON.parse(JSON.stringify(App.Collections.workflowManagementCollection.getOptions(false)));
+            self.initialWorkflowId = self.workflowOptions[0].id;
+            self.initialWorkflowCode = self.workflowOptions[0].workflow_code;
+            self.initialWorkflowLabel = self.workflowOptions[0].label;
+            self.initialWorkflowStatusLabelClass = self.workflowStatusLabelNotFinishClass;
+            self.projectAttributes = JSON.parse(JSON.stringify(App.Collections.projectAttributesManagementCollection));
             self.attributesOptions = JSON.parse(JSON.stringify(App.Collections.attributesManagementCollection.getTableOptions('projects', false)));
             //console.log({attributesOptions: self.attributesOptions})
+            self.aCurrentProjectTypeAttributes = [];
+            self.projectAttributeWorkflowIds = {};
+            // for(let i = 1; i <= self.workflowOptions.length; i++){
+            //     self.projectAttributes = self.projectAttributes.concat(JSON.parse(JSON.stringify(App.Collections.projectAttributesManagementCollection.where({workflow_id: i}))));
+            // }
+            self.workflowRequirementsConfig = {};
+            self.setProjectWorkflowConfig();
             self.attributesOptionsCnt = self.attributesOptions.length;
-            self.workflowOptions = JSON.parse(JSON.stringify(App.Collections.workflowManagementCollection.getOptions(false)));
+
             self.selectOptions = {
                 yesNoIsActiveOptions: App.Models.projectModel.getYesNoOptions(true, 'Yes'),
                 bool: '',
@@ -6333,10 +6559,419 @@
             self.projectScopeTeam = [];
 
         },
-        formChanged: function() {
+        toggleCollapse: function (e) {
             let self = this;
-            if (self.bDoneLoadingForm) {
+            e.preventDefault();
+            let $btn = $(e.currentTarget);
+            let $icon = $btn.find('i');
+            $($btn.data('target')).toggle();
+
+            if ($icon.hasClass('fa-plus')) {
+                $icon.removeClass('fa-plus').addClass('fa-minus');
+            } else {
+                $icon.removeClass('fa-minus').addClass('fa-plus');
+            }
+        },
+        workflowScrollTo: function (e) {
+            let self = this;
+            e.preventDefault();
+            let workflowId = $(e.currentTarget).index();
+            var position = $('fieldset[data-workflow-id="' + workflowId + '"]').offset().top;
+
+            $("body, html").animate({
+                scrollTop: position
+            } /* speed */);
+
+        },
+        initWorkflowDisplay: function () {
+            let self = this;
+            var $boxOne = self.$('.workflow-status-display .workflow-status-display-progress-box');
+            let $progressBox = $boxOne.find('.wf-progress');
+            _.each(self.workflowOptions, function (workflow, idx) {
+                if (!$progressBox.find('.point[data-workflow-id="' + workflow.id + '"]').length) {
+                    // <i class="fas fa-exclamation-triangle"></i>
+                    // exclamation-circle <i class="fas fa-exclamation-circle"></i>
+                    // <i class="far fa-check-circle"></i>
+                    let pointActive = 'point--active';
+                    let pointComplete = 'point--complete';
+                    let pointClasses = '';
+                    let str = '<div data-workflow-id="' + workflow.id + '" data-workflow-code="' + workflow.workflow_code + '" class="point ' + pointClasses + '">' +
+                        '    <div class="bullet"></div>' +
+                        '    <label class="wf-label">' + workflow.label + '</label>' +
+                        '</div>';
+
+                    $progressBox.append($(str));
+                }
+            });
+        },
+        updateWorkflowDisplay: function () {
+            let self = this;
+            let $display = self.$('.workflow-status-display-progress-box');
+            let $points = $display.find('.point');
+            //console.log({$display:$display,$points:$points})
+
+            $points.each(function (idx, el) {
+                let workflowIdx = idx + 1;
+                let $point = $(el);
+                let $workflowFieldset = self.$('[data-workflow-id="' + workflowIdx + '"]');
+                let $statusLabel = $workflowFieldset.find('legend .workflow-status-label');
+                let $statusIcon = $workflowFieldset.find('legend .workflow-status-label i');
+                let $btn = $workflowFieldset.find('legend .btn');
+                $point.removeClass('point--active point--complete point--late');
+                let statusRemoveAllClasses = self.workflowStatusLabelWaitingClass + ' ' + self.workflowStatusLabelLateClass + ' ' + self.workflowStatusLabelNotFinishClass;
+                let iconRemoveAllClasses = self.workflowStatusIconNotFinishClass + ' ' + self.workflowStatusIconLateClass + ' ' + self.workflowStatusIconDoneClass;
+                let iconRemoveClasses = self.workflowStatusIconNotFinishClass + ' ' + self.workflowStatusIconDoneClass;
+
+                if (self.workflowState[workflowIdx].complete === true) {
+                    let btn = '<button type="button" class="pull-right btn btn-box-tool" data-target="#workflow-attributes-group-content-' + workflowIdx + '"' +
+                        '                                                data-widget="custom-collapse" title="Show/Hide form elements"><i class="fa fa-plus"></i></button>';
+                    $statusLabel.attr('title','All Required Completed.');
+                    $point.addClass('point--complete');
+                    if (!$btn.length) {
+                        $statusLabel.after(btn);
+                    }
+                    $statusIcon.removeClass(iconRemoveAllClasses);
+                    $statusLabel.removeClass(statusRemoveAllClasses);
+                    $statusLabel.addClass(self.workflowStatusLabelDoneClass);
+                    $statusIcon.addClass(self.workflowStatusIconDoneClass);
+                    // only hide if the user isn't working on the form
+                    let $saveBtn = self.parentView.gridManagerContainerToolbar.$('.btnSave');
+                    if ($saveBtn.hasClass('disabled')) {
+                        $workflowFieldset.find('.workflow-attributes-group-content').hide();
+                    }
+                } else {
+                    $statusIcon.removeClass(iconRemoveClasses);
+                    if (self.workflowState[workflowIdx].in_progress === true) {
+                        $point.addClass('point--active');
+                        $statusLabel.attr('title','In Progress.');
+                        $statusLabel.removeClass(statusRemoveAllClasses);
+                        $statusLabel.addClass(self.workflowStatusLabelNotFinishClass);
+                        $statusIcon.addClass(self.workflowStatusIconNotFinishClass);
+                        $workflowFieldset.find('input,textarea,select').prop('disabled', false).removeAttr('disabled');
+                        $workflowFieldset.find('.workflow-attributes-group-content').show();
+                    } else {
+                        $point.removeClass('point--active');
+                        $statusLabel.attr('title','Waiting for previous steps to be completed.');
+                        $statusLabel.removeClass(statusRemoveAllClasses);
+                        $statusLabel.addClass(self.workflowStatusLabelWaitingClass);
+                        $statusIcon.addClass(self.workflowStatusIconNotFinishClass);
+                        $workflowFieldset.find('input,textarea,select').prop('disabled', true).attr('disabled', 'disabled');
+                        $workflowFieldset.find('.workflow-attributes-group-content').hide();
+                    }
+                    if (self.workflowState[workflowIdx].late === true) {
+                        $point.addClass('point--late');
+                        $statusLabel.attr('title',$statusLabel.attr('title') + ' These tasks are behind schedule! Please finish A.S.A.P.');
+                        $statusLabel.removeClass(statusRemoveAllClasses);
+                        $statusLabel.addClass(self.workflowStatusLabelLateClass);
+                        $statusIcon.removeClass(iconRemoveAllClasses);
+                        $statusIcon.addClass(self.workflowStatusIconLateClass);
+                    }
+                }
+                //console.log('point',{idx:idx,el:el,workflowState:self.workflowState[workflowIdx]})
+            });
+
+            let getTotalPoints = $points.length,
+                getCompleteIndex = $display.find('.point--active').index(),
+                barWidth = (getCompleteIndex - 1) / (getTotalPoints - 1) * 100 + '%';
+
+
+            $display.find('.bar__fill').css('width', barWidth);
+
+        },
+        getAttributeFormElementName: function (attributeCode) {
+            let self = this;
+            let name = '';
+            let result = App.Collections.attributesManagementCollection.where({attribute_code: attributeCode});
+            let attribute = result[0];
+            if (attribute.get('input') === 'table' && attributeCode === 'material_needed_and_cost') {
+                name = 'material_needed_and_cost[material][]'
+            } else if (attribute.get('input') === 'table' && attributeCode === 'budget_sources') {
+                name = 'budget_sources[source][]'
+            } else if (attribute.get('input') === 'bool' || attribute.get('input') === 'checkbox') {
+                name = attributeCode + '[]';
+            } else {
+                name = attributeCode;
+            }
+            _log('App.Views.ProjectScope.getAttributeFormElementName',{attributeCode:attributeCode,name:name})
+            return name;
+        },
+        getAttributeFormElementValue: function ($el) {
+
+            let value = '';
+            if ($el.length) {
+                let elementType = $el[0].type;
+                if($el.attr('name').match(/budget_sources/)) {
+                    //console.log('getAttributeFormElementValue budget_sources',{$el:$el})
+                    let partials = 0;
+                    value = [];
+                    $el.each(function(idx,el){
+                        //console.log({idx:idx, name:$(el).attr('name'),val:$(el).val()})
+                        let budgetSource = $(el).val();
+                        let amount = $('#budget_sources_amount_'+idx).val();
+                        let status = $('#budget_sources_status_'+idx).val();
+                        if(budgetSource !== '' && amount !== ''&& status !== ''){
+                            value.push(budgetSource + ' ' + amount + ' ' + status);
+                        } else if(budgetSource === '' && amount === ''&& status === ''){
+                            // do nothing
+                        }else if(budgetSource !== '' || amount !== '' || status !== ''){
+                            partials++;
+                        }
+                    });
+                    // It's either all or nothing...
+                    if(partials>0){
+                        value = [];
+                    }
+                } else if($el.attr('name').match(/material_needed_and_cost/)) {
+                    //console.log('getAttributeFormElementValue material_needed_and_cost',{$el:$el});
+                    let partials = 0;
+                    value = [];
+                    $el.each(function(idx,el){
+                        let material = $(el).val();
+                        let cost = $('#material_needed_and_cost_cost_'+idx).val();
+                        if(material !== '' && cost !== ''){
+                            value.push(material + ' ' + cost);
+                        } else if(material === '' && cost === ''){
+                            // do nothing
+                        }else if(material !== '' || cost !== ''){
+                            partials++;
+                        }
+                        //console.log({idx:idx, name:$(el).attr('name'),val:$(el).val()})
+                    });
+                    // It's either all or nothing...
+                    if(partials>0){
+                        value = [];
+                    }
+                }
+                else if (elementType === 'checkbox') {
+                    let $checkedBoxes = $('[name="' + $el.attr('name') + '"]:checked');
+                    if ($checkedBoxes.length) {
+                        value = [];
+                        $checkedBoxes.each(function (idx, box) {
+                            value.push($(box).val());
+                        });
+                    }
+                } else if (elementType === 'radio') {
+                    let $checkedRadio = $('[name="' + $el.attr('name') + '"]:checked');
+                    if ($checkedRadio.length) {
+                        value = $checkedRadio.val();
+                    }
+                } else if (elementType === 'select') {
+                    value = $el.val();
+                } else {
+                    value = $el.val();
+                }
+            }
+            _log('App.Views.ProjectScope.getAttributeFormElementValue',{$el:$el,value:value});
+            return value;
+        },
+        getAttributeMeetsWorkflowRequirement: function (workflowId, attributeId, bUseForm, dependentOn, dependentOnCond) {
+            let self = this;
+            let bMeetsRequirement = false;
+            let attribute = App.Collections.attributesManagementCollection.get(parseInt(attributeId));
+            let attributeCode = attribute.get('attribute_code');
+            let attributeValue;
+            let bIsDependent = !_.isNull(dependentOn) && !_.isUndefined(dependentOn);
+            if (bIsDependent) {
+                let bIsRequired = true;
+                let dependsOnAttribute = App.Collections.attributesManagementCollection.get(parseInt(dependentOn));
+                //console.log({dependentOn:dependentOn,dependsOnAttribute:dependsOnAttribute})
+
+                let dependsOnAttributeInputType = dependsOnAttribute.get('input');
+                let bIsSelectType = (dependsOnAttributeInputType === 'select' || dependsOnAttributeInputType === 'bool');
+                let dependsOnAttributeCode = dependsOnAttribute.get('attribute_code');
+                let dependsOnAttributeValue;
+
+                if (bUseForm) {
+                    bIsRequired = self.getAttributeIsWorkflowRequirement(parseInt(attributeId));
+
+                    if (bIsRequired) {
+                        attributeValue = self.getAttributeFormElementValue($('[name="' + self.getAttributeFormElementName(attributeCode) + '"]'));
+                        bMeetsRequirement = !_.isEmpty(attributeValue.toString());
+                        _log('App.Views.ProjectScope.getAttributeMeetsWorkflowRequirement',{workflowId:workflowId,bUseForm:bUseForm,attributeCode:attributeCode,attributeValue:attributeValue,dependentOn:dependentOn,dependsOnAttribute:dependsOnAttribute,dependentOnCond:dependentOnCond,bMeetsRequirement:bMeetsRequirement})
+                    } else {
+                        bMeetsRequirement = true;
+                    }
+                } else {
+                    attributeValue = self.model.get(attributeCode);
+                    dependsOnAttributeValue = self.model.get(dependsOnAttributeCode);
+                    if (bIsSelectType) {
+                        _.each(dependentOnCond.split(/,/), function (val, key) {
+                            if (val.match(/^not/)) {
+                                let optionVal = val.replace(/^not /, '');
+                                if (dependsOnAttributeValue.toString() === optionVal) {
+                                    bIsRequired = false;
+                                }
+                            } else {
+                                if (dependsOnAttributeValue.toString() !== val) {
+                                    bIsRequired = false;
+                                }
+
+                            }
+                        });
+                        if (bIsRequired) {
+                            bMeetsRequirement = !_.isEmpty(attributeValue.toString());
+                        } else {
+                            bMeetsRequirement = true;
+                        }
+                    } else {
+                        bIsRequired = dependsOnAttributeValue === dependentOnCond;
+                        if (bIsRequired) {
+                            bMeetsRequirement = !_.isEmpty(attributeValue.toString());
+                        } else {
+                            bMeetsRequirement = true;
+                        }
+                    }
+
+                    //console.log({bMeetsRequirement:bMeetsRequirement,workflowId:workflowId,attribute_code:attributeCode,attributeValue:attributeValue,dependentOnCond:dependentOnCond})
+                }
+            } else {
+
+                if (bUseForm) {
+                    attributeValue = self.getAttributeFormElementValue($('[name="' + self.getAttributeFormElementName(attributeCode) + '"]'));
+                } else {
+
+                    attributeValue = self.model.get(attributeCode);
+
+                    //console.log({bMeetsRequirement:bMeetsRequirement,workflowId:workflowId,attribute_code:attributeCode,value:value,isNull:_.isNull(value),isUndef:_.isUndefined(value)})
+                }
+                bMeetsRequirement = !_.isEmpty(attributeValue.toString());
+                _log('App.Views.ProjectScope.getAttributeMeetsWorkflowRequirement',{workflowId:workflowId,bUseForm:bUseForm,attributeCode:attributeCode,attributeValue:attributeValue,bMeetsRequirement:bMeetsRequirement})
+            }
+
+
+            return bMeetsRequirement;
+        },
+        updateProjectWorkflowState: function (bUseForm = true) {
+            let self = this;
+            if (self.bUpdatingProjectWorkflow) {
+                console.log('skipping update b/c of race cond')
+                return;
+            }
+            self.bUpdatingProjectWorkflow = true;
+            let req = self.getApplicableWorkflowRequirements();
+            _log('App.Views.ProjectScope.updateProjectWorkflowState',{bUseForm:bUseForm,model:self.model,formData:$.unserialize($('[name="projectScope"]').serialize()),applicableRequirements:req})
+
+            self.workflowState = {};
+            let lastCompleted = false;
+            let foundInProgress = false;
+            _.each(self.workflowOptions, function (wfOption, idx) {
+                let bComplete = true;
+                let workflowId = wfOption.id;
+                let incomplete = [];
+                _.each(req.requirements[workflowId], function (reqData, key) {
+                    if (!self.getAttributeMeetsWorkflowRequirement(workflowId, reqData.attribute_id, bUseForm)) {
+                        bComplete = false;
+                        incomplete.push(reqData.attribute_id)
+                    }
+                });
+                _.each(req.dependents[workflowId], function (reqData, key) {
+                    if (!self.getAttributeMeetsWorkflowRequirement(workflowId, reqData.attribute_id, bUseForm, reqData.workflow_requirement_depends_on, reqData.workflow_requirement_depends_on_condition)) {
+                        bComplete = false;
+                        incomplete.push(reqData.attribute_id)
+                    }
+                });
+                if (_.isUndefined(self.workflowState[workflowId])) {
+                    self.workflowState[workflowId] = {complete: false, in_progress: false, late: false};
+                }
+                self.workflowState[workflowId].complete = bComplete;
+                self.workflowState[workflowId].incomplete = incomplete;
+                if (foundInProgress === false && !bComplete) {
+                    self.workflowState[workflowId].in_progress = true;
+                    foundInProgress = true;
+                }
+                lastCompleted = bComplete;
+            });
+            _log('App.Views.ProjectScope.updateProjectWorkflowState', {workflowState:self.workflowState});
+            self.updateWorkflowDisplay();
+            self.bUpdatingProjectWorkflow = false;
+        },
+        getApplicableWorkflowRequirements: function () {
+            let self = this;
+
+            let applicableRequirements = {};
+            let applicableDependents = {};
+
+            _.each(self.workflowRequirementsConfig.requirements, function (projectTypeRequirements, workflowId) {
+                if (_.isUndefined(applicableRequirements[workflowId])) {
+                    applicableRequirements[workflowId] = [];
+                }
+                _.each(self.currentProjectTypes, function (projectTypeId, key) {
+                    _.each(projectTypeRequirements[projectTypeId], function (reqData, key) {
+                        if (!_.where(applicableRequirements[workflowId], {attribute_id: reqData.attribute_id}).length) {
+                            applicableRequirements[workflowId].push(reqData);
+                        }
+                    })
+                });
+
+            });
+            _.each(self.workflowRequirementsConfig.dependents, function (projectTypeRequirements, workflowId) {
+                if (_.isUndefined(applicableDependents[workflowId])) {
+                    applicableDependents[workflowId] = [];
+                }
+                _.each(self.currentProjectTypes, function (projectTypeId, key) {
+                    _.each(projectTypeRequirements[projectTypeId], function (reqData, key) {
+                        if (!_.where(applicableDependents[workflowId], {attribute_id: reqData.attribute_id}).length) {
+                            applicableDependents[workflowId].push(reqData);
+                        }
+                    })
+                });
+
+            });
+            _log('App.Views.ProjectScope.getApplicableWorkflowRequirements', {
+                workflowRequirementsConfig: self.workflowRequirementsConfig,
+                currentProjectTypes: self.currentProjectTypes,
+                requirements: applicableRequirements,
+                dependents: applicableDependents
+            });
+            //console.log({applicableRequirements:applicableRequirements,applicableDependents:applicableDependents})
+            return {requirements: applicableRequirements, dependents: applicableDependents};
+        },
+        setProjectWorkflowConfig: function () {
+            let self = this;
+
+            let aSkillIds = App.Models.projectModel.getSkillsNeededIdList();
+            let workflowRequirements = {};
+            let workflowDependsOn = {};
+            _.each(self.workflowOptions, function (wfOption, idx) {
+                let workflowId = wfOption.id;
+                _.each(aSkillIds, function (aSkill, idx) {
+                    let skillId = parseInt(aSkill.id);
+                    if (_.isUndefined(workflowRequirements[workflowId])) {
+                        workflowRequirements[workflowId] = {};
+                    }
+                    if (_.isUndefined(workflowRequirements[workflowId][aSkill.id])) {
+                        workflowRequirements[workflowId][aSkill.id] = [];
+                    }
+                    workflowRequirements[workflowId][aSkill.id] = _.where(self.projectAttributes, {
+                        workflow_id: workflowId,
+                        workflow_requirement: 1,
+                        project_skill_needed_option_id: skillId
+                    });
+
+                    if (_.isUndefined(workflowDependsOn[workflowId])) {
+                        workflowDependsOn[workflowId] = {};
+                    }
+                    if (_.isUndefined(workflowDependsOn[workflowId][aSkill.id])) {
+                        workflowDependsOn[workflowId][aSkill.id] = [];
+                    }
+                    workflowDependsOn[workflowId][aSkill.id] = _.where(self.projectAttributes, {
+                        workflow_id: workflowId,
+                        workflow_requirement: 3,
+                        project_skill_needed_option_id: skillId
+                    });
+                })
+
+            });
+
+            self.workflowRequirementsConfig = {requirements: workflowRequirements, dependents: workflowDependsOn};
+            //console.log('setProjectWorkflowConfig',{workflowRequirementsConfig:self.workflowRequirementsConfig,workflowRequirements:workflowRequirements,workflowDependsOn:workflowDependsOn})
+        },
+        formChanged: function () {
+            let self = this;
+            if (self.bDoneLoadingForm && !self.bUpdatingProjectWorkflow) {
                 self.trigger('changed');
+                //console.log('formChanged run updateProjectWorkflowState()')
+                self.updateProjectWorkflowState();
             }
         },
         handleStatusChange: function (e) {
@@ -6353,13 +6988,57 @@
             let self = this;
             self.model.set('ProjectID', e.ProjectID);
             self.bDoneLoadingForm = false;
-            if (e.ProjectID === 'new'){
+            if (e.ProjectID === 'new') {
                 self.bIsAddNew = true;
             }
-            self.render();
+            //console.log('handleProjectIDChange',{bIsAddNew:self.bIsAddNew,e:e})
+            self.render(e);
+        },
+        setCurrentProjectTypes: function (bUseCurrentForm = false) {
+            let self = this;
+            if (bUseCurrentForm) {
+                let $checked = self.$('[name^="primary_skill_needed"]:checked');
+                if ($checked.length === 0) {
+                    alert('There needs to be at least one Project Type. Defaulting to General');
+                    self.$('#primary_skill_needed_' + App.Vars.selectOptions['ProjectSkillNeededOptions']['General']).prop('checked', true);
+
+                    $checked = self.$('[name^="primary_skill_needed"]:checked');
+                }
+                let aIds = [];
+                $checked.each(function (idx, el) {
+                    aIds.push($(el).val());
+                });
+                self.currentProjectTypes = aIds;
+            } else {
+                //console.log('setCurrentProjectTypes',{model:JSON.parse(JSON.stringify(self.model))})
+                if(self.model.get('primary_skill_needed') !== ''){
+                    self.currentProjectTypes = JSON.parse(self.model.get('primary_skill_needed'));
+                    if(!_.isArray(self.currentProjectTypes)){
+                        self.currentProjectTypes = [self.currentProjectTypes];
+                    } else {
+                        self.currentProjectTypes = [App.Vars.selectOptions['ProjectSkillNeededOptions']['General']];
+                    }
+                }
+
+            }
+            _log('App.Views.ProjectScope.setCurrentProjectTypes',{bUseCurrentForm:bUseCurrentForm,currentProjectTypes:self.currentProjectTypes})
+        },
+        getCurrentProjectTypes: function () {
+            let self = this;
+            if (_.isNull(self.currentProjectTypes)) {
+                self.setCurrentProjectTypes();
+            }
+
+            return self.currentProjectTypes;
         },
         render: function (e) {
             let self = this;
+            // prevents double load
+            //console.log('render info',{bIsAddNew:self.bIsAddNew,currentModId:self.getViewDataStore('current-model-id', 'project_scope_management'),e:e,})
+            if (_.isUndefined(e) && self.getViewDataStore('current-model-id', 'project_scope_management')!=='new') {
+                //console.log('skipping render')
+                return self;
+            }
             if (_.isUndefined(self.model.get(self.model.idAttribute)) || self.model.get(self.model.idAttribute) === '') {
                 self.$el.html('No Projects Found');
             } else {
@@ -6369,7 +7048,7 @@
                     self.model.fetch({reset: true})
                 ).then(function () {
                     //console.log('project scope model', self.model)
-
+                    //console.log('in render', {e: e,bIsAddNew:self.bIsAddNew,model:self.model});
                     if (self.model.get(self.model.idAttribute) === null && self.model.get("SequenceNumber") === 99999) {
                         let sequenceNumber = self.projectsDropDownView.collection.models.length > 0 ? _.max(self.projectsDropDownView.collection.models, function (project) {
                             return parseInt(project.get("SequenceNumber"));
@@ -6388,19 +7067,24 @@
                         optionLabelModelAttrName: ['LastName', 'FirstName', 'Title']
                     });
                     self.childViews.push(contactSelect);
-                    self.currentTypes = self.model.get('primary_skill_needed') !== '' ? JSON.parse(self.model.get('primary_skill_needed')) : [App.Vars.selectOptions['ProjectSkillNeededOptions']['General']];
+                    self.setCurrentProjectTypes(false);
 
-                    let defaultOptions = [];
-                    _.each(self.currentTypes, function (val,idx) {
-                        defaultOptions.push(self.getSkillsNeededLabel(val));
+                    let defaultProjectTypeOptions = [];
+                    _.each(self.currentProjectTypes, function (val, idx) {
+                        defaultProjectTypeOptions.push(self.getSkillsNeededLabel(val));
                     });
-                    //console.log('render', {currentTypes: self.currentTypes, defaultOptions: defaultOptions})
+
                     let tplVars = {
-                        projectTypeCheckboxList: App.Models.projectModel.getSkillsNeededCheckboxList(true, defaultOptions.join(',')),
+                        projectTypeCheckboxList: App.Models.projectModel.getSkillsNeededCheckboxList(true, defaultProjectTypeOptions.join(',')),
                         SiteID: self.sitesDropdownView.model.get(self.sitesDropdownView.model.idAttribute),
                         teamMembers: self.getTeamMembersList(),
                         contactSelect: contactSelect.getHtml(),
-                        project: self.model
+                        project: self.model,
+                        initialWorkflowId: self.initialWorkflowId,
+                        initialWorkflowCode: self.initialWorkflowCode,
+                        initialWorkflowLabel: self.initialWorkflowLabel,
+                        defaultWorkflowStatusLabelClass: self.initialWorkflowStatusLabelClass,
+                        defaultWorkflowStatusIconClass: self.defaultWorkflowStatusIconClass
                     };
                     self.$el.html(self.template(tplVars));
 
@@ -6408,46 +7092,76 @@
                         self.$('[name="Comments"]').attr('rows', 3);
                     }
 
+                    _.each(self.workflowOptions, function (workflow, idx) {
+                        if (!$('.workflow-attributes-group[data-workflow-id="' + workflow.id + '"]').length) {
+                            // <i class="fas fa-exclamation-triangle"></i>
+                            // exclamation-circle <i class="fas fa-exclamation-circle"></i>
+                            // <i class="far fa-check-circle"></i>
+                            let workflowIdx = idx + 1;
+                            let $workflowFieldset = $('<fieldset class="workflow-attributes-group" data-workflow-id="' + workflow.id + '" data-workflow-code="' + workflow.workflow_code + '"><legend>Information Needed During <span class="label label-default">' + workflow.label + '</span> Step <span class="workflow-status-label label ' + self.defaultWorkflowStatusLabelClass + '"><i class="fas ' + self.defaultWorkflowStatusIconClass + '"></i></span></legend><div id="workflow-attributes-group-content-' + workflowIdx + '" class="workflow-attributes-group-content"></fieldset>');
+                            self.$('[name="projectScope"]').append($workflowFieldset);
+                        }
+                        _log('App.Views.ProjectScope.render worflow fieldset',{idx:idx, workflow:workflow,fieldset:$('.workflow-attributes-group[data-workflow-id="' + workflow.id + '"]')})
+                    });
+                    self.initWorkflowDisplay();
                     self.finishRenderingForm();
 
                     if (self.bIsAddNew) {
                         self.sitesDropdownView.$el.prop('disabled', true);
                         self.projectsDropDownView.$el.prepend('<option>New Project</option>');
                         self.projectsDropDownView.$el.prop('disabled', true);
+                    } else {
+
                     }
+                    //console.log('render run updateProjectWorkflowState()')
+                    self.updateProjectWorkflowState();
                 });
             }
 
             return self;
         },
-        checkAllLeadership: function(e){
+        getWorkflowIdByAttributeId: function (attributeId) {
+            let self = this;
+            if (_.isUndefined(self.projectAttributeWorkflowIds[attributeId])) {
+                let aResults = App.Collections.projectAttributesManagementCollection.where({attribute_id: attributeId});
+                if (aResults.length) {
+                    self.projectAttributeWorkflowIds[attributeId] = aResults[0].get('workflow_id');
+                } else {
+                    // default to 1 to keep attributes from disappearing
+                    self.projectAttributeWorkflowIds[attributeId] = 1;
+                }
+            }
+
+            return self.projectAttributeWorkflowIds[attributeId];
+        },
+        checkAllLeadership: function (e) {
             let self = this;
             let $checkbox = $(e.currentTarget);
 
-            if($checkbox.prop('checked')){
-                self.$('[name="email_team_member[]"]').each(function(idx,el){
+            if ($checkbox.prop('checked')) {
+                self.$('[name="email_team_member[]"]').each(function (idx, el) {
                     let $el = $(el);
-                    if(!$el.prop('checked')){
-                        $el.prop('checked',true);
-                        $el.attr('checked','checked');
+                    if (!$el.prop('checked')) {
+                        $el.prop('checked', true);
+                        $el.attr('checked', 'checked');
                     }
                 })
             } else {
-                self.$('[name="email_team_member[]"]').each(function(idx,el){
+                self.$('[name="email_team_member[]"]').each(function (idx, el) {
                     let $el = $(el);
-                    if($el.prop('checked')){
-                        $el.prop('checked',false);
+                    if ($el.prop('checked')) {
+                        $el.prop('checked', false);
                         $el.removeAttr('checked');
                     }
                 })
             }
         },
-        emailProjectReport: function(e){
+        emailProjectReport: function (e) {
             let self = this;
             e.preventDefault();
 
             let emails = [];
-            $('[name="email_team_member[]"]').each(function(idx,el){
+            $('[name="email_team_member[]"]').each(function (idx, el) {
                 if ($(el).prop('checked')) {
                     emails.push($(el).val());
                 }
@@ -6492,7 +7206,7 @@
                 growl('Please check a team member to be emailed.', 'error');
             }
         },
-        getTeamMembersList: function(){
+        getTeamMembersList: function () {
             let self = this;
             let html = '';
             self.projectScopeTeam = self.model.get('team');
@@ -6506,8 +7220,8 @@
                 let fname = !_.isNull(self.projectScopeTeam[x]['FirstName']) ? self.projectScopeTeam[x]['FirstName'] : '';
                 let lname = !_.isNull(self.projectScopeTeam[x]['LastName']) ? self.projectScopeTeam[x]['LastName'] : '';
 
-                html += '<tr><td><label class="checkbox-inline"><input type="checkbox" name="email_team_member[]" value="'+email+'"/>&nbsp;'+ self.projectScopeTeam[x]['Role'] +'</label></td><td>'+ fname + ' ' + lname +'</td><td>'+ mobilePhone +'</td><td>'+ homePhone +'</td><td><a target="_blank" href="mailto:'+ email +'">'+email+'</a></td><td>'+ self.projectScopeTeam[x]['ProjectVolunteerRoleStatusLabel'] +'</td></tr>';
-                if (self.projectScopeTeam[x]['Comments']!=='') {
+                html += '<tr><td><label class="checkbox-inline"><input type="checkbox" name="email_team_member[]" value="' + email + '"/>&nbsp;' + self.projectScopeTeam[x]['Role'] + '</label></td><td>' + fname + ' ' + lname + '</td><td>' + mobilePhone + '</td><td>' + homePhone + '</td><td><a target="_blank" href="mailto:' + email + '">' + email + '</a></td><td>' + self.projectScopeTeam[x]['ProjectVolunteerRoleStatusLabel'] + '</td></tr>';
+                if (self.projectScopeTeam[x]['Comments'] !== '') {
                     html += '<tr><td class="comments-row" colspan="6"><strong>Comments:</strong> ' + self.projectScopeTeam[x]['Comments'] + '</td></tr>';
                 }
             }
@@ -6524,7 +7238,23 @@
             let $table = self.$('.material-needed-and-cost');
             let x = $table.find('tbody > tr').length;
             let attribute_id = _.findWhere(self.attributesOptions, {attribute_code: 'material_needed_and_cost'}).attribute_id;
-            let row = self.getMaterialCostRowHtml('material_needed_and_cost', x, attribute_id, ['','']);
+            let row = self.getMaterialCostRowHtml('material_needed_and_cost', x, attribute_id, ['', '']);
+            $table.find('tbody').append(row);
+        },
+        addBudgetSourceRow: function (e) {
+            let self = this;
+            e.preventDefault();
+            let $table = self.$('.table.budget-sources');
+            let x = $table.find('tbody > tr').length;
+            let attribute_id = _.findWhere(self.attributesOptions, {attribute_code: 'budget_sources'}).attribute_id;
+            let row = self.getBudgetSourcesRowHtml('budget_sources', x, attribute_id, {
+                "BudgetID": 'new',
+                "ProjectID": self.model.get(self.model.idAttribute),
+                "BudgetSource": "",
+                "BudgetAmount": "",
+                "Status": "",
+                "Comments": ""
+            });
             $table.find('tbody').append(row);
         },
         calculateFromMaterialAndCost: function (e) {
@@ -6553,36 +7283,31 @@
         },
         handleProjectTypeChange: function (e) {
             let self = this;
-            let $checked = self.$('[name^="primary_skill_needed"]:checked');
-            if ($checked.length === 0) {
-                alert('There needs to be at least one Project Type. Defaulting to General');
-                self.$('#primary_skill_needed_'+ App.Vars.selectOptions['ProjectSkillNeededOptions']['General']).prop('checked', true);
 
-                $checked = self.$('[name^="primary_skill_needed"]:checked');
-            }
-            let aIds = [];
-            $checked.each(function (idx, el) {
-                aIds.push($(el).val());
-            });
-            let removed = _.difference(self.currentTypes,aIds);
-            if (removed.length){
+            let typesBeforeChange = _.clone(self.currentProjectTypes);
+            self.setCurrentProjectTypes(true);
+
+            let removed = _.difference(typesBeforeChange, self.currentProjectTypes);
+            if (removed.length) {
                 _.each(removed, function (project_type_id, idx) {
                     _.each(self.getProjectTypeAttributes(project_type_id), function (pta, idx) {
                         let attribute = _.where(self.attributesOptions, {id: pta.attribute_id});
                         //console.log(self.$('[name="'+ attribute[0].attribute_code+'"]'),project_type_id, pta.attribute_id,attribute)
                         let defaultValue = attribute.input === 'input' || attribute.input === 'textarea' ? self.cleanTextInputValue(attribute[0].default_value) : attribute[0].default_value;
-                        self.$('[name="'+ attribute[0].attribute_code+'"]').val(defaultValue);
+                        self.$('[name="' + attribute[0].attribute_code + '"]').val(defaultValue);
                     });
                 })
             }
 
-            self.currentTypes = aIds;
-            self.buildFormElements(self.currentTypes);
+
+            self.buildFormElements(self.currentProjectTypes);
+            //console.log('handleProjectTypeChange run updateProjectWorkflowState()')
+            self.updateProjectWorkflowState();
         },
         finishRenderingForm: function () {
             let self = this;
 
-            self.buildFormElements(self.currentTypes);
+            self.buildFormElements(self.currentProjectTypes);
 
             self.$('[name="Active"]').val(self.model.get('Active')).trigger('change');
             if (self.projectScopeContacts.length) {
@@ -6593,7 +7318,7 @@
                     }
                 });
             }
-
+            self.parentView.gridManagerContainerToolbar.disableSaveBtn();
             window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
             self.bDoneLoadingForm = true;
         },
@@ -6614,7 +7339,13 @@
 
             return lineCnt;
         },
-        getSkillsNeededLabel: function (id){
+        getBudgetSourcesCnt: function () {
+            let self = this;
+            let lineCnt = self.model.get('budget_sources') !== '' ? JSON.parse(self.model.get('budget_sources')).length : 0;
+
+            return lineCnt;
+        },
+        getSkillsNeededLabel: function (id) {
             let skillOpts = {};
             _.each(App.Vars.selectOptions['ProjectSkillNeededOptions'], function (val, key) {
                 skillOpts[val] = key;
@@ -6654,7 +7385,25 @@
             let cost = self.cleanTextInputValue(aRowValues[1]);
             return '<tr><td><input data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[material][]" class="form-control material" id="' + attribute_code + '_material_' + x + '" placeholder="" value="' + materialNeed + '"/></td><td><div class="input-group"><div class="input-group-addon">$</div><input type="number" title="Money format only please. With or without cents." data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[cost][]" class="form-control material-cost" id="' + attribute_code + '_cost_' + x + '" placeholder="0.00" value="' + cost + '" step="0.01"/></div></td></tr>';
         },
-        basename: function(path){
+        getBudgetSourcesRowHtml: function (attribute_code, x, attribute_id, aRowValues) {
+            let self = this;
+            let budgetId = self.cleanTextInputValue(aRowValues['BudgetID']);
+            let projectId = self.cleanTextInputValue(aRowValues['ProjectID']);
+            let budgetSourceId = self.cleanTextInputValue(aRowValues['BudgetSource']);
+            let amount = self.cleanTextInputValue(aRowValues['BudgetAmount']);
+            let statusId = self.cleanTextInputValue(aRowValues['Status']);
+            let comment = self.cleanTextInputValue(aRowValues['Comments']);
+            let sourceOptions = '<option value="">Choose</option>' + App.Models.projectBudgetModel.getSourceOptions(true, budgetSourceId);
+            let statusOptions = '<option value="">Choose</option>' + App.Models.projectBudgetModel.getStatusOptions(true, statusId);
+            let hiddenInput = '<input type="hidden" data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[budgetid][]" id="' + attribute_code + '_budgetid_' + x + '" value="' + budgetId + '"/>';
+            return '<tr>' +
+                '<td>' + hiddenInput + '<select data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[source][]" class="form-control source" id="' + attribute_code + '_source_' + x + '" >' + sourceOptions + '</select></td>' +
+                '<td><div class="input-group"><div class="input-group-addon">$</div><input type="number" title="Money format only please. With or without cents." data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[amount][]" class="form-control budget-source-amount" id="' + attribute_code + '_amount_' + x + '" placeholder="0.00" value="' + amount + '" step="0.01"/></div></td>' +
+                '<td><select data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[status][]" class="form-control status" id="' + attribute_code + '_status_' + x + '" >' + statusOptions + '</select></td>' +
+                '<td><textarea  data-attribute-id="' + attribute_id + '" name="' + attribute_code + '[comment][]" class="form-control material-cost" id="' + attribute_code + '_comment_' + x + '" >' + comment + '</textarea></td>' +
+                '</tr>';
+        },
+        basename: function (path) {
             let rx1 = /(.*)\/+([^/]*)$/;  // (dir/) (optional_file)
             let rx2 = /()(.*)$/;// ()     (file)
             return (rx1.exec(path) || rx2.exec(path))[2];
@@ -6663,8 +7412,11 @@
             let self = this;
             let ProjectAttachmentID = aRowValues[0];
             let url = aRowValues[1];
-
-            return '<tr><td><a href="'+ url+'" target="_blank">' + self.basename(url) + '</a></td><td><button class="btn btn-secondary project-attachment-delete" data-id="'+ProjectAttachmentID+'" id="' + attribute_code + '_delete_' + x + '" ><span class="ui-icon ui-icon-trash"></span></button></div></td></tr>';
+            let img = '';
+            if (url.match(/\.(gif|png|bmp|jpg|jpeg)$/i)) {
+                img = '<img class="attachment-thumb" width="100px" src="' + url + '"/> ';
+            }
+            return '<tr><td>'+img+'<a href="' + url + '" target="_blank">' + self.basename(url) + '</a></td><td><button class="btn btn-secondary project-attachment-delete" data-id="' + ProjectAttachmentID + '" id="' + attribute_code + '_delete_' + x + '" ><span class="ui-icon ui-icon-trash"></span></button></div></td></tr>';
         },
         getInputHtml: function (inputType, attribute_code, attribute_id, value, optionHtml) {
             let self = this;
@@ -6705,6 +7457,26 @@
                         html += '</tbody>';
                         html += '<tfoot><tr><td colspan="2" align="right"><button class="btn btn-secondary add-project-attachment">Add attachment</button></td></tr></tfoot>';
                         html += '</table>';
+                    } else if (attribute_code === 'budget_sources') {
+                        html = '<table class="table budget-sources">';
+                        html += '<thead><tr><th style="width:150px">Source<label></label></th><th style="width:140px">Amt<label></label></th><th style="width:130px">Status<label></label></th><th>Comment</th></tr></thead>';
+                        html += '<tbody>';
+                        let aRowValues = value !== '' ? JSON.parse(value) : [];
+                        for (let x = 0; x <= self.getBudgetSourcesCnt(); x++) {
+                            let aRowValue = !_.isUndefined(aRowValues[x]) ? aRowValues[x] : {
+                                "BudgetID": 'new',
+                                "ProjectID": self.model.get(self.model.idAttribute),
+                                "BudgetSource": "",
+                                "BudgetAmount": "",
+                                "Status": "",
+                                "Comments": ""
+                            };
+                            html += self.getBudgetSourcesRowHtml(attribute_code, x, attribute_id, aRowValue);
+                        }
+                        html += '</tbody>';
+                        html += '<tfoot><tr><td colspan="4" align="right"><button class="btn btn-secondary add-budget-source">Add another budget source</input></td></tr></tfoot>';
+                        html += '</table>';
+                        //html += '<textarea type="text" data-attribute-id="' + attribute_id + '" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="' + placeholder + '" ' + pattern + ' >' + self.cleanTextInputValue(value) + '</textarea>';
                     }
                     break;
                 case 'text':
@@ -6722,12 +7494,16 @@
                     html = '<select data-attribute-id="' + attribute_id + '" name="' + attribute_code + '" class="form-control" id="' + attribute_code + '">' + optionHtml + '</select>';
                     break;
                 case 'bool':
-                    html = '<div class="admin__actions-switch" data-role="switcher">' +
-                           '    <input name="' + attribute_code + '" class="admin__actions-switch-checkbox" type="checkbox">' +
-                           '    <label class="admin__actions-switch-label">' +
-                           '        <span class="admin__actions-switch-text">No</span>' +
-                           '    </label>' +
-                           '</div>';
+                    html = '<div>';
+                    for (let x = 0; x <= 1; x++) {
+                        let boolLabel = x === 0 ? 'No' : 'Yes';
+                        let checked = value === x ? 'checked' : '';
+                        html +=
+                            '    <label class="bool-label checkbox-inline" for="' + attribute_code + '_' + x + '">' +
+                            '        <input type="radio" ' + checked + ' id="' + attribute_code + '_' + x + '" name="' + attribute_code + '[]" value="' + x + '"> ' + boolLabel +
+                            '    </label>';
+                    }
+                    html += '</div>';
                     break;
                 case 'number':
                     bCloseInputGroup = false;
@@ -6735,11 +7511,11 @@
                     if (attribute_code === 'estimated_total_cost' || attribute_code === 'actual_cost') {
                         bCloseInputGroup = true;
                         html += '<div class="input-group"><div class="input-group-addon">$</div>';
-                        placeholder = '0.00';
+                        placeholder = '';
                         numberStepAttr = ' step="0.01" ';
-                        helpBlock = '<p class="help-block">Money format only please. With or without cents.</p>';
+                        helpBlock = '<p class="help-block">Money format only please. With or without cents. Valid format examples: 0.50 or .50 or 10 or 10.00 or 10.01</p>';
                     }
-                    html += '<input data-attribute-id="' + attribute_id + '" type="number" '+ numberStepAttr +' name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="" value="' + value + '"/>';
+                    html += '<input data-attribute-id="' + attribute_id + '" type="number" ' + numberStepAttr + ' name="' + attribute_code + '" class="form-control" id="' + attribute_code + '" placeholder="' + placeholder + '" value="' + value + '"/>';
                     if (bCloseInputGroup) {
                         if (attribute_code === 'estimated_total_cost') {
                             html += '<div class="input-group-btn"><button class="btn btn-primary calculate-total-from-material-cost">Calculate Total From Material Cost</button></div>';
@@ -6753,7 +7529,7 @@
             }
             return html;
         },
-        getAttachmentModalForm: function(){
+        getAttachmentModalForm: function () {
             let self = this;
             let template = window.template('newProjectAttachmentTemplate');
 
@@ -6763,7 +7539,7 @@
 
             return template(tplVars);
         },
-        clickFileUpload: function(e){
+        clickFileUpload: function (e) {
             let self = this;
             e.preventDefault();
             self.getModalElement().one('show.bs.modal', function (event) {
@@ -6786,7 +7562,7 @@
                         selfView.find('.progress').fadeTo(0, 'slow');
                         selfView.find('[name="AttachmentPath"]').val('');
                         selfView.find('.files').empty();
-                        _.each(data.jqXHR.responseJSON.files, function (file,index) {
+                        _.each(data.jqXHR.responseJSON.files, function (file, index) {
                             let sFileName = file.name;
                             //let sExistingVal = selfView.find('[name="AttachmentPath"]').val().length > 0 ? selfView.find('[name="AttachmentPath"]').val() + "\n" : '';
                             //selfView.find('[name="AttachmentPath"]').val(sExistingVal + file.url);
@@ -6808,6 +7584,7 @@
                     }
                 }).prop('disabled', !$.support.fileInput)
                     .parent().addClass($.support.fileInput ? undefined : 'disabled');
+
                 modal.find('.save.btn').one('click', function (e) {
                     e.preventDefault();
                     try {
@@ -6817,13 +7594,12 @@
                     let data = $.unserialize(modal.find('form').serialize());
                     self.model.set(self.model.idAttribute, data[self.model.idAttribute]);
                     if (modal.find('[name="AttachmentPath"]').val() !== '') {
-                        self.saveProjectAttachments(data);
+                        self.saveProjectAttachments(data,e);
                         self.getModalElement().modal('hide');
                     } else {
                         self.getModalElement().modal('hide');
-                        self.render();
+                        self.render(e);
                     }
-
 
 
                 });
@@ -6837,32 +7613,36 @@
             window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             let growlMsg = '';
             let growlType = '';
+            let $deleteBtn = $(e.currentTarget);
             let projectAttachment = new App.Models.ProjectAttachment();
-            projectAttachment.set(projectAttachment.idAttribute, $(e.currentTarget).data('id'));
-            projectAttachment.url = '/admin/project_attachment/destroy/'+ $(e.currentTarget).data('id');
+            projectAttachment.set(projectAttachment.idAttribute, $deleteBtn.data('id'));
+            projectAttachment.url = '/admin/project_attachment/destroy/' + $deleteBtn.data('id');
             $.when(projectAttachment.destroy(
                 {
                     success: function (model, response, options) {
                         growlMsg = response.msg;
                         growlType = response.success ? 'success' : 'error';
+                        $deleteBtn.parents('tr').remove();
                     },
                     error: function (model, response, options) {
                         growlMsg = response.msg;
                         growlType = response.success ? 'success' : 'error';
                     }
                 })).then(function () {
+
                 growl(growlMsg, growlType);
                 window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-
+                // need to pass an event if we want the form to update
                 self.render();
             });
         },
-        saveProjectAttachments: function(data){
+        saveProjectAttachments: function (data,e) {
             let self = this;
             let projectAttachment = new App.Models.ProjectAttachment();
             window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
             let growlMsg = '';
             let growlType = '';
+            let attachmentResponse = null;
             //console.log({data:data})
             projectAttachment.url = '/admin/project_attachment';
             $.when(
@@ -6871,20 +7651,24 @@
                         success: function (model, response, options) {
                             growlMsg = response.msg;
                             growlType = response.success ? 'success' : 'error';
+                            attachmentResponse = response;
                         },
                         error: function (model, response, options) {
                             growlMsg = response.msg;
                             growlType = response.success ? 'success' : 'error';
+                            attachmentResponse = response;
                         }
                     })
             ).then(function () {
                 growl(growlMsg, growlType);
                 window.ajaxWaiting('remove', self.ajaxWaitingTargetClassSelector);
-                self.model.set(self.model.idAttribute,data[self.model.idAttribute]);
-                self.render();
+                self.model.set(self.model.idAttribute, data[self.model.idAttribute]);
+                //console.log({model:self.model,attachmentResponse:attachmentResponse})
+                // need to pass an event if we want the form to update
+                self.render(e);
             });
         },
-        getAttributesForForm: function(projectTypeId){
+        getAttributesForForm: function (projectTypeId) {
             let self = this;
             let aProjectTypeAttributes = [];
             let aProjectTypeId = [];
@@ -6904,32 +7688,107 @@
             });
             return aProjectTypeAttributes;
         },
+        getAttributeIsWorkflowRequirement: function (attributeId) {
+            let self = this;
+            let bIsRequired = true;
+
+            let aProjectAttributes = _.where(self.aCurrentProjectTypeAttributes, {attribute_id: attributeId});
+            _.each(aProjectAttributes, function (projectAttribute, idx) {
+
+                if (projectAttribute.workflow_requirement === 0) {
+                    bIsRequired = false;
+                } else if (projectAttribute.workflow_requirement === 3) {
+
+                    let dependsOnAttribute = App.Collections.attributesManagementCollection.get(parseInt(projectAttribute.workflow_requirement_depends_on));
+
+                    let $dependsOnAttributeEl = $('[name="' + self.getAttributeFormElementName(dependsOnAttribute.get('attribute_code')) + '"]');
+                    let dependsOnAttributeValue = self.getAttributeFormElementValue($dependsOnAttributeEl);
+                    let bIsSelectType = (dependsOnAttribute.get('input') === 'select' || dependsOnAttribute.get('input') === 'bool');
+                    if (bIsSelectType) {
+                        //console.log({cond:projectAttribute.workflow_requirement_depends_on_condition,arr:projectAttribute.workflow_requirement_depends_on_condition.split(/,/)})
+                        let aRequiredIfNotMatches = [];
+                        let aRequiredIfMatches = [];
+                        _.each(projectAttribute.workflow_requirement_depends_on_condition.split(/,/), function (val, key) {
+
+                            if (val.match(/^not/)) {
+                                let optionVal = val.replace(/^not /, '');
+                                aRequiredIfNotMatches.push(optionVal.toString());
+
+                            } else {
+                                aRequiredIfMatches.push(val.toString());
+
+                            }
+                        });
+                        if (aRequiredIfNotMatches.length) {
+                            let bMatches = _.indexOf(aRequiredIfNotMatches, dependsOnAttributeValue.toString()) !== -1;
+                            bIsRequired = !bMatches;
+                            //console.log({bMatches:bMatches,bIsRequired:bIsRequired,dependsOnAttributeValue:dependsOnAttributeValue.toString(), aRequiredIfNotMatches:aRequiredIfNotMatches})
+
+                        } else {
+                            let bMatches = _.indexOf(aRequiredIfMatches, dependsOnAttributeValue.toString()) !== -1;
+                            bIsRequired = bMatches;
+                            //console.log({bMatches:bMatches,bIsRequired:bIsRequired,dependsOnAttributeValue:dependsOnAttributeValue.toString(), aRequiredIfMatches:aRequiredIfMatches})
+
+                        }
+                    } else {
+                        if (dependsOnAttributeValue !== projectAttribute.workflow_requirement_depends_on_condition) {
+                            bIsRequired = false;
+                        }
+                    }
+                }
+            });
+            return bIsRequired;
+        },
+        getIsAttributeDependentOn: function (attributeId) {
+            let self = this;
+            let bIsDependentOn = false;
+            let aProjectAttributes = _.where(self.aCurrentProjectTypeAttributes, {attribute_id: attributeId});
+            _.each(aProjectAttributes, function (projectAttribute, idx) {
+                if (projectAttribute.workflow_requirement === 3) {
+                    bIsDependentOn = true;
+                }
+            });
+
+            return bIsDependentOn;
+        },
         buildFormElements: function (projectTypeId) {
             let self = this;
-            let aProjectTypeAttributes = self.getAttributesForForm(projectTypeId);
+            self.aCurrentProjectTypeAttributes = self.getAttributesForForm(projectTypeId);
 
             for (let i = 0; i < self.attributesOptionsCnt; i++) {
                 let attribute = self.attributesOptions[i];
-                let attributeFormGroupClassname = 'form-group-' + attribute.attribute_code.replace('_','-');
+                if (attribute.attribute_code === 'primary_skill_needed') {
+                    continue;
+                }
+                let attributeFormGroupClassname = 'form-group-' + attribute.attribute_code.replace('_', '-');
                 // only add or show attribute form element that is applicable to the currently chosen project types
-                if (_.where(aProjectTypeAttributes, {attribute_id: attribute.id}).length) {
+                let aProjectAttributes = _.where(self.aCurrentProjectTypeAttributes, {attribute_id: attribute.id});
+                //console.log({projectTypeId:projectTypeId,attribute:attribute,aProjectAttributes:aProjectAttributes,model:self.model});
+                if (aProjectAttributes.length) {
                     if (self.$('.' + attributeFormGroupClassname).length === 0) {
+
                         let value = self.model.get(attribute.attribute_code);
                         let optionHtml = attribute.options_source !== '' && !_.isUndefined(self.selectOptions[attribute.options_source]) ? self.selectOptions[attribute.options_source] : '';
 
+                        let requiredClass = self.getAttributeIsWorkflowRequirement(attribute.id) ? 'required' : '';
                         let hideClass = '';
-                        if ('status_reason' === attribute.attribute_code || 'permit_required_for' === attribute.attribute_code || 'would_like_team_lead_to_contact' === attribute.attribute_code) {
+
+                        if (self.getIsAttributeDependentOn(attribute.id) && requiredClass === '') {
                             hideClass = 'hide';
                         }
-                        let row = '<div class="dynamic form-group ' + attributeFormGroupClassname + ' ' + hideClass + '">' +
-                                  '    <label for="' + attribute.attribute_code + '">' + attribute.label + '</label>' +
-                                  self.getInputHtml(attribute.input, attribute.attribute_code, attribute.id, value, optionHtml) +
-                                  '</div>';
-                        self.$('[name="projectScope"]').append(row);
+
+                        let row = '<div class="dynamic form-group ' + attributeFormGroupClassname + ' ' + hideClass + ' ' + requiredClass + '">' +
+                            '    <label for="' + attribute.attribute_code + '">' + attribute.label + '</label>' +
+                            self.getInputHtml(attribute.input, attribute.attribute_code, attribute.id, value, optionHtml) +
+                            '</div>';
+                        // append row to correct workflow fieldset
+                        self.$('fieldset[data-workflow-id="' + self.getWorkflowIdByAttributeId(attribute.id) + '"] .workflow-attributes-group-content').append(row);
                         if (attribute.input === 'select') {
                             self.$('[name="' + attribute.attribute_code + '"]').val(value);
                         } else if (attribute.input === 'bool') {
-                            self.$('[name="' + attribute.attribute_code + '"]').prop('checked', value === 1);
+                            if (value !== '') {
+                                self.$('#' + attribute.attribute_code + '_' + value).prop('checked', true);
+                            }
                         }
                     } else {
                         self.$('.' + attributeFormGroupClassname).show();
@@ -7034,7 +7893,7 @@
                     SiteStatusID: SiteStatusID,
                     ProjectID: ProjectID
                 });
-                //console.log('trigger project-id-change',{SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID})
+                //console.log('trigger project-id-change',{SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID, currentProjectID:self.getViewDataStore('current-model-id')});
                 self.trigger('project-id-change', {SiteID: SiteID, SiteStatusID: SiteStatusID, ProjectID: ProjectID});
             }
         }
@@ -7279,7 +8138,7 @@
         },
         handleProjectIDChange: function (e) {
             let self = this;
-
+            self.gridManagerContainerToolbar.disableSaveBtn();
             self.setViewDataStoreValue('current-model-id', e['ProjectID']);
         },
     });
