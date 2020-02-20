@@ -9,6 +9,11 @@
 namespace Dhayakawa\SpringIntoAction\Controllers;
 
 use \Dhayakawa\SpringIntoAction\Controllers\FrontendBackboneAppController as BaseController;
+
+use Dhayakawa\SpringIntoAction\Mail\RegistrationConfirmation;
+use Dhayakawa\SpringIntoAction\Mail\ProjectReport;
+use Dhayakawa\SpringIntoAction\Models\ProjectScope;
+use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
@@ -175,13 +180,25 @@ class ProjectRegistrationController extends BaseController
                     $groveId = $model->IndividualID;
                 }
                 $contactInfo['groveId'] = $groveId;
-                $bProjectVolunteerExists = ProjectVolunteer::where(
+                $ProjectVolunteer = ProjectVolunteer::join(
+                    'projects',
+                    'projects.ProjectID',
+                    '=',
+                    'project_volunteers.ProjectID'
+                )->join(
+                    'site_status',
+                    'site_status.SiteStatusID',
+                    '=',
+                    'projects.SiteStatusID'
+                )->where(
                     [
-                        ['ProjectID', '=', $ProjectID],
-                        ['VolunteerID', '=', $volunteerID],
+                        ['site_status.Year', '=', $this->getCurrentYear()],
+                        //['project_volunteers.ProjectID', '=', $ProjectID],
+                        ['project_volunteers.VolunteerID', '=', $volunteerID],
                     ]
-                )->exists();
+                );
 
+                $bProjectVolunteerExists = $ProjectVolunteer->exists();
                 if (!$bProjectVolunteerExists) {
                     $model = new ProjectVolunteer;
                     $model->fill(['VolunteerID' => $volunteerID, 'ProjectID' => $ProjectID]);
@@ -211,6 +228,20 @@ class ProjectRegistrationController extends BaseController
                 }
             }
             if ($iSuccessCnt) {
+                $projectScope = new ProjectScope();
+                $projectData = $projectScope->getProject($ProjectID, true);
+                $sites = SiteStatus::join(
+                    'sites',
+                    'sites.SiteID',
+                    '=',
+                    'site_status.SiteID'
+                )->where('SiteStatusID', $projectData['SiteStatusID'])->get()->toArray();
+                foreach($aRegistered as $aRegistrant){
+                    $aEmailData = $aRegistrant;
+                    $aEmailData['project'] = $projectData;
+                    $aEmailData['project']['SiteName'] = $sites[0]['SiteName'];
+                    Mail::to($aRegistrant['Email'])->send(new RegistrationConfirmation($aEmailData));
+                }
                 if ($iSuccessCnt + count($aAlreadyRegistered) === count($aContactInfo)) {
                     ProjectReservation::where('session_id', $request->session()->getId())->delete();
                     $request->session()->forget('groveId');

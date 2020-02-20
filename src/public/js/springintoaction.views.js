@@ -7013,10 +7013,10 @@
                 //console.log('setCurrentProjectTypes',{model:JSON.parse(JSON.stringify(self.model))})
                 if(self.model.get('primary_skill_needed') !== ''){
                     self.currentProjectTypes = JSON.parse(self.model.get('primary_skill_needed'));
-                    if(!_.isArray(self.currentProjectTypes)){
-                        self.currentProjectTypes = [self.currentProjectTypes];
-                    } else {
+                    if(_.isEmpty(self.currentProjectTypes)) {
                         self.currentProjectTypes = [App.Vars.selectOptions['ProjectSkillNeededOptions']['General']];
+                    } else if(!_.isArray(self.currentProjectTypes)){
+                        self.currentProjectTypes = [self.currentProjectTypes];
                     }
                 }
 
