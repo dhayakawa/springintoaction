@@ -5,6 +5,9 @@
  * Date: 2/13/2018
  * Time: 10:25 AM
  */
+
+use Dhayakawa\SpringIntoAction\Mail\RegistrationConfirmation;
+
 $default = [
     'prefix' => config('springintoaction.app.prefix', ''),
     'namespace' => 'Dhayakawa\SpringIntoAction\Controllers',
@@ -129,6 +132,15 @@ Route::group(
 
         //onedrive routes.
         Route::get('onedrive_callback', ['as' => 'onedrive.callback', 'uses' => 'OneDriveController@callback']);
+        // Route::get('/registration_confirmation_mailable', function () {
+        //     $aEmailData = ['FullName'=>'Bob Jones'];
+        //     $aEmailData['project'] = ['SiteName'=>'Madison Elementary','SequenceNumber'=>'1','ProjectDescription'=>'Work on everything'];
+        //     $aEmailData['project']['team'][] = ['Role'=>'Team Leader','FirstName'=>'David','LastName'=>'Hayakawa','Email'=>'d.hayakawa@nelsonjameson.com','MobilePhoneNumber'=>'(715) 305-4840','HomePhoneNumber'=>''];
+        //     $aEmailData['Year'] = 2020;
+        //     $aEmailData['EventDate'] = 'May 19th, 2020';
+        //     return new \Dhayakawa\SpringIntoAction\Mail\RegistrationConfirmation($aEmailData);
+        //
+        // });
     }
 );
 

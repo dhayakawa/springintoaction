@@ -8,6 +8,7 @@
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
     use Illuminate\Http\Request;
+    use Dhayakawa\SpringIntoAction\Models\ProjectRole;
 
     class ProjectVolunteerController extends BaseController {
 
@@ -236,9 +237,12 @@
             $batchSuccess = true;
             $failMsg = '';
             if(is_array($params['deleteModelIDs'])) {
+                $workerRoleId = (string) ProjectRole::getIdByRole('Worker');
                 foreach($params['deleteModelIDs'] as $modelID) {
                     $model   = ProjectVolunteerRole::where('ProjectVolunteerRoleID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $params['ProjectRoleID']);
+                    $volunteerID = null;
                     if($model->get()->count()) {
+                        $volunteerID = $model->get()->first()->VolunteerID;
                         $success = $model->forceDelete();
                     } else {
                         $success = true;
@@ -248,15 +252,19 @@
                         $failMsg .= ' Project Volunteer Role failed. ';
                     }
 
-                    // Only remove from project volunteers if there are no other roles available
-                    $projectVolunteerRoleModel = ProjectVolunteerRole::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID']);
-                    $projectVolunteerModel = ProjectVolunteer::where('VolunteerID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID']);
+                    // We must remove the project volunteer record if this was not a worker role and they are
+                    // not already a Worker or some other role for this project or else they will not be able to register for a project
+                    if($volunteerID !== null && $params['ProjectRoleID'] !== $workerRoleId){
+                        $projectVolunteerRoleModel = ProjectVolunteerRole::where('VolunteerID', '=', $volunteerID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $workerRoleId);
+                        $projectVolunteerModel = ProjectVolunteer::where('VolunteerID', '=', $volunteerID)->where('ProjectID', '=', $params['ProjectID']);
 
-                    if($projectVolunteerRoleModel->get()->count() === 0 && $projectVolunteerModel->get()->count()) {
-                        $success = $projectVolunteerModel->forceDelete();
-                    } else {
-                        $success = true;
+                        if($projectVolunteerRoleModel->get()->count() === 0 && $projectVolunteerModel->get()->count()) {
+                            $success = $projectVolunteerModel->forceDelete();
+                        } else {
+                            $success = true;
+                        }
                     }
+
 
                     if(!$success) {
                         $batchSuccess = false;

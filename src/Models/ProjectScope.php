@@ -331,17 +331,18 @@ FROM (
                 $order['direction']
             );
         }
+        //$sql = \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql());
         // \Illuminate\Support\Facades\Log::debug(
         //     '',
         //     [
         //         'File:' . __FILE__,
         //         'Method:' . __METHOD__,
         //         'Line:' . __LINE__,
-        //         $projects->toSql(),
+        //         $sSqlPeopleNeeded,
         //         $filter
         //     ]
         // );
-        // $sql = \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql());
+        // //
         // \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$sql]);
         $all_projects = $projectScope->get()->toArray();
         //echo print_r($all_projects,true);

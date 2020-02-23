@@ -58,4 +58,13 @@ class VolunteerStatusOptions extends BaseModel
         return $this->defaultRecordData;
     }
 
+    public static function getIdByStatusOption($status){
+        $value = null;
+        $collection = self::where('option_label', '=', $status)->get();
+        if ($collection->count()) {
+            $aModel = $collection->first()->toArray();
+            $value = $aModel['id'];
+        }
+        return $value;
+    }
 }
