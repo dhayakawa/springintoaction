@@ -302,17 +302,15 @@ class ProjectsController extends BaseController
         return [];
     }
 
-    public function getProject($ProjectID)
+    /**
+     * @param $ProjectID
+     *
+     * @return array|mixed
+     * @deprecated
+     */
+    public function getProject(Request $request,$ProjectID)
     {
-        try {
-            if ($project = Project::where('ProjectID', $ProjectID)->get()) {
-                return current($project->toArray());
-            }
-        } catch (\Exception $e) {
-            return [];
-        }
-
-        return [];
+        return $this->getProjectScopeProject($request, $ProjectID);
     }
 
     public function uploadList(Request $request)
@@ -330,22 +328,16 @@ class ProjectsController extends BaseController
         $oAjaxUploadHandler = new ajaxUploader($aaOptions);
     }
 
+    /**
+     * This is only used for the project dropdowns
+     * @return mixed
+     */
     public function getAllProjects()
     {
-        $projectModel = new Project();
-        $sSqlVolunteersAssigned = $projectModel->getVolunteersAssignedSql();
-        $all_projects = Project::select(
-            'projects.*',
-            DB::raw(
-                '(SELECT GROUP_CONCAT(distinct BudgetID SEPARATOR \',\') FROM budgets where budgets.ProjectID = projects.ProjectID and budgets.deleted_at is null) as BudgetSources'
-            ),
-            DB::raw(
-                "{$sSqlVolunteersAssigned} as VolunteersAssigned"
-            ),
-            DB::raw(
-                '(select COUNT(*) from project_attachments where project_attachments.ProjectID = projects.ProjectID) AS `HasAttachments`'
-            )
-        )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
+
+        $all_projects = ProjectScope::select(
+            'projects.*'
+            )->join('site_status', 'projects.SiteStatusID', '=', 'site_status.SiteStatusID')->where(
             'site_status.Year',
             date('Y')
         )->whereNull('projects.deleted_at')->whereNull('site_status.deleted_at')->where('projects.Active', 1)->orderBy(

@@ -13,6 +13,7 @@ use \Dhayakawa\SpringIntoAction\Controllers\FrontendBackboneAppController as Bas
 use Dhayakawa\SpringIntoAction\Mail\RegistrationConfirmation;
 use Dhayakawa\SpringIntoAction\Mail\ProjectReport;
 use Dhayakawa\SpringIntoAction\Models\ProjectScope;
+use Dhayakawa\SpringIntoAction\Models\SiteSetting;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +63,8 @@ class ProjectRegistrationController extends BaseController
         $params = $request->all();
         $aContactInfo = $params['contact_info'];
         $ProjectID = $params['ProjectID'];
-        $ProjectRoleID = 4;
+        $ProjectRoleID = (string) ProjectRole::getIdByRole('Worker');
+        $volunteerAgreedStatusId = VolunteerStatusOptions::getIdByStatusOption('Agreed');
         $aRegistered = [];
         $aRegistrationFailed = [];
         $aAlreadyRegistered = [];
@@ -211,7 +213,7 @@ class ProjectRegistrationController extends BaseController
                                 'VolunteerID' => $volunteerID,
                                 'ProjectID' => $ProjectID,
                                 'ProjectRoleID' => $ProjectRoleID,
-                                'Status' => 5
+                                'Status' => $volunteerAgreedStatusId
                             ]
                         );
                         $pvrSuccess = $model->save();
@@ -236,10 +238,15 @@ class ProjectRegistrationController extends BaseController
                     '=',
                     'site_status.SiteID'
                 )->where('SiteStatusID', $projectData['SiteStatusID'])->get()->toArray();
+                $siteSetting = new SiteSetting();
+                $eventDate = $siteSetting->getSettingValue('event_date');
+                $currentYear = $this->getCurrentYear();
                 foreach($aRegistered as $aRegistrant){
                     $aEmailData = $aRegistrant;
                     $aEmailData['project'] = $projectData;
                     $aEmailData['project']['SiteName'] = $sites[0]['SiteName'];
+                    $aEmailData['Year'] = $currentYear;
+                    $aEmailData['EventDate'] = $eventDate;
                     Mail::to($aRegistrant['Email'])->send(new RegistrationConfirmation($aEmailData));
                 }
                 if ($iSuccessCnt + count($aAlreadyRegistered) === count($aContactInfo)) {
