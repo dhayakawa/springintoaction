@@ -20,6 +20,7 @@
         <div class="col-xs-12 clearfix header">
             @if (!empty(trim(Route::currentRouteName())))
             <a class="home-logo" href="{{ url('/') }}"><img src="/images/sia-spring-logo-transparent-big.png" /></a>
+            @php echo $preRegistrationMsg @endphp
             @endif
             <ul class="nav-links">
                 @auth
