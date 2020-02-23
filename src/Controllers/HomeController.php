@@ -67,7 +67,15 @@ class HomeController extends BaseController
         $SiteSetting = new SiteSetting();
         $aSiteSettingResult = $SiteSetting->getIsSettingOn('open_registration');
 
+        $user = Auth::user();
+
         $bShowProjectRegistration = $aSiteSettingResult['on'];
+        $preRegistrationMsg = '';
+        if($user !== null && !$bShowProjectRegistration){
+            $aSiteSettingPrivateResult = $SiteSetting->getIsSettingOn('allow_private_registration');
+            $bShowProjectRegistration = $aSiteSettingPrivateResult['on'];
+            $preRegistrationMsg = "<div class=\"pre-registration-msg\" style='position:absolute;width:400px;text-align:right;bottom:0;right:0;font-weight:bold;'>*This pre-registration is not open to the public yet.</div>";
+        }
         if ($bShowProjectRegistration) {
             $yearNow = date('Y');
             $month = date('n');
@@ -108,7 +116,7 @@ class HomeController extends BaseController
             $this->makeJsFiles(compact('appInitialData'));
         }
 
-        return view('welcome', $request, compact('bShowProjectRegistration', 'appInitialData'));
+        return view('welcome', $request, compact('bShowProjectRegistration','preRegistrationMsg', 'appInitialData'));
     }
 
     public function makeJsFiles($appInitialData)
