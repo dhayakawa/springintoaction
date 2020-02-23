@@ -237,6 +237,8 @@ class ProjectVolunteerRole extends BaseModel
                 $SiteID
             )->whereNull('site_status.deleted_at');
         }
+        // $str= '<pre>' . \Illuminate\Support\Str::replaceArray('?', $collection->getBindings(), $collection->toSql()) . '</pre>';
+        // \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$str]);
         return $collection->get()->toArray();
     }
 

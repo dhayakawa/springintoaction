@@ -58,4 +58,13 @@
             return $this->hasMany('Dhayakawa\SpringIntoAction\Models\Volunteer');
         }
 
+        public static function getIdByRole($role){
+            $value = null;
+            $collection = self::where('Role', '=', $role)->get();
+            if ($collection->count()) {
+                $aModel = $collection->first()->toArray();
+                $value = $aModel['ProjectRoleID'];
+            }
+            return $value;
+        }
     }

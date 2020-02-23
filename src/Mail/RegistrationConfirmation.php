@@ -37,6 +37,7 @@ class RegistrationConfirmation extends Mailable
     {
         $leaderIntro = '';
         $aTeamLeaders = [];
+        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$this->aData['project']['team']]);
         if (!empty($this->aData['project']['team'])) {
 
             foreach ($this->aData['project']['team'] as $teamMember) {
@@ -53,9 +54,9 @@ class RegistrationConfirmation extends Mailable
             }
             if (!empty($aTeamLeaders)) {
                 if (count($aTeamLeaders) > 1) {
-                    $leaderIntro = "The team leaders for this project are";
+                    $leaderIntro = "The team leaders for this project are:";
                 } else {
-                    $leaderIntro = "The team leader for this project is";
+                    $leaderIntro = "The team leader for this project is:";
                 }
             }
         }
@@ -63,10 +64,13 @@ class RegistrationConfirmation extends Mailable
         return $this->view('springintoaction::admin.emails.registration_confirmation')->with(
             [
                 'fullName' => $this->aData['FullName'],
+                'SequenceNumber' => $this->aData['project']['SequenceNumber'],
                 'ProjectDescription' => $this->aData['project']['ProjectDescription'],
                 'SiteName' => $this->aData['project']['SiteName'],
                 'leaderIntro' => $leaderIntro,
-                'aTeamLeaders' => $aTeamLeaders
+                'aTeamLeaders' => $aTeamLeaders,
+                'Year' => $this->aData['Year'],
+                'date' => $this->aData['EventDate']
             ]
         );
     }
