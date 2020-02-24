@@ -7286,15 +7286,23 @@
 
             let typesBeforeChange = _.clone(self.currentProjectTypes);
             self.setCurrentProjectTypes(true);
-
+            let aCurrentlyUsedAttributeCodes = [];
+            _.each(self.currentProjectTypes, function(project_type_id,idx){
+                _.each(self.getProjectTypeAttributes(project_type_id), function (pta, idx) {
+                    let attribute = _.where(self.attributesOptions, {id: pta.attribute_id});
+                    aCurrentlyUsedAttributeCodes.push(attribute[0].attribute_code)
+                });
+            });
             let removed = _.difference(typesBeforeChange, self.currentProjectTypes);
             if (removed.length) {
                 _.each(removed, function (project_type_id, idx) {
                     _.each(self.getProjectTypeAttributes(project_type_id), function (pta, idx) {
                         let attribute = _.where(self.attributesOptions, {id: pta.attribute_id});
-                        //console.log(self.$('[name="'+ attribute[0].attribute_code+'"]'),project_type_id, pta.attribute_id,attribute)
-                        let defaultValue = attribute.input === 'input' || attribute.input === 'textarea' ? self.cleanTextInputValue(attribute[0].default_value) : attribute[0].default_value;
-                        self.$('[name="' + attribute[0].attribute_code + '"]').val(defaultValue);
+                        if (attribute[0].is_core !== 1 && _.indexOf(aCurrentlyUsedAttributeCodes,attribute[0].attribute_code) === -1) {
+                            //console.log(self.$('[name="'+ attribute[0].attribute_code+'"]'),{project_type_id:project_type_id, pta:pta,attribute:attribute})
+                            let defaultValue = attribute.input === 'input' || attribute.input === 'textarea' ? self.cleanTextInputValue(attribute[0].default_value) : attribute[0].default_value;
+                            self.$('[name="' + attribute[0].attribute_code + '"]').val(defaultValue);
+                        }
                     });
                 })
             }

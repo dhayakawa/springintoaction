@@ -13,7 +13,7 @@ use Dhayakawa\SpringIntoAction\Controllers\FrontendBackboneAppController as Base
 class GroveController extends BaseController
 {
 
-    public function runImport($importType)
+    public static function runImport($importType)
     {
 
         $groveApi = new GroveApi();

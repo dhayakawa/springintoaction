@@ -445,17 +445,6 @@
                 Email: ''
             };
 
-            // if (App.Vars.devMode) {
-            //     contactInfoDataValues = {
-            //         groveId: null,
-            //         Church: 'woodlands',
-            //         ChurchOther: '',
-            //         MobilePhoneNumber: '7153054840',
-            //         FirstName: 'David',
-            //         LastName: 'Hayakawa',
-            //         Email: 'david.hayakawa@gmail.com'
-            //     };
-            // }
             self.contactInfoViews[0] = new App.Views.ContactInfo({
                 el: self.$el.find('.personal-contact-info-wrapper'),
                 parentView: self,
@@ -1318,9 +1307,7 @@
             $spinnerWrapper.append(App.Vars.spinnerHtml);
             $submitBtn.before($spinnerWrapper);
             let formData = new FormData($('form[name="newProjectRegistration"]')[0]);
-            // for (var pair of formData.entries()) {
-            //     //console.log(pair[0] + ', ' + pair[1]);
-            // }
+            //for (var pair of formData.entries()) {       console.log(pair[0] + ', ' + pair[1]);            }
 
             $.ajax({
                 type: "post",
@@ -1475,6 +1462,7 @@
             'change [name="register-school-preference"]': 'welcomeHelperAction',
             'click .active-filter-btn': 'removeFromActiveFiltersContainer',
             'click .show-all-projects': 'showAllProjects',
+            'click .reset-for-test-case': 'resetForTestCase',
         },
         render: function () {
             let self = this;
@@ -1482,6 +1470,11 @@
             self.$el.html(self.template({
                 year: new Date().getFullYear()
             }));
+            if(App.Vars.devMode) {
+                self.$el.prepend('<button data-reset-type="developer" class="reset-for-test-case">Reset Developer</button>');
+                self.$el.prepend('<button data-reset-type="developer-family" class="reset-for-test-case">Reset Developer Family</button>');
+                self.$el.prepend('<button data-reset-type="developer-small-group" class="reset-for-test-case">Reset Developer Small Group</button>')
+            }
             self.showWelcomeHelper();
 
             App.Views.skillFilterGroup = self.skillFilterGroup = new self.projectFilterGroupViewClass({
@@ -1522,6 +1515,28 @@
             self.projectListView.render();
             self.listenTo(App.Views.projectListView, 'register-for-project', self.showRegistrationForm);
             return self;
+        },
+        resetForTestCase: function(e){
+            e.preventDefault();
+            let self = this;
+            if(App.Vars.devMode){
+                let resetData = {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    reset_type: $(e.currentTarget).data('reset-type')
+                };
+                $.ajax({
+                    type: "post",
+                    dataType: "json",
+                    url: 'project_registration/reset_for_test_case',
+                    data: resetData,
+                    success: function (response) {
+                        $('.reset-for-test-case').after('<span class="reset-for-test-case-successful text-success">'+response.msg+'</span>');
+                    },
+                    fail: function (response) {
+                        console.error(response)
+                    }
+                })
+            }
         },
         getIsPublicChurchKiosk: function () {
             let self = this;

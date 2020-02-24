@@ -115,6 +115,10 @@ Route::group(
             'project_registration/grove_login',
             ['as' => 'project.registration.grove_login', 'uses' => 'ProjectRegistrationController@groveLogin']
         );
+        Route::post(
+            'project_registration/reset_for_test_case',
+            ['as' => 'project.registration.reset_for_test_case', 'uses' => 'ProjectRegistrationController@resetForTestCase']
+        );
         Route::get(
             'project_registration/delete_reservation/{ProjectID}',
             [
@@ -141,6 +145,7 @@ Route::group(
         //     return new \Dhayakawa\SpringIntoAction\Mail\RegistrationConfirmation($aEmailData);
         //
         // });
+
     }
 );
 

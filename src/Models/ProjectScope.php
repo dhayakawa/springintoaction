@@ -14,6 +14,7 @@ use Dhayakawa\SpringIntoAction\Helpers\ProjectRegistrationHelper;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Dhayakawa\SpringIntoAction\Models\Attribute;
 use Dhayakawa\SpringIntoAction\Models\ProjectAttribute;
@@ -1547,12 +1548,13 @@ OPTIONS_TEMPLATE;
         $compiledColumnDefinitions = $defaultColumnDefinitions . PHP_EOL . $dynamicCols;
         $appVarsDefinition =
             "App.Vars.projectsBackgridColumnDefinitions = [" . PHP_EOL . $compiledColumnDefinitions . PHP_EOL . "];";
-
+        $bIsLocalEnv = App::environment('local');
+        $devFolder = $bIsLocalEnv ? 'packages' : 'vendor';
         $projectModelPackageFile =
-            base_path() . '/packages/dhayakawa/springintoaction/src/resources/assets/js/models/project.js';
+            base_path() . '/'.$devFolder.'/dhayakawa/springintoaction/src/resources/assets/js/models/project.js';
         $projectModelPackageFileContents = file_get_contents($projectModelPackageFile);
         $projectCollectionPackageFile =
-            base_path() . '/packages/dhayakawa/springintoaction/src/resources/assets/js/collections/project.js';
+            base_path() . '/'.$devFolder.'/dhayakawa/springintoaction/src/resources/assets/js/collections/project.js';
         $projectCollectionPackageFileContents = file_get_contents($projectCollectionPackageFile);
         $publicCollectionsFile = base_path() . "/public/js/springintoaction.collections.js";
         $publicModelsFile = base_path() . "/public/js/springintoaction.models.js";

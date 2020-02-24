@@ -1,6 +1,6 @@
 
 <td>
-    <div class="row">
+    <div data-project-id-row="<%= ProjectID %>" class="row">
         <div class="col-xs-6 col-lg-8 site-xs-col site-col"><%= SiteName %></div>
         <div class="col-xs-1 col-lg-1 skills-xs-col skills-col"><%= SkillsNeeded %></div>
         <div class="col-xs-1 col-lg-1 child-xs-col child-friendly-col"><%= ChildFriendly %></div>
