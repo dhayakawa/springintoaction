@@ -77,12 +77,8 @@ class HomeController extends BaseController
             $preRegistrationMsg = "<div class=\"pre-registration-msg\" style='position:absolute;width:400px;text-align:right;bottom:0;right:0;font-weight:bold;'>*This pre-registration is not open to the public yet.</div>";
         }
         if ($bShowProjectRegistration) {
-            $yearNow = date('Y');
-            $month = date('n');
 
-            // need to make sure the year is for the upcoming/next spring
-            // or this spring if the month is less than may
-            $Year = $month > 5 ? $yearNow + 1 : $yearNow;
+            $Year = $this->getCurrentYear();
             $bIsLocalEnv = App::environment('local');
             $remoteIPAddress = $_SERVER['REMOTE_ADDR'];
             $churchIPAddress = $SiteSetting->getSettingValue('church_ip_address');
