@@ -14,6 +14,7 @@ use Dhayakawa\SpringIntoAction\Mail\RegistrationConfirmation;
 use Dhayakawa\SpringIntoAction\Mail\ProjectReport;
 use Dhayakawa\SpringIntoAction\Models\ProjectScope;
 use Dhayakawa\SpringIntoAction\Models\SiteSetting;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Support\Facades\Storage;
@@ -53,6 +54,7 @@ use Dhayakawa\SpringIntoAction\Models\ProjectReservation;
 use Dhayakawa\SpringIntoAction\Controllers\GroveApi;
 use Dhayakawa\SpringIntoAction\Models\LifeGroups;
 use Dhayakawa\SpringIntoAction\Models\GroveIndividual;
+use Illuminate\Support\Facades\DB;
 
 class ProjectRegistrationController extends BaseController
 {
@@ -226,7 +228,19 @@ class ProjectRegistrationController extends BaseController
                         $aRegistrationFailed[] = $contactInfo;
                     }
                 } else {
-                    $aAlreadyRegistered[] = $contactInfo;
+                    // Look to see if this person is assigned a non worker role
+                    $bAlreadyHasNonWorkerRoleForProject =
+                        ProjectVolunteerRole::where('VolunteerID', '=', $volunteerID)->where(
+                            'ProjectID',
+                            '=',
+                            $ProjectID
+                        )->where('ProjectRoleID', '!=', $ProjectRoleID)->exists();
+                    if ($bAlreadyHasNonWorkerRoleForProject) {
+                        $iSuccessCnt++;
+                        $aRegistered[] = $contactInfo;
+                    } else {
+                        $aAlreadyRegistered[] = $contactInfo;
+                    }
                 }
             }
             if ($iSuccessCnt) {
@@ -247,7 +261,7 @@ class ProjectRegistrationController extends BaseController
                     $aEmailData['project']['SiteName'] = $sites[0]['SiteName'];
                     $aEmailData['Year'] = $currentYear;
                     $aEmailData['EventDate'] = $eventDate;
-                    Mail::to($aRegistrant['Email'])->send(new RegistrationConfirmation($aEmailData));
+                    //Mail::to($aRegistrant['Email'])->send(new RegistrationConfirmation($aEmailData));
                 }
                 if ($iSuccessCnt + count($aAlreadyRegistered) === count($aContactInfo)) {
                     ProjectReservation::where('session_id', $request->session()->getId())->delete();
@@ -642,5 +656,102 @@ class ProjectRegistrationController extends BaseController
         $age = $interval->format('%y');
 
         return $age >= 16;
+    }
+
+    public function resetForTestCase(Request $request)
+    {
+        $bIsLocalEnv = App::environment('local');
+        \Illuminate\Support\Facades\Log::debug('', ['File:' . __FILE__, 'Method:' . __METHOD__, 'Line:' . __LINE__,$bIsLocalEnv]);
+        if ($bIsLocalEnv) {
+            // developer volunteerID
+            $volunteerID = 627;
+            // developer grove id
+            $groveId = 797;
+            $groveFamilyId = 381;
+            $lifegroupId = 512;
+            $workerRoleId = (string) ProjectRole::getIdByRole('Worker');
+            $aVolunteerID = [$volunteerID];
+            if($request->reset_type === 'developer-family'){
+                //$aVolunteerID[]
+                $aResult = GroveIndividual::
+                    join(
+                        'volunteers',
+                        'volunteers.IndividualID',
+                        '=',
+                        'grove_individuals.id'
+                    )->where('family_id','=',$groveFamilyId)->select('volunteers.VolunteerID')->get('VolunteerID')->toArray();
+                foreach($aResult as $result){
+                    $aVolunteerID[]=$result['VolunteerID'];
+                }
+            } else if($request->reset_type === 'developer-small-group'){
+                //$aVolunteerID[]
+                $aResult = LifeGroups::
+                join(
+                    'volunteers',
+                    'volunteers.IndividualID',
+                    '=',
+                    'life_groups.individual_id'
+                )->where('group_id','=',$lifegroupId)->select('volunteers.VolunteerID')->get('VolunteerID')->toArray();
+                foreach($aResult as $result){
+                    $aVolunteerID[]=$result['VolunteerID'];
+                }
+            }
+
+            $aProjectVolunteerCollection = ProjectVolunteer::join(
+                'projects',
+                'projects.ProjectID',
+                '=',
+                'project_volunteers.ProjectID'
+            )->join(
+                'site_status',
+                'site_status.SiteStatusID',
+                '=',
+                'projects.SiteStatusID'
+            )->where(
+                'site_status.Year', '=', $this->getCurrentYear()
+            )->whereIn(
+                'project_volunteers.VolunteerID', $aVolunteerID
+            )->get()->toArray();
+            //echo print_r($aProjectVolunteerCollection,true);
+            $deleteRoleSuccess = [];
+            $deletePVSuccess = [];
+            if (count($aProjectVolunteerCollection)) {
+                foreach ($aProjectVolunteerCollection as $aProjectVolunteer) {
+                    //print_r($aProjectVolunteer);
+                    $volunteerID = $aProjectVolunteer['VolunteerID'];
+                    // Remove worker roles
+                    $projectVolunteerRole =
+                        ProjectVolunteerRole::where('VolunteerID', '=', $volunteerID)->where(
+                            'ProjectID',
+                            '=',
+                            $aProjectVolunteer['ProjectID']
+                        )->where('ProjectRoleID', '=', $workerRoleId);
+                    $deleteRoleSuccess[$volunteerID] = $projectVolunteerRole->forceDelete();
+                    // Look for non worker roles
+                    $projectVolunteerRoleModel =
+                        ProjectVolunteerRole::where('VolunteerID', '=', $volunteerID)->where(
+                            'ProjectID',
+                            '=',
+                            $aProjectVolunteer['ProjectID']
+                        )->where('ProjectRoleID', '!=', $workerRoleId);
+                    $projectVolunteerModel =
+                        ProjectVolunteer::where('VolunteerID', '=', $volunteerID)->where(
+                            'ProjectID',
+                            '=',
+                            $aProjectVolunteer['ProjectID']
+                        );
+
+                    // If the user doesn't have any other roles for this project remove them as a volunteer for this project
+                    if ($projectVolunteerRoleModel->get()->count() === 0 && $projectVolunteerModel->get()->count()) {
+                        $deletePVSuccess[$volunteerID]= $projectVolunteerModel->forceDelete();
+                    }
+                }
+            }
+            DB::table('project_reservations')->truncate();
+            $response = ['success' => true, 'msg' => print_r($deleteRoleSuccess,true).print_r($deletePVSuccess,true)];
+            return view('springintoaction::frontend.json_response', $request, compact('response'));
+        }
+        $response = ['success' => false, 'msg' => 'nope'];
+        return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
 }

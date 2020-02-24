@@ -1,11 +1,11 @@
 <div class="row reservation-wrapper">
     <div class="col-xs-12">
-        <p class="steps-help">
-            How many people would you like to register right now? They must be at least 16 years old.<br>
+
+        <p class="steps-help">How many people would you like to register right now? They must be at least 16 years old.<br>
             <small class="text-muted">*Children under 16 are welcome to participate even though they are not registered.</small><br><br>
             There are currently <strong><%= volunteersNeeded %></strong> open spots. <br>
-            We'll temporarily reserve the spots for you until you finish registering.
-        </p>
+            We'll temporarily reserve the spots for you until you finish registering.</p>
+
         <form autocomplete="new-project-reservation-<% print(Math.random().toString()) %>" name="newProjectReservation">
             <input type="hidden" name="_token" value="<%= CsrfToken %>">
             <input type="hidden" name="ProjectID" value="<%= ProjectID %>"/>
