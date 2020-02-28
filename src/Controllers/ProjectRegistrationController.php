@@ -72,12 +72,12 @@ class ProjectRegistrationController extends BaseController
         $aAlreadyRegistered = [];
         $iSuccessCnt = 0;
         \Illuminate\Support\Facades\Log::debug(
-            '',
+            'Registration Attempt',
             [
                 'File:' . __FILE__,
                 'Method:' . __METHOD__,
                 'Line:' . __LINE__,
-                $aContactInfo,
+                $params,
             ]
         );
         if (is_array($aContactInfo)) {
@@ -312,7 +312,15 @@ class ProjectRegistrationController extends BaseController
                 'aRegistrationFailed' => $aRegistrationFailed,
             ];
         }
-
+        \Illuminate\Support\Facades\Log::debug(
+            'Registration Result',
+            [
+                'File:' . __FILE__,
+                'Method:' . __METHOD__,
+                'Line:' . __LINE__,
+                $response,
+            ]
+        );
         return view('springintoaction::frontend.json_response', $request, compact('response'));
     }
 
