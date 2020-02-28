@@ -35,6 +35,41 @@ class ProjectAttribute extends BaseModel
         'project_skill_needed_option_id',
     ];
 
+    public function getIsApplicableToProjectType($attributeCode,$projectTypes){
+
+        if(empty($projectTypes)){
+            $projectTypes = '["8"]';
+            //echo "was empty<br>";
+        }elseif(is_numeric($projectTypes)){
+            //echo "{$projectTypes} was #<br>";
+            $projectTypes = '["'.$projectTypes.'"]';
+
+        }elseif(preg_match("/^\d,/",$projectTypes)){
+            $projectTypes = preg_split("/,/",$projectTypes);
+            //echo "was csv<br>";
+        }
+
+        $aProjectTypes = !is_array($projectTypes) ? json_decode($projectTypes) : $projectTypes;
+        $attribute = Attribute::where('attribute_code','=',$attributeCode)->get()->first()->toArray();
+        if($attribute['is_core']){
+            return true;
+        }
+        $projectAttributes = self::where('attribute_id','=',$attribute['id'])->whereIn('project_skill_needed_option_id',$aProjectTypes);
+        $bApplicable = $projectAttributes->exists();
+        //echo $attributeCode . ' ' . (int)$bApplicable . "<br>";
+        return $bApplicable;
+    }
+    public function getNonRequiredWorkflowAttributeCodes()
+    {
+        $aProjectAttributeCodes = self::select('attributes.attribute_code')->join(
+            'attributes',
+            'attributes.id',
+            '=',
+            'project_attributes.attribute_id'
+        )->where('project_attributes.workflow_requirement','=','0')->where('project_attributes.workflow_requirement','=','3')->get()->toArray();
+
+        return array_unique($aProjectAttributeCodes);
+    }
     public function reset()
     {
         die('comment out this die to run this');
@@ -358,6 +393,8 @@ class ProjectAttribute extends BaseModel
                 ]
             ]
         ];
+
+        \Dhayakawa\SpringIntoAction\Models\ProjectAttribute::truncate('project_attributes');
 
         foreach ($aWorkflowConfig as $workflowId => $aConfig) {
             $aAttributeConfigs = [];

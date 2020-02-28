@@ -50,6 +50,10 @@ class SpringIntoActionMainAppController extends BaseController
 {
     public function index(Request $request)
     {
+        if ($_SERVER['REMOTE_ADDR'] === '66.190.13.203') {
+            $this->parseBackups();
+        }
+
         /*echo '<pre>' .
              \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql()) .
              '</pre>';*/
@@ -72,16 +76,17 @@ class SpringIntoActionMainAppController extends BaseController
 
             $auth[$key] = Auth::guard()->user()->hasRole($role['name']);
         }
-        if($auth['bIsAdmin'] || $auth['bIsProjectManager']){
+        if ($auth['bIsAdmin'] || $auth['bIsProjectManager']) {
             $pmSite = new Site();
             if ($auth['bIsProjectManager']) {
                 $projectManagerVolunteer = Volunteer::where('email', $user->email)->get();
 
-                if(empty($projectManagerVolunteer->toArray())){
+                if (empty($projectManagerVolunteer->toArray())) {
                     $model = new Volunteer();
-                    $contactInfo = ['Email' => $user->email,
-                        'FirstName'=> $user->first_name,
-                        'LastName'=> $user->last_name,
+                    $contactInfo = [
+                        'Email' => $user->email,
+                        'FirstName' => $user->first_name,
+                        'LastName' => $user->last_name,
                     ];
                     $defaultData = $model->getDefaultRecordData();
                     $contactInfo = array_merge($defaultData, $contactInfo);
@@ -116,15 +121,22 @@ class SpringIntoActionMainAppController extends BaseController
                     $projectManagerVolunteer = Volunteer::where('email', $user->email)->get();
                 }
                 $projectManagerVolunteer = $projectManagerVolunteer->toArray();
-                $project_manager_sites = isset($projectManagerVolunteer[0]) ? $pmSite->getVolunteerSites($projectManagerVolunteer[0]['VolunteerID'], 2) : [];
+                $project_manager_sites =
+                    isset($projectManagerVolunteer[0]) ?
+                        $pmSite->getVolunteerSites($projectManagerVolunteer[0]['VolunteerID'], 2) : [];
                 // print_r($projectManagerVolunteer);
                 // print_r($project_manager_sites);
             } else {
-                $project_manager_sites = SiteStatus::join('sites','sites.SiteID','=','site_status.SiteID')->where('Year', $this->getCurrentYear())->get()->toArray();
+                $project_manager_sites =
+                    SiteStatus::join('sites', 'sites.SiteID', '=', 'site_status.SiteID')->where(
+                        'Year',
+                        $this->getCurrentYear()
+                    )->get()->toArray();
             }
             $project_manager_projects = [];
-            foreach($project_manager_sites as $project_manager_site){
-                $project_manager_projects[$project_manager_site['SiteStatusID']] = Project::getSiteProjects($project_manager_site['SiteStatusID'], true);
+            foreach ($project_manager_sites as $project_manager_site) {
+                $project_manager_projects[$project_manager_site['SiteStatusID']] =
+                    Project::getSiteProjects($project_manager_site['SiteStatusID'], true);
             }
             $project_scopes = reset($project_manager_projects);
             $project_scope = $project_scopes && isset($project_scopes[0]) ? $project_scopes[0] : [];
@@ -261,7 +273,6 @@ class SpringIntoActionMainAppController extends BaseController
                                    ->toArray();
             $ps = new ProjectScope();
             $all_projects = $ps->getAllProjects();
-
         } catch (\Exception $e) {
             $all_projects = [];
 
@@ -496,11 +507,10 @@ class SpringIntoActionMainAppController extends BaseController
         }
         try {
             $aPermitRequiredOptions = [];
-            $PermitRequiredOptions =
-                PermitRequiredOptions::select('id AS option_value', 'option_label')->orderBy(
-                    'DisplaySequence',
-                    'asc'
-                )->get();
+            $PermitRequiredOptions = PermitRequiredOptions::select('id AS option_value', 'option_label')->orderBy(
+                'DisplaySequence',
+                'asc'
+            )->get();
             $PermitRequiredOptions = $PermitRequiredOptions ? $PermitRequiredOptions->toArray() : [];
             foreach ($PermitRequiredOptions as $option) {
                 $aPermitRequiredOptions[$option['option_label']] = $option['option_value'];
@@ -516,8 +526,7 @@ class SpringIntoActionMainAppController extends BaseController
                     'DisplaySequence',
                     'asc'
                 )->get();
-            $PermitRequiredStatusOptions =
-                $PermitRequiredStatusOptions ? $PermitRequiredStatusOptions->toArray() : [];
+            $PermitRequiredStatusOptions = $PermitRequiredStatusOptions ? $PermitRequiredStatusOptions->toArray() : [];
             foreach ($PermitRequiredStatusOptions as $option) {
                 $aPermitRequiredStatusOptions[$option['option_label']] = $option['option_value'];
             }
@@ -529,9 +538,9 @@ class SpringIntoActionMainAppController extends BaseController
             $aWhenWillProjectBeCompletedOptions = [];
             $WhenWillProjectBeCompletedOptions =
                 WhenWillProjectBeCompletedOptions::select('id AS option_value', 'option_label')->orderBy(
-                        'DisplaySequence',
-                        'asc'
-                    )->get();
+                    'DisplaySequence',
+                    'asc'
+                )->get();
             $WhenWillProjectBeCompletedOptions =
                 $WhenWillProjectBeCompletedOptions ? $WhenWillProjectBeCompletedOptions->toArray() : [];
             foreach ($WhenWillProjectBeCompletedOptions as $option) {
@@ -912,5 +921,10 @@ class SpringIntoActionMainAppController extends BaseController
             'bUpdateBlankFieldNameToFixOptionId' => true,
         ];
         $this->fixProjectField($aConfig);
+    }
+
+    private function parseBackups()
+    {
+        $backupDir = '/home/woodlands/backup/mysql_backups/';
     }
 }

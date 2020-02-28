@@ -9,6 +9,7 @@
 namespace Dhayakawa\SpringIntoAction\Controllers;
 
 use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
+use Dhayakawa\SpringIntoAction\Models\ProjectAttribute;
 use Dhayakawa\SpringIntoAction\Models\ProjectScope;
 use Illuminate\Support\Facades\Log;
 use Dompdf\Dompdf;
@@ -80,6 +81,15 @@ class ReportsController extends BaseController
             case 'projects_full':
                 $reportName = 'Project Report by Year, Site and Project';
                 $reportHtml = $this->getYearSiteProjectFullReport(
+                    $Year,
+                    $SiteID,
+                    $ProjectID,
+                    $bReturnArray
+                );
+                break;
+            case 'projects_missing':
+                $reportName = 'Projects Missing Data Report';
+                $reportHtml = $this->getProjectsMissingDataReport(
                     $Year,
                     $SiteID,
                     $ProjectID,
@@ -165,7 +175,7 @@ class ReportsController extends BaseController
             }
         }
         if ($bReturnArray) {
-            if ($ReportType !== 'projects_full') {
+            if ($ReportType !== 'projects_full' && $ReportType !== 'projects_missing') {
                 $html = array_merge(["Spring Into Action $Year", $reportName, $date, " "], $reportHtml);
             } else {
                 $html = $reportHtml;
@@ -184,8 +194,8 @@ class ReportsController extends BaseController
         } elseif (!empty($this->downloadType) && $this->downloadType === 'csv') {
             return $this->getCSV($html, $reportName);
         } elseif (!empty($this->downloadType) && $this->downloadType === 'spreadsheet') {
-            if ($ReportType === 'projects_full') {
-                return $this->getProjectsFullSpreadsheet($html, $reportName, $bSaveAsFile);
+            if ($ReportType === 'projects_full' || $ReportType === 'projects_missing') {
+                return $this->getProjectsFullSpreadsheet($html, $reportName, $ReportType, $bSaveAsFile);
             } else {
                 return $this->getSpreadsheet($html, $reportName);
             }
@@ -549,6 +559,130 @@ class ReportsController extends BaseController
         }
 
         return $html;
+    }
+
+    public function getProjectsMissingDataReport($Year, $SiteID, $ProjectID, $bReturnArray)
+    {
+        if (!$bReturnArray) {
+            //echo "<pre>\$_GET" . print_r($_GET, true) . "</pre>";
+            $formSubmissionHtml =
+                '<div style=\'width:100%;text-align:center;\'><button data-href="/admin/report/projects_missing/' .
+                $Year .
+                '/null/null" class="btn btn-primary submit-for-html-report">Submit For HTML Preview</button></div>' .
+                "<div style='width:100%;text-align:center;font-size:20px'><a href=\"/admin/report/projects_missing/{$Year}/null/null/spreadsheet\" class=\"must-download-spreadsheet\">Download spreadsheet</a></div>" .
+                "<div style='width:100%;text-align:center;font-size:14px'>Before you click the [Download spreadsheet] link or [Submit For HTML Preview] button, check or uncheck the project attributes above to customize this report</div>";
+            if (!isset($_GET['submit-for-html-report'])) {
+                return $formSubmissionHtml;
+            }
+        }
+        $aWorksheets = [];
+        $projectAttributes = new ProjectAttribute();
+        $aProjectAttributesToRemove = [];
+        $aIncludeProjectAttributes = isset($_GET['project_attributes']) ? $_GET['project_attributes'] : [];
+
+        $projectModel = new ProjectScope();
+        $aProjects = $projectModel->getReportProjects($Year, $SiteID, $ProjectID, [], null);
+
+        $aAttributes = ProjectScope::getAttributesByCodeArray('projects');
+
+        $aFilterableAttributes = array_keys($aAttributes);
+        $aFilterableAttributes[] = 'team_leader';
+        $aFilterableAttributes[] = 'PeopleNeeded';
+        $aFilterableAttributes[] = 'VolunteersAssigned';
+        $aFilterableAttributes[] = 'BudgetSources';
+        $aFilterableAttributes[] = 'ProjectDescription';
+        if (!empty($aIncludeProjectAttributes)) {
+            if ($aIncludeProjectAttributes !== '*') {
+                $aProjectAttributesToRemove = array_diff($aFilterableAttributes, $aIncludeProjectAttributes);
+            }
+        } else {
+            // Nothing was sent in so nothing is included
+            $aProjectAttributesToRemove = $aFilterableAttributes;
+        }
+
+        //echo "<pre>" . print_r($aAttributes, true) . "</pre>";
+        foreach ($aProjects as $idx => $aProject) {
+            foreach ($aProject as $field => $value) {
+                if (!in_array($field, ['SiteName', 'Active', 'SequenceNumber'])) {
+                    if (($value === null || $value === '')) {
+                        $value = 'X';
+                        if(isset($aAttributes[$field])){
+
+                            if(!$projectAttributes->getIsApplicableToProjectType($field,$aProject['primary_skill_needed'])){
+                                $value = '';
+                            }
+                        }
+
+                    } else {
+                        $value = '';
+                    }
+                    $aProjects[$idx][$field] = $value;
+                }
+            }
+
+            if (in_array('team_leader', $aIncludeProjectAttributes)) {
+                $model = new ProjectVolunteerRole();
+                $aTeamLeaders = $model->getProjectTeam($aProject['ProjectID'], null, null);
+                $aProjects[$idx]['team_leader'] = empty($aTeamLeaders) ? 'X' : '';
+            }
+        }
+
+        $aNonRequiredWorkflowAttributeCodes = $projectAttributes->getNonRequiredWorkflowAttributeCodes();
+        foreach ($aNonRequiredWorkflowAttributeCodes as $nonRequiredWorkflowAttributeCode) {
+            $this->deleteColumn($aProjects, $nonRequiredWorkflowAttributeCode);
+        }
+        $this->deleteColumn($aProjects, 'OriginalRequest');
+        $this->deleteColumn($aProjects, 'VolunteersAssigned');
+        $this->deleteColumn($aProjects, 'Comments');
+        $this->deleteColumn($aProjects, 'ProjectID');
+        $this->deleteColumn($aProjects, 'SiteStatusID');
+        $this->deleteColumn($aProjects, 'HasAttachments');
+        foreach ($aProjectAttributesToRemove as $attributesToRemove) {
+            $this->deleteColumn($aProjects, $attributesToRemove);
+        }
+
+        $aAttributeLabels = ProjectScope::getAttributesLabelsArray('projects');
+        $aKeys = array_keys($aProjects[0]);
+        $colNames = [];
+        foreach ($aKeys as $sKeyStr):
+
+            if (isset($aAttributeLabels[$sKeyStr])) {
+                $colNames[] = $aAttributeLabels[$sKeyStr];
+            } else {
+                if ($sKeyStr === 'SequenceNumber') {
+                    $sKeyStr = 'Project Num';
+                } elseif ($sKeyStr === 'SiteName') {
+                    $sKeyStr = 'Site Name';
+                }
+
+                $colName = ucwords(str_replace("_", ' ', $sKeyStr));
+                $colNames[] = $colName;
+            }
+
+        endforeach;
+        $date = date('l, F d, Y');
+        $aWorksheets['Project Report'] = [
+            'header_year' => "Spring Into Action $Year",
+            'header_report_name' => 'Project Report',
+            'header_date' => $date,
+            'column_names' => $colNames,
+            'table_data' => $aProjects
+        ];
+
+        if (!$bReturnArray) {
+            $dbug = '';
+            //$dbug.= "<pre>\$aIncludeProjectAttributes" . print_r($aIncludeProjectAttributes, true) . "</pre>";
+            //$dbug.= "<pre>\$aFilterableAttributes" . print_r($aFilterableAttributes, true) . "</pre>";
+            //$dbug.= "<pre>\$aProjectAttributesToRemove" . print_r($aProjectAttributesToRemove, true) . "</pre>";
+            //$dbug.= "<pre>\$aWorksheets" . print_r($aWorksheets, true) . "</pre>";
+
+            $dbug .= $this->getWorksheetHtmlTable($aWorksheets,true, 'projects_missing');
+
+            $aWorksheets = $formSubmissionHtml . $dbug;
+        }
+
+        //echo "<pre>" . print_r($html, true) . "</pre>";die;
+        return $aWorksheets;
     }
 
     public function getYearSiteProjectFullReport($Year, $SiteID, $ProjectID, $bReturnArray)
@@ -1067,28 +1201,28 @@ class ReportsController extends BaseController
             'projects.SequenceNumber as Proj Num',
             'projects.ProjectDescription as Project Description'
         )->join(
-                'project_volunteers',
-                'project_volunteers.VolunteerID',
-                '=',
-                'volunteers.VolunteerID'
-            )->join(
-                'projects',
-                'projects.ProjectID',
-                '=',
-                'project_volunteers.ProjectID'
-            )->join(
-                'site_status',
-                'projects.SiteStatusID',
-                '=',
-                'site_status.SiteStatusID'
-            )->join(
-                'sites',
-                'sites.SiteID',
-                '=',
-                'site_status.SiteID'
-            )->whereNull('volunteers.deleted_at')->whereNull('project_volunteers.deleted_at')->whereNull(
-                'projects.deleted_at'
-            )->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->where('site_status.Year', $Year);
+            'project_volunteers',
+            'project_volunteers.VolunteerID',
+            '=',
+            'volunteers.VolunteerID'
+        )->join(
+            'projects',
+            'projects.ProjectID',
+            '=',
+            'project_volunteers.ProjectID'
+        )->join(
+            'site_status',
+            'projects.SiteStatusID',
+            '=',
+            'site_status.SiteStatusID'
+        )->join(
+            'sites',
+            'sites.SiteID',
+            '=',
+            'site_status.SiteID'
+        )->whereNull('volunteers.deleted_at')->whereNull('project_volunteers.deleted_at')->whereNull(
+            'projects.deleted_at'
+        )->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at')->where('site_status.Year', $Year);
         if ($ProjectID) {
             $collection->where('projects.ProjectID', $ProjectID);
         }
@@ -1424,6 +1558,41 @@ class ReportsController extends BaseController
         return $html;
     }
 
+    public function getWorksheetHtmlTable($aWorksheets, $bStripeTable = true, $addClasses = '')
+    {
+        $tableStripeClass = $bStripeTable ? 'table-striped' : '';
+        $aTableResults = [];
+        foreach ($aWorksheets as $aWorksheet) {
+            $aTableResults[] = "<table class=\"table {$tableStripeClass} {$addClasses}\">";
+
+            $aTableResults[] = "<thead><tr>";
+            foreach ($aWorksheet['column_names'] as $sKeyStr):
+                $colName = preg_replace("/( |\/)/", '-', $sKeyStr);
+                $aTableResults[] = "<th title=\"{$sKeyStr}\" class=\"{$colName}\">{$sKeyStr}</th>";
+            endforeach;
+            $aTableResults[] = "</tr></thead>";
+            $aTableResults[] = "<tbody>";
+
+
+            foreach ($aWorksheet['table_data'] as $aTableRow):
+                $aTableResults[] = "<tr>";
+                $i = 0;
+                foreach($aTableRow as $sTableField => $sStr){
+                    $sStr = empty($sStr) ? '&nbsp;' : $sStr;
+                    $colName = !empty($aWorksheet['column_names']) ? preg_replace("/( |\/)/", '-', $aWorksheet['column_names'][$i]) : '';
+                    $aTableResults[] = "<td class=\"{$colName}\">{$sStr}</td>";
+                    $i++;
+                }
+
+                $aTableResults[] = "</tr>";
+            endforeach;
+
+
+            $aTableResults[] = "</tbody></table>";
+        }
+        return implode('', $aTableResults);
+    }
+
     public function getResultsHtmlTable($aaRows, $bStripeTable = true, $addClasses = '')
     {
         $tableStripeClass = $bStripeTable ? 'table-striped' : '';
@@ -1732,7 +1901,7 @@ CSS;
         return $aColLetters;
     }
 
-    public function getProjectsFullSpreadsheet($aWorksheets, $reportName, $bSaveAsFile = false)
+    public function getProjectsFullSpreadsheet($aWorksheets, $reportName, $ReportType, $bSaveAsFile = false)
     {
         $aColLetters = $this->getSpreadsheetColumnLetters();
         $Header1FontSize = 18;
@@ -1833,6 +2002,11 @@ CSS;
                         $activeWorkSheet->getStyle($aCells[$fieldName]['cell'] . $rowCnt)->getFont()->setSize(
                             $iCellFontSize
                         );
+                        if($ReportType === 'projects_missing' && !in_array($aCells[$fieldName]['cell'],['A','B','C'])){
+                            $activeWorkSheet->getStyle($aCells[$fieldName]['cell'] . $rowCnt)->getAlignment()->setHorizontal(
+                                \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
+                            );
+                        }
                     }
                     $rowCnt++;
                 }
