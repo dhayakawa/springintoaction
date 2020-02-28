@@ -703,48 +703,61 @@
 .sia-main-app .reports-management-view h4.Assigned-Volunteers {
   margin: 0;
 }
-.sia-main-app .reports-management-view .Name,
-.sia-main-app .reports-management-view .Full-Name {
+.sia-main-app .reports-management-view .table thead .Name,
+.sia-main-app .reports-management-view .table thead .Full-Name {
   width: 150px;
 }
-.sia-main-app .reports-management-view .Contact-Phone {
+.sia-main-app .reports-management-view .table thead .Contact-Phone {
   width: 130px;
 }
-.sia-main-app .reports-management-view .Site-Name {
+.sia-main-app .reports-management-view .table thead .Site-Name {
   width: 200px;
 }
-.sia-main-app .reports-management-view .Proj-Num {
+.sia-main-app .reports-management-view .table thead .Active {
   width: 75px;
 }
-.sia-main-app .reports-management-view .Est-Cost {
+.sia-main-app .reports-management-view .table thead .Proj-Num {
   width: 75px;
 }
-.sia-main-app .reports-management-view .Volunteers-Needed-Est {
+.sia-main-app .reports-management-view .table thead .Est-Cost {
   width: 75px;
 }
-.sia-main-app .reports-management-view .Budget-Sources {
+.sia-main-app .reports-management-view .table thead .Volunteers-Needed-Est {
   width: 75px;
 }
-.sia-main-app .reports-management-view .Budget-Allocate {
+.sia-main-app .reports-management-view .table thead .Budget-Sources {
   width: 75px;
 }
-.sia-main-app .reports-management-view .Estimator-Project-Contact {
+.sia-main-app .reports-management-view .table thead .Budget-Allocate {
+  width: 75px;
+}
+.sia-main-app .reports-management-view .table thead .Estimator-Project-Contact {
   width: 125px;
 }
-.sia-main-app .reports-management-view .Status {
+.sia-main-app .reports-management-view .table thead .Status {
   width: 100px;
 }
-.sia-main-app .reports-management-view .StatusReason {
+.sia-main-app .reports-management-view .table thead .StatusReason {
   width: 150px;
 }
-.sia-main-app .reports-management-view .Role {
+.sia-main-app .reports-management-view .table thead .Role {
   width: 115px;
 }
-.sia-main-app .reports-management-view .Email {
+.sia-main-app .reports-management-view .table thead .Email {
   width: 225px;
 }
-.sia-main-app .reports-management-view .Age-Range {
+.sia-main-app .reports-management-view .table thead .Age-Range {
   width: 100px;
+}
+.sia-main-app .reports-management-view .table.projects_missing thead tr th {
+  overflow: hidden;
+}
+.sia-main-app .reports-management-view .table.projects_missing thead tr th.Active,
+.sia-main-app .reports-management-view .table.projects_missing thead tr th.Project-Num {
+  width: 50px;
+}
+.sia-main-app .reports-management-view .table.projects_missing thead tr th.Status {
+  width: auto;
 }
 .sia-main-app .site-management-selects {
   width: 200px;

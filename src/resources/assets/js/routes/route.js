@@ -273,6 +273,11 @@
                                             'badgeCount': '',
                                             'route': 'view/reports/management/projects_full'
                                         }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Projects Missing Data',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/projects_missing'
+                                        }),
                                         // new App.Models.DashboardPanelLinksListItem({
                                         //     'linkText': 'Project List',
                                         //     'badgeCount': '',

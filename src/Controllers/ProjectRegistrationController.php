@@ -261,7 +261,14 @@ class ProjectRegistrationController extends BaseController
                     $aEmailData['project']['SiteName'] = $sites[0]['SiteName'];
                     $aEmailData['Year'] = $currentYear;
                     $aEmailData['EventDate'] = $eventDate;
-                    //Mail::to($aRegistrant['Email'])->send(new RegistrationConfirmation($aEmailData));
+                    try {
+                        $bIsLocalEnv = App::environment('local');
+                        if (!$bIsLocalEnv) {
+                            Mail::to($aRegistrant['Email'])->send(new RegistrationConfirmation($aEmailData));
+                        }
+                    } catch (\Exception $e) {
+                        report($e);
+                    }
                 }
                 if ($iSuccessCnt + count($aAlreadyRegistered) === count($aContactInfo)) {
                     ProjectReservation::where('session_id', $request->session()->getId())->delete();

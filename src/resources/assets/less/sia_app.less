@@ -355,62 +355,82 @@
       margin: 0;
     }
 
-    .Name, .Full-Name {
-      width: 150px;
-    }
+    .table {
+      thead {
+        .Name, .Full-Name {
+          width: 150px;
+        }
 
-    .Contact-Phone {
-      width: 130px;
-    }
+        .Contact-Phone {
+          width: 130px;
+        }
 
-    .Site-Name {
-      width: 200px;
-    }
+        .Site-Name {
+          width: 200px;
+        }
 
-    .Proj-Num {
-      width: 75px;
-    }
+        .Active {
+          width: 75px;
+        }
 
-    .Est-Cost {
-      width: 75px;
-    }
+        .Proj-Num {
+          width: 75px;
+        }
 
-    .Volunteers-Needed-Est {
-      width: 75px;
-    }
+        .Est-Cost {
+          width: 75px;
+        }
 
-    .Budget-Sources {
-      width: 75px;
-    }
+        .Volunteers-Needed-Est {
+          width: 75px;
+        }
 
-    .Budget-Allocate {
-      width: 75px;
-    }
+        .Budget-Sources {
+          width: 75px;
+        }
 
-    .Estimator-Project-Contact {
-      width: 125px;
-    }
+        .Budget-Allocate {
+          width: 75px;
+        }
 
-    .Status {
-      width: 100px;
-    }
+        .Estimator-Project-Contact {
+          width: 125px;
+        }
 
-    .StatusReason {
-      width: 150px;
-    }
+        .Status {
+          width: 100px;
+        }
 
-    .Role {
-      width: 115px;
-    }
+        .StatusReason {
+          width: 150px;
+        }
 
-    .Email {
-      width: 225px;
-    }
+        .Role {
+          width: 115px;
+        }
 
-    .Age-Range {
-      width: 100px;
-    }
+        .Email {
+          width: 225px;
+        }
 
+        .Age-Range {
+          width: 100px;
+        }
+      }
+      &.projects_missing{
+        thead{
+          tr th{
+            overflow:hidden;
+            &.Active,&.Project-Num {
+              width: 50px;
+            }
+            &.Status {
+              width: auto;
+            }
+          }
+        }
+      }
+    }
   }
 
   .site-management-selects {

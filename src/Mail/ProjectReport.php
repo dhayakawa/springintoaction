@@ -15,7 +15,7 @@ class ProjectReport extends Mailable
     public $SiteName;
     public $ProjectNum;
     public $projectAttachmentPaths;
-    public $aImages = null;
+    public $aImages = [];
     /**
      * Create a new message instance.
      *
