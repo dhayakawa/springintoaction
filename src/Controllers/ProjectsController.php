@@ -447,7 +447,11 @@ class ProjectsController extends BaseController
                 );
                 $aTeamMemberEmails = $aData['emails'];
                 //echo $reportFilePath . PHP_EOL;
-                Mail::to($aTeamMemberEmails)->send(new ProjectReport($aData));
+                try {
+                    Mail::to($aTeamMemberEmails)->send(new ProjectReport($aData));
+                } catch (\Exception $e) {
+                    report($e);
+                }
             }
         }
         $msg = 'Emails sent';
