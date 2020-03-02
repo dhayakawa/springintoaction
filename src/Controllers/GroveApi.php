@@ -88,7 +88,12 @@ class GroveApi
     private $xRateLimitRetryAfter = null;
     private $iRateLimitSleep = 7;
     private $bTooManyRequests = false;
+    private $localPath;
 
+    public function __construct()
+    {
+        $this->localPath = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
+    }
 
     /**
      * @param       $method
@@ -251,7 +256,8 @@ class GroveApi
         $this->xRateLimitLimit =
             isset($aResponseHeaders['x-ratelimit-limit']) ? current($aResponseHeaders['x-ratelimit-limit']) : false;
         $this->xRateLimitRemaining =
-            isset($aResponseHeaders['x-ratelimit-remaining']) ? current($aResponseHeaders['x-ratelimit-remaining']) : false;
+            isset($aResponseHeaders['x-ratelimit-remaining']) ? current($aResponseHeaders['x-ratelimit-remaining']) :
+                false;
         $this->xRateLimitReset =
             isset($aResponseHeaders['x-ratelimit-reset']) ? current($aResponseHeaders['x-ratelimit-reset']) : false;
         $this->xRateLimitRetryAfter =
@@ -338,146 +344,194 @@ class GroveApi
         return $response;
     }
 
-    public function importFamilyMemberType()
+    private function deleteLogs($globPattern, $logDatetime = null)
     {
-        $bUseLogFile = true;
-        $bForceRebuild = true;
-        $bRebuildLogFiles = false;
-        $modifiedSince = '2015-02-09';
-        $aApiParams = [
-            'modified_since' => $modifiedSince,
-        ];
-        if (!GroveIndividual::where('family_member_type', '!=', '')->exists()) {
-            $aApiParams = null;
-        }
-        if ($bUseLogFile) {
-            $hoursLogIsValid = 12;
-            $iExpectedLogs = 38;
-            clearstatcache();
-            $localPath = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
-            $filename = $localPath . 'grove_family_list.log';
-            if (\file_exists($filename)) {
-                $timestamp = filemtime($filename);
+        $aLogFilePaths = glob($this->localPath . $globPattern);
+        if (!empty($aLogFilePaths)) {
+            foreach ($aLogFilePaths as $logFilePath) {
+                // Do not delete current logs
 
-                $datetime1 = date_create(date('Y-m-d H:i'));
-                $datetime2 = date_create(date('Y-m-d H:i', $timestamp));
-
-                $interval = date_diff($datetime1, $datetime2);
-
-                $age = $interval->format('%h');
-                $bRebuildLogFiles = $age > $hoursLogIsValid;
-                $aLogFilePaths = glob($localPath . "grove_family_list.log");
-                if (count($aLogFilePaths) < $iExpectedLogs) {
-                    $bRebuildLogFiles = true;
-                }
-                if ($bRebuildLogFiles) {
-                    if (!empty($aLogFilePaths)) {
-                        foreach ($aLogFilePaths as $aLogFilePath) {
-                            unlink($aLogFilePath);
-                        }
-                    }
-                }
-            } else {
-                $bRebuildLogFiles = true;
-            }
-            if ($bRebuildLogFiles) {
-                $this->bReturnXML = true;
-                $logName = 'grove_family_list.log';
-                $response = $this->family_list($aApiParams);
-                Storage::disk('local')->put($logName, $response);
-                try {
-                    $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
-                } catch (Exception $e) {
-                    $aResponse = [];
-                }
-                $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
-                $this->bReturnXML = false;
-            }
-        }
-        if ($bUseLogFile) {
-            $logName = 'grove_family_list.log';
-            $exists = Storage::disk('local')->exists($logName);
-            if ($exists) {
-                $response = Storage::disk('local')->get($logName);
-                $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
-                $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
-            } else {
-                $response = [];
-            }
-        } else {
-            $response = $this->family_list($aApiParams);
-        }
-
-        $aFamilies = [];
-        if (isset($response['families']['family'])) {
-            $aFamilies = $response['families']['family'];
-        }
-        foreach ($aFamilies as $aFamily) {
-            $aIndividuals = $aFamily['individuals']['individual'];
-            if (isset($aIndividuals['first_name'])) {
-                $aIndividuals = [$aIndividuals];
-            }
-            foreach ($aIndividuals as $aIndividual) {
-                $groveIndividual = GroveIndividual::find($aIndividual['@attributes']['id']);
-                if ($groveIndividual) {
-                    $groveIndividual->family_member_type = $aIndividual['type'];
-                    $groveIndividual->save();
+                if ($logDatetime !== null && !preg_match("/{$logDatetime}\.log$/", $logFilePath)) {
+                    unlink($logFilePath);
+                    file_put_contents(
+                        '/var/www/html/laravel/storage/app/debug-log.log',
+                        "\$logDatetime:{$logDatetime} did not match. deleted {$logFilePath}\n",
+                        \FILE_APPEND
+                    );
+                } else {
+                    unlink($logFilePath);
+                    file_put_contents(
+                        '/var/www/html/laravel/storage/app/debug-log.log',
+                        "\$logDatetime:{$logDatetime} was null or did not match. deleted {$logFilePath}\n",
+                        \FILE_APPEND
+                    );
                 }
             }
         }
     }
 
-    public function importIndividuals($bSaveToDb = true, $bShowOutput = false)
+    private function log()
     {
-        // We must force the $bUseLogFile so we can clean up the xml. otherwise it takes too long
-        $bUseLogFile = true;
+        // DH: Allowing as many log items as you want to be passed in as parameters
+        $sData = '';
+        $iFlags = null; // overwrite file if exists
+        $rContext = null;
+        $aParams = func_get_args();
+        $iParamsCount = count($aParams);
+        $iParamsLimit = $iParamsCount;
+        $sFilename = $aParams[0];
+        if (is_resource($aParams[$iParamsCount - 1])) {
+            $rContext = $aParams[$iParamsCount - 1];
+            $iFlags = $aParams[$iParamsCount - 2];
+            $iParamsLimit = $iParamsCount - 2;
+        } else {
+            $aAvailableFlags = [\FILE_APPEND];
+            if ($iParamsCount <= 2 ||
+                $aParams[$iParamsCount - 1] == null ||
+                $aParams[$iParamsCount - 1] == 'FORCE_NULL_FLAG'
+            ) {
+                $iFlags = null;
+                if ($iParamsCount <= 2) {
+                    $iParamsLimit = $iParamsCount - 1;
+                } else {
+                    $iParamsLimit = $iParamsCount - 2;
+                }
+            } elseif ($iParamsCount > 2) {
+                if (is_numeric($aParams[$iParamsCount - 1]) && is_int($aParams[$iParamsCount - 1])) {
+                    if (in_array((int) $aParams[$iParamsCount - 1], $aAvailableFlags)) {
+                        $iFlags = $aParams[$iParamsCount - 1];
+                        $iParamsLimit = $iParamsCount - 2;
+                        //file_put_contents('/var/www/html/laravel/storage/app/debug-log.log',"{$iParamsCount}:{$aParams[$iParamsCount - 1]},{$iFlags},{$iParamsLimit}\n",\FILE_APPEND);
+                    }
+                } else {
+                    $iFlags = null;
+                    $iParamsLimit = $iParamsCount - 1;
+                }
+            }
+        }
+        for ($x = 1; $x <= $iParamsLimit; $x++) {
+            if (is_array($aParams[$x])) {
+                $sData .= print_r($aParams[$x], true);
+            } elseif (is_object($aParams[$x])) {
+                $sData .= print_r(json_decode(json_encode($aParams[$x]), true), true);
+            } else {
+                $sData .= trim(var_export($aParams[$x], true), "'");
+                $sData = !preg_match("/\n$/", $sData) ? $sData . PHP_EOL : $sData;
+            }
+        }
+        $bWriteSuccessful = null;
+        $writeType = null;
+
+        $filePath = "{$this->localPath}{$sFilename}";
+        $bFileExists = file_exists($filePath);
+        $iContentLengthBeforeWrite = $bFileExists ? strlen(file_get_contents($filePath)) : 0;
+        if ($iFlags !== null) {
+            $writeType = 'append';
+            // $bWriteSuccessful = Storage::disk('local')->append(
+            //     $sFilename,
+            //     $sData
+            // );
+            $bytesWritten = file_put_contents($filePath, $sData, FILE_APPEND);
+            $bWriteSuccessful = $bytesWritten !== false;
+        } else {
+            $writeType = 'put';
+            // $bWriteSuccessful = Storage::disk('local')->put(
+            //     $sFilename,
+            //     $sData
+            // );
+            $bytesWritten = file_put_contents($filePath, $sData);
+            $bWriteSuccessful = $bytesWritten !== false;
+        }
+        if ($bWriteSuccessful) {
+            if ($bytesWritten === 0 && !empty(trim($sData))) {
+                $bWriteSuccessful = false;
+            }
+        }
+        /*
+        if (preg_match("/^_grove_individual_profiles_debug_/", $sFilename)) {
+            $str = "\$sFilename:{$sFilename}\n";
+            $str .= "\$filePath:$filePath\n";
+            $str .= "\$bFileExists:".(int)$bFileExists."\n";
+            $str .= "\$iContentLengthBeforeWrite:".(int)$iContentLengthBeforeWrite."\n";
+            $str .= "\$iParamsLimit:$iParamsLimit\n";
+            $str .= "\$iFlags:$iFlags\n";
+            $str .= "\$sData:$sData";
+            $str .= "\$writeType:$writeType\n";
+            $str .= "\$bytesWritten:$bytesWritten\n";
+            $str .= "\$bWriteSuccessful:" .
+                    ($bWriteSuccessful === null ? 'null' : $bWriteSuccessful ? 'true' : 'false') .
+                    PHP_EOL .
+                    PHP_EOL .
+                    PHP_EOL;
+            file_put_contents('/var/www/html/laravel/storage/app/debug-log.log', $str, \FILE_APPEND);
+        }/**/
+    }
+
+    /**
+     * FYI- There is no option to page the api results
+     *
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function importFamilyMemberType($bSaveToDb = true, $bLogOutput = false)
+    {
+        set_time_limit(0);
+        //file_put_contents('/var/www/html/laravel/storage/app/debug-log.log', 'start:Line:' . __LINE__.PHP_EOL);
+        $importCmd = "family_list";
         $bForceRebuild = true;
         $bRebuildLogFiles = false;
+        $hoursLogIsValid = 12;
         $modifiedSince = '2015-02-09';
-        $iRecordsPerPage = 100;
-        $iInfiniteLoopLimitMax = 100;
-
-        $iExpectedFiles[100] = 86;
+        $iRecordsPerPage = '*';
+        $iApiCallsFinishedPageCnt = 0;
+        $bApiCallsDone = false;
+        $logDatetime = date('m-d-Y-H-i-s');
         // rounded down to nearest hundred
-        $iExpectedRecordCnt = 8500;
-        $groveCount = GroveIndividual::select(DB::raw('count(*) as count'))->first()->toArray()['count'];
-        if ($groveCount >= $iExpectedRecordCnt) {
-            $groveMaxUpdateAt =
-                GroveIndividual::select(DB::raw('max(updated_at) as max_update_at'))->first()->toArray(
-                )['max_update_at'];
-            list($modifiedSince, $timeJunk) = preg_split("/ /", $groveMaxUpdateAt);
+        $iExpectedRecordCnt = null;//not applicable
+        $iExpectedFiles[$iRecordsPerPage] = 1;
+        $iInfiniteLoopLimitMax = $iExpectedFiles[$iRecordsPerPage] + 50;
+        $aApiParams = [
+            'modified_since' => $modifiedSince,
+        ];
+
+        $iExpectedLogs = 1;
+        if (!GroveIndividual::where('family_member_type', '!=', '')->exists()) {
+            $aApiParams = null;
         }
-        $localPath = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
-        // Let the long running script finish
-        set_time_limit(0);
 
-        if ($bUseLogFile) {
-            $aSavedLogFilePaths = glob($localPath . "saved_grove_individual_profiles_*.log");
-            if (!empty($aSavedLogFilePaths)) {
-                foreach ($aSavedLogFilePaths as $aLogFilePath) {
-                    unlink($aLogFilePath);
-                }
-            }
-            $aRawLogFilePaths = glob($localPath . "raw_grove_individual_profiles_*.log");
-            if (!empty($aRawLogFilePaths)) {
-                foreach ($aRawLogFilePaths as $aLogFilePath) {
-                    unlink($aLogFilePath);
-                }
-            }
-            if ($bForceRebuild) {
-                $aLogFilePaths = glob($localPath . "grove_individual_profiles_*.log");
-                if ($bForceRebuild || $bRebuildLogFiles) {
-                    if (!empty($aLogFilePaths)) {
-                        foreach ($aLogFilePaths as $aLogFilePath) {
-                            unlink($aLogFilePath);
-                        }
-                    }
-                }
-            }
-            $hoursLogIsValid = 12;
+        // Remove all api call debugging results
+        $this->deleteLogs("_grove_{$importCmd}_*.log", $logDatetime);
+        // Remove all previously imported logs
+        $this->deleteLogs("saved_grove_{$importCmd}_*.log", $logDatetime);
+        // Remove all previous raw api call results
+        $this->deleteLogs("raw_grove_{$importCmd}_*.log", $logDatetime);
 
+        $this->log(
+            "_grove_{$importCmd}_debug_{$logDatetime}.log",
+            "api config:",
+            [
+                '$bSaveToDb' => $bSaveToDb,
+                '$bLogOutput' => $bLogOutput,
+                '$bForceRebuild' => $bForceRebuild,
+                '$bRebuildLogFiles' => $bRebuildLogFiles,
+                '$hoursLogIsValid' => $hoursLogIsValid,
+                '$logDatetime' => $logDatetime,
+                '$aApiParams' => $aApiParams,
+                '$modifiedSince' => $modifiedSince,
+                '$this->localPath' => $this->localPath
+            ]
+        );
+
+        if ($bForceRebuild || $bRebuildLogFiles) {
+            $this->deleteLogs("grove_{$importCmd}_*.log", $logDatetime);
+            $bRebuildLogFiles = true;
+            $this->log(
+                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                "Configured to rebuild log files. Deleted all grove_{$importCmd}_*.log",
+                \FILE_APPEND
+            );
+        } else {
             clearstatcache();
-            $filename = $localPath . 'grove_individual_profiles_1.log';
+            $filename = $this->localPath . "grove_{$importCmd}_1.log";
             if (\file_exists($filename)) {
                 $timestamp = filemtime($filename);
 
@@ -489,54 +543,513 @@ class GroveApi
                 $age = $interval->format('%h');
 
                 $bRebuildLogFiles = $age > $hoursLogIsValid;
-                $aLogFilePaths = glob($localPath . "grove_individual_profiles_*.log");
-
-                if ($bForceRebuild || $bRebuildLogFiles) {
-                    if (!empty($aLogFilePaths)) {
-                        foreach ($aLogFilePaths as $aLogFilePath) {
-                            unlink($aLogFilePath);
-                        }
-                    }
+                if ($bRebuildLogFiles) {
+                    $this->deleteLogs("grove_{$importCmd}_*.log", $logDatetime);
+                    $this->log(
+                        "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                        "Log files were too old, rebuilding log files. Deleted all grove_{$importCmd}_*.log",
+                        \FILE_APPEND
+                    );
+                } else {
+                    $this->log(
+                        "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                        "Log files age are valid, skipping rebuild of log files.",
+                        \FILE_APPEND
+                    );
                 }
             } else {
                 $bRebuildLogFiles = true;
             }
+        }
+        $this->log(
+            "_grove_{$importCmd}_debug_{$logDatetime}.log",
+            "api build state: \$bRebuildLogFiles:{$bRebuildLogFiles}",
+            \FILE_APPEND
+        );
 
-            if ($bForceRebuild || $bRebuildLogFiles) {
-                $iPageNum = 1;
-                $this->bReturnXML = true;
-                do {
-                    $logName = 'grove_individual_profiles_' . $iPageNum . '.log';
-                    $iTestDataSetupStart = microtime(1);
-                    $response = $this->individual_profiles(
-                        [
-                            'page' => $iPageNum,
-                            'per_page' => $iRecordsPerPage,
-                            'include_inactive' => false,
-                            'modified_since' => $modifiedSince,
-                        ]
-                    );
-                    if (is_array($response)) {
-                        if (isset($response['error'])) {
-                            die($response['error']);
-                        }
-                        break;
+        if ($bRebuildLogFiles) {
+            $iPageNum = 1;
+            $this->bReturnXML = true;
+            $bContinueApiCalls = true;
+            do {
+                $logName = "grove_{$importCmd}_{$iPageNum}.log";
+                $response = $this->family_list($aApiParams);
+                if (is_array($response)) {
+                    if (isset($response['error'])) {
+                        $this->log(
+                            "_grove_{$importCmd}_api_failed_{$logDatetime}.log",
+                            "{$logName} : killing script due to api call error-{$response['error']}"
+                        );
+
+                        return false;
+                    } else {
+                        $this->log(
+                            "_grove_{$importCmd}_api_error_{$logDatetime}.log",
+                            "{$logName} : breaking out of api call loop due to unexpected array response.",
+                            $response,
+                            \FILE_APPEND
+                        );
                     }
-                    $iTestDataSetupEnd = microtime(1);
-                    $iTestDataSetupTime = $iTestDataSetupEnd - $iTestDataSetupStart;
-                    $sFormattedSetupTime = $this->formatSeconds($iTestDataSetupTime);
-                    //echo "It took {$sFormattedSetupTime} to complete grove call<br>\n";
-                    Storage::disk('local')->put(
-                        str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName),
-                        $response
+
+                    return false;
+                }
+                $this->log(
+                    str_replace("grove_{$importCmd}", "raw_grove_{$importCmd}", $logName),
+                    $response
+                );
+                $xml = new \SimpleXMLElement($response);
+                // Check to see if there are any families in the xml
+                $xpathIndividuals = "/ccb_api/response";
+                $individualsResult = $xml->xpath($xpathIndividuals);
+                if ($individualsResult) {
+                    $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+
+                    $bApiCallsDone =
+                        isset($aResponse['ccb_api']['response']['families']['@attributes']['count']) ?
+                            $aResponse['ccb_api']['response']['families']['@attributes']['count'] < 1 : true;
+                    if ($bLogOutput) {
+                        $cnt =
+                            isset($aResponse['ccb_api']['response']['families']['@attributes']['count']) ?
+                                $aResponse['ccb_api']['response']['families']['@attributes']['count'] :
+                                'Expected [\'@attributes\'][\'count\'] but it was not set';
+                        $this->log(
+                            "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                            "{$logName} : " . '$cnt:' . $cnt . ' $bApiCallsDone:' . ((int) $bApiCallsDone),
+                            \FILE_APPEND
+                        );
+                    }
+
+                    if ($bApiCallsDone) {
+                        $iApiCallsFinishedPageCnt = $iPageNum - 1;
+                        $aApiLogFilePaths = glob($this->localPath . "grove_{$importCmd}_*.log");
+                        $this->log(
+                            "_grove_{$importCmd}_api_finished_{$logDatetime}.log",
+                            "Actual ApiCallsFinishedPageCnt={$iApiCallsFinishedPageCnt}",
+                            "log files to import:",
+                            join("\n", $aApiLogFilePaths)
+                        );
+                        $this->deleteLogs(
+                            str_replace("grove_{$importCmd}", "raw_grove_{$importCmd}", $logName)
+                        );
+                        $bContinueApiCalls = false;
+                    }
+                }
+                if (!$bApiCallsDone) {
+                    $xpathIndividual = "/ccb_api/response/families/family";
+                    $result = $xml->xpath($xpathIndividual);
+                    if (!$result || count($result) < 1) {
+                        $this->log(
+                            "_grove_{$importCmd}_api_xml_error_{$logDatetime}.log",
+                            "{$logName} : XML empty forcing exit.",
+                            \FILE_APPEND
+                        );
+
+                        return false;
+                    } else {
+                        $this->log($logName, $response);
+                    }
+                    try {
+                        $bCreateArrayException = false;
+                        $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+                    } catch (Exception $e) {
+                        $aResponse = [];
+                        $bCreateArrayException = true;
+
+                        $this->log(
+                            "_grove_{$importCmd}_api_xml_error_{$logDatetime}.log",
+                            "{$logName} : XML to array:" . $e->getMessage(),
+                            \FILE_APPEND
+                        );
+                    }
+                    $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
+                    if (!isset($response['families'])) {
+                        if (!$bCreateArrayException) {
+                            $this->log(
+                                "_grove_{$importCmd}_api_xml_failed_{$logDatetime}.log",
+                                "{$logName} : forcing exit b/c families node is missing in rebuild:" .
+                                print_r($response, true),
+                                \FILE_APPEND
+                            );
+
+                            return false;
+                        }
+                    }
+                    $iPageNum++;
+                    $bInfiniteLoopLimit =
+                        ($iPageNum > $iInfiniteLoopLimitMax) || ($iPageNum > $iExpectedFiles[$iRecordsPerPage]);
+                    $bNoMoreRecords =
+                        isset($response['families']['@attributes']['count']) ?
+                            $response['families']['@attributes']['count'] < 1 : true;
+
+                    if ($bInfiniteLoopLimit && !$bNoMoreRecords) {
+                        $this->log(
+                            "_grove_{$importCmd}_api_xml_looplimit_{$logDatetime}.log",
+                            "{$logName} : Exited loop at page count:" . ($iPageNum)
+                        );
+                    }
+                    $bContinueApiCalls = !empty($response) && !$bNoMoreRecords && !$bInfiniteLoopLimit;
+                    if ($bContinueApiCalls) {
+                        sleep($this->getRateLimitSleep());
+                    }
+                }
+            } while ($bContinueApiCalls && !$bApiCallsDone);
+            $this->bReturnXML = false;
+            $this->log(
+                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                "finished api calls moving on to import.",
+                \FILE_APPEND
+            );
+        }
+
+        /**
+         * Now import log files created by api calls
+         */
+        // $iIndividualCounter- This is just to debug the save
+        $iTotalIndividualsToImport = 0;
+        $iTotalIndividualsSuccessfullyImported = 0;
+        $iIndividualCounter = 1;
+        $aLogFilePaths = glob($this->localPath . "grove_{$importCmd}_*.log");
+        $iLogFilePathCnt = count($aLogFilePaths);
+        $this->log(
+            "_grove_{$importCmd}_debug_{$logDatetime}.log",
+            "Before import begins : " . '$iLogFilePathCnt:' . $iLogFilePathCnt,
+            \FILE_APPEND
+        );
+        if ($iLogFilePathCnt === 0) {
+            if ($iApiCallsFinishedPageCnt === 0 && $bApiCallsDone) {
+                $this->log(
+                    "_grove_{$importCmd}_import_noupdates_{$logDatetime}.log",
+                    "no updates found"
+                );
+
+                return true;
+            } else {
+                $this->log(
+                    "_grove_{$importCmd}_import_failed_{$logDatetime}.log",
+                    "no grove_{$importCmd}_*.log found"
+                );
+
+                return false;
+            }
+        }
+        for ($iPageNum = 1; $iPageNum <= $iLogFilePathCnt; $iPageNum++) {
+            $logName = "grove_{$importCmd}_1.log";
+            $exists = Storage::disk('local')->exists($logName);
+            if ($exists) {
+                $response = Storage::disk('local')->get($logName);
+                try {
+                    $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+                    $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
+                } catch (Exception $e) {
+                    $this->log(
+                        "_grove_{$importCmd}_import_failed_{$logDatetime}.log",
+                        "{$logName} : forcing exit due to xml to array exception",
+                        "XML2Array::createArray exception message:" . $e->getMessage(),
+                        "xml from log:" . $response
                     );
-                    $iTestDataSetupStart = microtime(1);
-                    $xml = new \SimpleXMLElement($response);
+
+                    return false;
+                }
+            } else {
+                $this->log(
+                    "_grove_{$importCmd}_import_failed_{$logDatetime}.log",
+                    "{$logName} : file missing. forcing exit."
+                );
+
+                return false;
+            }
+
+            $aFamilies = [];
+            $iFamiliesCnt = $response['families']['@attributes']['count'];
+
+            $this->log(
+                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                "{$logName} : \$iFamiliesCnt-{$iFamiliesCnt}",
+                \FILE_APPEND
+            );
+
+            if ($iFamiliesCnt === '1' && isset($response['families']['family'])) {
+                // we need to make this 1 family an array of itself, otherwise we loop through the keys of itself
+                $aFamilies = [$response['families']['family']];
+            } elseif (isset($response['families']['family'])) {
+                $aFamilies = $response['families']['family'];
+            }
+            foreach ($aFamilies as $aFamily) {
+                $aIndividuals = $aFamily['individuals']['individual'];
+                if (isset($aIndividuals['first_name'])) {
+                    $aIndividuals = [$aIndividuals];
+                }
+                $iTotalIndividualsToImport += count($aIndividuals);
+                foreach ($aIndividuals as $aIndividual) {
+                    if ($bSaveToDb) {
+                        $individual_id = $aIndividual['@attributes']['id'];
+                        $groveIndividual = GroveIndividual::find($aIndividual['@attributes']['id']);
+                        if ($groveIndividual) {
+                            $groveIndividual->family_member_type = $aIndividual['type'];
+                            $success = $groveIndividual->save();
+
+                            if ($success) {
+                                $msg = "succeeded";
+                                $iTotalIndividualsSuccessfullyImported++;
+                            } else {
+                                $msg = "failed";
+                            }
+                            $this->log(
+                                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                                "{$logName} : $iIndividualCounter. Save {$msg} {$individual_id}",
+                                "saved with \$aIndividual['type']:{$aIndividual['type']}",
+                                \FILE_APPEND
+                            );
+                            if (!$success) {
+                                $this->log(
+                                    "_grove_{$importCmd}_import_failed_{$logDatetime}.log",
+                                    "{$logName} : forcing exit. Save to db failed on (\$iIndividualCounter-{$iIndividualCounter}) for individual_id:{$individual_id}",
+                                    $aIndividual
+                                );
+
+                                return false;
+                            }
+                        }
+                    }
+                    $iIndividualCounter++;
+                }
+                if (Storage::disk('local')->exists($logName)) {
+                    Storage::move(
+                        $logName,
+                        str_replace("grove_{$importCmd}", "saved_grove_{$importCmd}", $logName)
+                    );
+                }
+                $this->deleteLogs(str_replace("grove_{$importCmd}", "raw_grove_{$importCmd}", $logName));
+            }
+        }
+
+        $aSavedLogFilePaths = glob($this->localPath . "saved_grove_{$importCmd}_*.log");
+        $iSavedLogFilePathCnt = count($aSavedLogFilePaths);
+        if ($iSavedLogFilePathCnt === $iLogFilePathCnt) {
+            $this->log(
+                "_grove_{$importCmd}_import_finished_{$logDatetime}.log",
+                "Imported pages:" . $iSavedLogFilePathCnt,
+                "\$iTotalIndividualsToImport:{$iTotalIndividualsToImport}",
+                "\$iTotalIndividualsSuccessfullyImported:{$iTotalIndividualsSuccessfullyImported}"
+            );
+        } else {
+            $this->log(
+                "_grove_{$importCmd}_import_done_but_not_finished_{$logDatetime}.log",
+                "done with import execution but import failed somehow without exiting. Need to figure out why."
+            );
+        }
+        ini_set('max_execution_time', 160);
+
+        return true;
+    }
+
+    /**
+     * We must force the use of log files so we can clean up the xml. otherwise it takes too long
+     *
+     * @param bool $bSaveToDb
+     * @param bool $bLogOutput
+     *
+     * @return bool
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function importIndividuals($bSaveToDb = true, $bLogOutput = false)
+    {
+        // Let the long running script finish
+        set_time_limit(0);
+        //file_put_contents('/var/www/html/laravel/storage/app/debug-log.log', 'start:Line:' . __LINE__.PHP_EOL);
+        $bForceRebuild = true;
+        $bRebuildLogFiles = false;
+        $hoursLogIsValid = 12;
+        $modifiedSince = '2015-02-09';
+        $iRecordsPerPage = 500;
+        $iApiCallsFinishedPageCnt = 0;
+        $bApiCallsDone = false;
+        $logDatetime = date('m-d-Y-H-i-s');
+        // rounded down to nearest hundred
+        $iExpectedRecordCnt = 10000;//10000
+        $iExpectedFiles[$iRecordsPerPage] = round($iExpectedRecordCnt / $iRecordsPerPage) + 10;
+        $iInfiniteLoopLimitMax = $iExpectedFiles[$iRecordsPerPage] + 50;
+        $groveCount = GroveIndividual::select(DB::raw('count(*) as count'))->first()->toArray()['count'];
+        if ($groveCount) {
+            $iExpectedFiles[$iRecordsPerPage] = round($groveCount / $iRecordsPerPage) + 10;
+            $iInfiniteLoopLimitMax = $iExpectedFiles[$iRecordsPerPage] + 50;
+        }
+        if ($groveCount >= $iExpectedRecordCnt) {
+            $groveMaxUpdateAt =
+                GroveIndividual::select(DB::raw('max(updated_at) as max_update_at'))->first()->toArray(
+                )['max_update_at'];
+            [$modifiedSince, $timeJunk] = preg_split("/ /", $groveMaxUpdateAt);
+        }
+
+        // Remove all api call debugging results
+        $this->deleteLogs("_grove_individual_profiles_*.log", $logDatetime);
+        // Remove all previously imported logs
+        $this->deleteLogs("saved_grove_individual_profiles_*.log", $logDatetime);
+        // Remove all previous raw api call results
+        $this->deleteLogs("raw_grove_individual_profiles_*.log", $logDatetime);
+
+        $this->log(
+            "_grove_individual_profiles_debug_{$logDatetime}.log",
+            "api config:",
+            [
+                '$bSaveToDb' => $bSaveToDb,
+                '$bLogOutput' => $bLogOutput,
+                '$bForceRebuild' => $bForceRebuild,
+                '$bRebuildLogFiles' => $bRebuildLogFiles,
+                '$hoursLogIsValid' => $hoursLogIsValid,
+                '$iRecordsPerPage' => $iRecordsPerPage,
+                '$logDatetime' => $logDatetime,
+                '$iExpectedRecordCnt' => $iExpectedRecordCnt,
+                '$iExpectedFiles[$iRecordsPerPage]' => $iExpectedFiles[$iRecordsPerPage],
+                '$modifiedSince' => $modifiedSince,
+                '$groveCount' => $groveCount,
+                '$iInfiniteLoopLimitMax' => $iInfiniteLoopLimitMax,
+                '$this->localPath' => $this->localPath
+            ]
+        );
+        if ($bForceRebuild || $bRebuildLogFiles) {
+            $this->deleteLogs("grove_individual_profiles_*.log", $logDatetime);
+            $bRebuildLogFiles = true;
+            $this->log(
+                "_grove_individual_profiles_debug_{$logDatetime}.log",
+                "Configured to rebuild log files. Deleted all grove_individual_profiles_*.log",
+                \FILE_APPEND
+            );
+        } else {
+            clearstatcache();
+            $filename = $this->localPath . 'grove_individual_profiles_1.log';
+            if (\file_exists($filename)) {
+                $timestamp = filemtime($filename);
+
+                $datetime1 = date_create(date('Y-m-d H:i'));
+                $datetime2 = date_create(date('Y-m-d H:i', $timestamp));
+
+                $interval = date_diff($datetime1, $datetime2);
+
+                $age = $interval->format('%h');
+
+                $bRebuildLogFiles = $age > $hoursLogIsValid;
+                if ($bRebuildLogFiles) {
+                    $this->deleteLogs("grove_individual_profiles_*.log", $logDatetime);
+                    $this->log(
+                        "_grove_individual_profiles_debug_{$logDatetime}.log",
+                        "Log files were too old, rebuilding log files. Deleted all grove_individual_profiles_*.log",
+                        \FILE_APPEND
+                    );
+                } else {
+                    $this->log(
+                        "_grove_individual_profiles_debug_{$logDatetime}.log",
+                        "Log files age are valid, skipping rebuild of log files.",
+                        \FILE_APPEND
+                    );
+                }
+            } else {
+                $bRebuildLogFiles = true;
+            }
+        }
+        $this->log(
+            "_grove_individual_profiles_debug_{$logDatetime}.log",
+            "api build state: \$bRebuildLogFiles:{$bRebuildLogFiles}",
+            \FILE_APPEND
+        );
+        if ($bRebuildLogFiles) {
+            $iPageNum = 1;
+            // This has the api call return xml instead of an array
+            $this->bReturnXML = true;
+            $bContinueApiCalls = true;
+            do {
+                $logName = 'grove_individual_profiles_' . $iPageNum . '.log';
+                $iTestDataSetupStart = microtime(1);
+                $response = $this->individual_profiles(
+                    [
+                        'page' => $iPageNum,
+                        'per_page' => $iRecordsPerPage,
+                        'include_inactive' => false,
+                        'modified_since' => $modifiedSince,
+                    ]
+                );
+                if (is_array($response)) {
+                    if (isset($response['error'])) {
+                        $this->log(
+                            "_grove_individual_profiles_api_failed_{$logDatetime}.log",
+                            "{$logName} : killing script due to api call error-{$response['error']}"
+                        );
+
+                        return false;
+                    } else {
+                        $this->log(
+                            "_grove_individual_profiles_api_error_{$logDatetime}.log",
+                            "{$logName} : breaking out of api call loop due to unexpected array response.",
+                            $response,
+                            \FILE_APPEND
+                        );
+                    }
+
+                    return false;
+                }
+                $iTestDataSetupEnd = microtime(1);
+                $iTestDataSetupTime = $iTestDataSetupEnd - $iTestDataSetupStart;
+                $sFormattedSetupTime = $this->formatSeconds($iTestDataSetupTime);
+                //echo "It took {$sFormattedSetupTime} to complete grove call<br>\n";
+                $this->log(
+                    str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName),
+                    $response
+                );
+
+                $iTestDataSetupStart = microtime(1);
+                $xml = new \SimpleXMLElement($response);
+                // Check to see if there are any individuals in the xml
+                $xpathIndividuals = "/ccb_api/response";
+                $individualsResult = $xml->xpath($xpathIndividuals);
+                if ($individualsResult) {
+                    $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+
+                    $bApiCallsDone =
+                        isset($aResponse['ccb_api']['response']['individuals']['@attributes']['count']) ?
+                            $aResponse['ccb_api']['response']['individuals']['@attributes']['count'] < 1 : true;
+                    if ($bLogOutput) {
+                        $individualsCnt =
+                            isset($aResponse['ccb_api']['response']['individuals']['@attributes']['count']) ?
+                                $aResponse['ccb_api']['response']['individuals']['@attributes']['count'] :
+                                'Expected something but it was not set';
+                        $this->log(
+                            "_grove_individual_profiles_debug_{$logDatetime}.log",
+                            "{$logName} : " .
+                            '$individualsCnt:' .
+                            $individualsCnt .
+                            ' $bApiCallsDone:' .
+                            ((int) $bApiCallsDone),
+                            \FILE_APPEND
+                        );
+                    }
+
+                    if ($bApiCallsDone) {
+                        $iApiCallsFinishedPageCnt = $iPageNum - 1;
+                        $aApiLogFilePaths = glob($this->localPath . "grove_individual_profiles_*.log");
+                        $this->log(
+                            "_grove_individual_profiles_api_finished_{$logDatetime}.log",
+                            "Actual ApiCallsFinishedPageCnt={$iApiCallsFinishedPageCnt}",
+                            "log files to import:",
+                            join("\n", $aApiLogFilePaths)
+                        );
+                        $this->deleteLogs(
+                            str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName)
+                        );
+                        $bContinueApiCalls = false;
+                    }
+                }
+
+                if (!$bApiCallsDone) {
                     $xpathIndividual = "/ccb_api/response/individuals/individual";
                     $result = $xml->xpath($xpathIndividual);
                     if (!$result || count($result) < 1) {
-                        // break out of loop to stop
-                        $iPageNum = $iInfiniteLoopLimitMax;
+                        $this->log(
+                            '_grove_individual_profiles_api_xml_error_' . $logDatetime . '.log',
+                            "{$logName} : XML empty forcing exit.",
+                            \FILE_APPEND
+                        );
+
+                        return false;
                     } else {
                         $aRemoveNodes = [
                             'sync_id',
@@ -592,86 +1105,137 @@ class GroveApi
                         }
                         $response = $xml->asXml();
 
-                        Storage::disk('local')->put($logName, $response);
+                        $this->log($logName, $response);
+
                         try {
+                            $bCreateArrayException = false;
                             $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
                         } catch (Exception $e) {
                             $aResponse = [];
+                            $bCreateArrayException = true;
+
+                            $this->log(
+                                '_grove_individual_profiles_api_error_' . $logDatetime . '.log',
+                                "{$logName} : XML to array:" . $e->getMessage(),
+                                \FILE_APPEND
+                            );
                         }
                         $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
                         if (!isset($response['individuals'])) {
-                            echo '<h1>individuals node is missing in rebuild</h1>';
-                            echo '<pre>' . print_r($response, true) . '</pre>';
                             // break out of loop to stop
                             $iPageNum = $iInfiniteLoopLimitMax;
+                            if (!$bCreateArrayException) {
+                                $this->log(
+                                    '_grove_individual_profiles_api_error_' . $logDatetime . '.log',
+                                    "{$logName} : forcing infinite loop exit b/c individuals node is missing in rebuild:" .
+                                    print_r($response, true),
+                                    \FILE_APPEND
+                                );
+                            }
                         }
                     }
-
                     $iPageNum++;
-                    $bInfiniteLoopLimit = ($iPageNum > $iInfiniteLoopLimitMax) || ($iPageNum > $iRecordsPerPage);
+                    $bInfiniteLoopLimit =
+                        ($iPageNum > $iInfiniteLoopLimitMax) || ($iPageNum > $iExpectedFiles[$iRecordsPerPage]);
                     $bNoMoreRecords =
                         isset($response['individuals']['@attributes']['count']) ?
                             $response['individuals']['@attributes']['count'] < 1 : true;
-                    $bContinue = !empty($response) && !$bNoMoreRecords && !$bInfiniteLoopLimit;
-                    if ($bContinue) {
+
+                    if ($bInfiniteLoopLimit && !$bNoMoreRecords) {
+                        $datetime = date('m-d-Y-H-i-s');
+                        $this->log(
+                            '_grove_individual_profiles_api_looplimit_' . $datetime . '.log',
+                            "{$logName} : Exited loop at page count:" . ($iPageNum)
+                        );
+                    }
+                    $bContinueApiCalls = !empty($response) && !$bNoMoreRecords && !$bInfiniteLoopLimit;
+                    if ($bContinueApiCalls) {
                         sleep($this->getRateLimitSleep());
                     }
-                } while ($bContinue);
-                $this->bReturnXML = false;
+                }
+            } while ($bContinueApiCalls && !$bApiCallsDone);
+            // Set api rest call response back to array
+            $this->bReturnXML = false;
+            $this->log(
+                "_grove_individual_profiles_debug_{$logDatetime}.log",
+                "finished api calls moving on to import.",
+                \FILE_APPEND
+            );
+        }
+
+        /**
+         * Now import log files created by api calls
+         */
+        // $iIndividualCounter- This is just to debug the save
+        $iTotalIndividualsToImport = 0;
+        $iTotalIndividualsSuccessfullyImported = 0;
+        $iIndividualCounter = 1;
+        $aLogFilePaths = glob($this->localPath . "grove_individual_profiles_*.log");
+        $iLogFilePathCnt = count($aLogFilePaths);
+        $this->log(
+            "_grove_individual_profiles_debug_{$logDatetime}.log",
+            "Before import begins : " . '$iLogFilePathCnt:' . $iLogFilePathCnt,
+            \FILE_APPEND
+        );
+        if ($iLogFilePathCnt === 0) {
+            if ($iApiCallsFinishedPageCnt === 0 && $bApiCallsDone) {
+                $this->log(
+                    '_grove_individual_profiles_import_noupdates_' . $logDatetime . '.log',
+                    "no updates found"
+                );
+
+                return true;
+            } else {
+                $this->log(
+                    '_grove_individual_profiles_import_failed_' . $logDatetime . '.log',
+                    "no grove_individual_profiles_*.log found"
+                );
+
+                return false;
             }
         }
-        if ($bShowOutput) {
-            // Allow us to send content to the browser before the script is done
-            ini_set(
-                "implicit_flush",
-                true
-            );
-            // remove all existing buffers or else the implicit flush doesn't work for some reason.
-            // ** Make sure you don't need these buffers... at the time I wrote this, this method is meant to run on stand alone scripts
-            do {
-                echo ob_get_contents();
-            } while (@ob_end_clean());
-            // This is the magic. Output 1019 characters to the browser so it triggers the page to load. 1019 is a value I found
-            // in a forum post. There is an actual required amout of data that needs to be sent or the browser will ignore it and wait
-            // for more data. I think the different browsers require different amounts of data. 1019 worked for firefox and I didn't do
-            // any discovery to see what the least amount of data was required.
-            print(str_repeat(" ", 1019) . "\n");
-            flush();// Flush all output to browser now.
-            echo "<ol>";
-            print(str_repeat(" ", 1019) . "\n");
-            flush();// Flush all output to browser now.
-        }
-        $aLogFilePaths = glob($localPath . "grove_individual_profiles_*.log");
-        if (count($aLogFilePaths) === 0) {
-            return true;
-        }
-        $iIndividualCnt = 1;
-        $iPageNum = 1;
-        do {
-            if ($bUseLogFile) {
-                $logName = 'grove_individual_profiles_' . $iPageNum . '.log';
-                $exists = Storage::disk('local')->exists($logName);
-                if ($exists) {
-                    $response = Storage::disk('local')->get($logName);
+
+        for ($iPageNum = 1; $iPageNum <= $iLogFilePathCnt; $iPageNum++) {
+            $logName = 'grove_individual_profiles_' . $iPageNum . '.log';
+            $exists = Storage::disk('local')->exists($logName);
+            if ($exists) {
+                $response = Storage::disk('local')->get($logName);
+                try {
                     $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
                     $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
-                } else {
-                    $response = [];
+                } catch (Exception $e) {
+                    $this->log(
+                        '_grove_individual_profiles_import_failed_' . $logDatetime . '.log',
+                        "{$logName} : forcing exit due to xml to array exception",
+                        "XML2Array::createArray exception message:" . $e->getMessage(),
+                        "xml from log:" . $response
+                    );
 
-                    $iPageNum = $iInfiniteLoopLimitMax;
+                    return false;
                 }
             } else {
-                $response = $this->individual_profiles(
-                    [
-                        'page' => $iPageNum,
-                        'per_page' => $iRecordsPerPage,
-                        'include_inactive' => false,
-                        'modified_since' => $modifiedSince,
-                    ]
+                $this->log(
+                    '_grove_individual_profiles_import_failed_' . $logDatetime . '.log',
+                    "{$logName} : file missing. forcing exit."
                 );
+
+                return false;
             }
+            //$this->log("_grove_individual_profiles_debug_{$logDatetime}.log", "{$logName}", $response, \FILE_APPEND);
             $aIndividuals = [];
-            if (isset($response['individuals']['individual'])) {
+
+            $iIndividualsCnt = $response['individuals']['@attributes']['count'];
+            $iTotalIndividualsToImport += $iIndividualsCnt;
+            $this->log(
+                "_grove_individual_profiles_debug_{$logDatetime}.log",
+                "{$logName} : \$iIndividualsCnt-{$iIndividualsCnt}",
+                \FILE_APPEND
+            );
+            // XML2Array::createArray does not create an array of individuals if there is only 1 individual.
+            if ($iIndividualsCnt === '1' && isset($response['individuals']['individual'])) {
+                // we need to make this 1 individual an array of itself, otherwise we loop through the keys of itself
+                $aIndividuals = [$response['individuals']['individual']];
+            } elseif (isset($response['individuals']['individual'])) {
                 $aIndividuals = $response['individuals']['individual'];
             }
             foreach ($aIndividuals as $aIndividual) {
@@ -697,9 +1261,15 @@ class GroveApi
                 $err =
                     !isset($aIndividual['@attributes']['id']) ? 'missing individual_id on page ' . $iPageNum . PHP_EOL :
                         '';
-                $iIndividualCnt++;
-                if ($bShowOutput) {
-                    echo '<li>' . $iIndividualCnt . '<pre>' . $err . print_r($aIndividual, true) . '</pre>';
+
+                if (!empty($err)) {
+                    $this->log(
+                        "_grove_individual_profiles_debug_{$logDatetime}.log",
+                        "{$logName} : \$iIndividualCounter:$iIndividualCounter",
+                        "\$err:$err",
+                        $aIndividual,
+                        \FILE_APPEND
+                    );
                 }
 
                 if ($bSaveToDb) {
@@ -713,22 +1283,30 @@ class GroveApi
 
                     $groveIndividual->fill($data);
                     $success = $groveIndividual->save();
-                    if ($bShowOutput) {
-                        if ($success) {
-                            echo "$iIndividualCnt. Saved {$individual_id}<br>";
-                        } else {
-                            echo "Save failed {$individual_id}<br>";
-                        }
+                    if ($success) {
+                        $msg = "succeeded";
+                        $iTotalIndividualsSuccessfullyImported++;
+                    } else {
+                        $msg = "failed";
                     }
+                    $this->log(
+                        "_grove_individual_profiles_debug_{$logDatetime}.log",
+                        "{$logName} : $iIndividualCounter. Save {$msg} {$individual_id}",
+                        "saved with \$data:",
+                        $data,
+                        \FILE_APPEND
+                    );
                     if (!$success) {
-                        die("Save failed {$individual_id}");
+                        $this->log(
+                            '_grove_individual_profiles_import_failed_' . $logDatetime . '.log',
+                            "{$logName} : forcing exit. Save to db failed on (\$iIndividualCounter-{$iIndividualCounter}) for individual_id:{$individual_id}",
+                            $aIndividual
+                        );
+
+                        return false;
                     }
                 }
-                if ($bShowOutput) {
-                    echo '</li>';
-                    print(str_repeat(" ", 1019) . "\n");
-                    flush();// Flush all output to browser now.
-                }
+                $iIndividualCounter++;
             }
             if (Storage::disk('local')->exists($logName)) {
                 Storage::move(
@@ -736,79 +1314,94 @@ class GroveApi
                     str_replace('grove_individual_profiles', 'saved_grove_individual_profiles', $logName)
                 );
             }
-            if (Storage::disk('local')->exists(
-                str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName)
-            )
-            ) {
-                Storage::disk('local')->delete(
-                    str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName)
-                );
-            }
-            $iPageNum++;
-            $bInfiniteLoopLimit = $iPageNum > $iInfiniteLoopLimitMax;
+            $this->deleteLogs(str_replace('grove_individual_profiles', 'raw_grove_individual_profiles', $logName));
+        }
 
-            $bNoMoreRecords =
-                isset($response['individuals']['@attributes']['count']) ?
-                    $response['individuals']['@attributes']['count'] < 1 : true;
-        } while (!$bNoMoreRecords && !$bInfiniteLoopLimit);
-
-        if ($bShowOutput) {
-            echo "</ol>";
-            print(str_repeat(" ", 1019) . "\n");
-            flush();// Flush all output to browser now.
-            ini_restore('implicit_flush');
+        $aSavedLogFilePaths = glob($this->localPath . "saved_grove_individual_profiles_*.log");
+        $iSavedLogFilePathCnt = count($aSavedLogFilePaths);
+        if ($iSavedLogFilePathCnt === $iLogFilePathCnt) {
+            $this->log(
+                '_grove_individual_profiles_import_finished_' . $logDatetime . '.log',
+                "Imported pages:" . $iSavedLogFilePathCnt,
+                "\$iTotalIndividualsToImport:{$iTotalIndividualsToImport}",
+                "\$iTotalIndividualsSuccessfullyImported:{$iTotalIndividualsSuccessfullyImported}"
+            );
+        } else {
+            $this->log(
+                '_grove_individual_profiles_import_done_but_not_finished_' . $logDatetime . '.log',
+                "done with import execution but import failed somehow without exiting. Need to figure out why."
+            );
         }
 
         ini_set('max_execution_time', 160);
+
+        return true;
     }
 
-    public function importLifeGroups($bSaveToDb = true, $bShowOutput = false)
+    public function importLifeGroups($bSaveToDb = true, $bLogOutput = false)
     {
-        if ($bShowOutput) {
-            // Allow us to send content to the browser before the script is done
-            ini_set(
-                "implicit_flush",
-                true
-            );
-            // remove all existing buffers or else the implicit flush doesn't work for some reason.
-            // ** Make sure you don't need these buffers... at the time I wrote this, this method is meant to run on stand alone scripts
-            do {
-                echo ob_get_contents();
-            } while (@ob_end_clean());
-            // This is the magic. Output 1019 characters to the browser so it triggers the page to load. 1019 is a value I found
-            // in a forum post. There is an actual required amout of data that needs to be sent or the browser will ignore it and wait
-            // for more data. I think the different browsers require different amounts of data. 1019 worked for firefox and I didn't do
-            // any discovery to see what the least amount of data was required.
-            print(str_repeat(" ", 1019) . "\n");
-            flush();// Flush all output to browser now.
-
-        }
-        // forcing logFile
-        $bUseLogFile = true;
+        set_time_limit(0);
+        //file_put_contents('/var/www/html/laravel/storage/app/debug-log.log', 'start:Line:' . __LINE__.PHP_EOL);
+        $importCmd = "group_profiles";
+        $bForceRebuild = false;
+        $bRebuildLogFiles = false;
+        $hoursLogIsValid = 12;
         $modifiedSince = '2015-02-09';
+        $iRecordsPerPage = 500;
+        $iApiCallsFinishedPageCnt = 0;
+        $bApiCallsDone = false;
+        $logDatetime = date('m-d-Y-H-i-s');
         // rounded down to nearest hundred
-        $iExpectedRecordCnt = 700;
+        $iExpectedRecordCnt = 1100; // groups
         $groveCount = LifeGroups::select(DB::raw('count(*) as count'))->first()->toArray()['count'];
         if ($groveCount >= $iExpectedRecordCnt) {
-            $groveMaxUpdateAt = LifeGroups::select(DB::raw('max(updated_at) as max_update_at'))->first()->toArray(
-                )['max_update_at'];
-            list($modifiedSince, $timeJunk) = preg_split("/ /", $groveMaxUpdateAt);
+            $groveMaxUpdateAt =
+                LifeGroups::select(DB::raw('max(updated_at) as max_update_at'))->first()->toArray()['max_update_at'];
+            [$modifiedSince, $timeJunk] = preg_split("/ /", $groveMaxUpdateAt);
         }
-        $iInfiniteLoopLimitMax = 100;
+
+        $iExpectedFiles[$iRecordsPerPage] = round($iExpectedRecordCnt / $iRecordsPerPage)+3;
+        $iInfiniteLoopLimitMax = $iExpectedFiles[$iRecordsPerPage] + 50;
+        $iLastValidPageNum = null;
         $lifeGroupDepartmentId = 10;
         $aImportGroupDepartments = [$lifeGroupDepartmentId];
-        $localPath = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
-        // Let the long running script finish
-        set_time_limit(0);
+
         if ($bSaveToDb) {
             DB::table('life_groups')->truncate();
         }
-        if ($bUseLogFile) {
-            $hoursLogIsValid = 12;
-            $iExpectedLogs = 40;
-            $iLastValidPageNum = null;
+        // Remove all api call debugging results
+        $this->deleteLogs("_grove_{$importCmd}_*.log", $logDatetime);
+        // Remove all previously imported logs
+        $this->deleteLogs("saved_grove_{$importCmd}_*.log", $logDatetime);
+        // Remove all previous raw api call results
+        $this->deleteLogs("raw_grove_{$importCmd}_*.log", $logDatetime);
+
+        $this->log(
+            "_grove_{$importCmd}_debug_{$logDatetime}.log",
+            "api config:",
+            [
+                '$bSaveToDb' => $bSaveToDb,
+                '$bLogOutput' => $bLogOutput,
+                '$bForceRebuild' => $bForceRebuild,
+                '$bRebuildLogFiles' => $bRebuildLogFiles,
+                '$hoursLogIsValid' => $hoursLogIsValid,
+                '$logDatetime' => $logDatetime,
+                '$modifiedSince' => $modifiedSince,
+                '$this->localPath' => $this->localPath
+            ]
+        );
+
+        if ($bForceRebuild || $bRebuildLogFiles) {
+            $this->deleteLogs("grove_{$importCmd}_*.log", $logDatetime);
+            $bRebuildLogFiles = true;
+            $this->log(
+                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                "Configured to rebuild log files. Deleted all grove_{$importCmd}_*.log",
+                \FILE_APPEND
+            );
+        } else {
             clearstatcache();
-            $filename = $localPath . 'grove_group_profiles_1.log';
+            $filename = $this->localPath . "grove_{$importCmd}_1.log";
             if (\file_exists($filename)) {
                 $timestamp = filemtime($filename);
 
@@ -820,10 +1413,10 @@ class GroveApi
                 $age = $interval->format('%h');
                 $bAgeIsValid = $age < $hoursLogIsValid;
                 $bRebuildLogFiles = !$bAgeIsValid;
-                $aLogFilePaths = glob($localPath . "grove_group_profiles_*.log");
-                sort($aLogFilePaths, SORT_NATURAL);
 
-                if (count($aLogFilePaths) < $iExpectedLogs) {
+                $aLogFilePaths = glob($this->localPath . "grove_{$importCmd}_*.log");
+                sort($aLogFilePaths, SORT_NATURAL);
+                if (count($aLogFilePaths) < $iExpectedFiles[$iRecordsPerPage]) {
                     $bRebuildLogFiles = true;
                 }
                 if ($bRebuildLogFiles) {
@@ -833,94 +1426,272 @@ class GroveApi
                                 unlink($sLogFilePath);
                             } else {
                                 $content = Storage::disk('local')->get(basename($sLogFilePath));
-                                if(!preg_match("/Too many Grove requests/", $content)){
+                                if (!preg_match("/Too many Grove requests/", $content)) {
                                     preg_match("/(\d+)\.log$/", $sLogFilePath, $matches);
                                     $iLastValidPageNum = $matches[1] + 1;
+                                    $this->log(
+                                        "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                                        "\$iLastValidPageNum:$iLastValidPageNum",
+                                        \FILE_APPEND
+                                    );
                                 } else {
                                     unlink($sLogFilePath);
+                                    $this->log(
+                                        "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                                        "deleting a Too many Grove requests log",
+                                        \FILE_APPEND
+                                    );
                                 }
                             }
                         }
                     }
+                    $this->log(
+                        "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                        "Log files were too old, rebuilding log files. Deleted all grove_{$importCmd}_*.log",
+                        \FILE_APPEND
+                    );
+                } else {
+                    $this->log(
+                        "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                        "Log files age are valid, skipping rebuild of log files.",
+                        \FILE_APPEND
+                    );
                 }
             } else {
                 $bRebuildLogFiles = true;
             }
+        }
+        $this->log(
+            "_grove_{$importCmd}_debug_{$logDatetime}.log",
+            "api build state: \$bRebuildLogFiles:{$bRebuildLogFiles}",
+            \FILE_APPEND
+        );
 
-            if ($bRebuildLogFiles) {
-                $iPageNum = $iLastValidPageNum !== null ? $iLastValidPageNum : 1;
-                $this->bReturnXML = true;
-                do {
-                    $rateLimitRemaining = $this->getRateLimitRemaining();
-                    $rateLimitReset = $this->getRateLimitReset();
-                    $rateLimitTryAfter = $this->getRateLimitRetryAfter​();
+        if ($bRebuildLogFiles) {
+            $iPageNum = $iLastValidPageNum !== null ? $iLastValidPageNum : 1;
+            $bContinueApiCalls = true;
+            $this->bReturnXML = true;
+            do {
+                $rateLimitRemaining = $this->getRateLimitRemaining();
+                $rateLimitReset = $this->getRateLimitReset();
+                $rateLimitTryAfter = $this->getRateLimitRetryAfter​();
 
-                    //echo "\$iPageNum:$iPageNum \$rateLimitRemaining:$rateLimitRemaining \$rateLimitReset:$rateLimitReset \$rateLimitTryAfter:$rateLimitTryAfter<br>";
-                    $logName = 'grove_group_profiles_' . $iPageNum . '.log';
-                    $response = $this->group_profiles(['page' => $iPageNum]);
-                    if (!preg_match("/Too many Grove requests/", $response)) {
-                        Storage::disk('local')->put($logName, $response);
+                //echo "\$iPageNum:$iPageNum \$rateLimitRemaining:$rateLimitRemaining \$rateLimitReset:$rateLimitReset \$rateLimitTryAfter:$rateLimitTryAfter<br>";
+                $logName = "grove_{$importCmd}_{$iPageNum}.log";
+                $response = $this->group_profiles(
+                    [
+                        'page' => $iPageNum,
+                        'per_page' => $iRecordsPerPage
+                    ]
+                );
+                if (is_array($response)) {
+                    if (isset($response['error'])) {
+                        $this->log(
+                            "_grove_{$importCmd}_api_failed_{$logDatetime}.log",
+                            "{$logName} : killing script due to api call error-{$response['error']}"
+                        );
+
+                        return false;
+                    } else {
+                        $this->log(
+                            "_grove_{$importCmd}_api_error_{$logDatetime}.log",
+                            "{$logName} : breaking out of api call loop due to unexpected array response.",
+                            $response,
+                            \FILE_APPEND
+                        );
                     }
 
+                    return false;
+                } elseif (preg_match("/Too many Grove requests/", $response)) {
+                    $this->log(
+                        "_grove_{$importCmd}_api_error_{$logDatetime}.log",
+                        "{$logName} : breaking out of api call loop due to Too many Grove requests response.",
+                        $response,
+                        \FILE_APPEND
+                    );
+                    return false;
+                }
+
+                $this->log(
+                    str_replace("grove_{$importCmd}", "raw_grove_{$importCmd}", $logName),
+                    $response
+                );
+                $xml = new \SimpleXMLElement($response);
+                // Check to see if there are any families in the xml
+                $xpathIndividuals = "/ccb_api/response";
+                $individualsResult = $xml->xpath($xpathIndividuals);
+                if ($individualsResult) {
+                    $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+
+                    $bApiCallsDone =
+                        isset($aResponse['ccb_api']['response']['groups']['@attributes']['count']) ?
+                            $aResponse['ccb_api']['response']['groups']['@attributes']['count'] < 1 : true;
+                    if ($bLogOutput) {
+                        $cnt =
+                            isset($aResponse['ccb_api']['response']['groups']['@attributes']['count']) ?
+                                $aResponse['ccb_api']['response']['groups']['@attributes']['count'] :
+                                'Expected [\'@attributes\'][\'count\'] but it was not set';
+                        $this->log(
+                            "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                            "{$logName} : " . '$cnt:' . $cnt . ' $bApiCallsDone:' . ((int) $bApiCallsDone),
+                            \FILE_APPEND
+                        );
+                    }
+
+                    if ($bApiCallsDone) {
+                        $iApiCallsFinishedPageCnt = $iPageNum - 1;
+                        $aApiLogFilePaths = glob($this->localPath . "grove_{$importCmd}_*.log");
+                        $this->log(
+                            "_grove_{$importCmd}_api_finished_{$logDatetime}.log",
+                            "Actual ApiCallsFinishedPageCnt={$iApiCallsFinishedPageCnt}",
+                            "log files to import:",
+                            join("\n", $aApiLogFilePaths)
+                        );
+                        $this->deleteLogs(
+                            str_replace("grove_{$importCmd}", "raw_grove_{$importCmd}", $logName)
+                        );
+                        $bContinueApiCalls = false;
+                    }
+                }
+                if (!$bApiCallsDone) {
+                    $xpathIndividual = "/ccb_api/response/groups/group";
+                    $result = $xml->xpath($xpathIndividual);
+                    if (!$result || count($result) < 1) {
+                        $this->log(
+                            "_grove_{$importCmd}_api_xml_error_{$logDatetime}.log",
+                            "{$logName} : XML empty forcing exit.",
+                            \FILE_APPEND
+                        );
+
+                        return false;
+                    } else {
+                        $this->log($logName, $response);
+                    }
                     try {
+                        $bCreateArrayException = false;
                         $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
                     } catch (Exception $e) {
                         $aResponse = [];
+                        $bCreateArrayException = true;
+
+                        $this->log(
+                            "_grove_{$importCmd}_api_xml_error_{$logDatetime}.log",
+                            "{$logName} : XML to array:" . $e->getMessage(),
+                            \FILE_APPEND
+                        );
                     }
                     $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
+                    if (!isset($response['groups'])) {
+                        if (!$bCreateArrayException) {
+                            $this->log(
+                                "_grove_{$importCmd}_api_xml_failed_{$logDatetime}.log",
+                                "{$logName} : forcing exit b/c families node is missing in rebuild:" .
+                                print_r($response, true),
+                                \FILE_APPEND
+                            );
 
+                            return false;
+                        }
+                    }
                     $iPageNum++;
-                    $bInfiniteLoopLimit = $iPageNum > $iInfiniteLoopLimitMax;
+                    $bInfiniteLoopLimit =
+                        ($iPageNum > $iInfiniteLoopLimitMax) || ($iPageNum > $iExpectedFiles[$iRecordsPerPage]);
                     $bNoMoreRecords =
                         isset($response['groups']['@attributes']['count']) ?
                             $response['groups']['@attributes']['count'] < 1 : true;
-                    if($bNoMoreRecords){
-                        echo '<pre>response:'. print_r($response, true) . '</pre>';
+
+                    if ($bInfiniteLoopLimit && !$bNoMoreRecords) {
+                        $this->log(
+                            "_grove_{$importCmd}_api_xml_looplimit_{$logDatetime}.log",
+                            "{$logName} : Exited loop at page count:" . ($iPageNum)
+                        );
                     }
-                    if ($bShowOutput) {
-                        print(str_repeat(" ", 1019) . "\n");
-                        flush();// Flush all output to browser now.
-                    }
-                    $bContinue = !empty($response) && !$bNoMoreRecords && !$bInfiniteLoopLimit;
-                    if ($bContinue) {
+                    $bContinueApiCalls = !empty($response) && !$bNoMoreRecords && !$bInfiniteLoopLimit;
+                    if ($bContinueApiCalls) {
                         sleep($this->getRateLimitSleep());
                     }
+                }
 
-                } while ($bContinue);
-                $this->bReturnXML = false;
-            }
-        }
-
-        if ($bShowOutput) {
-            echo "<ol>";
-            print(str_repeat(" ", 1019) . "\n");
-            flush();// Flush all output to browser now.
+            } while ($bContinueApiCalls && !$bApiCallsDone);
+            $this->bReturnXML = false;
+            $this->log(
+                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                "finished api calls moving on to import.",
+                \FILE_APPEND
+            );
         }
 
         $iParticipantCnt = 1;
         $iPageNum = 1;
-        do {
-            if ($bUseLogFile) {
-                $logName = 'grove_group_profiles_' . $iPageNum . '.log';
-                $exists = Storage::disk('local')->exists($logName);
-                if ($exists) {
-                    $response = Storage::disk('local')->get($logName);
-                    try {
-                        $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
-                        $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
-                    } catch (\Exception $e) {
-                        $response = [];
-                    }
+        $iTotalIndividualsToImport = 0;
+        $iTotalIndividualsSuccessfullyImported = 0;
+        $iIndividualCounter = 1;
+        $aLogFilePaths = glob($this->localPath . "grove_{$importCmd}_*.log");
+        $iLogFilePathCnt = count($aLogFilePaths);
+        $this->log(
+            "_grove_{$importCmd}_debug_{$logDatetime}.log",
+            "Before import begins : " . '$iLogFilePathCnt:' . $iLogFilePathCnt,
+            \FILE_APPEND
+        );
+        if ($iLogFilePathCnt === 0) {
+            if ($iApiCallsFinishedPageCnt === 0 && $bApiCallsDone) {
+                $this->log(
+                    "_grove_{$importCmd}_import_noupdates_{$logDatetime}.log",
+                    "no updates found"
+                );
 
-                } else {
-                    $response = [];
+                return true;
+            } else {
+                $this->log(
+                    "_grove_{$importCmd}_import_failed_{$logDatetime}.log",
+                    "no grove_{$importCmd}_*.log found"
+                );
+
+                return false;
+            }
+        }
+
+        for ($iPageNum = 1; $iPageNum <= $iLogFilePathCnt; $iPageNum++) {
+            $bSkipLogRename = false;
+            $logName = "grove_{$importCmd}_1.log";
+            $exists = Storage::disk('local')->exists($logName);
+            if ($exists) {
+                $response = Storage::disk('local')->get($logName);
+                try {
+                    $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
+                    $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
+                } catch (Exception $e) {
+                    $this->log(
+                        "_grove_{$importCmd}_import_failed_{$logDatetime}.log",
+                        "{$logName} : forcing exit due to xml to array exception",
+                        "XML2Array::createArray exception message:" . $e->getMessage(),
+                        "xml from log:" . $response
+                    );
+
+                    return false;
                 }
             } else {
-                sleep($this->getRateLimitSleep());
-                $response = $this->group_profiles(['page' => $iPageNum]);
+                $this->log(
+                    "_grove_{$importCmd}_import_failed_{$logDatetime}.log",
+                    "{$logName} : file missing. forcing exit."
+                );
+
+                return false;
             }
+
             $aGroups = [];
-            if (isset($response['groups']['group'])) {
+            $iGroupsCnt = $response['groups']['@attributes']['count'];
+
+            $this->log(
+                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                "{$logName} : \$iGroupsCnt-{$iGroupsCnt}",
+                \FILE_APPEND
+            );
+
+            if ($iGroupsCnt === '1' && isset($response['groups']['group'])) {
+                // we need to make this 1 family an array of itself, otherwise we loop through the keys of itself
+                $aGroups = [$response['groups']['group']];
+            } elseif (isset($response['groups']['group'])) {
                 $aGroups = $response['groups']['group'];
             }
             foreach ($aGroups as $idx => $aGroup) {
@@ -953,7 +1724,7 @@ class GroveApi
                     }
                     // echo "$group_id :: $group_name <br>";
                     // echo '<pre>' . print_r($aParticipants, true) . '</pre>';
-
+                    $iTotalIndividualsToImport += count($aParticipants);
                     foreach ($aParticipants as $aParticipant) {
                         $data = [];
                         $data['group_id'] = $group_id;
@@ -965,48 +1736,82 @@ class GroveApi
                         $err =
                             !isset($aParticipant['@attributes']['id']) ?
                                 'missing individual_id on page ' . $iPageNum . PHP_EOL : '';
-                        if ($bShowOutput) {
-                            echo '<li>' . $iParticipantCnt++ . '<pre>' . $err . print_r($data, true) . '</pre>';
+                        if (!empty($err)) {
+                            $this->log(
+                                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                                "{$logName} : \$iParticipantCnt:$iParticipantCnt",
+                                "\$err:$err",
+                                $aParticipant,
+                                \FILE_APPEND
+                            );
                         }
 
                         if ($bSaveToDb) {
                             $lifeGroup = new LifeGroups();
                             $lifeGroup->fill($data);
                             $success = $lifeGroup->save();
-                            if ($bShowOutput) {
-                                if ($success) {
-                                    echo "PageNum: $iPageNum. Saved $group_id :: $group_name :: {$data['individual_id']}";
-                                } else {
-                                    echo "PageNum: $iPageNum. Save failed $group_id :: $group_name {$data['individual_id']}";
-                                }
+
+                            if ($success) {
+                                $msg = "succeeded";
+                                $iTotalIndividualsSuccessfullyImported++;
+                            } else {
+                                $msg = "failed";
+                            }
+                            $this->log(
+                                "_grove_{$importCmd}_debug_{$logDatetime}.log",
+                                "{$logName} : $iParticipantCnt. Save {$msg} PageNum: $iPageNum. Saved $group_id :: $group_name :: {$data['individual_id']}",
+                                "saved with \$data:",
+                                $data,
+                                \FILE_APPEND
+                            );
+                            if (!$success) {
+                                $this->log(
+                                    "_grove_{$importCmd}_import_error_{$logDatetime}.log",
+                                    "{$logName} : Leaving log as is and continuing with next log b/c Save to db failed on (\$iParticipantCnt-{$iParticipantCnt}) for individual_id:{$data['individual_id']}",
+                                    $aParticipant,
+                                    \FILE_APPEND
+                                );
+                                $bSkipLogRename = true;
                             }
                         }
-                        if ($bShowOutput) {
-                            echo '</li>';
-                            print(str_repeat(" ", 1019) . "\n");
-                            flush();// Flush all output to browser now.
-                        }
+                        $iParticipantCnt++;
                     }
                 }
             }
-            $iPageNum++;
-            $bInfiniteLoopLimit = $iPageNum > $iInfiniteLoopLimitMax;
-            $bNoMoreRecords = isset($response['groups']) && $response['groups']['@attributes']['count'] < 1;
-
-            if ($bNoMoreRecords) {
-                echo '<pre>no more records:'. $iPageNum . PHP_EOL . print_r($response, true) . '</pre>';
-            }
-
-        } while (!$bNoMoreRecords && !$bInfiniteLoopLimit);
-
-        if ($bShowOutput) {
-            echo "</ol>";
-            print(str_repeat(" ", 1019) . "\n");
-            flush();// Flush all output to browser now.
-            ini_restore('implicit_flush');
+            // can't delete the log files unless they have all been imported
         }
 
+        $aSavedLogFilePaths = glob($this->localPath . "saved_grove_{$importCmd}_*.log");
+        $iSavedLogFilePathCnt = count($aSavedLogFilePaths);
+        if ($iSavedLogFilePathCnt === $iLogFilePathCnt) {
+            $this->log(
+                "_grove_{$importCmd}_import_finished_{$logDatetime}.log",
+                "Imported pages:" . $iSavedLogFilePathCnt,
+                "\$iTotalIndividualsToImport:{$iTotalIndividualsToImport}",
+                "\$iTotalIndividualsSuccessfullyImported:{$iTotalIndividualsSuccessfullyImported}"
+            );
+        } else {
+            $this->log(
+                "_grove_{$importCmd}_import_done_but_not_finished_{$logDatetime}.log",
+                "done with import execution but import failed somehow without exiting. Need to figure out why.",
+                "Imported pages:" . $iSavedLogFilePathCnt,
+                "\$iTotalIndividualsToImport:{$iTotalIndividualsToImport}",
+                "\$iTotalIndividualsSuccessfullyImported:{$iTotalIndividualsSuccessfullyImported}"
+            );
+        }
+        // if (!$bSkipLogRename) {
+        //     if (Storage::disk('local')->exists($logName)) {
+        //         Storage::move(
+        //             $logName,
+        //             str_replace("grove_{$importCmd}", "saved_grove_{$importCmd}", $logName)
+        //         );
+        //     }
+        //     $this->deleteLogs(str_replace("grove_{$importCmd}", "raw_grove_{$importCmd}", $logName));
+        // } else {
+        //     $bSkipLogRename = false;
+        // }
         ini_set('max_execution_time', 160);
+        return true;
     }
 
     /**

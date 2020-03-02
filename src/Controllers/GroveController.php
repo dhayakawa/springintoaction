@@ -17,17 +17,16 @@ class GroveController extends BaseController
     {
 
         $groveApi = new GroveApi();
-        //$response = $groveApi->api_status();
+
         switch ($importType) {
             case 'individuals':
-                $groveApi->importIndividuals(true, false);
+                $groveApi->importIndividuals(true, true);
                 break;
             case 'family':
                 $groveApi->importFamilyMemberType();
                 break;
             case 'lifegroup':
                 $groveApi->importLifeGroups(true, true);
-                echo "done importing lifegroup";
                 break;
             case 'status':
                 $response = $groveApi->rate_limit_test();
@@ -36,12 +35,5 @@ class GroveController extends BaseController
                 echo '<pre>api_status:' . print_r($response, true) . '</pre>';
                 break;
         }
-
-        // $response = $groveApi->family_list();
-        // echo '<pre>' . print_r($response, true) . '</pre>';
-
-        //$response = $groveApi->group_search(['department_id' => 10]);
-        //$response = $groveApi->individual_groups(797);
-        //$response = $groveApi->family_list(512);
     }
 }
