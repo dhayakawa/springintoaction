@@ -353,15 +353,15 @@ class GroveApi
 
                 if ($logDatetime !== null && !preg_match("/{$logDatetime}\.log$/", $logFilePath)) {
                     unlink($logFilePath);
-                    file_put_contents(
-                        '/var/www/html/laravel/storage/app/debug-log.log',
+                    $this->log(
+                        'debug-log.log',
                         "\$logDatetime:{$logDatetime} did not match. deleted {$logFilePath}\n",
                         \FILE_APPEND
                     );
                 } else {
                     unlink($logFilePath);
-                    file_put_contents(
-                        '/var/www/html/laravel/storage/app/debug-log.log',
+                    $this->log(
+                        'debug-log.log',
                         "\$logDatetime:{$logDatetime} was null or did not match. deleted {$logFilePath}\n",
                         \FILE_APPEND
                     );
