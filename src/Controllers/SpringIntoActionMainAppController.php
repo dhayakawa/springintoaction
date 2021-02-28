@@ -4,6 +4,7 @@ namespace Dhayakawa\SpringIntoAction\Controllers;
 
 use \Dhayakawa\SpringIntoAction\Controllers\BackboneAppController as BaseController;
 //use Illuminate\Support\Facades\Config;
+use Dhayakawa\SpringIntoAction\Controllers\GroveApi;
 use Dhayakawa\SpringIntoAction\Models\AnnualBudget;
 use Dhayakawa\SpringIntoAction\Models\Attribute;
 use Dompdf\Exception;
@@ -48,12 +49,15 @@ use \Laratrust\LaratrustRole;
 #PHPStormUSEMARKER
 class SpringIntoActionMainAppController extends BaseController
 {
+
     public function index(Request $request)
     {
         if ($_SERVER['REMOTE_ADDR'] === '66.190.13.203') {
             $this->parseBackups();
         }
 
+
+        //$apiresponse = $this->getGroupParticipants(GroveApi::GROVE_GROUP_NAME_LIAISONS);
         /*echo '<pre>' .
              \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql()) .
              '</pre>';*/

@@ -14,10 +14,17 @@ use App\Http\Controllers\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Dhayakawa\SpringIntoAction\Helpers\ArraySearchTrait;
+use Dhayakawa\SpringIntoAction\Controllers\GroveApi;
+use Dhayakawa\SpringIntoAction\Helpers\ManageGroveGroupTrait;
 
 class BackboneAppController extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, ArraySearchTrait,CurrentYearTrait;
+    /**
+     * @var GroveApi
+     */
+    protected $groveApi;
+
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, ArraySearchTrait, CurrentYearTrait, ManageGroveGroupTrait;
     /**
      * Create a new controller instance.
      *
