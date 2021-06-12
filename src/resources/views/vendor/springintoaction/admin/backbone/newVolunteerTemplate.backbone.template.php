@@ -113,31 +113,31 @@
         <select name="AssignmentInformationSendStatus" class="form-control" id="AssignmentInformationSendStatus"><%= sendStatusOptions %></select>
     </div>
     <div class="form-group">
-        <label for="inputDateSubmitted">Grove Date Submitted</label>
-        <input type="text" name="DateSubmitted" class="form-control" id="inputDateSubmitted" placeholder="Grove Date Submitted" value="<%= testString %>"/>
+        <label for="inputDateSubmitted">My Woodlands Date Submitted</label>
+        <input type="text" name="DateSubmitted" class="form-control" id="inputDateSubmitted" placeholder="My Woodlands Date Submitted" value="<%= testString %>"/>
     </div>
     <div class="form-group">
-        <label for="inputDateModified">Grove Date Modified</label>
-        <input type="text" name="DateModified" class="form-control" id="inputDateModified" placeholder="Grove Date Modified" value="<%= testString %>"/>
+        <label for="inputDateModified">My Woodlands Date Modified</label>
+        <input type="text" name="DateModified" class="form-control" id="inputDateModified" placeholder="My Woodlands Date Modified" value="<%= testString %>"/>
     </div>
     <div class="form-group">
-        <label for="inputResponseID">Grove ResponseID</label>
-        <input type="text" name="ResponseID" class="form-control" id="inputResponseID" placeholder="Grove ResponseID" value="<%= testDBID %>"/>
+        <label for="inputResponseID">My Woodlands ResponseID</label>
+        <input type="text" name="ResponseID" class="form-control" id="inputResponseID" placeholder="My Woodlands ResponseID" value="<%= testDBID %>"/>
     </div>
     <div class="form-group">
-        <label for="inputConfirmationCode">Grove Confirmation Code</label>
-        <input type="text" name="ConfirmationCode" class="form-control" id="inputConfirmationCode" placeholder="Grove Confirmation Code" value="<%= testString %>"/>
+        <label for="inputConfirmationCode">My Woodlands Confirmation Code</label>
+        <input type="text" name="ConfirmationCode" class="form-control" id="inputConfirmationCode" placeholder="My Woodlands Confirmation Code" value="<%= testString %>"/>
     </div>
     <div class="form-group">
-        <label for="inputIndividualID">Grove IndividualID</label>
-        <input type="text" name="IndividualID" class="form-control" id="inputIndividualID" placeholder="Grove IndividualID" value="<%= testDBID %>"/>
+        <label for="inputIndividualID">My Woodlands IndividualID</label>
+        <input type="text" name="IndividualID" class="form-control" id="inputIndividualID" placeholder="My Woodlands IndividualID" value="<%= testDBID %>"/>
     </div>
     <div class="form-group">
-        <label for="inputEnteredFirstName">Grove EnteredFirstName</label>
-        <input type="text" name="EnteredFirstName" class="form-control" id="inputEnteredFirstName" placeholder="Grove EnteredFirstName" value="<%= testString %>"/>
+        <label for="inputEnteredFirstName">My Woodlands EnteredFirstName</label>
+        <input type="text" name="EnteredFirstName" class="form-control" id="inputEnteredFirstName" placeholder="My Woodlands EnteredFirstName" value="<%= testString %>"/>
     </div>
     <div class="form-group">
-        <label for="inputEnteredLastName">Grove EnteredLastName</label>
-        <input type="text" name="EnteredLastName" class="form-control" id="inputEnteredLastName" placeholder="Grove EnteredLastName" value="<%= testString %>"/>
+        <label for="inputEnteredLastName">My Woodlands EnteredLastName</label>
+        <input type="text" name="EnteredLastName" class="form-control" id="inputEnteredLastName" placeholder="My Woodlands EnteredLastName" value="<%= testString %>"/>
     </div>
 </form>

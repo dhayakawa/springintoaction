@@ -29,6 +29,7 @@ Route::group(
                 'uses' => 'HomeController@index',
             ]
         );
+        Route::get('/', 'HomeController@index')->name('springintoaction.index');
         Route::get(
             'home',
             [

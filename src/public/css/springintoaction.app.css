@@ -1008,7 +1008,7 @@
 }
 .sia-main-app form[name="projectScope"] fieldset.workflow-attributes-group legend .workflow-status-label {
   float: right;
-  padding: .3em .6em .4em;
+  padding: 0.3em 0.6em 0.4em;
   top: 0;
 }
 .sia-main-app form[name="projectScope"] fieldset.workflow-attributes-group legend .workflow-status-label i {
@@ -1045,7 +1045,7 @@
 .backgrid-wrapper .overlay-bottom {
   position: absolute;
   z-index: 99;
-  opacity: .6;
+  opacity: 0.6;
   width: 100%;
   height: 0px;
 }

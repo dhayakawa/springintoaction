@@ -7,6 +7,7 @@
     use Dhayakawa\SpringIntoAction\Models\SiteVolunteer;
     use Dhayakawa\SpringIntoAction\Models\SiteVolunteerRole;
     use Illuminate\Http\Request;
+    use Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
 
     class SiteVolunteerRoleController extends BaseController {
 
@@ -78,7 +79,8 @@
                 $success = $model->save();
                 $SiteVolunteerID = $model->SiteVolunteerID;
             }
-
+            $SiteRoleID = false;
+            $siteVolunteerRoleStatus = false;
             if ($success) {
                 $model = new SiteVolunteerRole;
                 $data = array_map(
@@ -94,11 +96,19 @@
                 $data['SiteVolunteerID'] = $SiteVolunteerID;
                 $model->fill($data);
                 $success = $model->save();
+                $SiteRoleID = $model->SiteRoleID;
+                $siteVolunteerRoleStatus = $model->Status;
             }
 
             if(!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Site Volunteer Role Addition Not Implemented Yet.'];
             } elseif($success) {
+                if ($SiteRoleID) {
+                    $agreedVolunteerStatusId = (int)VolunteerStatusOptions::getIdByStatusOption('Agreed');
+                    if ($agreedVolunteerStatusId === (int)$siteVolunteerRoleStatus) {
+                        //$this->addIndividualToGroup($this->getGroupIdBySiteRoleId($SiteRoleID), $request['VolunteerID']);
+                    }
+                }
                 $response = ['success' => true, 'msg' => 'Site Volunteer Role Addition Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Site Volunteer Role Addition Failed.'];
@@ -172,8 +182,15 @@
             // );
             $model->fill($data);
             $success = $model->save();
-
+            $SiteRoleID = $model->SiteRoleID;
+            $siteVolunteerRoleStatus = $model->Status;
             if($success) {
+                $agreedVolunteerStatusId = (int)VolunteerStatusOptions::getIdByStatusOption('Agreed');
+                $bAgreedStatus = $agreedVolunteerStatusId === (int)$siteVolunteerRoleStatus;
+                $siteVolunteerModel = SiteVolunteer::findOrFail($model->SiteVolunteerID);
+
+                //$this->updateGroupIndividual($this->getGroupIdBySiteRoleId($SiteRoleID), $bAgreedStatus, $siteVolunteerModel->VolunteerID);
+
                 $response = ['success' => true, 'msg' => 'Site Volunteer Role Update Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Site Volunteer Role Update Failed.'];
@@ -204,27 +221,37 @@
             if (is_array($params['deleteModelIDs'])) {
                 foreach ($params['deleteModelIDs'] as $modelID) {
 
-                    $projectVolunteerRoleModel = SiteVolunteerRole::find($modelID);
-                    $SiteVolunteerID = $projectVolunteerRoleModel->SiteVolunteerID;
-                    $SiteStatusID = $projectVolunteerRoleModel->SiteStatusID;
-                    $success = $projectVolunteerRoleModel->delete();
+                    $siteVolunteerRoleModel = SiteVolunteerRole::find($modelID);
+                    $siteRoleId = $siteVolunteerRoleModel->SiteRoleID;
+                    $SiteVolunteerID = $siteVolunteerRoleModel->SiteVolunteerID;
+                    $SiteStatusID = $siteVolunteerRoleModel->SiteStatusID;
+                    $siteVolunteer = SiteVolunteer::where('SiteVolunteerID', '=', $SiteVolunteerID)->get()->first();
+                    $volunteerID = $siteVolunteer->VolunteerID;
+                    $success = $siteVolunteerRoleModel->delete();
 
                     if (!$success) {
                         $batchSuccess = false;
                         $failMsg .= ' Site Volunteer Role failed. ';
                     } else {
-                        $projectVolunteerRoleModel = SiteVolunteerRole::where('SiteVolunteerID', '=', $SiteVolunteerID)->where(
+                        if($volunteerID && $success){
+                            $this->removeIndividualFromGroup($this->getGroupIdBySiteRoleId($siteRoleId), $volunteerID);
+                        }
+                        $siteVolunteerRoleModel = SiteVolunteerRole::where('SiteVolunteerID', '=', $SiteVolunteerID)->where(
                             'SiteStatusID',
                             '=',
                             $SiteStatusID)->get()->first();
 
-                        if(!$projectVolunteerRoleModel){
+                        if(!$siteVolunteerRoleModel){
                             $siteVolunteer = SiteVolunteer::where('SiteVolunteerID', '=', $SiteVolunteerID)->where(
                                 'SiteStatusID',
                                 '=',
                                 $SiteStatusID
-                            );
-                            $siteVolunteer->delete();
+                            )->get()->first();
+                            $volunteerID = $siteVolunteer->VolunteerID;
+                            $success = $siteVolunteer->delete();
+                            if ($volunteerID && $success) {
+                                $this->removeIndividualFromAllGroups('site', $volunteerID);
+                            }
                         }
                     }
 

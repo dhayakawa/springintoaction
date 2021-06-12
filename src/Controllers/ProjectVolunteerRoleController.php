@@ -7,6 +7,7 @@
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
     use Illuminate\Http\Request;
+    use Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
 
     class ProjectVolunteerRoleController extends BaseController {
 
@@ -79,7 +80,8 @@
                 $success = $model->save();
                 $ProjectVolunteerID = $model->ProjectVolunteerID;
             }
-
+            $ProjectRoleID = false;
+            $projectVolunteerRoleStatus = false;
             if ($success) {
                 $model = new ProjectVolunteerRole;
                 $data = array_map(
@@ -95,11 +97,19 @@
                 //$data['SiteVolunteerID'] = $ProjectVolunteerID;
                 $model->fill($data);
                 $success = $model->save();
+                $ProjectRoleID = $model->ProjectRoleID;
+                $projectVolunteerRoleStatus = $model->Status;
             }
 
             if(!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Project Lead Addition Not Implemented Yet.'];
             } elseif($success) {
+                if ($ProjectRoleID) {
+                    $agreedVolunteerStatusId = (int) VolunteerStatusOptions::getIdByStatusOption('Agreed');
+                    if ($agreedVolunteerStatusId === (int) $projectVolunteerRoleStatus) {
+                        $this->addIndividualToGroup($this->getGroupIdByProjectRoleId($ProjectRoleID), $request['VolunteerID']);
+                    }
+                }
                 $response = ['success' => true, 'msg' => 'Project Lead Addition Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Project Lead Addition Failed.'];
@@ -146,7 +156,9 @@
          * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
          */
         public function update(Request $request, $ProjectVolunteerRoleID) {
+
             $model = ProjectVolunteerRole::findOrFail($ProjectVolunteerRoleID);
+
             $data = array_map(
                 function ($value) {
                     if (is_array($value)) {
@@ -176,6 +188,10 @@
             $success = $model->save();
 
             if($success) {
+                $agreedVolunteerStatusId = (int) VolunteerStatusOptions::getIdByStatusOption('Agreed');
+                $bAgreedStatus = $agreedVolunteerStatusId === (int) $model->Status;
+                //echo '$model->ProjectRoleID:'.$model->ProjectRoleID.PHP_EOL;
+                $this->updateGroupIndividual($this->getGroupIdByProjectRoleId($model->ProjectRoleID), $bAgreedStatus, $model->VolunteerID);
                 $response = ['success' => true, 'msg' => 'Project Volunteer Role Update Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Project Volunteer Role  Update Failed.'];

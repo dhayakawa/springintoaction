@@ -636,7 +636,7 @@ FROM (
                             from site_volunteer_role svr
                                    join site_roles sr on sr.SiteRoleID = svr.SiteRoleID and sr.Role = 'Project Manager'
                                    join site_volunteers sv on sv.SiteVolunteerID = svr.SiteVolunteerID
-                                   join volunteers on volunteers.VolunteerID = sv.VolunteerID  and volunteers.deleted_at is null 
+                                   join volunteers on volunteers.VolunteerID = sv.VolunteerID  and volunteers.deleted_at is null
                                    where svr.SiteStatusID = {$data['SiteStatusID']} limit 1
                            ) as `PM`"
                 )
@@ -883,17 +883,23 @@ FROM (
     public function createProjectScope($requestData, &$projectModel, $projectModelData)
     {
         $projectModel->fill($projectModelData);
-        $projectModelSuccess = $projectModel->save();
-        $ProjectID = $projectModel->ProjectID;
-        //echo '$ProjectID:'. $ProjectID. PHP_EOL;
-        //print_r($requestData);
-        // echo "\$ProjectID:$ProjectID\n";
-        // echo '$projectModel->toArray():' . print_r($projectModel->toArray(), true) . PHP_EOL;
-        // echo '$projectModelData:' . print_r($projectModelData, true) . PHP_EOL;
-        // echo '$requestData:' . print_r($requestData, true) . PHP_EOL;
-        $aModelResult = $this->updateProjectScopeAttributes($ProjectID, $requestData);
+        try {
+            $projectModelSuccess = $projectModel->save();
+            $ProjectID = $projectModel->ProjectID;
+            echo '$ProjectID:'. $ProjectID. PHP_EOL;
+            //print_r($requestData);
+            // echo "\$ProjectID:$ProjectID\n";
+            // echo '$projectModel->toArray():' . print_r($projectModel->toArray(), true) . PHP_EOL;
+//            echo '$projectModelData:' . print_r($projectModelData, true) . PHP_EOL;
+//            echo '$requestData:' . print_r($requestData, true) . PHP_EOL;
+            $aModelResult = $this->updateProjectScopeAttributes($ProjectID, $requestData);
 
-        return !preg_grep("/0/", $aModelResult) && $projectModelSuccess;
+            return !preg_grep("/0/", $aModelResult) && $projectModelSuccess;
+        } catch (Exception $e) {
+            echo $e->getMessage();
+            return false;
+        }
+
     }
 
     public function getInitialProjectScopeAttributeData()
@@ -1373,27 +1379,27 @@ OPTIONS_TEMPLATE;
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.\$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.\$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.\$el.empty();
                               this.\$el.append(this.currentEditor.\$el);
                               this.currentEditor.render();
                               this.\$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1416,7 +1422,7 @@ OPTIONS_TEMPLATE;
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1427,7 +1433,7 @@ OPTIONS_TEMPLATE;
                             \$el.removeClass('attribute-not-applicable');
                             \$el.removeAttr('title');
                         }
-                        
+
                         \$el.text(this.formatter.fromRaw(model.get(columnName), model));
                         \$el.addClass(columnName);
                         this.updateStateClassesMaybe();

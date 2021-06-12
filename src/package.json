@@ -24,6 +24,7 @@
     "backbone": "^1.3.3",
     "backbone-relational": "^0.10.0",
     "backbone.paginator": "^2.0.6",
+      "backgrid": "^0.3.8",
     "backgrid-columnmanager": "^0.2.4",
     "backgrid-filter": "^0.3.7",
     "backgrid-grouped-columns": "^0.1.4",

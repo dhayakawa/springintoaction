@@ -25,6 +25,28 @@ class GroveApi
     const GROVE_GROUP_ID_VOLUNTEERS = 1482;
     const GROVE_GROUP_NAME_LIAISONS = 'MTM-SIA-LI';
     const GROVE_GROUP_ID_LIAISONS = 1483;
+    const GROVE_GROUP_NAME_ESTIMATORS = 'MTM-SIA-PE';
+    const GROVE_GROUP_ID_ESTIMATORS = 1490;
+    const GROVE_GROUP_NAME_SITE_COORDINATORS = 'MTM-SIA-SC';
+    const GROVE_GROUP_ID_SITE_COORDINATORS = 1491;
+    const ALL_GROVE_GROUPS = [
+        self::GROVE_GROUP_NAME_PROJECT_MANAGERS => self::GROVE_GROUP_ID_PROJECT_MANAGERS,
+        self::GROVE_GROUP_NAME_SITE_COORDINATORS => self::GROVE_GROUP_ID_SITE_COORDINATORS,
+        self::GROVE_GROUP_NAME_ESTIMATORS => self::GROVE_GROUP_ID_ESTIMATORS,
+        self::GROVE_GROUP_NAME_LIAISONS => self::GROVE_GROUP_ID_LIAISONS,
+        self::GROVE_GROUP_NAME_VOLUNTEERS => self::GROVE_GROUP_ID_VOLUNTEERS,
+        self::GROVE_GROUP_NAME_TEAM_LEADERS => self::GROVE_GROUP_ID_TEAM_LEADERS
+    ];
+    const ALL_GROVE_SITE_GROUP_NAMES = [
+        self::GROVE_GROUP_NAME_PROJECT_MANAGERS,
+        self::GROVE_GROUP_NAME_SITE_COORDINATORS,
+    ];
+    const ALL_GROVE_PROJECT_GROUP_NAMES = [
+        self::GROVE_GROUP_NAME_ESTIMATORS,
+        self::GROVE_GROUP_NAME_LIAISONS,
+        self::GROVE_GROUP_NAME_VOLUNTEERS,
+        self::GROVE_GROUP_NAME_TEAM_LEADERS
+    ];
 
     const API_MESSAGE_INVALID_CONNECTION = '001';
     const API_MESSAGE_INVALID_LOGIN_OR_PASSWORD = '002';
@@ -84,11 +106,12 @@ class GroveApi
         self::API_RESPONSE_UNKNOWN_SERVICE => '\'X\' is an unknown API service.',
         self::API_RESPONSE_TYPE_UNHANDLED => 'The response type \'X\' is not currently supported for the service \'Y\'.',
     ];
-    private $groveAdminUsername = 'springintoaction';
-    private $groveAdminUserPassword = 'ynkp=9z##%4d!V24';
+    public $maxApiCallAttempts = 10;
+    private $groveAdminUsername = '';
+    private $groveAdminUserPassword = '';
     private $apiUrl = 'https://woodlandschurch.ccbchurch.com/api.php';
     private $apiDoc = 'http://designccb.s3.amazonaws.com/helpdesk/files/official_docs/api.html';
-    //curl -u 'springintoaction:ynkp=9z##%4d!V24' -d "" "https://woodlandschurch.ccbchurch.com/api.php?srv=api_status"
+
 
     private $bReturnXML = false;
     // around 60 calls
@@ -104,9 +127,11 @@ class GroveApi
     {
         $this->localPath =
             Storage::disk('local')
-                   ->getDriver()
-                   ->getAdapter()
-                   ->getPathPrefix();
+                ->getDriver()
+                ->getAdapter()
+                ->getPathPrefix();
+        $this->groveAdminUsername = env('GROVE_API_USER');
+        $this->groveAdminUserPassword = env('GROVE_API_PASSWORD');
     }
 
     /**
@@ -143,7 +168,7 @@ class GroveApi
             $response = $this->curlPost($uri, $aData);
         }
         Storage::disk('local')
-               ->append('grove_uri.log', date('Y-m-d') . " {$method} " . $uri . PHP_EOL);
+            ->append('grove_uri.log', date('Y-m-d') . " {$method} " . $uri . PHP_EOL);
         if (is_string($response)) {
             if ($this->bReturnXML) {
                 return $response;
@@ -174,11 +199,11 @@ class GroveApi
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             // uncomment for debug only
-            curl_setopt($ch, CURLINFO_HEADER_OUT, true);
-            curl_setopt($ch, CURLOPT_HEADER, true);
-            curl_setopt($ch, CURLOPT_CERTINFO, true);
-            curl_setopt($ch, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NO_REVOKE);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, '2');
+//            curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+//            curl_setopt($ch, CURLOPT_HEADER, true);
+//            curl_setopt($ch, CURLOPT_CERTINFO, true);
+//            curl_setopt($ch, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NO_REVOKE);
+//            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, '2');
             //curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, '2');
             // curl_setopt($ch, CURLOPT_CAINFO , '/etc/ssl/certs/ca-certificates.crt');
             // curl_setopt($ch, CURLOPT_CAPATH , '/etc/ssl/certs/ca-certificates.crt');
@@ -209,9 +234,7 @@ class GroveApi
             );
 
             $output = curl_exec($ch);
-            echo "\$output:$output<br>";
-            echo "<pre>" . print_r(curl_version(), true) . "</pre>";
-            echo "<pre>" . print_r(curl_getinfo($ch), true) . "</pre>";
+
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $this->setRateLimits($aResponseHeaders, $httpCode);
         } catch (\Exception $e) {
@@ -299,19 +322,19 @@ class GroveApi
         $this->xRateLimitRetryAfter =
             isset($aResponseHeaders['retry-after']) ? current($aResponseHeaders['retry-after']) : false;
 
-        if ($this->xRateLimitRetryAfter || (int) $httpCode === 429) {
+        if ($this->xRateLimitRetryAfter || (int)$httpCode === 429) {
             $this->bTooManyRequests = true;
         } else {
             $this->bTooManyRequests = false;
         }
         Storage::disk('local')
-               ->put(
-                   'grove_rate_limits.log',
-                   date('Y-m-d') . " " . $httpCode . PHP_EOL . print_r(
-                       $aResponseHeaders,
-                       true
-                   ) . PHP_EOL
-               );
+            ->put(
+                'grove_rate_limits.log',
+                date('Y-m-d') . " " . $httpCode . PHP_EOL . print_r(
+                    $aResponseHeaders,
+                    true
+                ) . PHP_EOL
+            );
     }
 
     public function getRateLimit()
@@ -366,7 +389,7 @@ class GroveApi
             $interval = date_diff($datetime1, $datetime2);
             $age = $interval->format('%R%s');
 
-            return (int) $age <= 0;
+            return (int)$age <= 0;
         }
 
         return true;
@@ -377,6 +400,60 @@ class GroveApi
         $srv = 'rate_limit_test';
         $uri = "{$this->apiUrl}?srv={$srv}";
         $response = $this->curlGet($uri);
+
+        return $response;
+    }
+
+    /**
+     * Provides a way to keep calling the api if the throttling is triggered.
+     *
+     * $call is existing method in this class
+     * $aCallParams is an array of the parameters you would have normally used in the $call method
+     * $maxAttempts override default attempts to get a response from the grove api
+     * @param $call
+     * @param array $aCallParams
+     * @param int $maxAttempts
+     * @return array|mixed
+     */
+    public function getResponseCallUntil($call, $aCallParams = [], $maxAttempts = null)
+    {
+        if(!$maxAttempts){
+            $maxAttempts = $this->maxApiCallAttempts;
+        }
+        $bStop = false;
+
+        $loopCnt = 1;
+        do {
+            // You can keep calling this over and over again. the class will not make a request to the
+            // grove api until the throttle allows it.
+            if (!method_exists($this, $call)) {
+                return ['error' => "Sorry, method {$call} does not exist"];
+            }
+            $response = call_user_func([$this, $call], ...$aCallParams);
+
+            if (isset($response['error'])) {
+                if ($response['error'] === 'Too many Grove requests') {
+                    // output debug info
+//                    echo "Too many requests<br>";
+//                    echo "rate limit: {$this->getRateLimit()}<br>";
+//                    echo "rate limit remaining: {$this->getRateLimitRemaining()}<br>";
+//                    echo "rate limit retry after: {$this->getRateLimitRetryAfter()}<br><br>";
+                } else {
+                    // kill the loop, I think something went wrong besides the throttle
+                    //echo '<pre>' . print_r($response, true) . '</pre>';
+                    $bStop = true;
+                }
+            } else {
+                $bStop = true;
+            }
+            $loopCnt++;
+            if ($loopCnt >= $maxAttempts) {
+                $bStop = true;
+            }
+            if(!$bStop){
+                sleep($this->getRateLimitSleep());
+            }
+        } while (!$bStop);
 
         return $response;
     }
@@ -435,7 +512,7 @@ class GroveApi
                 }
             } elseif ($iParamsCount > 2) {
                 if (is_numeric($aParams[$iParamsCount - 1]) && is_int($aParams[$iParamsCount - 1])) {
-                    if (in_array((int) $aParams[$iParamsCount - 1], $aAvailableFlags)) {
+                    if (in_array((int)$aParams[$iParamsCount - 1], $aAvailableFlags)) {
                         $iFlags = $aParams[$iParamsCount - 1];
                         $iParamsLimit = $iParamsCount - 2;
                         //file_put_contents('/var/www/html/laravel/storage/app/debug-log.log',"{$iParamsCount}:{$aParams[$iParamsCount - 1]},{$iFlags},{$iParamsLimit}\n",\FILE_APPEND);
@@ -532,7 +609,7 @@ class GroveApi
 
         $iExpectedLogs = 1;
         if (!GroveIndividual::where('family_member_type', '!=', '')
-                            ->exists()
+            ->exists()
         ) {
             $aApiParams = null;
         }
@@ -653,7 +730,7 @@ class GroveApi
                                 'Expected [\'@attributes\'][\'count\'] but it was not set';
                         $this->log(
                             "_grove_{$importCmd}_debug_{$logDatetime}.log",
-                            "{$logName} : " . '$cnt:' . $cnt . ' $bApiCallsDone:' . ((int) $bApiCallsDone),
+                            "{$logName} : " . '$cnt:' . $cnt . ' $bApiCallsDone:' . ((int)$bApiCallsDone),
                             \FILE_APPEND
                         );
                     }
@@ -775,11 +852,11 @@ class GroveApi
             $logName = "grove_{$importCmd}_1.log";
             $exists =
                 Storage::disk('local')
-                       ->exists($logName);
+                    ->exists($logName);
             if ($exists) {
                 $response =
                     Storage::disk('local')
-                           ->get($logName);
+                        ->get($logName);
                 try {
                     $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
                     $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
@@ -857,7 +934,7 @@ class GroveApi
                     $iIndividualCounter++;
                 }
                 if (Storage::disk('local')
-                           ->exists($logName)
+                    ->exists($logName)
                 ) {
                     Storage::move(
                         $logName,
@@ -916,8 +993,8 @@ class GroveApi
         $iInfiniteLoopLimitMax = $iExpectedFiles[$iRecordsPerPage] + 50;
         $groveCount =
             GroveIndividual::select(DB::raw('count(*) as count'))
-                           ->first()
-                           ->toArray()['count'];
+                ->first()
+                ->toArray()['count'];
         if ($groveCount) {
             $iExpectedFiles[$iRecordsPerPage] = round($groveCount / $iRecordsPerPage) + 10;
             $iInfiniteLoopLimitMax = $iExpectedFiles[$iRecordsPerPage] + 50;
@@ -925,8 +1002,8 @@ class GroveApi
         if ($groveCount >= $iExpectedRecordCnt) {
             $groveMaxUpdateAt =
                 GroveIndividual::select(DB::raw('max(updated_at) as max_update_at'))
-                               ->first()
-                               ->toArray()['max_update_at'];
+                    ->first()
+                    ->toArray()['max_update_at'];
             [$modifiedSince, $timeJunk] = preg_split("/ /", $groveMaxUpdateAt);
         }
 
@@ -1067,7 +1144,7 @@ class GroveApi
                             '$individualsCnt:' .
                             $individualsCnt .
                             ' $bApiCallsDone:' .
-                            ((int) $bApiCallsDone),
+                            ((int)$bApiCallsDone),
                             \FILE_APPEND
                         );
                     }
@@ -1248,11 +1325,11 @@ class GroveApi
             $logName = 'grove_individual_profiles_' . $iPageNum . '.log';
             $exists =
                 Storage::disk('local')
-                       ->exists($logName);
+                    ->exists($logName);
             if ($exists) {
                 $response =
                     Storage::disk('local')
-                           ->get($logName);
+                        ->get($logName);
                 try {
                     $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
                     $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
@@ -1362,7 +1439,7 @@ class GroveApi
                 $iIndividualCounter++;
             }
             if (Storage::disk('local')
-                       ->exists($logName)
+                ->exists($logName)
             ) {
                 Storage::move(
                     $logName,
@@ -1410,13 +1487,13 @@ class GroveApi
         $iExpectedRecordCnt = 1100; // groups
         $groveCount =
             LifeGroups::select(DB::raw('count(*) as count'))
-                      ->first()
-                      ->toArray()['count'];
+                ->first()
+                ->toArray()['count'];
         if ($groveCount >= $iExpectedRecordCnt) {
             $groveMaxUpdateAt =
                 LifeGroups::select(DB::raw('max(updated_at) as max_update_at'))
-                          ->first()
-                          ->toArray()['max_update_at'];
+                    ->first()
+                    ->toArray()['max_update_at'];
             [$modifiedSince, $timeJunk] = preg_split("/ /", $groveMaxUpdateAt);
         }
 
@@ -1428,7 +1505,7 @@ class GroveApi
 
         if ($bSaveToDb) {
             DB::table('life_groups')
-              ->truncate();
+                ->truncate();
         }
         // Remove all api call debugging results
         $this->deleteLogs("_grove_{$importCmd}_*.log", $logDatetime);
@@ -1488,7 +1565,7 @@ class GroveApi
                             } else {
                                 $content =
                                     Storage::disk('local')
-                                           ->get(basename($sLogFilePath));
+                                        ->get(basename($sLogFilePath));
                                 if (!preg_match("/Too many Grove requests/", $content)) {
                                     preg_match("/(\d+)\.log$/", $sLogFilePath, $matches);
                                     $iLastValidPageNum = $matches[1] + 1;
@@ -1537,7 +1614,7 @@ class GroveApi
             do {
                 $rateLimitRemaining = $this->getRateLimitRemaining();
                 $rateLimitReset = $this->getRateLimitReset();
-                $rateLimitTryAfter = $this->getRateLimitRetryAfter​();
+                $rateLimitTryAfter = $this->getRateLimitRetryAfter();
 
                 //echo "\$iPageNum:$iPageNum \$rateLimitRemaining:$rateLimitRemaining \$rateLimitReset:$rateLimitReset \$rateLimitTryAfter:$rateLimitTryAfter<br>";
                 $logName = "grove_{$importCmd}_{$iPageNum}.log";
@@ -1597,7 +1674,7 @@ class GroveApi
                                 'Expected [\'@attributes\'][\'count\'] but it was not set';
                         $this->log(
                             "_grove_{$importCmd}_debug_{$logDatetime}.log",
-                            "{$logName} : " . '$cnt:' . $cnt . ' $bApiCallsDone:' . ((int) $bApiCallsDone),
+                            "{$logName} : " . '$cnt:' . $cnt . ' $bApiCallsDone:' . ((int)$bApiCallsDone),
                             \FILE_APPEND
                         );
                     }
@@ -1716,14 +1793,14 @@ class GroveApi
 
         for ($iPageNum = 1; $iPageNum <= $iLogFilePathCnt; $iPageNum++) {
             $bSkipLogRename = false;
-            $logName = "grove_{$importCmd}_1.log";
+            $logName = "grove_{$importCmd}_$iPageNum.log";
             $exists =
                 Storage::disk('local')
-                       ->exists($logName);
+                    ->exists($logName);
             if ($exists) {
                 $response =
                     Storage::disk('local')
-                           ->get($logName);
+                        ->get($logName);
                 try {
                     $aResponse = \Dhayakawa\SpringIntoAction\Helpers\XML2Array::createArray($response);
                     $response = isset($aResponse['ccb_api']['response']) ? $aResponse['ccb_api']['response'] : [];
@@ -1866,18 +1943,18 @@ class GroveApi
                 "\$iTotalIndividualsSuccessfullyImported:{$iTotalIndividualsSuccessfullyImported}"
             );
         }
-        // if (!$bSkipLogRename) {
-        //     if (Storage::disk('local')->exists($logName)) {
-        //         Storage::move(
-        //             $logName,
-        //             str_replace("grove_{$importCmd}", "saved_grove_{$importCmd}", $logName)
-        //         );
-        //     }
-        //     $this->deleteLogs(str_replace("grove_{$importCmd}", "raw_grove_{$importCmd}", $logName));
-        // } else {
-        //     $bSkipLogRename = false;
-        // }
-        ini_set('max_execution_time', 160);
+         if (!$bSkipLogRename) {
+             if (Storage::disk('local')->exists($logName)) {
+                 Storage::move(
+                     $logName,
+                     str_replace("grove_{$importCmd}", "saved_grove_{$importCmd}", $logName)
+                 );
+             }
+             $this->deleteLogs(str_replace("grove_{$importCmd}", "raw_grove_{$importCmd}", $logName));
+         } else {
+             $bSkipLogRename = false;
+         }
+        ini_set('max_execution_time', 0);
 
         return true;
     }
@@ -1931,7 +2008,7 @@ class GroveApi
      * include_image_link boolean (default false)
      *
      */
-    public function group_profile_from_id()
+    public function group_profile_from_id($id, $include_image_link = false)
     {
         $srv = 'group_profile_from_id';
         $aParams = array_map(
@@ -1962,7 +2039,7 @@ class GroveApi
      * group_id integer
      *
      */
-    public function remove_individual_from_group()
+    public function remove_individual_from_group($id, $group_id)
     {
         $srv = 'remove_individual_from_group';
         $aParams = array_map(
@@ -1996,7 +2073,7 @@ class GroveApi
      * @return array|mixed|string|string[]
      * @throws \ReflectionException
      */
-    public function add_individual_to_group()
+    public function add_individual_to_group($id, $group_id, $status)
     {
         $srv = 'add_individual_to_group';
         $aParams = array_map(
@@ -2023,14 +2100,13 @@ class GroveApi
      * add_individual_to_event
      *
      * Required Parameters
-     * name    type    notes
      * id    integer
      * event_id    integer
      * status    string    Must be one of the following: ‘add’; ‘invite’; ‘decline’; ‘maybe’; ‘request’
      * Optional Parameters
      * None
      */
-    public function add_individual_to_event()
+    public function add_individual_to_event($id, $event_id, $status)
     {
         // status:  ‘add’; ‘invite’; ‘decline’; ‘maybe’; ‘request’
         // maybe attending?
@@ -2062,14 +2138,13 @@ class GroveApi
      * event_profile
      *
      * Required Parameters
-     * name    type
      * id    integer
      * Optional Parameters
      * name    type    notes
      * include_guest_list    boolean    defaults to false
      * include_image_link    boolean    defaults to false
      */
-    public function event_profile()
+    public function event_profile($id, $aOptionalParameters = [])
     {
         //include_guest_list=1
         $srv = 'srv=event_profile';
@@ -2088,7 +2163,9 @@ class GroveApi
         }
 
         $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
-
+        if ($aOptionalParameters) {
+            $aData = array_merge($aData, $aOptionalParameters);
+        }
         return $this->getResponse('get', $srv, $aData);
     }
 
@@ -2101,14 +2178,12 @@ class GroveApi
      * group_participants
      *
      * Required Parameters
-     * name    type
      * id    integer
      * Optional Parameters
-     * name    type
      * include_inactive    boolean
      * modified_since    datetime
      */
-    public function group_participants($id)
+    public function group_participants($id, $aOptionalParameters = [])
     {
         $srv = 'group_participants';
         $aParams = array_map(
@@ -2126,7 +2201,9 @@ class GroveApi
         }
 
         $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
-
+        if ($aOptionalParameters) {
+            $aData = array_merge($aData, $aOptionalParameters);
+        }
         return $this->getResponse('get', $srv, $aData);
     }
 
@@ -2149,22 +2226,49 @@ class GroveApi
      * page    int    if per_page is set this defaults to 1
      * per_page int    if page is set this defaults to 25
      */
-    public function group_profiles()
+    public function group_profiles($aOptionalSearchParams = [])
     {
         $srv = 'group_profiles';
-        $func_args = \func_get_args();
-        $args = current($func_args);
 
-        return $this->getResponse('get', $srv, $args);
+        return $this->getResponse('get', $srv, $aOptionalSearchParams);
     }
 
-    public function group_search()
+    /**
+     *
+     * Required Parameters
+     * none
+     *
+     * Optional Parameters
+     * name    type
+     * area_id    integer
+     * campus_id    integer
+     * childcare    boolean
+     * meet_day_id    integer
+     * meet_time_id    integer
+     * department_id    integer
+     * type_id    integer
+     * udf_pulldown_1_id    integer
+     * udf_pulldown_2_id    integer
+     * udf_pulldown_3_id    integer
+     * limit_records_start    integer
+     * limit_records_per_page    integer
+     * order_by_1    string
+     * order_by_2    string
+     * order_by_3    string
+     * order_by_1_sort    string
+     * order_by_2_sort    string
+     * order_by_3_sort    string
+     *
+     * should be an associative array of the optional parameters
+     * @param $aOptionalSearchData
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    public function group_search($aOptionalSearchData = [])
     {
         $srv = 'group_search';
-        $func_args = \func_get_args();
-        $args = current($func_args);
 
-        return $this->getResponse('get', $srv, $args);
+        return $this->getResponse('get', $srv, $aOptionalSearchData);
     }
 
     /**
@@ -2183,7 +2287,7 @@ class GroveApi
      * Optional Parameters
      * None
      */
-    public function add_individual_significant_event()
+    public function add_individual_significant_event($id, $event_id, $date)
     {
         $srv = 'add_individual_significant_event';
         $aParams = array_map(
@@ -2263,7 +2367,7 @@ class GroveApi
      *          POST udf_pulldown_#    integer    # is a number between 1–6 inclusively, Must be sent via HTTP POST
      *          creator_id    integer    Must be sent via HTTP POST
      */
-    public function create_individual()
+    public function create_individual($first_name, $last_name, $aOptionalIndividualData = [])
     {
         // POST data: first_name=Ken&last_name=Scott&campus_id=0&family_id=0&family_position=c&gender=m&birthday=2%2F12%2F1966&anniversary=May+6%2C+1989&membership_date=2010-01-01&email=ken%40test.net&mailing_street_address=12265+Oracle+Blvd%2C+Suite+105&mailing_city=Colorado+Springs&mailing_state=CO&mailing_zip=80921&mailing_country=US&mobile_phone=719-266-2888
         $srv = 'create_individual';
@@ -2282,7 +2386,9 @@ class GroveApi
         }
 
         $aData = !empty($aParams) ? array_combine($aParams, $func_args) : null;
-
+        if ($aOptionalIndividualData) {
+            $aData = array_merge($aData, $aOptionalIndividualData);
+        }
         return $this->getResponse('post', $srv, $aData);
     }
 

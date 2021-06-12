@@ -109,6 +109,7 @@
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
+                self.model = self.collection.get(currentModelID);
                 if (!_.isUndefined(e.changed['SiteVolunteerRoleStatus'])) {
                     e.changed['Status'] = e.changed['SiteVolunteerRoleStatus'];
                 }

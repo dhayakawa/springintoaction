@@ -135,7 +135,6 @@ class ProjectRegistrationController extends BaseController
                     $volunteerID = $volunteer->VolunteerID;
                     $groveId = $volunteer->IndividualID;
 
-
                 } else {
                     $model = new Volunteer();
 
@@ -182,6 +181,7 @@ class ProjectRegistrationController extends BaseController
                     $model->save();
                     $volunteerID = $model->VolunteerID;
                     $groveId = $model->IndividualID;
+
                 }
                 $contactInfo['groveId'] = $groveId;
                 $ProjectVolunteer = ProjectVolunteer::join(
@@ -224,6 +224,7 @@ class ProjectRegistrationController extends BaseController
                     if ($pvSuccess && $pvrSuccess) {
                         $iSuccessCnt++;
                         $aRegistered[] = $contactInfo;
+                        $this->addIndividualToGroup(\Dhayakawa\SpringIntoAction\Controllers\GroveApi::GROVE_GROUP_NAME_VOLUNTEERS, $contactInfo['IndividualID'], $contactInfo['groveId']);
                     } else {
                         $aRegistrationFailed[] = $contactInfo;
                     }
@@ -567,9 +568,9 @@ class ProjectRegistrationController extends BaseController
             ];
         } else {
             if(isset($response['error'])){
-                $groveError = "Sorry, we could not connect to the Grove at this time, please try again.";
+                $groveError = "Sorry, we could not connect to My Woodlands at this time, please try again.";
             } else {
-                $groveError = 'Grove Login Failed.';
+                $groveError = 'My Woodlands Login Failed.';
             }
             $response = ['success' => false, 'groveLoggedInId' => $groveLoggedInId, 'msg' => $groveError];
         }

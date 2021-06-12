@@ -90,7 +90,7 @@ migrate
 >php artisan make:migration  create_project_contacts_table --create=project_contacts --table=project_contacts --path=packages/dhayakawa/springintoaction/src/migrations
 >php artisan make:migration  add_softdelete_to_budget_table --table=budget --path=packages/dhayakawa/springintoaction/src/migrations
 >php artisan make:migration  create_project_attachments_table --create=project_attachments --table=project_attachments --path=packages/dhayakawa/springintoaction/src/migrations
-
+>php artisan make:migration  create_failed_grove_group_management_attempts_table --create=failed_grove_group_management_attempts --table=failed_grove_group_management_attempts --path=packages/dhayakawa/springintoaction/src/migrations
 # VM Setup
 # Steps from this tutorial https://medium.com/@eaimanshoshi/i-am-going-to-write-down-step-by-step-procedure-to-setup-homestead-for-laravel-5-2-17491a423aa
 1. As the official documentation says, you need to enable hardware virtualization (VT-x).
@@ -107,9 +107,9 @@ vagrant box add laravel/homestead
 
 if you are now getting an error like this:
 
-The box ‘laravel/homestead’ could not be found or
+The box ï¿½laravel/homesteadï¿½ could not be found or
 could not be accessed in the remote catalog. If this is a private
-box on HashiCorp’s Atlas, please verify you’re logged in via
+box on HashiCorpï¿½s Atlas, please verify youï¿½re logged in via
 `vagrant login`. Also, please double-check the name. The expanded
 URL and error message are shown below:
 
@@ -136,11 +136,11 @@ this will create the Homestead.yaml configuration file. The Homestead.yaml file 
 
 NB: (According to this #06b52c7 change, from Feb 17, 2017, the Homestead.yaml file will be now located on C:\Users\USER_NAME\Homestead folder)
 Step 6:
-Now we need ssh key. To check it is already exist in your computer or not go to C:\Users\USER_NAME\ directory and try to find out a folder named .ssh. If it exists, go into the folder and try to find out two files named id_rsa and id_rsa.pub. If the folder .ssh doesn’t exist or the folder exists but the two files named id_rsa and id_rsa.pub doesn’t exist then run the following command:
+Now we need ssh key. To check it is already exist in your computer or not go to C:\Users\USER_NAME\ directory and try to find out a folder named .ssh. If it exists, go into the folder and try to find out two files named id_rsa and id_rsa.pub. If the folder .ssh doesnï¿½t exist or the folder exists but the two files named id_rsa and id_rsa.pub doesnï¿½t exist then run the following command:
 
 ssh-keygen -t rsa -C "your_email@example.com"
 
-then the command prompt will ask you two things. you don’t need to type anything, just press enter what ever the command prompt ask you.
+then the command prompt will ask you two things. you donï¿½t need to type anything, just press enter what ever the command prompt ask you.
 after finishing this command a new .ssh folder (if already not exist) will be created with the two files named id_rsa and id_rsa.pub into it.
 
 Step 7:
@@ -206,7 +206,7 @@ authorize: c:/Users/USER_NAME/.ssh/id_rsa.pub
 keys:
  - c:/Users/USER_NAME/.ssh/id_rsa
 
-Don’t forget to use the lowercase of you drive name(c instead of C) and forward slash(/) instead of back slash(\). See what I have wrote. In natural way we should write C:\Users\USER_NAME\.ssh , right? but no, see carefully. I have wrote c:/Users/USER_NAME/.ssh instead of C:\Users\USER_NAME\.ssh this is the tricky part, don’t miss it. We will always use lowercase of our drive name(like c instead of C) and the forward slash(/) instead of back slash (\) in our Homestead.yaml file.
+Donï¿½t forget to use the lowercase of you drive name(c instead of C) and forward slash(/) instead of back slash(\). See what I have wrote. In natural way we should write C:\Users\USER_NAME\.ssh , right? but no, see carefully. I have wrote c:/Users/USER_NAME/.ssh instead of C:\Users\USER_NAME\.ssh this is the tricky part, donï¿½t miss it. We will always use lowercase of our drive name(like c instead of C) and the forward slash(/) instead of back slash (\) in our Homestead.yaml file.
 
 folders:
  - map: ~/Code
@@ -219,14 +219,14 @@ folders:
  - map: e:/Homestead_Projects
  to: /home/vagrant/Code
 
-See now? my PC’s e:/Homestead_Projects folder and vagrant’s /home/vagrant/Code folder are pointing to the same folder. if you change anything in /home/vagrant/Code folder it will be reflected to e:/Homestead_Projects folder also and vice versa. 
+See now? my PCï¿½s e:/Homestead_Projects folder and vagrantï¿½s /home/vagrant/Code folder are pointing to the same folder. if you change anything in /home/vagrant/Code folder it will be reflected to e:/Homestead_Projects folder also and vice versa. 
 in my case e:/Homestead_Projects is my project folder. In your case use your own project folder. You can use any folder name here like /home/vagrant/ANY_FOLDER_NAME instead of /home/vagrant/Code
 
 sites:
  - map: homestead.app
  to: /home/vagrant/Code/Laravel/public
 
-Don’t get confused this one with the last discussion. this lines has nothing to do with the last discussion. I am going to explain it. this configuration says that if we hit homestead.app from our browser then the vagrant will serve the site from /home/vagrant/Code/Laravel/public folder. Yea I know we have not created any folder named Laravel in our /home/vagrant/Code folder from vagrant yet or in our e:/Homestead_Projects folder from our PC yet. we will create it later. you will find your answer in step 10. In future if you develop lot more sites, then this configuration will look like this:
+Donï¿½t get confused this one with the last discussion. this lines has nothing to do with the last discussion. I am going to explain it. this configuration says that if we hit homestead.app from our browser then the vagrant will serve the site from /home/vagrant/Code/Laravel/public folder. Yea I know we have not created any folder named Laravel in our /home/vagrant/Code folder from vagrant yet or in our e:/Homestead_Projects folder from our PC yet. we will create it later. you will find your answer in step 10. In future if you develop lot more sites, then this configuration will look like this:
 
 sites:
  - map: homestead.app
@@ -237,7 +237,7 @@ sites:
  to: /home/vagrant/Code/site3/public
  - - -bla bla bla bla bla - - - -
 
-One more thing the prefix of /Laravel/public which is /home/vagrant/Code, have to be exact match of to: /home/vagrant/Code from the last discussion. in the last discussion if you have used /home/vagrant/ANY_FOLDER_NAME to map your PC’s project folder then here you have to use /home/vagrant/ANY_FOLDER_NAME as the prefix of /Laravel/public which will look like /home/vagrant/ANY_FOLDER_NAME/Laravel/public. THIS IS IMPORTANT.
+One more thing the prefix of /Laravel/public which is /home/vagrant/Code, have to be exact match of to: /home/vagrant/Code from the last discussion. in the last discussion if you have used /home/vagrant/ANY_FOLDER_NAME to map your PCï¿½s project folder then here you have to use /home/vagrant/ANY_FOLDER_NAME as the prefix of /Laravel/public which will look like /home/vagrant/ANY_FOLDER_NAME/Laravel/public. THIS IS IMPORTANT.
 
 databases:
  - homestead
@@ -294,7 +294,7 @@ If you want to add another site just append here like this:
 192.168.10.10 site3.yeap
  - -bla bla bla bla - - 
 
-Now homestead.app is accessible from our browser. but don’t hit it yet.
+Now homestead.app is accessible from our browser. but donï¿½t hit it yet.
 
 Step 9:
 Now we can start our homestead using vagrant box by running the command vagrant up. But to do so we have to always run this command from C:\User\USER_NAME\Homestead directory. But we can do something so that we can run vagrant box from anywhere using git bash. To do so, download this file https://www.dropbox.com/s/haekwwhab4jn56r/.bash_profile?dl=0 and paste it in C:\User\USER_NAME\ directory or in C:\User\USER_NAME\ directory create a file named .bash_profile. And write down the following lines in the .bash_profile file:
@@ -319,7 +319,7 @@ To stop vagrant box use:
 homestead halt
 
 Step 10:
-Now we are going to create our first project named Laravel. Your questions from seeing /home/vagrant/Code/Laravel/public this line in Step 7 will be clear now. Till now we have only /home/vagrant/Code folder. There is no folder named Laravel in /home/vagrant/Code folder yet. You can check your project folder on your PC that I am telling right or wrong. In my case the project folder on my PC is e:/Homestead_Projects. You will see that there is no folder named Laravel in your PC’s project folder. Well, we are now going to create it.
+Now we are going to create our first project named Laravel. Your questions from seeing /home/vagrant/Code/Laravel/public this line in Step 7 will be clear now. Till now we have only /home/vagrant/Code folder. There is no folder named Laravel in /home/vagrant/Code folder yet. You can check your project folder on your PC that I am telling right or wrong. In my case the project folder on my PC is e:/Homestead_Projects. You will see that there is no folder named Laravel in your PCï¿½s project folder. Well, we are now going to create it.
 
 run homestead by using homestead up command. Now run the following command:
 

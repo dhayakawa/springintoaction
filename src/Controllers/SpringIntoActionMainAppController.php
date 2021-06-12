@@ -52,12 +52,12 @@ class SpringIntoActionMainAppController extends BaseController
 
     public function index(Request $request)
     {
-        if ($_SERVER['REMOTE_ADDR'] === '66.190.13.203') {
-            $this->parseBackups();
+        if ($_SERVER['REMOTE_ADDR'] === '66.190.11.41') {
+            //$this->parseBackups();
+            $this->testGroup();
         }
 
 
-        //$apiresponse = $this->getGroupParticipants(GroveApi::GROVE_GROUP_NAME_LIAISONS);
         /*echo '<pre>' .
              \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql()) .
              '</pre>';*/
@@ -727,8 +727,14 @@ class SpringIntoActionMainAppController extends BaseController
         $sFieldNameToFix = $aConfig['sFieldNameToFix'];
         $bIsMultiValueField = $aConfig['bIsMultiValueField'];
         $aFieldNameToFixOptionIds = $aConfig['FieldNameToFixOptionModelClass']::getOptionLabelsArray();
+
+        if (!isset($aFieldNameToFixOptionIds[''])) {
+            print_r($aConfig);
+            print_r($aFieldNameToFixOptionIds);
+            return;
+        }
         $defaultFieldNameToFixOptionId = $aFieldNameToFixOptionIds[$aConfig['defaultFieldNameToFixOptionLabelText']];
-        $iBlankFieldNameToFixOptionId = $aFieldNameToFixOptionIds[''];
+        $iBlankFieldNameToFixOptionId = isset($aFieldNameToFixOptionIds['']) ? $aFieldNameToFixOptionIds[''] : null;
         $sql =
             "select p.ProjectID,p.{$sFieldNameToFix} from projects p where (p.{$sFieldNameToFix} regexp '[a-zA-Z]' or p.{$sFieldNameToFix} = '') and p.deleted_at is null;";
         $rsFixes = DB::select($sql);

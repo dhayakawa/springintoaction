@@ -23,6 +23,10 @@ class BackboneAppController extends BaseController
      * @var GroveApi
      */
     protected $groveApi;
+    /**
+     * @var bool
+     */
+    protected $bSaveFailedGroveGroupManagementAttempts = true;
 
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests, ArraySearchTrait, CurrentYearTrait, ManageGroveGroupTrait;
     /**

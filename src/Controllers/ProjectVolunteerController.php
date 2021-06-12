@@ -7,6 +7,8 @@
     use Dhayakawa\SpringIntoAction\Models\Volunteer;
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteer;
     use Dhayakawa\SpringIntoAction\Models\ProjectVolunteerRole;
+    use Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
+
     use Illuminate\Http\Request;
     use Dhayakawa\SpringIntoAction\Models\ProjectRole;
 
@@ -81,7 +83,8 @@
                 $success = $model->save();
                 $ProjectVolunteerID = $model->ProjectVolunteerID;
             }
-
+            $ProjectRoleID = false;
+            $projectVolunteerRoleStatus = false;
             if ($success) {
                 $model = new ProjectVolunteerRole;
                 $data = array_map(
@@ -97,11 +100,19 @@
                 //$data['SiteVolunteerID'] = $ProjectVolunteerID;
                 $model->fill($data);
                 $success = $model->save();
+                $ProjectRoleID = $model->ProjectRoleID;
+                $projectVolunteerRoleStatus = $model->Status;
             }
 
             if (!isset($success)) {
                 $response = ['success' => false, 'msg' => 'Project Volunteer Addition Not Implemented Yet.'];
             } elseif ($success) {
+                if ($ProjectRoleID) {
+                    $agreedVolunteerStatusId = (int) VolunteerStatusOptions::getIdByStatusOption('Agreed');
+                    if ($agreedVolunteerStatusId === (int) $projectVolunteerRoleStatus) {
+                        $this->addIndividualToGroup($this->getGroupIdByProjectRoleId($ProjectRoleID), $request['VolunteerID']);
+                    }
+                }
                 $response = ['success' => true, 'msg' => 'Project Volunteer Addition Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Project Volunteer Addition Failed.'];
@@ -113,6 +124,7 @@
         public function batchStore(Request $request) {
             $params       = $request->all();
             $batchSuccess = true;
+            $agreedVolunteerStatusId = (int) VolunteerStatusOptions::getIdByStatusOption('Agreed');
             if(is_array($params['VolunteerIDs'])) {
                 foreach($params['VolunteerIDs'] as $volunteerID) {
                     $model = new ProjectVolunteer;
@@ -126,6 +138,14 @@
                     $success = $model->save();
                     if(!$success) {
                         $batchSuccess = false;
+                    } else {
+                        $ProjectRoleID = $model->ProjectRoleID;
+                        $projectVolunteerRoleStatus = $model->Status;
+                        if ($ProjectRoleID) {
+                            if ($agreedVolunteerStatusId === (int) $projectVolunteerRoleStatus) {
+                                $this->addIndividualToGroup($this->getGroupIdByProjectRoleId($ProjectRoleID), $volunteerID);
+                            }
+                        }
                     }
                 }
             } else {
@@ -213,6 +233,9 @@
             $success = $model->save();
 
             if ($success) {
+                $agreedVolunteerStatusId = (int) VolunteerStatusOptions::getIdByStatusOption('Agreed');
+                $bAgreedStatus = $agreedVolunteerStatusId === (int) $model->Status;
+                $this->updateGroupIndividual($this->getGroupIdByProjectRoleId($model->ProjectRoleID), $bAgreedStatus, $model->VolunteerID);
                 $response = ['success' => true, 'msg' => 'Project Volunteer  Update Succeeded.'];
             } else {
                 $response = ['success' => false, 'msg' => 'Project Volunteer   Update Failed.'];
@@ -239,11 +262,17 @@
             if(is_array($params['deleteModelIDs'])) {
                 $workerRoleId = (string) ProjectRole::getIdByRole('Worker');
                 foreach($params['deleteModelIDs'] as $modelID) {
-                    $model   = ProjectVolunteerRole::where('ProjectVolunteerRoleID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $params['ProjectRoleID']);
+                    // $params['ProjectRoleID'] is probably not applicable anymore because each deleted model could have a different role 03-02-2021
+                    $model   = ProjectVolunteerRole::where('ProjectVolunteerRoleID', '=', $modelID)->where('ProjectID', '=', $params['ProjectID']);//->where('ProjectRoleID', '=', $params['ProjectRoleID'])
                     $volunteerID = null;
+                    $ProjectRoleID = null;
                     if($model->get()->count()) {
                         $volunteerID = $model->get()->first()->VolunteerID;
+                        $ProjectRoleID= $model->get()->first()->ProjectRoleID;
                         $success = $model->forceDelete();
+                        if($success){
+                            $this->removeIndividualFromGroup($this->getGroupIdByProjectRoleId($ProjectRoleID), $volunteerID);
+                        }
                     } else {
                         $success = true;
                     }
@@ -254,12 +283,15 @@
 
                     // We must remove the project volunteer record if this was not a worker role and they are
                     // not already a Worker or some other role for this project or else they will not be able to register for a project
-                    if($volunteerID !== null && $params['ProjectRoleID'] !== $workerRoleId){
+                    if($volunteerID !== null && $ProjectRoleID !== $workerRoleId){
                         $projectVolunteerRoleModel = ProjectVolunteerRole::where('VolunteerID', '=', $volunteerID)->where('ProjectID', '=', $params['ProjectID'])->where('ProjectRoleID', '=', $workerRoleId);
                         $projectVolunteerModel = ProjectVolunteer::where('VolunteerID', '=', $volunteerID)->where('ProjectID', '=', $params['ProjectID']);
 
                         if($projectVolunteerRoleModel->get()->count() === 0 && $projectVolunteerModel->get()->count()) {
                             $success = $projectVolunteerModel->forceDelete();
+                            if($success){
+                                $this->removeIndividualFromAllGroups('project', $this->getGroupIdByProjectRoleId($workerRoleId), $volunteerID);
+                            }
                         } else {
                             $success = true;
                         }

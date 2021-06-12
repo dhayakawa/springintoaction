@@ -23,7 +23,7 @@ class CreateSiteVolunteerRoleTable extends Migration
                     $table->increments('SiteVolunteerRoleID')->autoIncrement();
                     $table->bigInteger('SiteVolunteerID')->nullable(false)->default(0);
                     $table->bigInteger('SiteRoleID')->nullable(false)->default(0);
-                    $table->text('Comments')->charset('utf8mb4')->nullable(false);
+                    $table->text('Comments')->charset('utf8mb4')->nullable(true);
                     $table->integer('Status')->nullable(false)->default(1);
                     $table->timestamps();
                     $table->foreign('SiteVolunteerID')->references('SiteVolunteerID')->on('site_volunteers')->onDelete(
