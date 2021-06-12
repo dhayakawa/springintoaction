@@ -4,34 +4,34 @@ return [
     'fields' => [
         'last_name'         => 'Last name',
         'first_name'        => 'First name',
-        'email'             => 'Grove E-mail',
-        'password'          => 'Grove Password',
-        'password_confirm'  => 'Grove Password confirmation',
+        'email'             => 'E-mail',
+        'password'          => 'Password',
+        'password_confirm'  => 'Password confirmation',
     ],
     'password' => [
-        'title'             => 'Forgotten Grove password',
-        'intro'             => 'Enter the following field to reset your Woodlands Church Grove password',
+        'title'             => 'Forgotten password',
+        'intro'             => 'Enter the following field to reset your password',
         'submit'            => 'Send reset link',
         'login_link'        => "Sign in with an existing user",
     ],
     'password_reset' => [
-        'title'             => 'Grove Password reset',
-        'intro'             => 'Enter the following fields to reset your Woodlands Church Grove password',
+        'title'             => 'Password reset',
+        'intro'             => 'Enter the following fields to reset your password',
         'submit'            => 'Reset',
     ],
     'register' => [
-        'title'             => 'Register as a new user in the Woodlands Church Grove Application',
-        'intro'             => 'Enter the following fields to create a new Grove user',
+        'title'             => 'Register as a new user in the My Woodlands Application',
+        'intro'             => 'Enter the following fields to create a new My Woodlands user',
         'register_button'   => 'Register',
-        'login_link'        => "Sign in with an existing Grove user",
+        'login_link'        => "Sign in with an existing My Woodlands user",
     ],
     'login' => [
         'title'             => 'Login',
-        'intro'             => 'Sign in with your Woodlands Church Grove login credentials to start your session',
+        'intro'             => 'Sign in with your My Woodlands login credentials to start your session',
         'rememberme'        => 'Remember me',
         'signin'            => 'Sign in',
-        'forgotpassword'    => "I forgot my Grove password",
-        'register'          => 'Register as a new user in the Woodlands Church Grove Application'
+        'forgotpassword'    => "I forgot my password",
+        'register'          => 'Register as a new user in the My Woodlands Application'
     ],
     'firstlogin' => [
         'title'             => 'First login',

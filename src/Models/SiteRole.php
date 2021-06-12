@@ -54,5 +54,13 @@
 
             return $this->defaultRecordData;
         }
-
+        public static function getIdByRole($role){
+            $value = null;
+            $collection = self::where('Role', '=', $role)->get();
+            if ($collection->count()) {
+                $aModel = $collection->first()->toArray();
+                $value = $aModel['SiteRoleID'];
+            }
+            return $value;
+        }
     }

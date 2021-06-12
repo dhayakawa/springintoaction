@@ -1141,9 +1141,7 @@
 
             _log('App.Views.ProjectTab.initialize', options);
         },
-        events: {
-
-        },
+        events: {},
         render: function (e) {
             let self = this;
             let currentModelId = self.getViewDataStore('current-model-id');
@@ -1169,12 +1167,13 @@
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
+                self.model = self.collection.get(currentModelID)
                 let attributes = _.extend({[self.model.idAttribute]: currentModelID}, e.changed);
                 if (attributes[self.managedGridView.model.idAttribute] === '') {
                     attributes[self.managedGridView.model.idAttribute] = self.managedGridView.getViewDataStore('current-model-id');
                 }
                 window.ajaxWaiting('show', self.ajaxWaitingTargetClassSelector);
-                //console.log('App.Views.ProjectTab.update', self.options.tab, {eChanged: e.changed, saveAttributes: attributes, tModel: self.model});
+                //console.log('App.Views.ProjectTab.update', self.options.tab, {currentModelID:currentModelID, collection:self.collection,eChanged: e.changed, saveAttributes: attributes, tModel: self.model});
                 self.model.url = self.getModelUrl(currentModelID);
                 self.model.save(attributes,
                     {
@@ -1229,7 +1228,7 @@
             let confirmMsg = "Do you really want to delete the checked " + self.options.tab + "s?";
             if (deleteCnt === self.collection.fullCollection.length) {
                 confirmMsg = "You are about to delete every checked " + self.options.tab + ". Do you really want to" +
-                             " continue with deleting them all?";
+                    " continue with deleting them all?";
             }
 
             bootbox.confirm(confirmMsg, function (bConfirmed) {
@@ -1241,7 +1240,7 @@
                         ProjectRoleID: self.model.get('ProjectRoleID')
                     });
                     // console.log('App.Views.ProjectTab.destroy', self.options.tab, attributes, 'deleteCnt:' + deleteCnt, 'self.collection.fullCollection.length:' +
-                    //                                                                                                    self.collection.fullCollection.length, self.model);
+                    //     self.collection.fullCollection.length, self.model);
                     $.when(
                         $.ajax({
                             type: "POST",
@@ -2491,6 +2490,7 @@
             let self = this;
             if (!_.isEmpty(e.changed)) {
                 let currentModelID = e.attributes[self.model.idAttribute];
+                self.model = self.collection.get(currentModelID);
                 if (!_.isUndefined(e.changed['SiteVolunteerRoleStatus'])) {
                     e.changed['Status'] = e.changed['SiteVolunteerRoleStatus'];
                 }

@@ -155,6 +155,64 @@ class SiteVolunteerRole extends BaseModel
     }
 
     /**
+     * @param $SiteVolunteerRoleID
+     * @param null $Year
+     * @return mixed
+     */
+    public function getAllSiteVolunteersByRoleId($SiteRoleID, $Year = null)
+    {
+        $Year = $Year ?: $this->getCurrentYear();
+
+        $collection = Volunteer::join(
+            'site_volunteers',
+            'volunteers.VolunteerID',
+            '=',
+            'site_volunteers.VolunteerID'
+        )->join(
+            'site_volunteer_role',
+            'site_volunteer_role.SiteVolunteerID',
+            '=',
+            'site_volunteers.SiteVolunteerID'
+        )->join(
+            'site_status',
+            'site_volunteer_role.SiteStatusID',
+            '=',
+            'site_status.SiteStatusID'
+        )->join(
+            'sites',
+            'sites.SiteID',
+            '=',
+            'site_status.SiteID'
+        )->join('site_roles', 'site_volunteer_role.SiteRoleID', '=', 'site_roles.SiteRoleID')->select(
+            [
+                'site_volunteers.SiteVolunteerID',
+                'site_volunteers.SiteStatusID',
+                'site_volunteer_role.*',
+                'volunteers.VolunteerID',
+                'volunteers.Active',
+                'sites.SiteName',
+                'site_roles.Role',
+                'volunteers.LastName',
+                'volunteers.FirstName',
+                'volunteers.MobilePhoneNumber',
+                'volunteers.HomePhoneNumber',
+                'volunteers.Email',
+                'site_volunteer_role.Status as SiteVolunteerRoleStatus'
+            ]
+        )->where(
+            'site_volunteer_role.SiteRoleID',
+            '=',
+            $SiteRoleID
+        )->where(
+            'site_status.Year',
+            $Year
+        )->whereNull('site_status.deleted_at')->whereNull('sites.deleted_at');
+        //echo '<pre>' . \Illuminate\Support\Str::replaceArray('?', $collection->getBindings(), $collection->toSql()) . '</pre>';
+        $aResults = $collection->get()->toArray();
+        return $aResults;
+    }
+
+    /**
      * @param null|array $defaults
      *
      * @return array
@@ -170,7 +228,7 @@ class SiteVolunteerRole extends BaseModel
         }
         if (isset($this->defaultRecordData['Year']) &&
             (!is_numeric($this->defaultRecordData['Year']) ||
-             !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))
+                !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))
         ) {
             $this->defaultRecordData['Year'] = $this->getCurrentYear();
         }

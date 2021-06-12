@@ -328,11 +328,11 @@
                                         //     'badgeCount': '',
                                         //     'route': 'view/reports/management/registered_project_manager_emails'
                                         // }),
-                                        // new App.Models.DashboardPanelLinksListItem({
-                                        //     'linkText': 'Volunteer Assignment',
-                                        //     'badgeCount': '',
-                                        //     'route': 'view/reports/management/volunteer_assignment'
-                                        // }),
+                                        new App.Models.DashboardPanelLinksListItem({
+                                            'linkText': 'Volunteer Assignment',
+                                            'badgeCount': '',
+                                            'route': 'view/reports/management/volunteer_assignment'
+                                        }),
                                         // new App.Models.DashboardPanelLinksListItem({
                                         //     'linkText': 'Volunteers Needed',
                                         //     'badgeCount': '',

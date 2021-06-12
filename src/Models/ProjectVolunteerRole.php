@@ -11,6 +11,7 @@ namespace Dhayakawa\SpringIntoAction\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Dhayakawa\SpringIntoAction\Models\Volunteer;
+use Dhayakawa\SpringIntoAction\Models\VolunteerStatusOptions;
 
 class ProjectVolunteerRole extends BaseModel
 {
@@ -93,10 +94,13 @@ class ProjectVolunteerRole extends BaseModel
         return $aSelectFields;
     }
 
-    public function getProjectVolunteerByRoleId($ProjectVolunteerRoleID, $bReturnWorker = true)
+    public function getProjectVolunteersByRoleId($ProjectVolunteerRoleID, $bReturnWorker = false, $Year = null)
     {
+        $Year = $Year?: $this->getCurrentYear();
+        $aSelectFields = $this->getSelectFields($bReturnWorker);
+        $aSelectFields = array_merge(['sites.SiteName'], $aSelectFields);
         $collection = ProjectVolunteerRole::select(
-            $aSelectFields = $this->getSelectFields($bReturnWorker)
+            $aSelectFields
         )->join(
             'project_volunteers',
             function ($join) {
@@ -128,6 +132,32 @@ class ProjectVolunteerRole extends BaseModel
             '=',
             $ProjectVolunteerRoleID
         )->whereNull('project_volunteers.deleted_at')->whereNull('project_volunteer_role.deleted_at');
+
+        $collection->join(
+            'projects',
+            function ($join) {
+                $join->on(
+                    'project_volunteer_role.ProjectID',
+                    '=',
+                    'projects.ProjectID'
+                )->where(
+                    'projects.Active', '=', '1'
+                );
+            }
+        )->join(
+            'site_status',
+            'projects.SiteStatusID',
+            '=',
+            'site_status.SiteStatusID'
+        )->join(
+            'sites',
+            'sites.SiteID',
+            '=',
+            'site_status.SiteID'
+        )->where(
+            'site_status.Year',
+            $Year
+        )->whereNull('site_status.deleted_at');
         // \Illuminate\Support\Facades\Log::debug(
         //     '',
         //     [
@@ -151,8 +181,8 @@ class ProjectVolunteerRole extends BaseModel
     {
         $sWorkerCondition = $bReturnWorkers ? '=' : '!=';
         $aSelectFields = $this->getSelectFields($bReturnWorkers);
-        if($Year || $SiteID){
-            $aSelectFields=array_merge(['sites.SiteName'],$aSelectFields);
+        if ($Year || $SiteID) {
+            $aSelectFields = array_merge(['sites.SiteName'], $aSelectFields);
         }
         $collection = ProjectVolunteerRole::select(
             $aSelectFields
@@ -186,7 +216,7 @@ class ProjectVolunteerRole extends BaseModel
                     '=',
                     'projects.ProjectID'
                 )->where(
-                    'projects.Active','=','1'
+                    'projects.Active', '=', '1'
                 );
             }
         )->join(
@@ -200,13 +230,13 @@ class ProjectVolunteerRole extends BaseModel
             '=',
             'project_volunteer_role.Status'
         )->whereNull('project_volunteers.deleted_at')->whereNull('project_volunteer_role.deleted_at');
-        if($ProjectID){
+        if ($ProjectID) {
             $collection->where(
                 'project_volunteer_role.ProjectID',
                 '=',
                 $ProjectID
             );
-        } elseif($Year){
+        } elseif ($Year) {
             $collection->join(
                 'site_status',
                 'projects.SiteStatusID',
@@ -221,7 +251,7 @@ class ProjectVolunteerRole extends BaseModel
                 'site_status.Year',
                 $Year
             )->whereNull('site_status.deleted_at');
-        } elseif($SiteID){
+        } elseif ($SiteID) {
             $collection->join(
                 'site_status',
                 'projects.SiteStatusID',
@@ -286,7 +316,7 @@ class ProjectVolunteerRole extends BaseModel
         }
         if (isset($this->defaultRecordData['Year']) &&
             (!is_numeric($this->defaultRecordData['Year']) ||
-             !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))
+                !preg_match("/^\d{4,4}$/", $this->defaultRecordData['Year']))
         ) {
             $this->defaultRecordData['Year'] = date('Y');
         }

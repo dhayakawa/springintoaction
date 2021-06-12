@@ -87,7 +87,7 @@
                         <div class="step-help">
                             <div class="well well-sm">
                                 Please start with filling out your personal contact information.<br>
-                                If you have a Grove account, please use the email address you use to log into the Grove.<br>
+                                If you have a My Woodlands account, please use the email address you use to log into My Woodlands.<br>
                                 All the fields are required.
                             </div>
                         </div>
@@ -122,13 +122,13 @@
                                     name="register-process-type"
                                     class="auto-register"
                                     id="auto-register-family"
-                                    value="family"/> I would like to import my family from the Grove.</label>
+                                    value="family"/> I would like to import my family from My Woodlands.</label>
                             <label class="auto-register-lifegroup"><input
                                     type="radio"
                                     name="register-process-type"
                                     class="auto-register"
                                     id="auto-register-lifegroup"
-                                    value="lifegroup"/> I would like to import my family and life group from the Grove.</label>
+                                    value="lifegroup"/> I would like to import my family and life group from My Woodlands.</label>
                             <label class="auto-register-manual"><input
                                     type="radio"
                                     name="register-process-type"
@@ -141,13 +141,13 @@
                 <div class="row grove-login">
                     <div class="col-xs-4">
                         <div class="form-group">
-                            <label for="inputGroveEmail">Grove Login:</label>
+                            <label for="inputGroveEmail">My Woodlands Login:</label>
                             <input type="text"
                                 name="GroveEmail"
                                 autocomplete="new-grove-email-<% print(Math.random().toString()) %>"
                                 class="form-control"
                                 id="inputGroveEmail"
-                                placeholder="Grove Login"
+                                placeholder="My Woodlands Login"
                                 required
                                 value=""
                             />
@@ -155,13 +155,13 @@
                     </div>
                     <div class="col-xs-4">
                         <div class="form-group">
-                            <label for="inputGrovePassword">Grove Password:</label>
+                            <label for="inputGrovePassword">My Woodlands Password:</label>
                             <input type="password"
                                 name="GrovePassword"
                                 autocomplete="new-grove-password-<% print(Math.random().toString()) %>"
                                 class="form-control"
                                 id="inputGrovePassword"
-                                placeholder="Grove Password"
+                                placeholder="My Woodlands Password"
                                 required
                                 value="<%= testGrovePassword %>"
                             />
@@ -187,7 +187,7 @@
                             <div class="multiple-register-list-msg hidden">
                                 All registration fields are required.<br>
                                 If you do not have a mobile phone number you can enter your home phone number.<br>
-                                If you know it, please use the email address they use to log into the Grove.<br>
+                                If you know it, please use the email address they use to log into My Woodlands.<br>
                                 Please delete any registration spots below that you do not need.
                             </div>
                         </div>

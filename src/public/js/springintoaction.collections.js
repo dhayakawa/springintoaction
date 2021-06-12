@@ -599,27 +599,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -642,7 +642,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -653,7 +653,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -676,27 +676,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -719,7 +719,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -730,7 +730,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -753,27 +753,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -796,7 +796,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -807,7 +807,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -830,27 +830,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -873,7 +873,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -884,7 +884,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -917,27 +917,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -960,7 +960,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -971,7 +971,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -994,27 +994,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1037,7 +1037,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1048,7 +1048,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1071,27 +1071,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1114,7 +1114,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1125,7 +1125,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1178,27 +1178,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1221,7 +1221,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1232,7 +1232,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1275,27 +1275,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1318,7 +1318,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1329,7 +1329,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1352,27 +1352,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1395,7 +1395,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1406,7 +1406,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1429,27 +1429,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1472,7 +1472,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1483,7 +1483,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1506,27 +1506,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1549,7 +1549,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1560,7 +1560,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1583,27 +1583,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1626,7 +1626,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1637,7 +1637,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1670,27 +1670,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1713,7 +1713,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1724,7 +1724,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1867,27 +1867,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -1910,7 +1910,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -1921,7 +1921,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();
@@ -1964,27 +1964,27 @@ App.Vars.projectsBackgridColumnDefinitions = [
                         enterEditMode: function () {
                             var model = this.model;
                             var column = this.column;
-                        
+
                             var editable = Backgrid.callByNeed(column.editable(), column, model);
                             editable = editable && !this.$el.hasClass('attribute-not-applicable');
                             //console.log('enterEditMode',{id:model.get(model.idAttribute),editable:editable,bIsApplicable:this.bIsApplicable,classes:this.$el.attr('class')})
                             if (editable) {
-                        
+
                               this.currentEditor = new this.editor({
                                 column: this.column,
                                 model: this.model,
                                 formatter: this.formatter
                               });
-                        
+
                               model.trigger('backgrid:edit', model, column, this, this.currentEditor);
-                        
+
                               // Need to redundantly undelegate events for Firefox
                               this.undelegateEvents();
                               this.$el.empty();
                               this.$el.append(this.currentEditor.$el);
                               this.currentEditor.render();
                               this.$el.addClass('editor');
-                        
+
                               model.trigger('backgrid:editing', model, column, this, this.currentEditor);
                             }
                         },
@@ -2007,7 +2007,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                                     skillIds.push(primarySkillNeeded);
                                 }
                             }
-    
+
                         }
                         let aAttributeCodes = App.Models.projectAttributesModel.getAttributeCodesByProjectSkillNeededOptionIds(skillIds);
                         let bIsApplicable = _.indexOf(aAttributeCodes,columnName,true) !== -1;
@@ -2018,7 +2018,7 @@ App.Vars.projectsBackgridColumnDefinitions = [
                             $el.removeClass('attribute-not-applicable');
                             $el.removeAttr('title');
                         }
-                        
+
                         $el.text(this.formatter.fromRaw(model.get(columnName), model));
                         $el.addClass(columnName);
                         this.updateStateClassesMaybe();

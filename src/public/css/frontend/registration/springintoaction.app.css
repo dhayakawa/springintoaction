@@ -1298,7 +1298,7 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .nav.nav-tab
   left: -99999px;
 }
 form[name="newProjectRegistration"] .registration-form-body-wrapper .muted-text {
-  opacity: .75;
+  opacity: 0.75;
 }
 form[name="newProjectRegistration"] .registration-form-body-wrapper .steps {
   border-left: 3px solid white;
@@ -1371,28 +1371,28 @@ form[name="newProjectRegistration"] .registration-form-body-wrapper .multiple-re
   background-size: 12px 12px !important;
 }
 .sia-registration-app .skills-icon.general-carpentry-icon {
-  background: url(/images/hammer.svg?1997863bf2075ead1d9be613c31b7452);
+  background: url(/images/hammer.svg?6664cb0f14bf8ebf0896bde8a6a80366);
 }
 .sia-registration-app .skills-icon.general-skill-icon {
-  background: url(/images/hand.svg?a1737559afc49080167d4d000a5fe2f2);
+  background: url(/images/hand.svg?7c75bda93633a61395111bef8c091ffd);
 }
 .sia-registration-app .skills-icon.painting-icon {
-  background: url(/images/paint.svg?6b4ae2c96861134da151455e072d96f5);
+  background: url(/images/paint.svg?5e9a7a14490bc66ef26b8ba8dff6ad08);
 }
 .sia-registration-app .skills-icon.finish-carpentry-icon {
-  background: url(/images/tools-and-utensils.svg?ffac4887c9316a56b728e3efeadf2ccc);
+  background: url(/images/tools-and-utensils.svg?83001baa75d9dffe1b0f07949733744b);
 }
 .sia-registration-app .skills-icon.landscaping-icon {
-  background: url(/images/rake.svg?08e4abc5f3d71e80eae5d59302a1ea47);
+  background: url(/images/rake.svg?5065cc4d0d0b563ae2820cb2f8e1a099);
 }
 .sia-registration-app .skills-icon.construction-icon {
-  background: url(/images/excavator.svg?54f30ad0453335067f75a7b609d5c99d);
+  background: url(/images/excavator.svg?b63919bb4d392b1fa781f10628fe53b4);
 }
 .sia-registration-app .skills-icon.cabinetry-icon {
-  background: url(/images/cabinet-bold.svg?06a55903baf64cf7956f3ceea7eaf766);
+  background: url(/images/cabinet-bold.svg?f5bece0c7565f133cdefb3c6a9187efa);
 }
 .sia-registration-app .skills-icon.cleaning-icon {
-  background: url(/images/bucket-with-bubbles.svg?88be9dccc335f9fa3aac26ffe1f6ddf3);
+  background: url(/images/bucket-with-bubbles.svg?8ed423c7f38d33dae7baf9c3b7af8ca1);
 }
 .sia-registration-app i.fas {
   margin-right: 3px;

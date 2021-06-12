@@ -21869,7 +21869,7 @@ return $;
 /**
  * @license
  * Lodash <https://lodash.com/>
- * Copyright JS Foundation and other contributors <https://js.foundation/>
+ * Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
  * Released under MIT license <https://lodash.com/license>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -21880,7 +21880,7 @@ return $;
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '4.17.5';
+  var VERSION = '4.17.15';
 
   /** Used as the size to enable large array optimizations. */
   var LARGE_ARRAY_SIZE = 200;
@@ -22144,7 +22144,7 @@ return $;
   var reHasUnicode = RegExp('[' + rsZWJ + rsAstralRange  + rsComboRange + rsVarRange + ']');
 
   /** Used to detect strings that need a more robust regexp to match words. */
-  var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2,}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
+  var reHasUnicodeWord = /[a-z][A-Z]|[A-Z]{2}[a-z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
 
   /** Used to assign default `context` object properties. */
   var contextProps = [
@@ -22304,6 +22304,14 @@ return $;
   /** Used to access faster Node.js helpers. */
   var nodeUtil = (function() {
     try {
+      // Use `util.types` for Node.js 10+.
+      var types = freeModule && freeModule.require && freeModule.require('util').types;
+
+      if (types) {
+        return types;
+      }
+
+      // Legacy `process.binding('util')` for Node.js < 10.
       return freeProcess && freeProcess.binding && freeProcess.binding('util');
     } catch (e) {}
   }());
@@ -23082,20 +23090,6 @@ return $;
       }
     }
     return result;
-  }
-
-  /**
-   * Gets the value at `key`, unless `key` is "__proto__".
-   *
-   * @private
-   * @param {Object} object The object to query.
-   * @param {string} key The key of the property to get.
-   * @returns {*} Returns the property value.
-   */
-  function safeGet(object, key) {
-    return key == '__proto__'
-      ? undefined
-      : object[key];
   }
 
   /**
@@ -24545,16 +24539,10 @@ return $;
         value.forEach(function(subValue) {
           result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack));
         });
-
-        return result;
-      }
-
-      if (isMap(value)) {
+      } else if (isMap(value)) {
         value.forEach(function(subValue, key) {
           result.set(key, baseClone(subValue, bitmask, customizer, key, value, stack));
         });
-
-        return result;
       }
 
       var keysFunc = isFull
@@ -25478,8 +25466,8 @@ return $;
         return;
       }
       baseFor(source, function(srcValue, key) {
+        stack || (stack = new Stack);
         if (isObject(srcValue)) {
-          stack || (stack = new Stack);
           baseMergeDeep(object, source, key, srcIndex, baseMerge, customizer, stack);
         }
         else {
@@ -25555,7 +25543,7 @@ return $;
           if (isArguments(objValue)) {
             newValue = toPlainObject(objValue);
           }
-          else if (!isObject(objValue) || (srcIndex && isFunction(objValue))) {
+          else if (!isObject(objValue) || isFunction(objValue)) {
             newValue = initCloneObject(srcValue);
           }
         }
@@ -27296,7 +27284,7 @@ return $;
       return function(number, precision) {
         number = toNumber(number);
         precision = precision == null ? 0 : nativeMin(toInteger(precision), 292);
-        if (precision) {
+        if (precision && nativeIsFinite(number)) {
           // Shift with exponential notation to avoid floating-point issues.
           // See [MDN](https://mdn.io/round#Examples) for more details.
           var pair = (toString(number) + 'e').split('e'),
@@ -28476,6 +28464,26 @@ return $;
         array[length] = isIndex(index, arrLength) ? oldArray[index] : undefined;
       }
       return array;
+    }
+
+    /**
+     * Gets the value at `key`, unless `key` is "__proto__" or "constructor".
+     *
+     * @private
+     * @param {Object} object The object to query.
+     * @param {string} key The key of the property to get.
+     * @returns {*} Returns the property value.
+     */
+    function safeGet(object, key) {
+      if (key === 'constructor' && typeof object[key] === 'function') {
+        return;
+      }
+
+      if (key == '__proto__') {
+        return;
+      }
+
+      return object[key];
     }
 
     /**
@@ -32271,6 +32279,7 @@ return $;
           }
           if (maxing) {
             // Handle invocations in a tight loop.
+            clearTimeout(timerId);
             timerId = setTimeout(timerExpired, wait);
             return invokeFunc(lastCallTime);
           }
@@ -36657,9 +36666,12 @@ return $;
       , 'g');
 
       // Use a sourceURL for easier debugging.
+      // The sourceURL gets injected into the source that's eval-ed, so be careful
+      // with lookup (in case of e.g. prototype pollution), and strip newlines if any.
+      // A newline wouldn't be a valid sourceURL anyway, and it'd enable code injection.
       var sourceURL = '//# sourceURL=' +
-        ('sourceURL' in options
-          ? options.sourceURL
+        (hasOwnProperty.call(options, 'sourceURL')
+          ? (options.sourceURL + '').replace(/[\r\n]/g, ' ')
           : ('lodash.templateSources[' + (++templateCounter) + ']')
         ) + '\n';
 
@@ -36692,7 +36704,9 @@ return $;
 
       // If `variable` is not specified wrap a with-statement around the generated
       // code to add the data object to the top of the scope chain.
-      var variable = options.variable;
+      // Like with sourceURL, we take care to not check the option's prototype,
+      // as this configuration is a code injection vector.
+      var variable = hasOwnProperty.call(options, 'variable') && options.variable;
       if (!variable) {
         source = 'with (obj) {\n' + source + '\n}\n';
       }
@@ -38897,10 +38911,11 @@ return $;
     baseForOwn(LazyWrapper.prototype, function(func, methodName) {
       var lodashFunc = lodash[methodName];
       if (lodashFunc) {
-        var key = (lodashFunc.name + ''),
-            names = realNames[key] || (realNames[key] = []);
-
-        names.push({ 'name': methodName, 'func': lodashFunc });
+        var key = lodashFunc.name + '';
+        if (!hasOwnProperty.call(realNames, key)) {
+          realNames[key] = [];
+        }
+        realNames[key].push({ 'name': methodName, 'func': lodashFunc });
       }
     });
 
@@ -38964,9 +38979,9 @@ return $;
   }
 }.call(this));
 
-//     Underscore.js 1.8.3
+//     Underscore.js 1.9.1
 //     http://underscorejs.org
-//     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+//     (c) 2009-2018 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
 
 (function() {
@@ -38974,29 +38989,32 @@ return $;
   // Baseline setup
   // --------------
 
-  // Establish the root object, `window` in the browser, or `exports` on the server.
-  var root = this;
+  // Establish the root object, `window` (`self`) in the browser, `global`
+  // on the server, or `this` in some virtual machines. We use `self`
+  // instead of `window` for `WebWorker` support.
+  var root = typeof self == 'object' && self.self === self && self ||
+            typeof global == 'object' && global.global === global && global ||
+            this ||
+            {};
 
   // Save the previous value of the `_` variable.
   var previousUnderscore = root._;
 
   // Save bytes in the minified (but not gzipped) version:
-  var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
+  var ArrayProto = Array.prototype, ObjProto = Object.prototype;
+  var SymbolProto = typeof Symbol !== 'undefined' ? Symbol.prototype : null;
 
   // Create quick reference variables for speed access to core prototypes.
-  var
-    push             = ArrayProto.push,
-    slice            = ArrayProto.slice,
-    toString         = ObjProto.toString,
-    hasOwnProperty   = ObjProto.hasOwnProperty;
+  var push = ArrayProto.push,
+      slice = ArrayProto.slice,
+      toString = ObjProto.toString,
+      hasOwnProperty = ObjProto.hasOwnProperty;
 
   // All **ECMAScript 5** native function implementations that we hope to use
   // are declared here.
-  var
-    nativeIsArray      = Array.isArray,
-    nativeKeys         = Object.keys,
-    nativeBind         = FuncProto.bind,
-    nativeCreate       = Object.create;
+  var nativeIsArray = Array.isArray,
+      nativeKeys = Object.keys,
+      nativeCreate = Object.create;
 
   // Naked function reference for surrogate-prototype-swapping.
   var Ctor = function(){};
@@ -39009,10 +39027,12 @@ return $;
   };
 
   // Export the Underscore object for **Node.js**, with
-  // backwards-compatibility for the old `require()` API. If we're in
+  // backwards-compatibility for their old module API. If we're in
   // the browser, add `_` as a global object.
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
+  // (`nodeType` is checked to ensure that `module`
+  // and `exports` are not HTML elements.)
+  if (typeof exports != 'undefined' && !exports.nodeType) {
+    if (typeof module != 'undefined' && !module.nodeType && module.exports) {
       exports = module.exports = _;
     }
     exports._ = _;
@@ -39021,7 +39041,7 @@ return $;
   }
 
   // Current version.
-  _.VERSION = '1.8.3';
+  _.VERSION = '1.9.1';
 
   // Internal function that returns an efficient (for current engines) version
   // of the passed-in callback, to be repeatedly applied in other Underscore
@@ -39032,9 +39052,7 @@ return $;
       case 1: return function(value) {
         return func.call(context, value);
       };
-      case 2: return function(value, other) {
-        return func.call(context, value, other);
-      };
+      // The 2-argument case is omitted because we’re not using it.
       case 3: return function(value, index, collection) {
         return func.call(context, value, index, collection);
       };
@@ -39047,34 +39065,51 @@ return $;
     };
   };
 
-  // A mostly-internal function to generate callbacks that can be applied
-  // to each element in a collection, returning the desired result — either
-  // identity, an arbitrary callback, a property matcher, or a property accessor.
+  var builtinIteratee;
+
+  // An internal function to generate callbacks that can be applied to each
+  // element in a collection, returning the desired result — either `identity`,
+  // an arbitrary callback, a property matcher, or a property accessor.
   var cb = function(value, context, argCount) {
+    if (_.iteratee !== builtinIteratee) return _.iteratee(value, context);
     if (value == null) return _.identity;
     if (_.isFunction(value)) return optimizeCb(value, context, argCount);
-    if (_.isObject(value)) return _.matcher(value);
+    if (_.isObject(value) && !_.isArray(value)) return _.matcher(value);
     return _.property(value);
   };
-  _.iteratee = function(value, context) {
+
+  // External wrapper for our callback generator. Users may customize
+  // `_.iteratee` if they want additional predicate/iteratee shorthand styles.
+  // This abstraction hides the internal-only argCount argument.
+  _.iteratee = builtinIteratee = function(value, context) {
     return cb(value, context, Infinity);
   };
 
-  // An internal function for creating assigner functions.
-  var createAssigner = function(keysFunc, undefinedOnly) {
-    return function(obj) {
-      var length = arguments.length;
-      if (length < 2 || obj == null) return obj;
-      for (var index = 1; index < length; index++) {
-        var source = arguments[index],
-            keys = keysFunc(source),
-            l = keys.length;
-        for (var i = 0; i < l; i++) {
-          var key = keys[i];
-          if (!undefinedOnly || obj[key] === void 0) obj[key] = source[key];
-        }
+  // Some functions take a variable number of arguments, or a few expected
+  // arguments at the beginning and then a variable number of values to operate
+  // on. This helper accumulates all remaining arguments past the function’s
+  // argument length (or an explicit `startIndex`), into an array that becomes
+  // the last argument. Similar to ES6’s "rest parameter".
+  var restArguments = function(func, startIndex) {
+    startIndex = startIndex == null ? func.length - 1 : +startIndex;
+    return function() {
+      var length = Math.max(arguments.length - startIndex, 0),
+          rest = Array(length),
+          index = 0;
+      for (; index < length; index++) {
+        rest[index] = arguments[index + startIndex];
       }
-      return obj;
+      switch (startIndex) {
+        case 0: return func.call(this, rest);
+        case 1: return func.call(this, arguments[0], rest);
+        case 2: return func.call(this, arguments[0], arguments[1], rest);
+      }
+      var args = Array(startIndex + 1);
+      for (index = 0; index < startIndex; index++) {
+        args[index] = arguments[index];
+      }
+      args[startIndex] = rest;
+      return func.apply(this, args);
     };
   };
 
@@ -39088,18 +39123,31 @@ return $;
     return result;
   };
 
-  var property = function(key) {
+  var shallowProperty = function(key) {
     return function(obj) {
       return obj == null ? void 0 : obj[key];
     };
   };
 
+  var has = function(obj, path) {
+    return obj != null && hasOwnProperty.call(obj, path);
+  }
+
+  var deepGet = function(obj, path) {
+    var length = path.length;
+    for (var i = 0; i < length; i++) {
+      if (obj == null) return void 0;
+      obj = obj[path[i]];
+    }
+    return length ? obj : void 0;
+  };
+
   // Helper for collection methods to determine whether a collection
-  // should be iterated as an array or as an object
+  // should be iterated as an array or as an object.
   // Related: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
   // Avoids a very nasty iOS 8 JIT bug on ARM-64. #2094
   var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
-  var getLength = property('length');
+  var getLength = shallowProperty('length');
   var isArrayLike = function(collection) {
     var length = getLength(collection);
     return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
@@ -39141,30 +39189,29 @@ return $;
   };
 
   // Create a reducing function iterating left or right.
-  function createReduce(dir) {
-    // Optimized iterator function as using arguments.length
-    // in the main function will deoptimize the, see #1991.
-    function iterator(obj, iteratee, memo, keys, index, length) {
+  var createReduce = function(dir) {
+    // Wrap code that reassigns argument variables in a separate function than
+    // the one that accesses `arguments.length` to avoid a perf hit. (#1991)
+    var reducer = function(obj, iteratee, memo, initial) {
+      var keys = !isArrayLike(obj) && _.keys(obj),
+          length = (keys || obj).length,
+          index = dir > 0 ? 0 : length - 1;
+      if (!initial) {
+        memo = obj[keys ? keys[index] : index];
+        index += dir;
+      }
       for (; index >= 0 && index < length; index += dir) {
         var currentKey = keys ? keys[index] : index;
         memo = iteratee(memo, obj[currentKey], currentKey, obj);
       }
       return memo;
-    }
+    };
 
     return function(obj, iteratee, memo, context) {
-      iteratee = optimizeCb(iteratee, context, 4);
-      var keys = !isArrayLike(obj) && _.keys(obj),
-          length = (keys || obj).length,
-          index = dir > 0 ? 0 : length - 1;
-      // Determine the initial value if none is provided.
-      if (arguments.length < 3) {
-        memo = obj[keys ? keys[index] : index];
-        index += dir;
-      }
-      return iterator(obj, iteratee, memo, keys, index, length);
+      var initial = arguments.length >= 3;
+      return reducer(obj, optimizeCb(iteratee, context, 4), memo, initial);
     };
-  }
+  };
 
   // **Reduce** builds up a single result from a list of values, aka `inject`,
   // or `foldl`.
@@ -39175,12 +39222,8 @@ return $;
 
   // Return the first value which passes a truth test. Aliased as `detect`.
   _.find = _.detect = function(obj, predicate, context) {
-    var key;
-    if (isArrayLike(obj)) {
-      key = _.findIndex(obj, predicate, context);
-    } else {
-      key = _.findKey(obj, predicate, context);
-    }
+    var keyFinder = isArrayLike(obj) ? _.findIndex : _.findKey;
+    var key = keyFinder(obj, predicate, context);
     if (key !== void 0 && key !== -1) return obj[key];
   };
 
@@ -39235,14 +39278,26 @@ return $;
   };
 
   // Invoke a method (with arguments) on every item in a collection.
-  _.invoke = function(obj, method) {
-    var args = slice.call(arguments, 2);
-    var isFunc = _.isFunction(method);
-    return _.map(obj, function(value) {
-      var func = isFunc ? method : value[method];
-      return func == null ? func : func.apply(value, args);
+  _.invoke = restArguments(function(obj, path, args) {
+    var contextPath, func;
+    if (_.isFunction(path)) {
+      func = path;
+    } else if (_.isArray(path)) {
+      contextPath = path.slice(0, -1);
+      path = path[path.length - 1];
+    }
+    return _.map(obj, function(context) {
+      var method = func;
+      if (!method) {
+        if (contextPath && contextPath.length) {
+          context = deepGet(context, contextPath);
+        }
+        if (context == null) return void 0;
+        method = context[path];
+      }
+      return method == null ? method : method.apply(context, args);
     });
-  };
+  });
 
   // Convenience version of a common use case of `map`: fetching a property.
   _.pluck = function(obj, key) {
@@ -39265,20 +39320,20 @@ return $;
   _.max = function(obj, iteratee, context) {
     var result = -Infinity, lastComputed = -Infinity,
         value, computed;
-    if (iteratee == null && obj != null) {
+    if (iteratee == null || typeof iteratee == 'number' && typeof obj[0] != 'object' && obj != null) {
       obj = isArrayLike(obj) ? obj : _.values(obj);
       for (var i = 0, length = obj.length; i < length; i++) {
         value = obj[i];
-        if (value > result) {
+        if (value != null && value > result) {
           result = value;
         }
       }
     } else {
       iteratee = cb(iteratee, context);
-      _.each(obj, function(value, index, list) {
-        computed = iteratee(value, index, list);
+      _.each(obj, function(v, index, list) {
+        computed = iteratee(v, index, list);
         if (computed > lastComputed || computed === -Infinity && result === -Infinity) {
-          result = value;
+          result = v;
           lastComputed = computed;
         }
       });
@@ -39290,20 +39345,20 @@ return $;
   _.min = function(obj, iteratee, context) {
     var result = Infinity, lastComputed = Infinity,
         value, computed;
-    if (iteratee == null && obj != null) {
+    if (iteratee == null || typeof iteratee == 'number' && typeof obj[0] != 'object' && obj != null) {
       obj = isArrayLike(obj) ? obj : _.values(obj);
       for (var i = 0, length = obj.length; i < length; i++) {
         value = obj[i];
-        if (value < result) {
+        if (value != null && value < result) {
           result = value;
         }
       }
     } else {
       iteratee = cb(iteratee, context);
-      _.each(obj, function(value, index, list) {
-        computed = iteratee(value, index, list);
+      _.each(obj, function(v, index, list) {
+        computed = iteratee(v, index, list);
         if (computed < lastComputed || computed === Infinity && result === Infinity) {
-          result = value;
+          result = v;
           lastComputed = computed;
         }
       });
@@ -39311,21 +39366,13 @@ return $;
     return result;
   };
 
-  // Shuffle a collection, using the modern version of the
-  // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
+  // Shuffle a collection.
   _.shuffle = function(obj) {
-    var set = isArrayLike(obj) ? obj : _.values(obj);
-    var length = set.length;
-    var shuffled = Array(length);
-    for (var index = 0, rand; index < length; index++) {
-      rand = _.random(0, index);
-      if (rand !== index) shuffled[index] = shuffled[rand];
-      shuffled[rand] = set[index];
-    }
-    return shuffled;
+    return _.sample(obj, Infinity);
   };
 
-  // Sample **n** random values from a collection.
+  // Sample **n** random values from a collection using the modern version of the
+  // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
   // If **n** is not specified, returns a single random element.
   // The internal `guard` argument allows it to work with `map`.
   _.sample = function(obj, n, guard) {
@@ -39333,17 +39380,28 @@ return $;
       if (!isArrayLike(obj)) obj = _.values(obj);
       return obj[_.random(obj.length - 1)];
     }
-    return _.shuffle(obj).slice(0, Math.max(0, n));
+    var sample = isArrayLike(obj) ? _.clone(obj) : _.values(obj);
+    var length = getLength(sample);
+    n = Math.max(Math.min(n, length), 0);
+    var last = length - 1;
+    for (var index = 0; index < n; index++) {
+      var rand = _.random(index, last);
+      var temp = sample[index];
+      sample[index] = sample[rand];
+      sample[rand] = temp;
+    }
+    return sample.slice(0, n);
   };
 
   // Sort the object's values by a criterion produced by an iteratee.
   _.sortBy = function(obj, iteratee, context) {
+    var index = 0;
     iteratee = cb(iteratee, context);
-    return _.pluck(_.map(obj, function(value, index, list) {
+    return _.pluck(_.map(obj, function(value, key, list) {
       return {
         value: value,
-        index: index,
-        criteria: iteratee(value, index, list)
+        index: index++,
+        criteria: iteratee(value, key, list)
       };
     }).sort(function(left, right) {
       var a = left.criteria;
@@ -39357,9 +39415,9 @@ return $;
   };
 
   // An internal function used for aggregate "group by" operations.
-  var group = function(behavior) {
+  var group = function(behavior, partition) {
     return function(obj, iteratee, context) {
-      var result = {};
+      var result = partition ? [[], []] : {};
       iteratee = cb(iteratee, context);
       _.each(obj, function(value, index) {
         var key = iteratee(value, index, obj);
@@ -39372,7 +39430,7 @@ return $;
   // Groups the object's values by a criterion. Pass either a string attribute
   // to group by, or a function that returns the criterion.
   _.groupBy = group(function(result, value, key) {
-    if (_.has(result, key)) result[key].push(value); else result[key] = [value];
+    if (has(result, key)) result[key].push(value); else result[key] = [value];
   });
 
   // Indexes the object's values by a criterion, similar to `groupBy`, but for
@@ -39385,13 +39443,18 @@ return $;
   // either a string attribute to count by, or a function that returns the
   // criterion.
   _.countBy = group(function(result, value, key) {
-    if (_.has(result, key)) result[key]++; else result[key] = 1;
+    if (has(result, key)) result[key]++; else result[key] = 1;
   });
 
+  var reStrSymbol = /[^\ud800-\udfff]|[\ud800-\udbff][\udc00-\udfff]|[\ud800-\udfff]/g;
   // Safely create a real, live array from anything iterable.
   _.toArray = function(obj) {
     if (!obj) return [];
     if (_.isArray(obj)) return slice.call(obj);
+    if (_.isString(obj)) {
+      // Keep surrogate pair characters together
+      return obj.match(reStrSymbol);
+    }
     if (isArrayLike(obj)) return _.map(obj, _.identity);
     return _.values(obj);
   };
@@ -39404,14 +39467,9 @@ return $;
 
   // Split a collection into two arrays: one whose elements all satisfy the given
   // predicate, and one whose elements all do not satisfy the predicate.
-  _.partition = function(obj, predicate, context) {
-    predicate = cb(predicate, context);
-    var pass = [], fail = [];
-    _.each(obj, function(value, key, obj) {
-      (predicate(value, key, obj) ? pass : fail).push(value);
-    });
-    return [pass, fail];
-  };
+  _.partition = group(function(result, value, pass) {
+    result[pass ? 0 : 1].push(value);
+  }, true);
 
   // Array Functions
   // ---------------
@@ -39420,7 +39478,7 @@ return $;
   // values in the array. Aliased as `head` and `take`. The **guard** check
   // allows it to work with `_.map`.
   _.first = _.head = _.take = function(array, n, guard) {
-    if (array == null) return void 0;
+    if (array == null || array.length < 1) return n == null ? void 0 : [];
     if (n == null || guard) return array[0];
     return _.initial(array, array.length - n);
   };
@@ -39435,7 +39493,7 @@ return $;
   // Get the last element of an array. Passing **n** will return the last N
   // values in the array.
   _.last = function(array, n, guard) {
-    if (array == null) return void 0;
+    if (array == null || array.length < 1) return n == null ? void 0 : [];
     if (n == null || guard) return array[array.length - 1];
     return _.rest(array, Math.max(0, array.length - n));
   };
@@ -39449,21 +39507,23 @@ return $;
 
   // Trim out all falsy values from an array.
   _.compact = function(array) {
-    return _.filter(array, _.identity);
+    return _.filter(array, Boolean);
   };
 
   // Internal implementation of a recursive `flatten` function.
-  var flatten = function(input, shallow, strict, startIndex) {
-    var output = [], idx = 0;
-    for (var i = startIndex || 0, length = getLength(input); i < length; i++) {
+  var flatten = function(input, shallow, strict, output) {
+    output = output || [];
+    var idx = output.length;
+    for (var i = 0, length = getLength(input); i < length; i++) {
       var value = input[i];
       if (isArrayLike(value) && (_.isArray(value) || _.isArguments(value))) {
-        //flatten current level of array or arguments object
-        if (!shallow) value = flatten(value, shallow, strict);
-        var j = 0, len = value.length;
-        output.length += len;
-        while (j < len) {
-          output[idx++] = value[j++];
+        // Flatten current level of array or arguments object.
+        if (shallow) {
+          var j = 0, len = value.length;
+          while (j < len) output[idx++] = value[j++];
+        } else {
+          flatten(value, shallow, strict, output);
+          idx = output.length;
         }
       } else if (!strict) {
         output[idx++] = value;
@@ -39478,12 +39538,15 @@ return $;
   };
 
   // Return a version of the array that does not contain the specified value(s).
-  _.without = function(array) {
-    return _.difference(array, slice.call(arguments, 1));
-  };
+  _.without = restArguments(function(array, otherArrays) {
+    return _.difference(array, otherArrays);
+  });
 
   // Produce a duplicate-free version of the array. If the array has already
   // been sorted, you have the option of using a faster algorithm.
+  // The faster algorithm will not work with an iteratee if the iteratee
+  // is not a one-to-one function, so providing an iteratee will disable
+  // the faster algorithm.
   // Aliased as `unique`.
   _.uniq = _.unique = function(array, isSorted, iteratee, context) {
     if (!_.isBoolean(isSorted)) {
@@ -39497,7 +39560,7 @@ return $;
     for (var i = 0, length = getLength(array); i < length; i++) {
       var value = array[i],
           computed = iteratee ? iteratee(value, i, array) : value;
-      if (isSorted) {
+      if (isSorted && !iteratee) {
         if (!i || seen !== computed) result.push(value);
         seen = computed;
       } else if (iteratee) {
@@ -39514,9 +39577,9 @@ return $;
 
   // Produce an array that contains the union: each distinct element from all of
   // the passed-in arrays.
-  _.union = function() {
-    return _.uniq(flatten(arguments, true, true));
-  };
+  _.union = restArguments(function(arrays) {
+    return _.uniq(flatten(arrays, true, true));
+  });
 
   // Produce an array that contains every item shared between all the
   // passed-in arrays.
@@ -39526,7 +39589,8 @@ return $;
     for (var i = 0, length = getLength(array); i < length; i++) {
       var item = array[i];
       if (_.contains(result, item)) continue;
-      for (var j = 1; j < argsLength; j++) {
+      var j;
+      for (j = 1; j < argsLength; j++) {
         if (!_.contains(arguments[j], item)) break;
       }
       if (j === argsLength) result.push(item);
@@ -39536,21 +39600,15 @@ return $;
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
-  _.difference = function(array) {
-    var rest = flatten(arguments, true, true, 1);
+  _.difference = restArguments(function(array, rest) {
+    rest = flatten(rest, true, true);
     return _.filter(array, function(value){
       return !_.contains(rest, value);
     });
-  };
-
-  // Zip together multiple lists into a single array -- elements that share
-  // an index go together.
-  _.zip = function() {
-    return _.unzip(arguments);
-  };
+  });
 
   // Complement of _.zip. Unzip accepts an array of arrays and groups
-  // each array's elements on shared indices
+  // each array's elements on shared indices.
   _.unzip = function(array) {
     var length = array && _.max(array, getLength).length || 0;
     var result = Array(length);
@@ -39561,9 +39619,13 @@ return $;
     return result;
   };
 
+  // Zip together multiple lists into a single array -- elements that share
+  // an index go together.
+  _.zip = restArguments(_.unzip);
+
   // Converts lists into objects. Pass either a single array of `[key, value]`
   // pairs, or two parallel arrays of the same length -- one of keys, and one of
-  // the corresponding values.
+  // the corresponding values. Passing by pairs is the reverse of _.pairs.
   _.object = function(list, values) {
     var result = {};
     for (var i = 0, length = getLength(list); i < length; i++) {
@@ -39576,8 +39638,8 @@ return $;
     return result;
   };
 
-  // Generator function to create the findIndex and findLastIndex functions
-  function createPredicateIndexFinder(dir) {
+  // Generator function to create the findIndex and findLastIndex functions.
+  var createPredicateIndexFinder = function(dir) {
     return function(array, predicate, context) {
       predicate = cb(predicate, context);
       var length = getLength(array);
@@ -39587,9 +39649,9 @@ return $;
       }
       return -1;
     };
-  }
+  };
 
-  // Returns the first index on an array-like that passes a predicate test
+  // Returns the first index on an array-like that passes a predicate test.
   _.findIndex = createPredicateIndexFinder(1);
   _.findLastIndex = createPredicateIndexFinder(-1);
 
@@ -39606,15 +39668,15 @@ return $;
     return low;
   };
 
-  // Generator function to create the indexOf and lastIndexOf functions
-  function createIndexFinder(dir, predicateFind, sortedIndex) {
+  // Generator function to create the indexOf and lastIndexOf functions.
+  var createIndexFinder = function(dir, predicateFind, sortedIndex) {
     return function(array, item, idx) {
       var i = 0, length = getLength(array);
       if (typeof idx == 'number') {
         if (dir > 0) {
-            i = idx >= 0 ? idx : Math.max(idx + length, i);
+          i = idx >= 0 ? idx : Math.max(idx + length, i);
         } else {
-            length = idx >= 0 ? Math.min(idx + 1, length) : idx + length + 1;
+          length = idx >= 0 ? Math.min(idx + 1, length) : idx + length + 1;
         }
       } else if (sortedIndex && idx && length) {
         idx = sortedIndex(array, item);
@@ -39629,7 +39691,7 @@ return $;
       }
       return -1;
     };
-  }
+  };
 
   // Return the position of the first occurrence of an item in an array,
   // or -1 if the item is not included in the array.
@@ -39646,7 +39708,9 @@ return $;
       stop = start || 0;
       start = 0;
     }
-    step = step || 1;
+    if (!step) {
+      step = stop < start ? -1 : 1;
+    }
 
     var length = Math.max(Math.ceil((stop - start) / step), 0);
     var range = Array(length);
@@ -39658,11 +39722,23 @@ return $;
     return range;
   };
 
+  // Chunk a single array into multiple arrays, each containing `count` or fewer
+  // items.
+  _.chunk = function(array, count) {
+    if (count == null || count < 1) return [];
+    var result = [];
+    var i = 0, length = array.length;
+    while (i < length) {
+      result.push(slice.call(array, i, i += count));
+    }
+    return result;
+  };
+
   // Function (ahem) Functions
   // ------------------
 
   // Determines whether to execute a function as a constructor
-  // or a normal function with the provided arguments
+  // or a normal function with the provided arguments.
   var executeBound = function(sourceFunc, boundFunc, context, callingContext, args) {
     if (!(callingContext instanceof boundFunc)) return sourceFunc.apply(context, args);
     var self = baseCreate(sourceFunc.prototype);
@@ -39674,52 +39750,53 @@ return $;
   // Create a function bound to a given object (assigning `this`, and arguments,
   // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
   // available.
-  _.bind = function(func, context) {
-    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+  _.bind = restArguments(function(func, context, args) {
     if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
-    var args = slice.call(arguments, 2);
-    var bound = function() {
-      return executeBound(func, bound, context, this, args.concat(slice.call(arguments)));
-    };
+    var bound = restArguments(function(callArgs) {
+      return executeBound(func, bound, context, this, args.concat(callArgs));
+    });
     return bound;
-  };
+  });
 
   // Partially apply a function by creating a version that has had some of its
   // arguments pre-filled, without changing its dynamic `this` context. _ acts
-  // as a placeholder, allowing any combination of arguments to be pre-filled.
-  _.partial = function(func) {
-    var boundArgs = slice.call(arguments, 1);
+  // as a placeholder by default, allowing any combination of arguments to be
+  // pre-filled. Set `_.partial.placeholder` for a custom placeholder argument.
+  _.partial = restArguments(function(func, boundArgs) {
+    var placeholder = _.partial.placeholder;
     var bound = function() {
       var position = 0, length = boundArgs.length;
       var args = Array(length);
       for (var i = 0; i < length; i++) {
-        args[i] = boundArgs[i] === _ ? arguments[position++] : boundArgs[i];
+        args[i] = boundArgs[i] === placeholder ? arguments[position++] : boundArgs[i];
       }
       while (position < arguments.length) args.push(arguments[position++]);
       return executeBound(func, bound, this, this, args);
     };
     return bound;
-  };
+  });
+
+  _.partial.placeholder = _;
 
   // Bind a number of an object's methods to that object. Remaining arguments
   // are the method names to be bound. Useful for ensuring that all callbacks
   // defined on an object belong to it.
-  _.bindAll = function(obj) {
-    var i, length = arguments.length, key;
-    if (length <= 1) throw new Error('bindAll must be passed function names');
-    for (i = 1; i < length; i++) {
-      key = arguments[i];
+  _.bindAll = restArguments(function(obj, keys) {
+    keys = flatten(keys, false, false);
+    var index = keys.length;
+    if (index < 1) throw new Error('bindAll must be passed function names');
+    while (index--) {
+      var key = keys[index];
       obj[key] = _.bind(obj[key], obj);
     }
-    return obj;
-  };
+  });
 
   // Memoize an expensive function by storing its results.
   _.memoize = function(func, hasher) {
     var memoize = function(key) {
       var cache = memoize.cache;
       var address = '' + (hasher ? hasher.apply(this, arguments) : key);
-      if (!_.has(cache, address)) cache[address] = func.apply(this, arguments);
+      if (!has(cache, address)) cache[address] = func.apply(this, arguments);
       return cache[address];
     };
     memoize.cache = {};
@@ -39728,12 +39805,11 @@ return $;
 
   // Delays a function for the given number of milliseconds, and then calls
   // it with the arguments supplied.
-  _.delay = function(func, wait) {
-    var args = slice.call(arguments, 2);
-    return setTimeout(function(){
+  _.delay = restArguments(function(func, wait, args) {
+    return setTimeout(function() {
       return func.apply(null, args);
     }, wait);
-  };
+  });
 
   // Defers a function, scheduling it to run after the current call stack has
   // cleared.
@@ -39745,17 +39821,18 @@ return $;
   // but if you'd like to disable the execution on the leading edge, pass
   // `{leading: false}`. To disable execution on the trailing edge, ditto.
   _.throttle = function(func, wait, options) {
-    var context, args, result;
-    var timeout = null;
+    var timeout, context, args, result;
     var previous = 0;
     if (!options) options = {};
+
     var later = function() {
       previous = options.leading === false ? 0 : _.now();
       timeout = null;
       result = func.apply(context, args);
       if (!timeout) context = args = null;
     };
-    return function() {
+
+    var throttled = function() {
       var now = _.now();
       if (!previous && options.leading === false) previous = now;
       var remaining = wait - (now - previous);
@@ -39774,6 +39851,14 @@ return $;
       }
       return result;
     };
+
+    throttled.cancel = function() {
+      clearTimeout(timeout);
+      previous = 0;
+      timeout = context = args = null;
+    };
+
+    return throttled;
   };
 
   // Returns a function, that, as long as it continues to be invoked, will not
@@ -39781,35 +39866,32 @@ return $;
   // N milliseconds. If `immediate` is passed, trigger the function on the
   // leading edge, instead of the trailing.
   _.debounce = function(func, wait, immediate) {
-    var timeout, args, context, timestamp, result;
+    var timeout, result;
 
-    var later = function() {
-      var last = _.now() - timestamp;
-
-      if (last < wait && last >= 0) {
-        timeout = setTimeout(later, wait - last);
-      } else {
-        timeout = null;
-        if (!immediate) {
-          result = func.apply(context, args);
-          if (!timeout) context = args = null;
-        }
-      }
+    var later = function(context, args) {
+      timeout = null;
+      if (args) result = func.apply(context, args);
     };
 
-    return function() {
-      context = this;
-      args = arguments;
-      timestamp = _.now();
-      var callNow = immediate && !timeout;
-      if (!timeout) timeout = setTimeout(later, wait);
-      if (callNow) {
-        result = func.apply(context, args);
-        context = args = null;
+    var debounced = restArguments(function(args) {
+      if (timeout) clearTimeout(timeout);
+      if (immediate) {
+        var callNow = !timeout;
+        timeout = setTimeout(later, wait);
+        if (callNow) result = func.apply(this, args);
+      } else {
+        timeout = _.delay(later, wait, this, args);
       }
 
       return result;
+    });
+
+    debounced.cancel = function() {
+      clearTimeout(timeout);
+      timeout = null;
     };
+
+    return debounced;
   };
 
   // Returns the first function passed as an argument to the second,
@@ -39864,22 +39946,24 @@ return $;
   // often you call it. Useful for lazy initialization.
   _.once = _.partial(_.before, 2);
 
+  _.restArguments = restArguments;
+
   // Object Functions
   // ----------------
 
   // Keys in IE < 9 that won't be iterated by `for key in ...` and thus missed.
   var hasEnumBug = !{toString: null}.propertyIsEnumerable('toString');
   var nonEnumerableProps = ['valueOf', 'isPrototypeOf', 'toString',
-                      'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
+    'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
 
-  function collectNonEnumProps(obj, keys) {
+  var collectNonEnumProps = function(obj, keys) {
     var nonEnumIdx = nonEnumerableProps.length;
     var constructor = obj.constructor;
-    var proto = (_.isFunction(constructor) && constructor.prototype) || ObjProto;
+    var proto = _.isFunction(constructor) && constructor.prototype || ObjProto;
 
     // Constructor is a special case.
     var prop = 'constructor';
-    if (_.has(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
+    if (has(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
 
     while (nonEnumIdx--) {
       prop = nonEnumerableProps[nonEnumIdx];
@@ -39887,15 +39971,15 @@ return $;
         keys.push(prop);
       }
     }
-  }
+  };
 
   // Retrieve the names of an object's own properties.
-  // Delegates to **ECMAScript 5**'s native `Object.keys`
+  // Delegates to **ECMAScript 5**'s native `Object.keys`.
   _.keys = function(obj) {
     if (!_.isObject(obj)) return [];
     if (nativeKeys) return nativeKeys(obj);
     var keys = [];
-    for (var key in obj) if (_.has(obj, key)) keys.push(key);
+    for (var key in obj) if (has(obj, key)) keys.push(key);
     // Ahem, IE < 9.
     if (hasEnumBug) collectNonEnumProps(obj, keys);
     return keys;
@@ -39922,22 +40006,22 @@ return $;
     return values;
   };
 
-  // Returns the results of applying the iteratee to each element of the object
-  // In contrast to _.map it returns an object
+  // Returns the results of applying the iteratee to each element of the object.
+  // In contrast to _.map it returns an object.
   _.mapObject = function(obj, iteratee, context) {
     iteratee = cb(iteratee, context);
-    var keys =  _.keys(obj),
-          length = keys.length,
-          results = {},
-          currentKey;
-      for (var index = 0; index < length; index++) {
-        currentKey = keys[index];
-        results[currentKey] = iteratee(obj[currentKey], currentKey, obj);
-      }
-      return results;
+    var keys = _.keys(obj),
+        length = keys.length,
+        results = {};
+    for (var index = 0; index < length; index++) {
+      var currentKey = keys[index];
+      results[currentKey] = iteratee(obj[currentKey], currentKey, obj);
+    }
+    return results;
   };
 
   // Convert an object into a list of `[key, value]` pairs.
+  // The opposite of _.object.
   _.pairs = function(obj) {
     var keys = _.keys(obj);
     var length = keys.length;
@@ -39959,7 +40043,7 @@ return $;
   };
 
   // Return a sorted list of the function names available on the object.
-  // Aliased as `methods`
+  // Aliased as `methods`.
   _.functions = _.methods = function(obj) {
     var names = [];
     for (var key in obj) {
@@ -39968,14 +40052,33 @@ return $;
     return names.sort();
   };
 
+  // An internal function for creating assigner functions.
+  var createAssigner = function(keysFunc, defaults) {
+    return function(obj) {
+      var length = arguments.length;
+      if (defaults) obj = Object(obj);
+      if (length < 2 || obj == null) return obj;
+      for (var index = 1; index < length; index++) {
+        var source = arguments[index],
+            keys = keysFunc(source),
+            l = keys.length;
+        for (var i = 0; i < l; i++) {
+          var key = keys[i];
+          if (!defaults || obj[key] === void 0) obj[key] = source[key];
+        }
+      }
+      return obj;
+    };
+  };
+
   // Extend a given object with all the properties in passed-in object(s).
   _.extend = createAssigner(_.allKeys);
 
-  // Assigns a given object with all the own properties in the passed-in object(s)
+  // Assigns a given object with all the own properties in the passed-in object(s).
   // (https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
   _.extendOwn = _.assign = createAssigner(_.keys);
 
-  // Returns the first key on an object that passes a predicate test
+  // Returns the first key on an object that passes a predicate test.
   _.findKey = function(obj, predicate, context) {
     predicate = cb(predicate, context);
     var keys = _.keys(obj), key;
@@ -39985,16 +40088,21 @@ return $;
     }
   };
 
+  // Internal pick helper function to determine if `obj` has key `key`.
+  var keyInObj = function(value, key, obj) {
+    return key in obj;
+  };
+
   // Return a copy of the object only containing the whitelisted properties.
-  _.pick = function(object, oiteratee, context) {
-    var result = {}, obj = object, iteratee, keys;
+  _.pick = restArguments(function(obj, keys) {
+    var result = {}, iteratee = keys[0];
     if (obj == null) return result;
-    if (_.isFunction(oiteratee)) {
+    if (_.isFunction(iteratee)) {
+      if (keys.length > 1) iteratee = optimizeCb(iteratee, keys[1]);
       keys = _.allKeys(obj);
-      iteratee = optimizeCb(oiteratee, context);
     } else {
-      keys = flatten(arguments, false, false, 1);
-      iteratee = function(value, key, obj) { return key in obj; };
+      iteratee = keyInObj;
+      keys = flatten(keys, false, false);
       obj = Object(obj);
     }
     for (var i = 0, length = keys.length; i < length; i++) {
@@ -40003,20 +40111,22 @@ return $;
       if (iteratee(value, key, obj)) result[key] = value;
     }
     return result;
-  };
+  });
 
-   // Return a copy of the object without the blacklisted properties.
-  _.omit = function(obj, iteratee, context) {
+  // Return a copy of the object without the blacklisted properties.
+  _.omit = restArguments(function(obj, keys) {
+    var iteratee = keys[0], context;
     if (_.isFunction(iteratee)) {
       iteratee = _.negate(iteratee);
+      if (keys.length > 1) context = keys[1];
     } else {
-      var keys = _.map(flatten(arguments, false, false, 1), String);
+      keys = _.map(flatten(keys, false, false), String);
       iteratee = function(value, key) {
         return !_.contains(keys, key);
       };
     }
     return _.pick(obj, iteratee, context);
-  };
+  });
 
   // Fill in a given object with default properties.
   _.defaults = createAssigner(_.allKeys, true);
@@ -40058,12 +40168,23 @@ return $;
 
 
   // Internal recursive comparison function for `isEqual`.
-  var eq = function(a, b, aStack, bStack) {
+  var eq, deepEq;
+  eq = function(a, b, aStack, bStack) {
     // Identical objects are equal. `0 === -0`, but they aren't identical.
     // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
     if (a === b) return a !== 0 || 1 / a === 1 / b;
-    // A strict comparison is necessary because `null == undefined`.
-    if (a == null || b == null) return a === b;
+    // `null` or `undefined` only equal to itself (strict comparison).
+    if (a == null || b == null) return false;
+    // `NaN`s are equivalent, but non-reflexive.
+    if (a !== a) return b !== b;
+    // Exhaust primitive checks
+    var type = typeof a;
+    if (type !== 'function' && type !== 'object' && typeof b != 'object') return false;
+    return deepEq(a, b, aStack, bStack);
+  };
+
+  // Internal recursive comparison function for `isEqual`.
+  deepEq = function(a, b, aStack, bStack) {
     // Unwrap any wrapped objects.
     if (a instanceof _) a = a._wrapped;
     if (b instanceof _) b = b._wrapped;
@@ -40080,7 +40201,7 @@ return $;
         return '' + a === '' + b;
       case '[object Number]':
         // `NaN`s are equivalent, but non-reflexive.
-        // Object(NaN) is equivalent to NaN
+        // Object(NaN) is equivalent to NaN.
         if (+a !== +a) return +b !== +b;
         // An `egal` comparison is performed for other numeric values.
         return +a === 0 ? 1 / +a === 1 / b : +a === +b;
@@ -40090,6 +40211,8 @@ return $;
         // millisecond representations. Note that invalid dates with millisecond representations
         // of `NaN` are not equivalent.
         return +a === +b;
+      case '[object Symbol]':
+        return SymbolProto.valueOf.call(a) === SymbolProto.valueOf.call(b);
     }
 
     var areArrays = className === '[object Array]';
@@ -40141,7 +40264,7 @@ return $;
       while (length--) {
         // Deep compare each member
         key = keys[length];
-        if (!(_.has(b, key) && eq(a[key], b[key], aStack, bStack))) return false;
+        if (!(has(b, key) && eq(a[key], b[key], aStack, bStack))) return false;
       }
     }
     // Remove the first object from the stack of traversed objects.
@@ -40180,8 +40303,8 @@ return $;
     return type === 'function' || type === 'object' && !!obj;
   };
 
-  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp, isError.
-  _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'Error'], function(name) {
+  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp, isError, isMap, isWeakMap, isSet, isWeakSet.
+  _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'Error', 'Symbol', 'Map', 'WeakMap', 'Set', 'WeakSet'], function(name) {
     _['is' + name] = function(obj) {
       return toString.call(obj) === '[object ' + name + ']';
     };
@@ -40191,13 +40314,14 @@ return $;
   // there isn't any inspectable "Arguments" type.
   if (!_.isArguments(arguments)) {
     _.isArguments = function(obj) {
-      return _.has(obj, 'callee');
+      return has(obj, 'callee');
     };
   }
 
   // Optimize `isFunction` if appropriate. Work around some typeof bugs in old v8,
-  // IE 11 (#1621), and in Safari 8 (#1929).
-  if (typeof /./ != 'function' && typeof Int8Array != 'object') {
+  // IE 11 (#1621), Safari 8 (#1929), and PhantomJS (#2236).
+  var nodelist = root.document && root.document.childNodes;
+  if (typeof /./ != 'function' && typeof Int8Array != 'object' && typeof nodelist != 'function') {
     _.isFunction = function(obj) {
       return typeof obj == 'function' || false;
     };
@@ -40205,12 +40329,12 @@ return $;
 
   // Is a given object a finite number?
   _.isFinite = function(obj) {
-    return isFinite(obj) && !isNaN(parseFloat(obj));
+    return !_.isSymbol(obj) && isFinite(obj) && !isNaN(parseFloat(obj));
   };
 
-  // Is the given value `NaN`? (NaN is the only number which does not equal itself).
+  // Is the given value `NaN`?
   _.isNaN = function(obj) {
-    return _.isNumber(obj) && obj !== +obj;
+    return _.isNumber(obj) && isNaN(obj);
   };
 
   // Is a given value a boolean?
@@ -40230,8 +40354,19 @@ return $;
 
   // Shortcut function for checking if an object has a given property directly
   // on itself (in other words, not on a prototype).
-  _.has = function(obj, key) {
-    return obj != null && hasOwnProperty.call(obj, key);
+  _.has = function(obj, path) {
+    if (!_.isArray(path)) {
+      return has(obj, path);
+    }
+    var length = path.length;
+    for (var i = 0; i < length; i++) {
+      var key = path[i];
+      if (obj == null || !hasOwnProperty.call(obj, key)) {
+        return false;
+      }
+      obj = obj[key];
+    }
+    return !!length;
   };
 
   // Utility Functions
@@ -40258,12 +40393,24 @@ return $;
 
   _.noop = function(){};
 
-  _.property = property;
+  // Creates a function that, when passed an object, will traverse that object’s
+  // properties down the given `path`, specified as an array of keys or indexes.
+  _.property = function(path) {
+    if (!_.isArray(path)) {
+      return shallowProperty(path);
+    }
+    return function(obj) {
+      return deepGet(obj, path);
+    };
+  };
 
   // Generates a function for a given object that returns a given property.
   _.propertyOf = function(obj) {
-    return obj == null ? function(){} : function(key) {
-      return obj[key];
+    if (obj == null) {
+      return function(){};
+    }
+    return function(path) {
+      return !_.isArray(path) ? obj[path] : deepGet(obj, path);
     };
   };
 
@@ -40298,7 +40445,7 @@ return $;
     return new Date().getTime();
   };
 
-   // List of HTML entities for escaping.
+  // List of HTML entities for escaping.
   var escapeMap = {
     '&': '&amp;',
     '<': '&lt;',
@@ -40314,7 +40461,7 @@ return $;
     var escaper = function(match) {
       return map[match];
     };
-    // Regexes for identifying a key that needs to be escaped
+    // Regexes for identifying a key that needs to be escaped.
     var source = '(?:' + _.keys(map).join('|') + ')';
     var testRegexp = RegExp(source);
     var replaceRegexp = RegExp(source, 'g');
@@ -40326,14 +40473,24 @@ return $;
   _.escape = createEscaper(escapeMap);
   _.unescape = createEscaper(unescapeMap);
 
-  // If the value of the named `property` is a function then invoke it with the
-  // `object` as context; otherwise, return it.
-  _.result = function(object, property, fallback) {
-    var value = object == null ? void 0 : object[property];
-    if (value === void 0) {
-      value = fallback;
+  // Traverses the children of `obj` along `path`. If a child is a function, it
+  // is invoked with its parent as context. Returns the value of the final
+  // child, or `fallback` if any child is undefined.
+  _.result = function(obj, path, fallback) {
+    if (!_.isArray(path)) path = [path];
+    var length = path.length;
+    if (!length) {
+      return _.isFunction(fallback) ? fallback.call(obj) : fallback;
     }
-    return _.isFunction(value) ? value.call(object) : value;
+    for (var i = 0; i < length; i++) {
+      var prop = obj == null ? void 0 : obj[path[i]];
+      if (prop === void 0) {
+        prop = fallback;
+        i = length; // Ensure we don't continue iterating.
+      }
+      obj = _.isFunction(prop) ? prop.call(obj) : prop;
+    }
+    return obj;
   };
 
   // Generate a unique integer id (unique within the entire client session).
@@ -40347,9 +40504,9 @@ return $;
   // By default, Underscore uses ERB-style template delimiters, change the
   // following template settings to use alternative delimiters.
   _.templateSettings = {
-    evaluate    : /<%([\s\S]+?)%>/g,
-    interpolate : /<%=([\s\S]+?)%>/g,
-    escape      : /<%-([\s\S]+?)%>/g
+    evaluate: /<%([\s\S]+?)%>/g,
+    interpolate: /<%=([\s\S]+?)%>/g,
+    escape: /<%-([\s\S]+?)%>/g
   };
 
   // When customizing `templateSettings`, if you don't want to define an
@@ -40360,15 +40517,15 @@ return $;
   // Certain characters need to be escaped so that they can be put into a
   // string literal.
   var escapes = {
-    "'":      "'",
-    '\\':     '\\',
-    '\r':     'r',
-    '\n':     'n',
+    "'": "'",
+    '\\': '\\',
+    '\r': 'r',
+    '\n': 'n',
     '\u2028': 'u2028',
     '\u2029': 'u2029'
   };
 
-  var escaper = /\\|'|\r|\n|\u2028|\u2029/g;
+  var escapeRegExp = /\\|'|\r|\n|\u2028|\u2029/g;
 
   var escapeChar = function(match) {
     return '\\' + escapes[match];
@@ -40393,7 +40550,7 @@ return $;
     var index = 0;
     var source = "__p+='";
     text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
-      source += text.slice(index, offset).replace(escaper, escapeChar);
+      source += text.slice(index, offset).replace(escapeRegExp, escapeChar);
       index = offset + match.length;
 
       if (escape) {
@@ -40404,7 +40561,7 @@ return $;
         source += "';\n" + evaluate + "\n__p+='";
       }
 
-      // Adobe VMs need the match returned to produce the correct offest.
+      // Adobe VMs need the match returned to produce the correct offset.
       return match;
     });
     source += "';\n";
@@ -40416,8 +40573,9 @@ return $;
       "print=function(){__p+=__j.call(arguments,'');};\n" +
       source + 'return __p;\n';
 
+    var render;
     try {
-      var render = new Function(settings.variable || 'obj', '_', source);
+      render = new Function(settings.variable || 'obj', '_', source);
     } catch (e) {
       e.source = source;
       throw e;
@@ -40448,7 +40606,7 @@ return $;
   // underscore functions. Wrapped objects may be chained.
 
   // Helper function to continue chaining intermediate results.
-  var result = function(instance, obj) {
+  var chainResult = function(instance, obj) {
     return instance._chain ? _(obj).chain() : obj;
   };
 
@@ -40459,9 +40617,10 @@ return $;
       _.prototype[name] = function() {
         var args = [this._wrapped];
         push.apply(args, arguments);
-        return result(this, func.apply(_, args));
+        return chainResult(this, func.apply(_, args));
       };
     });
+    return _;
   };
 
   // Add all of the Underscore functions to the wrapper object.
@@ -40474,7 +40633,7 @@ return $;
       var obj = this._wrapped;
       method.apply(obj, arguments);
       if ((name === 'shift' || name === 'splice') && obj.length === 0) delete obj[0];
-      return result(this, obj);
+      return chainResult(this, obj);
     };
   });
 
@@ -40482,7 +40641,7 @@ return $;
   _.each(['concat', 'join', 'slice'], function(name) {
     var method = ArrayProto[name];
     _.prototype[name] = function() {
-      return result(this, method.apply(this._wrapped, arguments));
+      return chainResult(this, method.apply(this._wrapped, arguments));
     };
   });
 
@@ -40496,7 +40655,7 @@ return $;
   _.prototype.valueOf = _.prototype.toJSON = _.prototype.value;
 
   _.prototype.toString = function() {
-    return '' + this._wrapped;
+    return String(this._wrapped);
   };
 
   // AMD registration happens at the end for compatibility with AMD loaders
@@ -40506,12 +40665,12 @@ return $;
   // popular enough to be bundled in a third party lib, but not be part of
   // an AMD load request. Those cases could generate an error when an
   // anonymous define() is called outside of a loader request.
-  if (typeof define === 'function' && define.amd) {
+  if (typeof define == 'function' && define.amd) {
     define('underscore', [], function() {
       return _;
     });
   }
-}.call(this));
+}());
 
 /*
 * Underscore.string
@@ -41883,29 +42042,43 @@ module.exports = function wrap(str, options){
 },{"./helper/makeString":20}]},{},[25])(25)
 });
 /*!
- * Select2 4.0.2
+ * Select2 4.0.13
  * https://select2.github.io
  *
  * Released under the MIT license
  * https://github.com/select2/select2/blob/master/LICENSE.md
  */
-(function (factory) {
+;(function (factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
     define(['jquery'], factory);
-  } else if (typeof exports === 'object') {
+  } else if (typeof module === 'object' && module.exports) {
     // Node/CommonJS
-    factory(require('jquery'));
+    module.exports = function (root, jQuery) {
+      if (jQuery === undefined) {
+        // require('jQuery') returns a factory that requires window to
+        // build a jQuery instance, we normalize how we use modules
+        // that require this pattern but the window provided is a noop
+        // if it's defined (how jquery works)
+        if (typeof window !== 'undefined') {
+          jQuery = require('jquery');
+        }
+        else {
+          jQuery = require('jquery')(root);
+        }
+      }
+      factory(jQuery);
+      return jQuery;
+    };
   } else {
     // Browser globals
     factory(jQuery);
   }
-}(function (jQuery) {
+} (function (jQuery) {
   // This is needed so we can catch the AMD loader configuration and use it
   // The inner file should be wrapped (by `banner.start.js`) in a function that
   // returns the AMD loader references.
-  var S2 =
-(function () {
+  var S2 =(function () {
   // Restore the Select2 AMD loader so it can be used
   // Needed mostly in the language files, where the loader is not inserted
   if (jQuery && jQuery.fn && jQuery.fn.select2 && jQuery.fn.select2.amd) {
@@ -41914,13 +42087,11 @@ module.exports = function wrap(str, options){
 var S2;(function () { if (!S2 || !S2.requirejs) {
 if (!S2) { S2 = {}; } else { require = S2; }
 /**
- * @license almond 0.3.1 Copyright (c) 2011-2014, The Dojo Foundation All Rights Reserved.
- * Available via the MIT or new BSD license.
- * see: http://github.com/jrburke/almond for details
+ * @license almond 0.3.3 Copyright jQuery Foundation and other contributors.
+ * Released under MIT license, http://github.com/requirejs/almond/LICENSE
  */
 //Going sloppy to avoid 'use strict' string cost, but strict practices should
 //be followed.
-/*jslint sloppy: true */
 /*global setTimeout: false */
 
 var requirejs, require, define;
@@ -41948,60 +42119,58 @@ var requirejs, require, define;
      */
     function normalize(name, baseName) {
         var nameParts, nameSegment, mapValue, foundMap, lastIndex,
-            foundI, foundStarMap, starI, i, j, part,
+            foundI, foundStarMap, starI, i, j, part, normalizedBaseParts,
             baseParts = baseName && baseName.split("/"),
             map = config.map,
             starMap = (map && map['*']) || {};
 
         //Adjust any relative paths.
-        if (name && name.charAt(0) === ".") {
-            //If have a base name, try to normalize against it,
-            //otherwise, assume it is a top-level require that will
-            //be relative to baseUrl in the end.
-            if (baseName) {
-                name = name.split('/');
-                lastIndex = name.length - 1;
+        if (name) {
+            name = name.split('/');
+            lastIndex = name.length - 1;
 
-                // Node .js allowance:
-                if (config.nodeIdCompat && jsSuffixRegExp.test(name[lastIndex])) {
-                    name[lastIndex] = name[lastIndex].replace(jsSuffixRegExp, '');
-                }
+            // If wanting node ID compatibility, strip .js from end
+            // of IDs. Have to do this here, and not in nameToUrl
+            // because node allows either .js or non .js to map
+            // to same file.
+            if (config.nodeIdCompat && jsSuffixRegExp.test(name[lastIndex])) {
+                name[lastIndex] = name[lastIndex].replace(jsSuffixRegExp, '');
+            }
 
-                //Lop off the last part of baseParts, so that . matches the
-                //"directory" and not name of the baseName's module. For instance,
-                //baseName of "one/two/three", maps to "one/two/three.js", but we
-                //want the directory, "one/two" for this normalization.
-                name = baseParts.slice(0, baseParts.length - 1).concat(name);
+            // Starts with a '.' so need the baseName
+            if (name[0].charAt(0) === '.' && baseParts) {
+                //Convert baseName to array, and lop off the last part,
+                //so that . matches that 'directory' and not name of the baseName's
+                //module. For instance, baseName of 'one/two/three', maps to
+                //'one/two/three.js', but we want the directory, 'one/two' for
+                //this normalization.
+                normalizedBaseParts = baseParts.slice(0, baseParts.length - 1);
+                name = normalizedBaseParts.concat(name);
+            }
 
-                //start trimDots
-                for (i = 0; i < name.length; i += 1) {
-                    part = name[i];
-                    if (part === ".") {
-                        name.splice(i, 1);
-                        i -= 1;
-                    } else if (part === "..") {
-                        if (i === 1 && (name[2] === '..' || name[0] === '..')) {
-                            //End of the line. Keep at least one non-dot
-                            //path segment at the front so it can be mapped
-                            //correctly to disk. Otherwise, there is likely
-                            //no path mapping for a path starting with '..'.
-                            //This can still fail, but catches the most reasonable
-                            //uses of ..
-                            break;
-                        } else if (i > 0) {
-                            name.splice(i - 1, 2);
-                            i -= 2;
-                        }
+            //start trimDots
+            for (i = 0; i < name.length; i++) {
+                part = name[i];
+                if (part === '.') {
+                    name.splice(i, 1);
+                    i -= 1;
+                } else if (part === '..') {
+                    // If at the start, or previous value is still ..,
+                    // keep them so that when converted to a path it may
+                    // still work when converted to a path, even though
+                    // as an ID it is less than ideal. In larger point
+                    // releases, may be better to just kick out an error.
+                    if (i === 0 || (i === 1 && name[2] === '..') || name[i - 1] === '..') {
+                        continue;
+                    } else if (i > 0) {
+                        name.splice(i - 1, 2);
+                        i -= 2;
                     }
                 }
-                //end trimDots
-
-                name = name.join("/");
-            } else if (name.indexOf('./') === 0) {
-                // No baseName, so this is ID is resolved relative
-                // to baseUrl, pull off the leading dot.
-                name = name.substring(2);
             }
+            //end trimDots
+
+            name = name.join('/');
         }
 
         //Apply map config if available.
@@ -42114,32 +42283,39 @@ var requirejs, require, define;
         return [prefix, name];
     }
 
+    //Creates a parts array for a relName where first part is plugin ID,
+    //second part is resource ID. Assumes relName has already been normalized.
+    function makeRelParts(relName) {
+        return relName ? splitPrefix(relName) : [];
+    }
+
     /**
      * Makes a name map, normalizing the name, and using a plugin
      * for normalization if necessary. Grabs a ref to plugin
      * too, as an optimization.
      */
-    makeMap = function (name, relName) {
+    makeMap = function (name, relParts) {
         var plugin,
             parts = splitPrefix(name),
-            prefix = parts[0];
+            prefix = parts[0],
+            relResourceName = relParts[1];
 
         name = parts[1];
 
         if (prefix) {
-            prefix = normalize(prefix, relName);
+            prefix = normalize(prefix, relResourceName);
             plugin = callDep(prefix);
         }
 
         //Normalize according
         if (prefix) {
             if (plugin && plugin.normalize) {
-                name = plugin.normalize(name, makeNormalize(relName));
+                name = plugin.normalize(name, makeNormalize(relResourceName));
             } else {
-                name = normalize(name, relName);
+                name = normalize(name, relResourceName);
             }
         } else {
-            name = normalize(name, relName);
+            name = normalize(name, relResourceName);
             parts = splitPrefix(name);
             prefix = parts[0];
             name = parts[1];
@@ -42186,13 +42362,14 @@ var requirejs, require, define;
     };
 
     main = function (name, deps, callback, relName) {
-        var cjsModule, depName, ret, map, i,
+        var cjsModule, depName, ret, map, i, relParts,
             args = [],
             callbackType = typeof callback,
             usingExports;
 
         //Use name if no relName
         relName = relName || name;
+        relParts = makeRelParts(relName);
 
         //Call the callback to define the module, if necessary.
         if (callbackType === 'undefined' || callbackType === 'function') {
@@ -42201,7 +42378,7 @@ var requirejs, require, define;
             //Default to [require, exports, module] if no deps
             deps = !deps.length && callback.length ? ['require', 'exports', 'module'] : deps;
             for (i = 0; i < deps.length; i += 1) {
-                map = makeMap(deps[i], relName);
+                map = makeMap(deps[i], relParts);
                 depName = map.f;
 
                 //Fast path CommonJS standard dependencies.
@@ -42257,7 +42434,7 @@ var requirejs, require, define;
             //deps arg is the module name, and second arg (if passed)
             //is just the relName.
             //Normalize module name, if it contains . or ..
-            return callDep(makeMap(deps, callback).f);
+            return callDep(makeMap(deps, makeRelParts(callback)).f);
         } else if (!deps.splice) {
             //deps is a config object, not an array.
             config = deps;
@@ -42440,10 +42617,10 @@ S2.define('select2/utils',[
     DecoratedClass.prototype = new ctr();
 
     for (var m = 0; m < superMethods.length; m++) {
-        var superMethod = superMethods[m];
+      var superMethod = superMethods[m];
 
-        DecoratedClass.prototype[superMethod] =
-          SuperClass.prototype[superMethod];
+      DecoratedClass.prototype[superMethod] =
+        SuperClass.prototype[superMethod];
     }
 
     var calledMethod = function (methodName) {
@@ -42490,8 +42667,22 @@ S2.define('select2/utils',[
 
   Observable.prototype.trigger = function (event) {
     var slice = Array.prototype.slice;
+    var params = slice.call(arguments, 1);
 
     this.listeners = this.listeners || {};
+
+    // Params should always come in as an array
+    if (params == null) {
+      params = [];
+    }
+
+    // If there are no arguments to the event, use a temporary object
+    if (params.length === 0) {
+      params.push({});
+    }
+
+    // Set the `_type` of the first object to the event
+    params[0]._type = event;
 
     if (event in this.listeners) {
       this.invoke(this.listeners[event], slice.call(arguments, 1));
@@ -42624,6 +42815,70 @@ S2.define('select2/utils',[
     $element.append($nodes);
   };
 
+  // Cache objects in Utils.__cache instead of $.data (see #4346)
+  Utils.__cache = {};
+
+  var id = 0;
+  Utils.GetUniqueElementId = function (element) {
+    // Get a unique element Id. If element has no id,
+    // creates a new unique number, stores it in the id
+    // attribute and returns the new id.
+    // If an id already exists, it simply returns it.
+
+    var select2Id = element.getAttribute('data-select2-id');
+    if (select2Id == null) {
+      // If element has id, use it.
+      if (element.id) {
+        select2Id = element.id;
+        element.setAttribute('data-select2-id', select2Id);
+      } else {
+        element.setAttribute('data-select2-id', ++id);
+        select2Id = id.toString();
+      }
+    }
+    return select2Id;
+  };
+
+  Utils.StoreData = function (element, name, value) {
+    // Stores an item in the cache for a specified element.
+    // name is the cache key.
+    var id = Utils.GetUniqueElementId(element);
+    if (!Utils.__cache[id]) {
+      Utils.__cache[id] = {};
+    }
+
+    Utils.__cache[id][name] = value;
+  };
+
+  Utils.GetData = function (element, name) {
+    // Retrieves a value from the cache by its key (name)
+    // name is optional. If no name specified, return
+    // all cache items for the specified element.
+    // and for a specified element.
+    var id = Utils.GetUniqueElementId(element);
+    if (name) {
+      if (Utils.__cache[id]) {
+        if (Utils.__cache[id][name] != null) {
+          return Utils.__cache[id][name];
+        }
+        return $(element).data(name); // Fallback to HTML5 data attribs.
+      }
+      return $(element).data(name); // Fallback to HTML5 data attribs.
+    } else {
+      return Utils.__cache[id];
+    }
+  };
+
+  Utils.RemoveData = function (element) {
+    // Removes all cached items for a specified element.
+    var id = Utils.GetUniqueElementId(element);
+    if (Utils.__cache[id] != null) {
+      delete Utils.__cache[id];
+    }
+
+    element.removeAttribute('data-select2-id');
+  };
+
   return Utils;
 });
 
@@ -42643,7 +42898,7 @@ S2.define('select2/results',[
 
   Results.prototype.render = function () {
     var $results = $(
-      '<ul class="select2-results__options" role="tree"></ul>'
+      '<ul class="select2-results__options" role="listbox"></ul>'
     );
 
     if (this.options.get('multiple')) {
@@ -42666,7 +42921,7 @@ S2.define('select2/results',[
     this.hideLoading();
 
     var $message = $(
-      '<li role="treeitem" aria-live="assertive"' +
+      '<li role="alert" aria-live="assertive"' +
       ' class="select2-results__option"></li>'
     );
 
@@ -42726,6 +42981,25 @@ S2.define('select2/results',[
     return sorter(data);
   };
 
+  Results.prototype.highlightFirstItem = function () {
+    var $options = this.$results
+      .find('.select2-results__option[aria-selected]');
+
+    var $selected = $options.filter('[aria-selected=true]');
+
+    // Check if there are any selected options
+    if ($selected.length > 0) {
+      // If there are selected options, highlight the first
+      $selected.first().trigger('mouseenter');
+    } else {
+      // If there are no selected options, highlight the first option
+      // in the dropdown
+      $options.first().trigger('mouseenter');
+    }
+
+    this.ensureHighlightVisible();
+  };
+
   Results.prototype.setClasses = function () {
     var self = this;
 
@@ -42740,7 +43014,7 @@ S2.define('select2/results',[
       $options.each(function () {
         var $option = $(this);
 
-        var item = $.data(this, 'data');
+        var item = Utils.GetData(this, 'data');
 
         // id needs to be converted to a string when comparing
         var id = '' + item.id;
@@ -42753,17 +43027,6 @@ S2.define('select2/results',[
         }
       });
 
-      var $selected = $options.filter('[aria-selected=true]');
-
-      // Check if there are any selected options
-      if ($selected.length > 0) {
-        // If there are selected options, highlight the first
-        $selected.first().trigger('mouseenter');
-      } else {
-        // If there are no selected options, highlight the first option
-        // in the dropdown
-        $options.first().trigger('mouseenter');
-      }
     });
   };
 
@@ -42792,11 +43055,16 @@ S2.define('select2/results',[
     option.className = 'select2-results__option';
 
     var attrs = {
-      'role': 'treeitem',
+      'role': 'option',
       'aria-selected': 'false'
     };
 
-    if (data.disabled) {
+    var matches = window.Element.prototype.matches ||
+      window.Element.prototype.msMatchesSelector ||
+      window.Element.prototype.webkitMatchesSelector;
+
+    if ((data.element != null && matches.call(data.element, ':disabled')) ||
+        (data.element == null && data.disabled)) {
       delete attrs['aria-selected'];
       attrs['aria-disabled'] = 'true';
     }
@@ -42856,7 +43124,7 @@ S2.define('select2/results',[
       this.template(data, option);
     }
 
-    $.data(option, 'data', data);
+    Utils.StoreData(option, 'data', data);
 
     return option;
   };
@@ -42874,6 +43142,7 @@ S2.define('select2/results',[
 
       if (container.isOpen()) {
         self.setClasses();
+        self.highlightFirstItem();
       }
     });
 
@@ -42896,6 +43165,10 @@ S2.define('select2/results',[
       }
 
       self.setClasses();
+
+      if (self.options.get('scrollAfterSelect')) {
+        self.highlightFirstItem();
+      }
     });
 
     container.on('unselect', function () {
@@ -42904,6 +43177,10 @@ S2.define('select2/results',[
       }
 
       self.setClasses();
+
+      if (self.options.get('scrollAfterSelect')) {
+        self.highlightFirstItem();
+      }
     });
 
     container.on('open', function () {
@@ -42939,7 +43216,7 @@ S2.define('select2/results',[
         return;
       }
 
-      var data = $highlighted.data('data');
+      var data = Utils.GetData($highlighted[0], 'data');
 
       if ($highlighted.attr('aria-selected') == 'true') {
         self.trigger('close', {});
@@ -42957,8 +43234,9 @@ S2.define('select2/results',[
 
       var currentIndex = $options.index($highlighted);
 
-      // If we are already at te top, don't move further
-      if (currentIndex === 0) {
+      // If we are already at the top, don't move further
+      // If no options, currentIndex will be -1
+      if (currentIndex <= 0) {
         return;
       }
 
@@ -43051,7 +43329,7 @@ S2.define('select2/results',[
       function (evt) {
       var $this = $(this);
 
-      var data = $this.data('data');
+      var data = Utils.GetData(this, 'data');
 
       if ($this.attr('aria-selected') === 'true') {
         if (self.options.get('multiple')) {
@@ -43074,7 +43352,7 @@ S2.define('select2/results',[
 
     this.$results.on('mouseenter', '.select2-results__option[aria-selected]',
       function (evt) {
-      var data = $(this).data('data');
+      var data = Utils.GetData(this, 'data');
 
       self.getHighlightedResults()
           .removeClass('select2-results__option--highlighted');
@@ -43189,14 +43467,15 @@ S2.define('select2/selection/base',[
 
     this._tabindex = 0;
 
-    if (this.$element.data('old-tabindex') != null) {
-      this._tabindex = this.$element.data('old-tabindex');
+    if (Utils.GetData(this.$element[0], 'old-tabindex') != null) {
+      this._tabindex = Utils.GetData(this.$element[0], 'old-tabindex');
     } else if (this.$element.attr('tabindex') != null) {
       this._tabindex = this.$element.attr('tabindex');
     }
 
     $selection.attr('title', this.$element.attr('title'));
     $selection.attr('tabindex', this._tabindex);
+    $selection.attr('aria-disabled', 'false');
 
     this.$selection = $selection;
 
@@ -43206,7 +43485,6 @@ S2.define('select2/selection/base',[
   BaseSelection.prototype.bind = function (container, $container) {
     var self = this;
 
-    var id = container.id + '-container';
     var resultsId = container.id + '-results';
 
     this.container = container;
@@ -43249,17 +43527,19 @@ S2.define('select2/selection/base',[
       self.$selection.removeAttr('aria-activedescendant');
       self.$selection.removeAttr('aria-owns');
 
-      self.$selection.focus();
+      self.$selection.trigger('focus');
 
       self._detachCloseHandler(container);
     });
 
     container.on('enable', function () {
       self.$selection.attr('tabindex', self._tabindex);
+      self.$selection.attr('aria-disabled', 'false');
     });
 
     container.on('disable', function () {
       self.$selection.attr('tabindex', '-1');
+      self.$selection.attr('aria-disabled', 'true');
     });
   };
 
@@ -43282,7 +43562,6 @@ S2.define('select2/selection/base',[
   };
 
   BaseSelection.prototype._attachCloseHandler = function (container) {
-    var self = this;
 
     $(document.body).on('mousedown.select2.' + container.id, function (e) {
       var $target = $(e.target);
@@ -43292,13 +43571,11 @@ S2.define('select2/selection/base',[
       var $all = $('.select2.select2-container--open');
 
       $all.each(function () {
-        var $this = $(this);
-
         if (this == $select[0]) {
           return;
         }
 
-        var $element = $this.data('element');
+        var $element = Utils.GetData(this, 'element');
 
         $element.select2('close');
       });
@@ -43320,6 +43597,27 @@ S2.define('select2/selection/base',[
 
   BaseSelection.prototype.update = function (data) {
     throw new Error('The `update` method must be defined in child classes.');
+  };
+
+  /**
+   * Helper method to abstract the "enabled" (not "disabled") state of this
+   * object.
+   *
+   * @return {true} if the instance is not disabled.
+   * @return {false} if the instance is disabled.
+   */
+  BaseSelection.prototype.isEnabled = function () {
+    return !this.isDisabled();
+  };
+
+  /**
+   * Helper method to abstract the "disabled" state of this object.
+   *
+   * @return {true} if the disabled option is true.
+   * @return {false} if the disabled option is false.
+   */
+  BaseSelection.prototype.isDisabled = function () {
+    return this.options.get('disabled');
   };
 
   return BaseSelection;
@@ -43359,7 +43657,10 @@ S2.define('select2/selection/single',[
 
     var id = container.id + '-container';
 
-    this.$selection.find('.select2-selection__rendered').attr('id', id);
+    this.$selection.find('.select2-selection__rendered')
+      .attr('id', id)
+      .attr('role', 'textbox')
+      .attr('aria-readonly', 'true');
     this.$selection.attr('aria-labelledby', id);
 
     this.$selection.on('mousedown', function (evt) {
@@ -43381,13 +43682,17 @@ S2.define('select2/selection/single',[
       // User exits the container
     });
 
-    container.on('selection:update', function (params) {
-      self.update(params.data);
+    container.on('focus', function (evt) {
+      if (!container.isOpen()) {
+        self.$selection.trigger('focus');
+      }
     });
   };
 
   SingleSelection.prototype.clear = function () {
-    this.$selection.find('.select2-selection__rendered').empty();
+    var $rendered = this.$selection.find('.select2-selection__rendered');
+    $rendered.empty();
+    $rendered.removeAttr('title'); // clear tooltip on empty
   };
 
   SingleSelection.prototype.display = function (data, container) {
@@ -43413,7 +43718,14 @@ S2.define('select2/selection/single',[
     var formatted = this.display(selection, $rendered);
 
     $rendered.empty().append(formatted);
-    $rendered.prop('title', selection.title || selection.text);
+
+    var title = selection.title || selection.text;
+
+    if (title) {
+      $rendered.attr('title', title);
+    } else {
+      $rendered.removeAttr('title');
+    }
   };
 
   return SingleSelection;
@@ -43458,14 +43770,14 @@ S2.define('select2/selection/multiple',[
       '.select2-selection__choice__remove',
       function (evt) {
         // Ignore the event if it is disabled
-        if (self.options.get('disabled')) {
+        if (self.isDisabled()) {
           return;
         }
 
         var $remove = $(this);
         var $selection = $remove.parent();
 
-        var data = $selection.data('data');
+        var data = Utils.GetData($selection[0], 'data');
 
         self.trigger('unselect', {
           originalEvent: evt,
@@ -43476,7 +43788,9 @@ S2.define('select2/selection/multiple',[
   };
 
   MultipleSelection.prototype.clear = function () {
-    this.$selection.find('.select2-selection__rendered').empty();
+    var $rendered = this.$selection.find('.select2-selection__rendered');
+    $rendered.empty();
+    $rendered.removeAttr('title');
   };
 
   MultipleSelection.prototype.display = function (data, container) {
@@ -43514,9 +43828,14 @@ S2.define('select2/selection/multiple',[
       var formatted = this.display(selection, $selection);
 
       $selection.append(formatted);
-      $selection.prop('title', selection.title || selection.text);
 
-      $selection.data('data', selection);
+      var title = selection.title || selection.text;
+
+      if (title) {
+        $selection.attr('title', title);
+      }
+
+      Utils.StoreData($selection[0], 'data', selection);
 
       $selections.push($selection);
     }
@@ -43581,8 +43900,9 @@ S2.define('select2/selection/placeholder',[
 
 S2.define('select2/selection/allowClear',[
   'jquery',
-  '../keys'
-], function ($, KEYS) {
+  '../keys',
+  '../utils'
+], function ($, KEYS, Utils) {
   function AllowClear () { }
 
   AllowClear.prototype.bind = function (decorated, container, $container) {
@@ -43611,7 +43931,7 @@ S2.define('select2/selection/allowClear',[
 
   AllowClear.prototype._handleClear = function (_, evt) {
     // Ignore the event if it is disabled
-    if (this.options.get('disabled')) {
+    if (this.isDisabled()) {
       return;
     }
 
@@ -43624,10 +43944,22 @@ S2.define('select2/selection/allowClear',[
 
     evt.stopPropagation();
 
-    var data = $clear.data('data');
+    var data = Utils.GetData($clear[0], 'data');
+
+    var previousVal = this.$element.val();
+    this.$element.val(this.placeholder.id);
+
+    var unselectData = {
+      data: data
+    };
+    this.trigger('clear', unselectData);
+    if (unselectData.prevented) {
+      this.$element.val(previousVal);
+      return;
+    }
 
     for (var d = 0; d < data.length; d++) {
-      var unselectData = {
+      unselectData = {
         data: data[d]
       };
 
@@ -43637,11 +43969,12 @@ S2.define('select2/selection/allowClear',[
 
       // If the event was prevented, don't clear it out.
       if (unselectData.prevented) {
+        this.$element.val(previousVal);
         return;
       }
     }
 
-    this.$element.val(this.placeholder.id).trigger('change');
+    this.$element.trigger('input').trigger('change');
 
     this.trigger('toggle', {});
   };
@@ -43664,12 +43997,14 @@ S2.define('select2/selection/allowClear',[
       return;
     }
 
+    var removeAll = this.options.get('translations').get('removeAllItems');
+
     var $remove = $(
-      '<span class="select2-selection__clear">' +
+      '<span class="select2-selection__clear" title="' + removeAll() +'">' +
         '&times;' +
       '</span>'
     );
-    $remove.data('data', data);
+    Utils.StoreData($remove[0], 'data', data);
 
     this.$selection.find('.select2-selection__rendered').prepend($remove);
   };
@@ -43690,8 +44025,8 @@ S2.define('select2/selection/search',[
     var $search = $(
       '<li class="select2-search select2-search--inline">' +
         '<input class="select2-search__field" type="search" tabindex="-1"' +
-        ' autocomplete="off" autocorrect="off" autocapitalize="off"' +
-        ' spellcheck="false" role="textbox" aria-autocomplete="list" />' +
+        ' autocomplete="off" autocorrect="off" autocapitalize="none"' +
+        ' spellcheck="false" role="searchbox" aria-autocomplete="list" />' +
       '</li>'
     );
 
@@ -43708,14 +44043,18 @@ S2.define('select2/selection/search',[
   Search.prototype.bind = function (decorated, container, $container) {
     var self = this;
 
+    var resultsId = container.id + '-results';
+
     decorated.call(this, container, $container);
 
     container.on('open', function () {
+      self.$search.attr('aria-controls', resultsId);
       self.$search.trigger('focus');
     });
 
     container.on('close', function () {
       self.$search.val('');
+      self.$search.removeAttr('aria-controls');
       self.$search.removeAttr('aria-activedescendant');
       self.$search.trigger('focus');
     });
@@ -43735,7 +44074,11 @@ S2.define('select2/selection/search',[
     });
 
     container.on('results:focus', function (params) {
-      self.$search.attr('aria-activedescendant', params.id);
+      if (params.data._resultId) {
+        self.$search.attr('aria-activedescendant', params.data._resultId);
+      } else {
+        self.$search.removeAttr('aria-activedescendant');
+      }
     });
 
     this.$selection.on('focusin', '.select2-search--inline', function (evt) {
@@ -43760,12 +44103,18 @@ S2.define('select2/selection/search',[
           .prev('.select2-selection__choice');
 
         if ($previousChoice.length > 0) {
-          var item = $previousChoice.data('data');
+          var item = Utils.GetData($previousChoice[0], 'data');
 
           self.searchRemoveChoice(item);
 
           evt.preventDefault();
         }
+      }
+    });
+
+    this.$selection.on('click', '.select2-search--inline', function (evt) {
+      if (self.$search.val()) {
+        evt.stopPropagation();
       }
     });
 
@@ -43854,7 +44203,7 @@ S2.define('select2/selection/search',[
 
     this.resizeSearch();
     if (searchHadFocus) {
-      this.$search.focus();
+      this.$search.trigger('focus');
     }
   };
 
@@ -43887,7 +44236,7 @@ S2.define('select2/selection/search',[
     var width = '';
 
     if (this.$search.attr('placeholder') !== '') {
-      width = this.$selection.find('.select2-selection__rendered').innerWidth();
+      width = this.$selection.find('.select2-selection__rendered').width();
     } else {
       var minimumWidth = this.$search.val().length + 1;
 
@@ -43911,10 +44260,13 @@ S2.define('select2/selection/eventRelay',[
       'open', 'opening',
       'close', 'closing',
       'select', 'selecting',
-      'unselect', 'unselecting'
+      'unselect', 'unselecting',
+      'clear', 'clearing'
     ];
 
-    var preventableEvents = ['opening', 'closing', 'selecting', 'unselecting'];
+    var preventableEvents = [
+      'opening', 'closing', 'selecting', 'unselecting', 'clearing'
+    ];
 
     decorated.call(this, container, $container);
 
@@ -44247,6 +44599,7 @@ S2.define('select2/diacritics',[
     '\u019F': 'O',
     '\uA74A': 'O',
     '\uA74C': 'O',
+    '\u0152': 'OE',
     '\u01A2': 'OI',
     '\uA74E': 'OO',
     '\u0222': 'OU',
@@ -44656,6 +45009,7 @@ S2.define('select2/diacritics',[
     '\uA74B': 'o',
     '\uA74D': 'o',
     '\u0275': 'o',
+    '\u0153': 'oe',
     '\u01A3': 'oi',
     '\u0223': 'ou',
     '\uA74F': 'oo',
@@ -44824,8 +45178,9 @@ S2.define('select2/diacritics',[
     '\u03CD': '\u03C5',
     '\u03CB': '\u03C5',
     '\u03B0': '\u03C5',
-    '\u03C9': '\u03C9',
-    '\u03C2': '\u03C3'
+    '\u03CE': '\u03C9',
+    '\u03C2': '\u03C3',
+    '\u2019': '\''
   };
 
   return diacritics;
@@ -44910,7 +45265,7 @@ S2.define('select2/data/select',[
     if ($(data.element).is('option')) {
       data.element.selected = true;
 
-      this.$element.trigger('change');
+      this.$element.trigger('input').trigger('change');
 
       return;
     }
@@ -44931,13 +45286,13 @@ S2.define('select2/data/select',[
         }
 
         self.$element.val(val);
-        self.$element.trigger('change');
+        self.$element.trigger('input').trigger('change');
       });
     } else {
       var val = data.id;
 
       this.$element.val(val);
-      this.$element.trigger('change');
+      this.$element.trigger('input').trigger('change');
     }
   };
 
@@ -44953,7 +45308,7 @@ S2.define('select2/data/select',[
     if ($(data.element).is('option')) {
       data.element.selected = false;
 
-      this.$element.trigger('change');
+      this.$element.trigger('input').trigger('change');
 
       return;
     }
@@ -44971,7 +45326,7 @@ S2.define('select2/data/select',[
 
       self.$element.val(val);
 
-      self.$element.trigger('change');
+      self.$element.trigger('input').trigger('change');
     });
   };
 
@@ -44993,7 +45348,7 @@ S2.define('select2/data/select',[
     // Remove anything added to child elements
     this.$element.find('*').each(function () {
       // Remove any custom data set by Select2
-      $.removeData(this, 'data');
+      Utils.RemoveData(this);
     });
   };
 
@@ -45044,7 +45399,7 @@ S2.define('select2/data/select',[
       }
     }
 
-    if (data.id) {
+    if (data.id !== undefined) {
       option.value = data.id;
     }
 
@@ -45066,7 +45421,7 @@ S2.define('select2/data/select',[
     normalizedData.element = option;
 
     // Override the option's data with the combined data
-    $.data(option, 'data', normalizedData);
+    Utils.StoreData(option, 'data', normalizedData);
 
     return $option;
   };
@@ -45074,7 +45429,7 @@ S2.define('select2/data/select',[
   SelectAdapter.prototype.item = function ($option) {
     var data = {};
 
-    data = $.data($option[0], 'data');
+    data = Utils.GetData($option[0], 'data');
 
     if (data != null) {
       return data;
@@ -45112,13 +45467,13 @@ S2.define('select2/data/select',[
     data = this._normalizeItem(data);
     data.element = $option[0];
 
-    $.data($option[0], 'data', data);
+    Utils.StoreData($option[0], 'data', data);
 
     return data;
   };
 
   SelectAdapter.prototype._normalizeItem = function (item) {
-    if (!$.isPlainObject(item)) {
+    if (item !== Object(item)) {
       item = {
         id: item,
         text: item
@@ -45164,14 +45519,18 @@ S2.define('select2/data/array',[
   'jquery'
 ], function (SelectAdapter, Utils, $) {
   function ArrayAdapter ($element, options) {
-    var data = options.get('data') || [];
+    this._dataToConvert = options.get('data') || [];
 
     ArrayAdapter.__super__.constructor.call(this, $element, options);
-
-    this.addOptions(this.convertToOptions(data));
   }
 
   Utils.Extend(ArrayAdapter, SelectAdapter);
+
+  ArrayAdapter.prototype.bind = function (container, $container) {
+    ArrayAdapter.__super__.bind.call(this, container, $container);
+
+    this.addOptions(this.convertToOptions(this._dataToConvert));
+  };
 
   ArrayAdapter.prototype.select = function (data) {
     var $option = this.$element.find('option').filter(function (i, elm) {
@@ -45320,6 +45679,13 @@ S2.define('select2/data/ajax',[
 
         callback(results);
       }, function () {
+        // Attempt to detect if a request was aborted
+        // Only works if the transport exposes a status property
+        if ('status' in $request &&
+            ($request.status === 0 || $request.status === '0')) {
+          return;
+        }
+
         self.trigger('results:message', {
           message: 'errorLoading'
         });
@@ -45328,7 +45694,7 @@ S2.define('select2/data/ajax',[
       self._request = $request;
     }
 
-    if (this.ajaxOptions.delay && params.term !== '') {
+    if (this.ajaxOptions.delay && params.term != null) {
       if (this._queryTimeout) {
         window.clearTimeout(this._queryTimeout);
       }
@@ -45397,7 +45763,10 @@ S2.define('select2/data/tags',[
           }, true)
         );
 
-        var checkText = option.text === params.term;
+        var optionText = (option.text || '').toUpperCase();
+        var paramsTerm = (params.term || '').toUpperCase();
+
+        var checkText = optionText === paramsTerm;
 
         if (checkText || checkChildren) {
           if (child) {
@@ -45452,8 +45821,6 @@ S2.define('select2/data/tags',[
   };
 
   Tags.prototype._removeOldTags = function (_) {
-    var tag = this._lastTag;
-
     var $options = this.$element.find('option[data-select2-tag]');
 
     $options.each(function () {
@@ -45491,6 +45858,29 @@ S2.define('select2/data/tokenizer',[
   Tokenizer.prototype.query = function (decorated, params, callback) {
     var self = this;
 
+    function createAndSelect (data) {
+      // Normalize the data object so we can use it for checks
+      var item = self._normalizeItem(data);
+
+      // Check if the data object already exists as a tag
+      // Select it if it doesn't
+      var $existingOptions = self.$element.find('option').filter(function () {
+        return $(this).val() === item.id;
+      });
+
+      // If an existing option wasn't found for it, create the option
+      if (!$existingOptions.length) {
+        var $option = self.option(item);
+        $option.attr('data-select2-tag', true);
+
+        self._removeOldTags();
+        self.addOptions([$option]);
+      }
+
+      // Select the item, now that we know there is an option for it
+      select(item);
+    }
+
     function select (data) {
       self.trigger('select', {
         data: data
@@ -45499,13 +45889,13 @@ S2.define('select2/data/tokenizer',[
 
     params.term = params.term || '';
 
-    var tokenData = this.tokenizer(params, this.options, select);
+    var tokenData = this.tokenizer(params, this.options, createAndSelect);
 
     if (tokenData.term !== params.term) {
       // Replace the search term if we have the search box
       if (this.$search.length) {
         this.$search.val(tokenData.term);
-        this.$search.focus();
+        this.$search.trigger('focus');
       }
 
       params.term = tokenData.term;
@@ -45634,8 +46024,28 @@ S2.define('select2/data/maximumSelectionLength',[
     decorated.call(this, $e, options);
   }
 
+  MaximumSelectionLength.prototype.bind =
+    function (decorated, container, $container) {
+      var self = this;
+
+      decorated.call(this, container, $container);
+
+      container.on('select', function () {
+        self._checkIfMaximumSelected();
+      });
+  };
+
   MaximumSelectionLength.prototype.query =
     function (decorated, params, callback) {
+      var self = this;
+
+      this._checkIfMaximumSelected(function () {
+        decorated.call(self, params, callback);
+      });
+  };
+
+  MaximumSelectionLength.prototype._checkIfMaximumSelected =
+    function (_, successCallback) {
       var self = this;
 
       this.current(function (currentData) {
@@ -45650,7 +46060,10 @@ S2.define('select2/data/maximumSelectionLength',[
           });
           return;
         }
-        decorated.call(self, params, callback);
+
+        if (successCallback) {
+          successCallback();
+        }
       });
   };
 
@@ -45689,7 +46102,7 @@ S2.define('select2/dropdown',[
   };
 
   Dropdown.prototype.position = function ($dropdown, $container) {
-    // Should be implmented in subclasses
+    // Should be implemented in subclasses
   };
 
   Dropdown.prototype.destroy = function () {
@@ -45712,8 +46125,8 @@ S2.define('select2/dropdown/search',[
     var $search = $(
       '<span class="select2-search select2-search--dropdown">' +
         '<input class="select2-search__field" type="search" tabindex="-1"' +
-        ' autocomplete="off" autocorrect="off" autocapitalize="off"' +
-        ' spellcheck="false" role="textbox" />' +
+        ' autocomplete="off" autocorrect="off" autocapitalize="none"' +
+        ' spellcheck="false" role="searchbox" aria-autocomplete="list" />' +
       '</span>'
     );
 
@@ -45727,6 +46140,8 @@ S2.define('select2/dropdown/search',[
 
   Search.prototype.bind = function (decorated, container, $container) {
     var self = this;
+
+    var resultsId = container.id + '-results';
 
     decorated.call(this, container, $container);
 
@@ -45750,18 +46165,28 @@ S2.define('select2/dropdown/search',[
 
     container.on('open', function () {
       self.$search.attr('tabindex', 0);
+      self.$search.attr('aria-controls', resultsId);
 
-      self.$search.focus();
+      self.$search.trigger('focus');
 
       window.setTimeout(function () {
-        self.$search.focus();
+        self.$search.trigger('focus');
       }, 0);
     });
 
     container.on('close', function () {
       self.$search.attr('tabindex', -1);
+      self.$search.removeAttr('aria-controls');
+      self.$search.removeAttr('aria-activedescendant');
 
       self.$search.val('');
+      self.$search.trigger('blur');
+    });
+
+    container.on('focus', function () {
+      if (!container.isOpen()) {
+        self.$search.trigger('focus');
+      }
     });
 
     container.on('results:all', function (params) {
@@ -45773,6 +46198,14 @@ S2.define('select2/dropdown/search',[
         } else {
           self.$searchContainer.addClass('select2-search--hide');
         }
+      }
+    });
+
+    container.on('results:focus', function (params) {
+      if (params.data._resultId) {
+        self.$search.attr('aria-activedescendant', params.data._resultId);
+      } else {
+        self.$search.removeAttr('aria-activedescendant');
       }
     });
   };
@@ -45859,6 +46292,7 @@ S2.define('select2/dropdown/infiniteScroll',[
 
     if (this.showLoadingMore(data)) {
       this.$results.append(this.$loadingMore);
+      this.loadMoreIfNeeded();
     }
   };
 
@@ -45877,25 +46311,27 @@ S2.define('select2/dropdown/infiniteScroll',[
       self.loading = true;
     });
 
-    this.$results.on('scroll', function () {
-      var isLoadMoreVisible = $.contains(
-        document.documentElement,
-        self.$loadingMore[0]
-      );
+    this.$results.on('scroll', this.loadMoreIfNeeded.bind(this));
+  };
 
-      if (self.loading || !isLoadMoreVisible) {
-        return;
-      }
+  InfiniteScroll.prototype.loadMoreIfNeeded = function () {
+    var isLoadMoreVisible = $.contains(
+      document.documentElement,
+      this.$loadingMore[0]
+    );
 
-      var currentOffset = self.$results.offset().top +
-        self.$results.outerHeight(false);
-      var loadingMoreOffset = self.$loadingMore.offset().top +
-        self.$loadingMore.outerHeight(false);
+    if (this.loading || !isLoadMoreVisible) {
+      return;
+    }
 
-      if (currentOffset + 50 >= loadingMoreOffset) {
-        self.loadMore();
-      }
-    });
+    var currentOffset = this.$results.offset().top +
+      this.$results.outerHeight(false);
+    var loadingMoreOffset = this.$loadingMore.offset().top +
+      this.$loadingMore.outerHeight(false);
+
+    if (currentOffset + 50 >= loadingMoreOffset) {
+      this.loadMore();
+    }
   };
 
   InfiniteScroll.prototype.loadMore = function () {
@@ -45916,7 +46352,7 @@ S2.define('select2/dropdown/infiniteScroll',[
     var $option = $(
       '<li ' +
       'class="select2-results__option select2-results__option--load-more"' +
-      'role="treeitem" aria-disabled="true"></li>'
+      'role="option" aria-disabled="true"></li>'
     );
 
     var message = this.options.get('translations').get('loadingMore');
@@ -45934,7 +46370,7 @@ S2.define('select2/dropdown/attachBody',[
   '../utils'
 ], function ($, Utils) {
   function AttachBody (decorated, $element, options) {
-    this.$dropdownParent = options.get('dropdownParent') || $(document.body);
+    this.$dropdownParent = $(options.get('dropdownParent') || document.body);
 
     decorated.call(this, $element, options);
   }
@@ -45942,27 +46378,14 @@ S2.define('select2/dropdown/attachBody',[
   AttachBody.prototype.bind = function (decorated, container, $container) {
     var self = this;
 
-    var setupResultsEvents = false;
-
     decorated.call(this, container, $container);
 
     container.on('open', function () {
       self._showDropdown();
       self._attachPositioningHandler(container);
 
-      if (!setupResultsEvents) {
-        setupResultsEvents = true;
-
-        container.on('results:all', function () {
-          self._positionDropdown();
-          self._resizeDropdown();
-        });
-
-        container.on('results:append', function () {
-          self._positionDropdown();
-          self._resizeDropdown();
-        });
-      }
+      // Must bind after the results handlers to ensure correct sizing
+      self._bindContainerResultHandlers(container);
     });
 
     container.on('close', function () {
@@ -46011,6 +46434,44 @@ S2.define('select2/dropdown/attachBody',[
     this.$dropdownContainer.detach();
   };
 
+  AttachBody.prototype._bindContainerResultHandlers =
+      function (decorated, container) {
+
+    // These should only be bound once
+    if (this._containerResultsHandlersBound) {
+      return;
+    }
+
+    var self = this;
+
+    container.on('results:all', function () {
+      self._positionDropdown();
+      self._resizeDropdown();
+    });
+
+    container.on('results:append', function () {
+      self._positionDropdown();
+      self._resizeDropdown();
+    });
+
+    container.on('results:message', function () {
+      self._positionDropdown();
+      self._resizeDropdown();
+    });
+
+    container.on('select', function () {
+      self._positionDropdown();
+      self._resizeDropdown();
+    });
+
+    container.on('unselect', function () {
+      self._positionDropdown();
+      self._resizeDropdown();
+    });
+
+    this._containerResultsHandlersBound = true;
+  };
+
   AttachBody.prototype._attachPositioningHandler =
       function (decorated, container) {
     var self = this;
@@ -46021,14 +46482,14 @@ S2.define('select2/dropdown/attachBody',[
 
     var $watchers = this.$container.parents().filter(Utils.hasScroll);
     $watchers.each(function () {
-      $(this).data('select2-scroll-position', {
+      Utils.StoreData(this, 'select2-scroll-position', {
         x: $(this).scrollLeft(),
         y: $(this).scrollTop()
       });
     });
 
     $watchers.on(scrollEvent, function (ev) {
-      var position = $(this).data('select2-scroll-position');
+      var position = Utils.GetData(this, 'select2-scroll-position');
       $(this).scrollTop(position.y);
     });
 
@@ -46087,16 +46548,26 @@ S2.define('select2/dropdown/attachBody',[
       top: container.bottom
     };
 
-    // Determine what the parent element is to use for calciulating the offset
+    // Determine what the parent element is to use for calculating the offset
     var $offsetParent = this.$dropdownParent;
 
-    // For statically positoned elements, we need to get the element
+    // For statically positioned elements, we need to get the element
     // that is determining the offset
     if ($offsetParent.css('position') === 'static') {
       $offsetParent = $offsetParent.offsetParent();
     }
 
-    var parentOffset = $offsetParent.offset();
+    var parentOffset = {
+      top: 0,
+      left: 0
+    };
+
+    if (
+      $.contains(document.body, $offsetParent[0]) ||
+      $offsetParent[0].isConnected
+      ) {
+      parentOffset = $offsetParent.offset();
+    }
 
     css.top -= parentOffset.top;
     css.left -= parentOffset.left;
@@ -46113,7 +46584,7 @@ S2.define('select2/dropdown/attachBody',[
 
     if (newDirection == 'above' ||
       (isCurrentlyAbove && newDirection !== 'below')) {
-      css.top = container.top - dropdown.height;
+      css.top = container.top - parentOffset.top - dropdown.height;
     }
 
     if (newDirection != null) {
@@ -46135,6 +46606,7 @@ S2.define('select2/dropdown/attachBody',[
 
     if (this.options.get('dropdownAutoWidth')) {
       css.minWidth = css.width;
+      css.position = 'relative';
       css.width = 'auto';
     }
 
@@ -46192,8 +46664,8 @@ S2.define('select2/dropdown/minimumResultsForSearch',[
 });
 
 S2.define('select2/dropdown/selectOnClose',[
-
-], function () {
+  '../utils'
+], function (Utils) {
   function SelectOnClose () { }
 
   SelectOnClose.prototype.bind = function (decorated, container, $container) {
@@ -46201,12 +46673,22 @@ S2.define('select2/dropdown/selectOnClose',[
 
     decorated.call(this, container, $container);
 
-    container.on('close', function () {
-      self._handleSelectOnClose();
+    container.on('close', function (params) {
+      self._handleSelectOnClose(params);
     });
   };
 
-  SelectOnClose.prototype._handleSelectOnClose = function () {
+  SelectOnClose.prototype._handleSelectOnClose = function (_, params) {
+    if (params && params.originalSelect2Event != null) {
+      var event = params.originalSelect2Event;
+
+      // Don't select an item if the close event was triggered from a select or
+      // unselect event
+      if (event._type === 'select' || event._type === 'unselect') {
+        return;
+      }
+    }
+
     var $highlightedResults = this.getHighlightedResults();
 
     // Only select highlighted results
@@ -46214,7 +46696,7 @@ S2.define('select2/dropdown/selectOnClose',[
       return;
     }
 
-    var data = $highlightedResults.data('data');
+    var data = Utils.GetData($highlightedResults[0], 'data');
 
     // Don't re-select already selected resulte
     if (
@@ -46255,11 +46737,14 @@ S2.define('select2/dropdown/closeOnSelect',[
     var originalEvent = evt.originalEvent;
 
     // Don't close if the control key is being held
-    if (originalEvent && originalEvent.ctrlKey) {
+    if (originalEvent && (originalEvent.ctrlKey || originalEvent.metaKey)) {
       return;
     }
 
-    this.trigger('close', {});
+    this.trigger('close', {
+      originalEvent: originalEvent,
+      originalSelect2Event: evt
+    });
   };
 
   return CloseOnSelect;
@@ -46306,6 +46791,9 @@ S2.define('select2/i18n/en',[],function () {
     },
     searching: function () {
       return 'Searching…';
+    },
+    removeAllItems: function () {
+      return 'Remove all items';
     }
   };
 });
@@ -46544,66 +47032,29 @@ S2.define('select2/defaults',[
       );
     }
 
-    if (typeof options.language === 'string') {
-      // Check if the language is specified with a region
-      if (options.language.indexOf('-') > 0) {
-        // Extract the region information if it is included
-        var languageParts = options.language.split('-');
-        var baseLanguage = languageParts[0];
+    // If the defaults were not previously applied from an element, it is
+    // possible for the language option to have not been resolved
+    options.language = this._resolveLanguage(options.language);
 
-        options.language = [options.language, baseLanguage];
-      } else {
-        options.language = [options.language];
+    // Always fall back to English since it will always be complete
+    options.language.push('en');
+
+    var uniqueLanguages = [];
+
+    for (var l = 0; l < options.language.length; l++) {
+      var language = options.language[l];
+
+      if (uniqueLanguages.indexOf(language) === -1) {
+        uniqueLanguages.push(language);
       }
     }
 
-    if ($.isArray(options.language)) {
-      var languages = new Translation();
-      options.language.push('en');
+    options.language = uniqueLanguages;
 
-      var languageNames = options.language;
-
-      for (var l = 0; l < languageNames.length; l++) {
-        var name = languageNames[l];
-        var language = {};
-
-        try {
-          // Try to load it with the original name
-          language = Translation.loadPath(name);
-        } catch (e) {
-          try {
-            // If we couldn't load it, check if it wasn't the full path
-            name = this.defaults.amdLanguageBase + name;
-            language = Translation.loadPath(name);
-          } catch (ex) {
-            // The translation could not be loaded at all. Sometimes this is
-            // because of a configuration problem, other times this can be
-            // because of how Select2 helps load all possible translation files.
-            if (options.debug && window.console && console.warn) {
-              console.warn(
-                'Select2: The language file for "' + name + '" could not be ' +
-                'automatically loaded. A fallback will be used instead.'
-              );
-            }
-
-            continue;
-          }
-        }
-
-        languages.extend(language);
-      }
-
-      options.translations = languages;
-    } else {
-      var baseTranslation = Translation.loadPath(
-        this.defaults.amdLanguageBase + 'en'
-      );
-      var customTranslation = new Translation(options.language);
-
-      customTranslation.extend(baseTranslation);
-
-      options.translations = customTranslation;
-    }
+    options.translations = this._processTranslations(
+      options.language,
+      options.debug
+    );
 
     return options;
   };
@@ -46670,13 +47121,14 @@ S2.define('select2/defaults',[
       debug: false,
       dropdownAutoWidth: false,
       escapeMarkup: Utils.escapeMarkup,
-      language: EnglishTranslation,
+      language: {},
       matcher: matcher,
       minimumInputLength: 0,
       maximumInputLength: 0,
       maximumSelectionLength: 0,
       minimumResultsForSearch: 0,
       selectOnClose: false,
+      scrollAfterSelect: false,
       sorter: function (data) {
         return data;
       },
@@ -46691,6 +47143,103 @@ S2.define('select2/defaults',[
     };
   };
 
+  Defaults.prototype.applyFromElement = function (options, $element) {
+    var optionLanguage = options.language;
+    var defaultLanguage = this.defaults.language;
+    var elementLanguage = $element.prop('lang');
+    var parentLanguage = $element.closest('[lang]').prop('lang');
+
+    var languages = Array.prototype.concat.call(
+      this._resolveLanguage(elementLanguage),
+      this._resolveLanguage(optionLanguage),
+      this._resolveLanguage(defaultLanguage),
+      this._resolveLanguage(parentLanguage)
+    );
+
+    options.language = languages;
+
+    return options;
+  };
+
+  Defaults.prototype._resolveLanguage = function (language) {
+    if (!language) {
+      return [];
+    }
+
+    if ($.isEmptyObject(language)) {
+      return [];
+    }
+
+    if ($.isPlainObject(language)) {
+      return [language];
+    }
+
+    var languages;
+
+    if (!$.isArray(language)) {
+      languages = [language];
+    } else {
+      languages = language;
+    }
+
+    var resolvedLanguages = [];
+
+    for (var l = 0; l < languages.length; l++) {
+      resolvedLanguages.push(languages[l]);
+
+      if (typeof languages[l] === 'string' && languages[l].indexOf('-') > 0) {
+        // Extract the region information if it is included
+        var languageParts = languages[l].split('-');
+        var baseLanguage = languageParts[0];
+
+        resolvedLanguages.push(baseLanguage);
+      }
+    }
+
+    return resolvedLanguages;
+  };
+
+  Defaults.prototype._processTranslations = function (languages, debug) {
+    var translations = new Translation();
+
+    for (var l = 0; l < languages.length; l++) {
+      var languageData = new Translation();
+
+      var language = languages[l];
+
+      if (typeof language === 'string') {
+        try {
+          // Try to load it with the original name
+          languageData = Translation.loadPath(language);
+        } catch (e) {
+          try {
+            // If we couldn't load it, check if it wasn't the full path
+            language = this.defaults.amdLanguageBase + language;
+            languageData = Translation.loadPath(language);
+          } catch (ex) {
+            // The translation could not be loaded at all. Sometimes this is
+            // because of a configuration problem, other times this can be
+            // because of how Select2 helps load all possible translation files
+            if (debug && window.console && console.warn) {
+              console.warn(
+                'Select2: The language file for "' + language + '" could ' +
+                'not be automatically loaded. A fallback will be used instead.'
+              );
+            }
+          }
+        }
+      } else if ($.isPlainObject(language)) {
+        languageData = new Translation(language);
+      } else {
+        languageData = language;
+      }
+
+      translations.extend(languageData);
+    }
+
+    return translations;
+  };
+
   Defaults.prototype.set = function (key, value) {
     var camelKey = $.camelCase(key);
 
@@ -46699,7 +47248,7 @@ S2.define('select2/defaults',[
 
     var convertedData = Utils._convertData(data);
 
-    $.extend(this.defaults, convertedData);
+    $.extend(true, this.defaults, convertedData);
   };
 
   var defaults = new Defaults();
@@ -46718,6 +47267,10 @@ S2.define('select2/options',[
 
     if ($element != null) {
       this.fromElement($element);
+    }
+
+    if ($element != null) {
+      this.options = Defaults.applyFromElement(this.options, $element);
     }
 
     this.options = Defaults.apply(this.options);
@@ -46743,14 +47296,6 @@ S2.define('select2/options',[
       this.options.disabled = $e.prop('disabled');
     }
 
-    if (this.options.language == null) {
-      if ($e.prop('lang')) {
-        this.options.language = $e.prop('lang').toLowerCase();
-      } else if ($e.closest('[lang]').prop('lang')) {
-        this.options.language = $e.closest('[lang]').prop('lang');
-      }
-    }
-
     if (this.options.dir == null) {
       if ($e.prop('dir')) {
         this.options.dir = $e.prop('dir');
@@ -46764,7 +47309,7 @@ S2.define('select2/options',[
     $e.prop('disabled', this.options.disabled);
     $e.prop('multiple', this.options.multiple);
 
-    if ($e.data('select2Tags')) {
+    if (Utils.GetData($e[0], 'select2Tags')) {
       if (this.options.debug && window.console && console.warn) {
         console.warn(
           'Select2: The `data-select2-tags` attribute has been changed to ' +
@@ -46773,11 +47318,11 @@ S2.define('select2/options',[
         );
       }
 
-      $e.data('data', $e.data('select2Tags'));
-      $e.data('tags', true);
+      Utils.StoreData($e[0], 'data', Utils.GetData($e[0], 'select2Tags'));
+      Utils.StoreData($e[0], 'tags', true);
     }
 
-    if ($e.data('ajaxUrl')) {
+    if (Utils.GetData($e[0], 'ajaxUrl')) {
       if (this.options.debug && window.console && console.warn) {
         console.warn(
           'Select2: The `data-ajax-url` attribute has been changed to ' +
@@ -46786,21 +47331,45 @@ S2.define('select2/options',[
         );
       }
 
-      $e.attr('ajax--url', $e.data('ajaxUrl'));
-      $e.data('ajax--url', $e.data('ajaxUrl'));
+      $e.attr('ajax--url', Utils.GetData($e[0], 'ajaxUrl'));
+      Utils.StoreData($e[0], 'ajax-Url', Utils.GetData($e[0], 'ajaxUrl'));
     }
 
     var dataset = {};
 
+    function upperCaseLetter(_, letter) {
+      return letter.toUpperCase();
+    }
+
+    // Pre-load all of the attributes which are prefixed with `data-`
+    for (var attr = 0; attr < $e[0].attributes.length; attr++) {
+      var attributeName = $e[0].attributes[attr].name;
+      var prefix = 'data-';
+
+      if (attributeName.substr(0, prefix.length) == prefix) {
+        // Get the contents of the attribute after `data-`
+        var dataName = attributeName.substring(prefix.length);
+
+        // Get the data contents from the consistent source
+        // This is more than likely the jQuery data helper
+        var dataValue = Utils.GetData($e[0], dataName);
+
+        // camelCase the attribute name to match the spec
+        var camelDataName = dataName.replace(/-([a-z])/g, upperCaseLetter);
+
+        // Store the data attribute contents into the dataset since
+        dataset[camelDataName] = dataValue;
+      }
+    }
+
     // Prefer the element's `dataset` attribute if it exists
     // jQuery 1.x does not correctly handle data attributes with multiple dashes
     if ($.fn.jquery && $.fn.jquery.substr(0, 2) == '1.' && $e[0].dataset) {
-      dataset = $.extend(true, {}, $e[0].dataset, $e.data());
-    } else {
-      dataset = $e.data();
+      dataset = $.extend(true, {}, $e[0].dataset, dataset);
     }
 
-    var data = $.extend(true, {}, dataset);
+    // Prefer our internal data cache if it exists
+    var data = $.extend(true, {}, Utils.GetData($e[0]), dataset);
 
     data = Utils._convertData(data);
 
@@ -46837,8 +47406,8 @@ S2.define('select2/core',[
   './keys'
 ], function ($, Options, Utils, KEYS) {
   var Select2 = function ($element, options) {
-    if ($element.data('select2') != null) {
-      $element.data('select2').destroy();
+    if (Utils.GetData($element[0], 'select2') != null) {
+      Utils.GetData($element[0], 'select2').destroy();
     }
 
     this.$element = $element;
@@ -46854,7 +47423,7 @@ S2.define('select2/core',[
     // Set up the tabindex
 
     var tabindex = $element.attr('tabindex') || 0;
-    $element.data('old-tabindex', tabindex);
+    Utils.StoreData($element[0], 'old-tabindex', tabindex);
     $element.attr('tabindex', '-1');
 
     // Set up containers and adapters
@@ -46915,6 +47484,9 @@ S2.define('select2/core',[
     // Synchronize any monitored attributes
     this._syncAttributes();
 
+    Utils.StoreData($element[0], 'select2', this);
+
+    // Ensure backwards compatibility with $element.data('select2').
     $element.data('select2', this);
   };
 
@@ -46991,6 +47563,12 @@ S2.define('select2/core',[
       return null;
     }
 
+    if (method == 'computedstyle') {
+      var computedStyle = window.getComputedStyle($element[0]);
+
+      return computedStyle.width;
+    }
+
     return method;
   };
 
@@ -47013,10 +47591,15 @@ S2.define('select2/core',[
       });
     });
 
-    this._sync = Utils.bind(this._syncAttributes, this);
+    this.$element.on('focus.select2', function (evt) {
+      self.trigger('focus', evt);
+    });
+
+    this._syncA = Utils.bind(this._syncAttributes, this);
+    this._syncS = Utils.bind(this._syncSubtree, this);
 
     if (this.$element[0].attachEvent) {
-      this.$element[0].attachEvent('onpropertychange', this._sync);
+      this.$element[0].attachEvent('onpropertychange', this._syncA);
     }
 
     var observer = window.MutationObserver ||
@@ -47026,14 +47609,30 @@ S2.define('select2/core',[
 
     if (observer != null) {
       this._observer = new observer(function (mutations) {
-        $.each(mutations, self._sync);
+        self._syncA();
+        self._syncS(null, mutations);
       });
       this._observer.observe(this.$element[0], {
         attributes: true,
+        childList: true,
         subtree: false
       });
     } else if (this.$element[0].addEventListener) {
-      this.$element[0].addEventListener('DOMAttrModified', self._sync, false);
+      this.$element[0].addEventListener(
+        'DOMAttrModified',
+        self._syncA,
+        false
+      );
+      this.$element[0].addEventListener(
+        'DOMNodeInserted',
+        self._syncS,
+        false
+      );
+      this.$element[0].addEventListener(
+        'DOMNodeRemoved',
+        self._syncS,
+        false
+      );
     }
   };
 
@@ -47133,7 +47732,7 @@ S2.define('select2/core',[
       if (self.isOpen()) {
         if (key === KEYS.ESC || key === KEYS.TAB ||
             (key === KEYS.UP && evt.altKey)) {
-          self.close();
+          self.close(evt);
 
           evt.preventDefault();
         } else if (key === KEYS.ENTER) {
@@ -47167,7 +47766,7 @@ S2.define('select2/core',[
   Select2.prototype._syncAttributes = function () {
     this.options.set('disabled', this.$element.prop('disabled'));
 
-    if (this.options.get('disabled')) {
+    if (this.isDisabled()) {
       if (this.isOpen()) {
         this.close();
       }
@@ -47175,6 +47774,61 @@ S2.define('select2/core',[
       this.trigger('disable', {});
     } else {
       this.trigger('enable', {});
+    }
+  };
+
+  Select2.prototype._isChangeMutation = function (evt, mutations) {
+    var changed = false;
+    var self = this;
+
+    // Ignore any mutation events raised for elements that aren't options or
+    // optgroups. This handles the case when the select element is destroyed
+    if (
+      evt && evt.target && (
+        evt.target.nodeName !== 'OPTION' && evt.target.nodeName !== 'OPTGROUP'
+      )
+    ) {
+      return;
+    }
+
+    if (!mutations) {
+      // If mutation events aren't supported, then we can only assume that the
+      // change affected the selections
+      changed = true;
+    } else if (mutations.addedNodes && mutations.addedNodes.length > 0) {
+      for (var n = 0; n < mutations.addedNodes.length; n++) {
+        var node = mutations.addedNodes[n];
+
+        if (node.selected) {
+          changed = true;
+        }
+      }
+    } else if (mutations.removedNodes && mutations.removedNodes.length > 0) {
+      changed = true;
+    } else if ($.isArray(mutations)) {
+      $.each(mutations, function(evt, mutation) {
+        if (self._isChangeMutation(evt, mutation)) {
+          // We've found a change mutation.
+          // Let's escape from the loop and continue
+          changed = true;
+          return false;
+        }
+      });
+    }
+    return changed;
+  };
+
+  Select2.prototype._syncSubtree = function (evt, mutations) {
+    var changed = this._isChangeMutation(evt, mutations);
+    var self = this;
+
+    // Only re-pull the data if we think there is a change
+    if (changed) {
+      this.dataAdapter.current(function (currentData) {
+        self.trigger('selection:update', {
+          data: currentData
+        });
+      });
     }
   };
 
@@ -47188,7 +47842,8 @@ S2.define('select2/core',[
       'open': 'opening',
       'close': 'closing',
       'select': 'selecting',
-      'unselect': 'unselecting'
+      'unselect': 'unselecting',
+      'clear': 'clearing'
     };
 
     if (args === undefined) {
@@ -47216,7 +47871,7 @@ S2.define('select2/core',[
   };
 
   Select2.prototype.toggleDropdown = function () {
-    if (this.options.get('disabled')) {
+    if (this.isDisabled()) {
       return;
     }
 
@@ -47232,15 +47887,40 @@ S2.define('select2/core',[
       return;
     }
 
+    if (this.isDisabled()) {
+      return;
+    }
+
     this.trigger('query', {});
   };
 
-  Select2.prototype.close = function () {
+  Select2.prototype.close = function (evt) {
     if (!this.isOpen()) {
       return;
     }
 
-    this.trigger('close', {});
+    this.trigger('close', { originalEvent : evt });
+  };
+
+  /**
+   * Helper method to abstract the "enabled" (not "disabled") state of this
+   * object.
+   *
+   * @return {true} if the instance is not disabled.
+   * @return {false} if the instance is disabled.
+   */
+  Select2.prototype.isEnabled = function () {
+    return !this.isDisabled();
+  };
+
+  /**
+   * Helper method to abstract the "disabled" state of this object.
+   *
+   * @return {true} if the disabled option is true.
+   * @return {false} if the disabled option is false.
+   */
+  Select2.prototype.isDisabled = function () {
+    return this.options.get('disabled');
   };
 
   Select2.prototype.isOpen = function () {
@@ -47317,14 +47997,14 @@ S2.define('select2/core',[
       });
     }
 
-    this.$element.val(newVal).trigger('change');
+    this.$element.val(newVal).trigger('input').trigger('change');
   };
 
   Select2.prototype.destroy = function () {
     this.$container.remove();
 
     if (this.$element[0].detachEvent) {
-      this.$element[0].detachEvent('onpropertychange', this._sync);
+      this.$element[0].detachEvent('onpropertychange', this._syncA);
     }
 
     if (this._observer != null) {
@@ -47332,16 +48012,23 @@ S2.define('select2/core',[
       this._observer = null;
     } else if (this.$element[0].removeEventListener) {
       this.$element[0]
-        .removeEventListener('DOMAttrModified', this._sync, false);
+        .removeEventListener('DOMAttrModified', this._syncA, false);
+      this.$element[0]
+        .removeEventListener('DOMNodeInserted', this._syncS, false);
+      this.$element[0]
+        .removeEventListener('DOMNodeRemoved', this._syncS, false);
     }
 
-    this._sync = null;
+    this._syncA = null;
+    this._syncS = null;
 
     this.$element.off('.select2');
-    this.$element.attr('tabindex', this.$element.data('old-tabindex'));
+    this.$element.attr('tabindex',
+    Utils.GetData(this.$element[0], 'old-tabindex'));
 
     this.$element.removeClass('select2-hidden-accessible');
     this.$element.attr('aria-hidden', 'false');
+    Utils.RemoveData(this.$element[0]);
     this.$element.removeData('select2');
 
     this.dataAdapter.destroy();
@@ -47369,7 +48056,7 @@ S2.define('select2/core',[
 
     this.$container.addClass('select2-container--' + this.options.get('theme'));
 
-    $container.data('element', this.$element);
+    Utils.StoreData($container[0], 'element', this.$element);
 
     return $container;
   };
@@ -47579,8 +48266,9 @@ S2.define('select2/compat/initSelection',[
 });
 
 S2.define('select2/compat/inputData',[
-  'jquery'
-], function ($) {
+  'jquery',
+  '../utils'
+], function ($, Utils) {
   function InputData (decorated, $element, options) {
     this._currentData = [];
     this._valueSeparator = options.get('valueSeparator') || ',';
@@ -47644,13 +48332,13 @@ S2.define('select2/compat/inputData',[
       });
 
       this.$element.val(data.id);
-      this.$element.trigger('change');
+      this.$element.trigger('input').trigger('change');
     } else {
       var value = this.$element.val();
       value += this._valueSeparator + data.id;
 
       this.$element.val(value);
-      this.$element.trigger('change');
+      this.$element.trigger('input').trigger('change');
     }
   };
 
@@ -47673,7 +48361,7 @@ S2.define('select2/compat/inputData',[
       }
 
       self.$element.val(values.join(self._valueSeparator));
-      self.$element.trigger('change');
+      self.$element.trigger('input').trigger('change');
     });
   };
 
@@ -47697,7 +48385,7 @@ S2.define('select2/compat/inputData',[
 
   InputData.prototype.addOptions = function (_, $options) {
     var options = $.map($options, function ($option) {
-      return $.data($option[0], 'data');
+      return Utils.GetData($option[0], 'data');
     });
 
     this._currentData.push.apply(this._currentData, options);
@@ -48100,8 +48788,9 @@ S2.define('jquery.select2',[
   'jquery-mousewheel',
 
   './select2/core',
-  './select2/defaults'
-], function ($, _, Select2, Defaults) {
+  './select2/defaults',
+  './select2/utils'
+], function ($, _, Select2, Defaults, Utils) {
   if ($.fn.select2 == null) {
     // All methods that should return the element
     var thisMethods = ['open', 'close', 'destroy'];
@@ -48119,9 +48808,10 @@ S2.define('jquery.select2',[
         return this;
       } else if (typeof options === 'string') {
         var ret;
+        var args = Array.prototype.slice.call(arguments, 1);
 
         this.each(function () {
-          var instance = $(this).data('select2');
+          var instance = Utils.GetData(this, 'select2');
 
           if (instance == null && window.console && console.error) {
             console.error(
@@ -48129,8 +48819,6 @@ S2.define('jquery.select2',[
               'element that is not using Select2.'
             );
           }
-
-          var args = Array.prototype.slice.call(arguments, 1);
 
           ret = instance[options].apply(instance, args);
         });
@@ -48174,12 +48862,12 @@ S2.define('jquery.select2',[
   return select2;
 }));
 
-/*! Select2 4.0.2 | https://github.com/select2/select2/blob/master/LICENSE.md */
+/*! Select2 4.0.13 | https://github.com/select2/select2/blob/master/LICENSE.md */
 
-(function(){if(jQuery&&jQuery.fn&&jQuery.fn.select2&&jQuery.fn.select2.amd)var e=jQuery.fn.select2.amd;return e.define("select2/i18n/en",[],function(){return{errorLoading:function(){return"The results could not be loaded."},inputTooLong:function(e){var t=e.input.length-e.maximum,n="Please delete "+t+" character";return t!=1&&(n+="s"),n},inputTooShort:function(e){var t=e.minimum-e.input.length,n="Please enter "+t+" or more characters";return n},loadingMore:function(){return"Loading more results…"},maximumSelected:function(e){var t="You can only select "+e.maximum+" item";return e.maximum!=1&&(t+="s"),t},noResults:function(){return"No results found"},searching:function(){return"Searching…"}}}),{define:e.define,require:e.require}})();
-//     Backbone.js 1.3.3
+!function(){if(jQuery&&jQuery.fn&&jQuery.fn.select2&&jQuery.fn.select2.amd)var e=jQuery.fn.select2.amd;e.define("select2/i18n/en",[],function(){return{errorLoading:function(){return"The results could not be loaded."},inputTooLong:function(e){var n=e.input.length-e.maximum,r="Please delete "+n+" character";return 1!=n&&(r+="s"),r},inputTooShort:function(e){return"Please enter "+(e.minimum-e.input.length)+" or more characters"},loadingMore:function(){return"Loading more results…"},maximumSelected:function(e){var n="You can only select "+e.maximum+" item";return 1!=e.maximum&&(n+="s"),n},noResults:function(){return"No results found"},searching:function(){return"Searching…"},removeAllItems:function(){return"Remove all items"}}}),e.define,e.require}();
+//     Backbone.js 1.4.0
 
-//     (c) 2010-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+//     (c) 2010-2019 Jeremy Ashkenas and DocumentCloud
 //     Backbone may be freely distributed under the MIT license.
 //     For all details and documentation:
 //     http://backbonejs.org
@@ -48188,8 +48876,8 @@ S2.define('jquery.select2',[
 
   // Establish the root object, `window` (`self`) in the browser, or `global` on the server.
   // We use `self` instead of `window` for `WebWorker` support.
-  var root = (typeof self == 'object' && self.self === self && self) ||
-            (typeof global == 'object' && global.global === global && global);
+  var root = typeof self == 'object' && self.self === self && self ||
+            typeof global == 'object' && global.global === global && global;
 
   // Set up Backbone appropriately for the environment. Start with AMD.
   if (typeof define === 'function' && define.amd) {
@@ -48207,7 +48895,7 @@ S2.define('jquery.select2',[
 
   // Finally, as a browser global.
   } else {
-    root.Backbone = factory(root, {}, root._, (root.jQuery || root.Zepto || root.ender || root.$));
+    root.Backbone = factory(root, {}, root._, root.jQuery || root.Zepto || root.ender || root.$);
   }
 
 })(function(root, Backbone, _, $) {
@@ -48223,7 +48911,7 @@ S2.define('jquery.select2',[
   var slice = Array.prototype.slice;
 
   // Current version of the library. Keep in sync with `package.json`.
-  Backbone.VERSION = '1.3.3';
+  Backbone.VERSION = '1.4.0';
 
   // For Backbone's purposes, jQuery, Zepto, Ender, or My Library (kidding) owns
   // the `$` variable.
@@ -48247,54 +48935,6 @@ S2.define('jquery.select2',[
   // form param named `model`.
   Backbone.emulateJSON = false;
 
-  // Proxy Backbone class methods to Underscore functions, wrapping the model's
-  // `attributes` object or collection's `models` array behind the scenes.
-  //
-  // collection.filter(function(model) { return model.get('age') > 10 });
-  // collection.each(this.addView);
-  //
-  // `Function#apply` can be slow so we use the method's arg count, if we know it.
-  var addMethod = function(length, method, attribute) {
-    switch (length) {
-      case 1: return function() {
-        return _[method](this[attribute]);
-      };
-      case 2: return function(value) {
-        return _[method](this[attribute], value);
-      };
-      case 3: return function(iteratee, context) {
-        return _[method](this[attribute], cb(iteratee, this), context);
-      };
-      case 4: return function(iteratee, defaultVal, context) {
-        return _[method](this[attribute], cb(iteratee, this), defaultVal, context);
-      };
-      default: return function() {
-        var args = slice.call(arguments);
-        args.unshift(this[attribute]);
-        return _[method].apply(_, args);
-      };
-    }
-  };
-  var addUnderscoreMethods = function(Class, methods, attribute) {
-    _.each(methods, function(length, method) {
-      if (_[method]) Class.prototype[method] = addMethod(length, method, attribute);
-    });
-  };
-
-  // Support `collection.sortBy('attr')` and `collection.findWhere({id: 1})`.
-  var cb = function(iteratee, instance) {
-    if (_.isFunction(iteratee)) return iteratee;
-    if (_.isObject(iteratee) && !instance._isModel(iteratee)) return modelMatcher(iteratee);
-    if (_.isString(iteratee)) return function(model) { return model.get(iteratee); };
-    return iteratee;
-  };
-  var modelMatcher = function(attrs) {
-    var matcher = _.matches(attrs);
-    return function(model) {
-      return matcher(model.attributes);
-    };
-  };
-
   // Backbone.Events
   // ---------------
 
@@ -48312,6 +48952,9 @@ S2.define('jquery.select2',[
 
   // Regular expression used to split event strings.
   var eventSplitter = /\s+/;
+
+  // A private global variable to share between listeners and listenees.
+  var _listening;
 
   // Iterates over the standard `event, callback` (as well as the fancy multiple
   // space-separated events `"change blur", callback` and jQuery-style event
@@ -48339,23 +48982,21 @@ S2.define('jquery.select2',[
   // Bind an event to a `callback` function. Passing `"all"` will bind
   // the callback to all events fired.
   Events.on = function(name, callback, context) {
-    return internalOn(this, name, callback, context);
-  };
-
-  // Guard the `listening` argument from the public API.
-  var internalOn = function(obj, name, callback, context, listening) {
-    obj._events = eventsApi(onApi, obj._events || {}, name, callback, {
+    this._events = eventsApi(onApi, this._events || {}, name, callback, {
       context: context,
-      ctx: obj,
-      listening: listening
+      ctx: this,
+      listening: _listening
     });
 
-    if (listening) {
-      var listeners = obj._listeners || (obj._listeners = {});
-      listeners[listening.id] = listening;
+    if (_listening) {
+      var listeners = this._listeners || (this._listeners = {});
+      listeners[_listening.id] = _listening;
+      // Allow the listening to use a counter, instead of tracking
+      // callbacks for library interop
+      _listening.interop = false;
     }
 
-    return obj;
+    return this;
   };
 
   // Inversion-of-control versions of `on`. Tell *this* object to listen to
@@ -48365,17 +49006,23 @@ S2.define('jquery.select2',[
     if (!obj) return this;
     var id = obj._listenId || (obj._listenId = _.uniqueId('l'));
     var listeningTo = this._listeningTo || (this._listeningTo = {});
-    var listening = listeningTo[id];
+    var listening = _listening = listeningTo[id];
 
     // This object is not listening to any other events on `obj` yet.
     // Setup the necessary references to track the listening callbacks.
     if (!listening) {
-      var thisId = this._listenId || (this._listenId = _.uniqueId('l'));
-      listening = listeningTo[id] = {obj: obj, objId: id, id: thisId, listeningTo: listeningTo, count: 0};
+      this._listenId || (this._listenId = _.uniqueId('l'));
+      listening = _listening = listeningTo[id] = new Listening(this, obj);
     }
 
-    // Bind callbacks on obj, and keep track of them on listening.
-    internalOn(obj, name, callback, this, listening);
+    // Bind callbacks on obj.
+    var error = tryCatchOn(obj, name, callback, this);
+    _listening = void 0;
+
+    if (error) throw error;
+    // If the target obj is not Backbone.Events, track events manually.
+    if (listening.interop) listening.on(name, callback);
+
     return this;
   };
 
@@ -48391,6 +49038,16 @@ S2.define('jquery.select2',[
     return events;
   };
 
+  // An try-catch guarded #on function, to prevent poisoning the global
+  // `_listening` variable.
+  var tryCatchOn = function(obj, name, callback, context) {
+    try {
+      obj.on(name, callback, context);
+    } catch (e) {
+      return e;
+    }
+  };
+
   // Remove one or many callbacks. If `context` is null, removes all
   // callbacks with that function. If `callback` is null, removes all
   // callbacks for the event. If `name` is null, removes all bound
@@ -48401,6 +49058,7 @@ S2.define('jquery.select2',[
       context: context,
       listeners: this._listeners
     });
+
     return this;
   };
 
@@ -48411,7 +49069,6 @@ S2.define('jquery.select2',[
     if (!listeningTo) return this;
 
     var ids = obj ? [obj._listenId] : _.keys(listeningTo);
-
     for (var i = 0; i < ids.length; i++) {
       var listening = listeningTo[ids[i]];
 
@@ -48420,7 +49077,9 @@ S2.define('jquery.select2',[
       if (!listening) break;
 
       listening.obj.off(name, callback, this);
+      if (listening.interop) listening.off(name, callback);
     }
+    if (_.isEmpty(listeningTo)) this._listeningTo = void 0;
 
     return this;
   };
@@ -48429,21 +49088,18 @@ S2.define('jquery.select2',[
   var offApi = function(events, name, callback, options) {
     if (!events) return;
 
-    var i = 0, listening;
     var context = options.context, listeners = options.listeners;
+    var i = 0, names;
 
-    // Delete all events listeners and "drop" events.
-    if (!name && !callback && !context) {
-      var ids = _.keys(listeners);
-      for (; i < ids.length; i++) {
-        listening = listeners[ids[i]];
-        delete listeners[listening.id];
-        delete listening.listeningTo[listening.objId];
+    // Delete all event listeners and "drop" events.
+    if (!name && !context && !callback) {
+      for (names = _.keys(listeners); i < names.length; i++) {
+        listeners[names[i]].cleanup();
       }
       return;
     }
 
-    var names = name ? [name] : _.keys(events);
+    names = name ? [name] : _.keys(events);
     for (; i < names.length; i++) {
       name = names[i];
       var handlers = events[name];
@@ -48451,7 +49107,7 @@ S2.define('jquery.select2',[
       // Bail out if there are no events stored.
       if (!handlers) break;
 
-      // Replace events if there are any remaining.  Otherwise, clean up.
+      // Find any remaining events.
       var remaining = [];
       for (var j = 0; j < handlers.length; j++) {
         var handler = handlers[j];
@@ -48462,21 +49118,19 @@ S2.define('jquery.select2',[
         ) {
           remaining.push(handler);
         } else {
-          listening = handler.listening;
-          if (listening && --listening.count === 0) {
-            delete listeners[listening.id];
-            delete listening.listeningTo[listening.objId];
-          }
+          var listening = handler.listening;
+          if (listening) listening.off(name, callback);
         }
       }
 
-      // Update tail event if the list has any events.  Otherwise, clean up.
+      // Replace events if there are any remaining.  Otherwise, clean up.
       if (remaining.length) {
         events[name] = remaining;
       } else {
         delete events[name];
       }
     }
+
     return events;
   };
 
@@ -48486,7 +49140,7 @@ S2.define('jquery.select2',[
   // once for each event, not once for a combination of all events.
   Events.once = function(name, callback, context) {
     // Map the event into a `{event: once}` object.
-    var events = eventsApi(onceMap, {}, name, callback, _.bind(this.off, this));
+    var events = eventsApi(onceMap, {}, name, callback, this.off.bind(this));
     if (typeof name === 'string' && context == null) callback = void 0;
     return this.on(events, callback, context);
   };
@@ -48494,7 +49148,7 @@ S2.define('jquery.select2',[
   // Inversion-of-control versions of `once`.
   Events.listenToOnce = function(obj, name, callback) {
     // Map the event into a `{event: once}` object.
-    var events = eventsApi(onceMap, {}, name, callback, _.bind(this.stopListening, this, obj));
+    var events = eventsApi(onceMap, {}, name, callback, this.stopListening.bind(this, obj));
     return this.listenTo(obj, events);
   };
 
@@ -48552,6 +49206,44 @@ S2.define('jquery.select2',[
     }
   };
 
+  // A listening class that tracks and cleans up memory bindings
+  // when all callbacks have been offed.
+  var Listening = function(listener, obj) {
+    this.id = listener._listenId;
+    this.listener = listener;
+    this.obj = obj;
+    this.interop = true;
+    this.count = 0;
+    this._events = void 0;
+  };
+
+  Listening.prototype.on = Events.on;
+
+  // Offs a callback (or several).
+  // Uses an optimized counter if the listenee uses Backbone.Events.
+  // Otherwise, falls back to manual tracking to support events
+  // library interop.
+  Listening.prototype.off = function(name, callback) {
+    var cleanup;
+    if (this.interop) {
+      this._events = eventsApi(offApi, this._events, name, callback, {
+        context: void 0,
+        listeners: void 0
+      });
+      cleanup = !this._events;
+    } else {
+      this.count--;
+      cleanup = this.count === 0;
+    }
+    if (cleanup) this.cleanup();
+  };
+
+  // Cleans up memory bindings between the listener and the listenee.
+  Listening.prototype.cleanup = function() {
+    delete this.listener._listeningTo[this.obj._listenId];
+    if (!this.interop) delete this.obj._listeners[this.id];
+  };
+
   // Aliases for backwards compatibility.
   Events.bind   = Events.on;
   Events.unbind = Events.off;
@@ -48573,6 +49265,7 @@ S2.define('jquery.select2',[
   var Model = Backbone.Model = function(attributes, options) {
     var attrs = attributes || {};
     options || (options = {});
+    this.preinitialize.apply(this, arguments);
     this.cid = _.uniqueId(this.cidPrefix);
     this.attributes = {};
     if (options.collection) this.collection = options.collection;
@@ -48600,6 +49293,10 @@ S2.define('jquery.select2',[
     // The prefix is used to create the client id which is used to identify models locally.
     // You may want to override this if you're experiencing name clashes with model ids.
     cidPrefix: 'c',
+
+    // preinitialize is an empty function by default. You can override it with a function
+    // or object.  preinitialize will run before any instantiation logic is run in the Model.
+    preinitialize: function(){},
 
     // Initialize is an empty function by default. Override it with your own
     // initialization logic.
@@ -48741,12 +49438,14 @@ S2.define('jquery.select2',[
       if (!diff) return this.hasChanged() ? _.clone(this.changed) : false;
       var old = this._changing ? this._previousAttributes : this.attributes;
       var changed = {};
+      var hasChanged;
       for (var attr in diff) {
         var val = diff[attr];
         if (_.isEqual(old[attr], val)) continue;
         changed[attr] = val;
+        hasChanged = true;
       }
-      return _.size(changed) ? changed : false;
+      return hasChanged ? changed : false;
     },
 
     // Get the previous value of an attribute, recorded at the time the last
@@ -48822,7 +49521,7 @@ S2.define('jquery.select2',[
       // Set temporary attributes if `{wait: true}` to properly find new ids.
       if (attrs && wait) this.attributes = _.extend({}, attributes, attrs);
 
-      var method = this.isNew() ? 'create' : (options.patch ? 'patch' : 'update');
+      var method = this.isNew() ? 'create' : options.patch ? 'patch' : 'update';
       if (method === 'patch' && !options.attrs) options.attrs = attrs;
       var xhr = this.sync(method, this, options);
 
@@ -48910,14 +49609,6 @@ S2.define('jquery.select2',[
 
   });
 
-  // Underscore methods that we want to implement on the Model, mapped to the
-  // number of arguments they take.
-  var modelMethods = {keys: 1, values: 1, pairs: 1, invert: 1, pick: 0,
-      omit: 0, chain: 1, isEmpty: 1};
-
-  // Mix in each Underscore method as a proxy to `Model#attributes`.
-  addUnderscoreMethods(Model, modelMethods, 'attributes');
-
   // Backbone.Collection
   // -------------------
 
@@ -48933,6 +49624,7 @@ S2.define('jquery.select2',[
   // its models in sort order, as they're added and removed.
   var Collection = Backbone.Collection = function(models, options) {
     options || (options = {});
+    this.preinitialize.apply(this, arguments);
     if (options.model) this.model = options.model;
     if (options.comparator !== void 0) this.comparator = options.comparator;
     this._reset();
@@ -48961,6 +49653,11 @@ S2.define('jquery.select2',[
     // The default model for a collection is just a **Backbone.Model**.
     // This should be overridden in most cases.
     model: Model,
+
+
+    // preinitialize is an empty function by default. You can override it with a function
+    // or object.  preinitialize will run before any instantiation logic is run in the Collection.
+    preinitialize: function(){},
 
     // Initialize is an empty function by default. Override it with your own
     // initialization logic.
@@ -49164,7 +49861,7 @@ S2.define('jquery.select2',[
     get: function(obj) {
       if (obj == null) return void 0;
       return this._byId[obj] ||
-        this._byId[this.modelId(obj.attributes || obj)] ||
+        this._byId[this.modelId(this._isModel(obj) ? obj.attributes : obj)] ||
         obj.cid && this._byId[obj.cid];
     },
 
@@ -49200,7 +49897,7 @@ S2.define('jquery.select2',[
       options || (options = {});
 
       var length = comparator.length;
-      if (_.isFunction(comparator)) comparator = _.bind(comparator, this);
+      if (_.isFunction(comparator)) comparator = comparator.bind(this);
 
       // Run sort based on type of `comparator`.
       if (length === 1 || _.isString(comparator)) {
@@ -49231,7 +49928,6 @@ S2.define('jquery.select2',[
         collection.trigger('sync', collection, resp, options);
       };
       wrapError(this, options);
-
       return this.sync('read', this, options);
     },
 
@@ -49271,6 +49967,21 @@ S2.define('jquery.select2',[
     // Define how to uniquely identify models in the collection.
     modelId: function(attrs) {
       return attrs[this.model.prototype.idAttribute || 'id'];
+    },
+
+    // Get an iterator of all models in this collection.
+    values: function() {
+      return new CollectionIterator(this, ITERATOR_VALUES);
+    },
+
+    // Get an iterator of all model IDs in this collection.
+    keys: function() {
+      return new CollectionIterator(this, ITERATOR_KEYS);
+    },
+
+    // Get an iterator of all [ID, model] tuples in this collection.
+    entries: function() {
+      return new CollectionIterator(this, ITERATOR_KEYSVALUES);
     },
 
     // Private method to reset all internal state. Called when the collection
@@ -49369,20 +50080,71 @@ S2.define('jquery.select2',[
 
   });
 
-  // Underscore methods that we want to implement on the Collection.
-  // 90% of the core usefulness of Backbone Collections is actually implemented
-  // right here:
-  var collectionMethods = {forEach: 3, each: 3, map: 3, collect: 3, reduce: 0,
-      foldl: 0, inject: 0, reduceRight: 0, foldr: 0, find: 3, detect: 3, filter: 3,
-      select: 3, reject: 3, every: 3, all: 3, some: 3, any: 3, include: 3, includes: 3,
-      contains: 3, invoke: 0, max: 3, min: 3, toArray: 1, size: 1, first: 3,
-      head: 3, take: 3, initial: 3, rest: 3, tail: 3, drop: 3, last: 3,
-      without: 0, difference: 0, indexOf: 3, shuffle: 1, lastIndexOf: 3,
-      isEmpty: 1, chain: 1, sample: 3, partition: 3, groupBy: 3, countBy: 3,
-      sortBy: 3, indexBy: 3, findIndex: 3, findLastIndex: 3};
+  // Defining an @@iterator method implements JavaScript's Iterable protocol.
+  // In modern ES2015 browsers, this value is found at Symbol.iterator.
+  /* global Symbol */
+  var $$iterator = typeof Symbol === 'function' && Symbol.iterator;
+  if ($$iterator) {
+    Collection.prototype[$$iterator] = Collection.prototype.values;
+  }
 
-  // Mix in each Underscore method as a proxy to `Collection#models`.
-  addUnderscoreMethods(Collection, collectionMethods, 'models');
+  // CollectionIterator
+  // ------------------
+
+  // A CollectionIterator implements JavaScript's Iterator protocol, allowing the
+  // use of `for of` loops in modern browsers and interoperation between
+  // Backbone.Collection and other JavaScript functions and third-party libraries
+  // which can operate on Iterables.
+  var CollectionIterator = function(collection, kind) {
+    this._collection = collection;
+    this._kind = kind;
+    this._index = 0;
+  };
+
+  // This "enum" defines the three possible kinds of values which can be emitted
+  // by a CollectionIterator that correspond to the values(), keys() and entries()
+  // methods on Collection, respectively.
+  var ITERATOR_VALUES = 1;
+  var ITERATOR_KEYS = 2;
+  var ITERATOR_KEYSVALUES = 3;
+
+  // All Iterators should themselves be Iterable.
+  if ($$iterator) {
+    CollectionIterator.prototype[$$iterator] = function() {
+      return this;
+    };
+  }
+
+  CollectionIterator.prototype.next = function() {
+    if (this._collection) {
+
+      // Only continue iterating if the iterated collection is long enough.
+      if (this._index < this._collection.length) {
+        var model = this._collection.at(this._index);
+        this._index++;
+
+        // Construct a value depending on what kind of values should be iterated.
+        var value;
+        if (this._kind === ITERATOR_VALUES) {
+          value = model;
+        } else {
+          var id = this._collection.modelId(model.attributes);
+          if (this._kind === ITERATOR_KEYS) {
+            value = id;
+          } else { // ITERATOR_KEYSVALUES
+            value = [id, model];
+          }
+        }
+        return {value: value, done: false};
+      }
+
+      // Once exhausted, remove the reference to the collection so future
+      // calls to the next method always return done.
+      this._collection = void 0;
+    }
+
+    return {value: void 0, done: true};
+  };
 
   // Backbone.View
   // -------------
@@ -49399,6 +50161,7 @@ S2.define('jquery.select2',[
   // if an existing element is not provided...
   var View = Backbone.View = function(options) {
     this.cid = _.uniqueId('view');
+    this.preinitialize.apply(this, arguments);
     _.extend(this, _.pick(options, viewOptions));
     this._ensureElement();
     this.initialize.apply(this, arguments);
@@ -49408,7 +50171,7 @@ S2.define('jquery.select2',[
   var delegateEventSplitter = /^(\S+)\s*(.*)$/;
 
   // List of view options to be set as properties.
-  var viewOptions = ['model', 'collection', 'el', 'id', 'attributes', 'className', 'tagName', 'events','options'];
+  var viewOptions = ['model', 'collection', 'el', 'id', 'attributes', 'className', 'tagName', 'events'];
 
   // Set up all inheritable **Backbone.View** properties and methods.
   _.extend(View.prototype, Events, {
@@ -49421,6 +50184,10 @@ S2.define('jquery.select2',[
     $: function(selector) {
       return this.$el.find(selector);
     },
+
+    // preinitialize is an empty function by default. You can override it with a function
+    // or object.  preinitialize will run before any instantiation logic is run in the View
+    preinitialize: function(){},
 
     // Initialize is an empty function by default. Override it with your own
     // initialization logic.
@@ -49465,7 +50232,6 @@ S2.define('jquery.select2',[
     _setElement: function(el) {
       this.$el = el instanceof Backbone.$ ? el : Backbone.$(el);
       this.el = this.$el[0];
-
     },
 
     // Set callbacks, where `this.events` is a hash of
@@ -49490,7 +50256,7 @@ S2.define('jquery.select2',[
         if (!_.isFunction(method)) method = this[method];
         if (!method) continue;
         var match = key.match(delegateEventSplitter);
-        this.delegate(match[1], match[2], _.bind(method, this));
+        this.delegate(match[1], match[2], method.bind(this));
       }
       return this;
     },
@@ -49546,6 +50312,94 @@ S2.define('jquery.select2',[
       this.$el.attr(attributes);
     }
 
+  });
+
+  // Proxy Backbone class methods to Underscore functions, wrapping the model's
+  // `attributes` object or collection's `models` array behind the scenes.
+  //
+  // collection.filter(function(model) { return model.get('age') > 10 });
+  // collection.each(this.addView);
+  //
+  // `Function#apply` can be slow so we use the method's arg count, if we know it.
+  var addMethod = function(base, length, method, attribute) {
+    switch (length) {
+      case 1: return function() {
+        return base[method](this[attribute]);
+      };
+      case 2: return function(value) {
+        return base[method](this[attribute], value);
+      };
+      case 3: return function(iteratee, context) {
+        return base[method](this[attribute], cb(iteratee, this), context);
+      };
+      case 4: return function(iteratee, defaultVal, context) {
+        return base[method](this[attribute], cb(iteratee, this), defaultVal, context);
+      };
+      default: return function() {
+        var args = slice.call(arguments);
+        args.unshift(this[attribute]);
+        return base[method].apply(base, args);
+      };
+    }
+  };
+
+  var addUnderscoreMethods = function(Class, base, methods, attribute) {
+    _.each(methods, function(length, method) {
+      if (base[method]) Class.prototype[method] = addMethod(base, length, method, attribute);
+    });
+  };
+
+  // Support `collection.sortBy('attr')` and `collection.findWhere({id: 1})`.
+  var cb = function(iteratee, instance) {
+    if (_.isFunction(iteratee)) return iteratee;
+    if (_.isObject(iteratee) && !instance._isModel(iteratee)) return modelMatcher(iteratee);
+    if (_.isString(iteratee)) return function(model) { return model.get(iteratee); };
+    return iteratee;
+  };
+  var modelMatcher = function(attrs) {
+    var matcher = _.matches(attrs);
+    return function(model) {
+      return matcher(model.attributes);
+    };
+  };
+
+  // Underscore methods that we want to implement on the Collection.
+  // 90% of the core usefulness of Backbone Collections is actually implemented
+  // right here:
+  var collectionMethods = {forEach: 3, each: 3, map: 3, collect: 3, reduce: 0,
+    foldl: 0, inject: 0, reduceRight: 0, foldr: 0, find: 3, detect: 3, filter: 3,
+    select: 3, reject: 3, every: 3, all: 3, some: 3, any: 3, include: 3, includes: 3,
+    contains: 3, invoke: 0, max: 3, min: 3, toArray: 1, size: 1, first: 3,
+    head: 3, take: 3, initial: 3, rest: 3, tail: 3, drop: 3, last: 3,
+    without: 0, difference: 0, indexOf: 3, shuffle: 1, lastIndexOf: 3,
+    isEmpty: 1, chain: 1, sample: 3, partition: 3, groupBy: 3, countBy: 3,
+    sortBy: 3, indexBy: 3, findIndex: 3, findLastIndex: 3};
+
+
+  // Underscore methods that we want to implement on the Model, mapped to the
+  // number of arguments they take.
+  var modelMethods = {keys: 1, values: 1, pairs: 1, invert: 1, pick: 0,
+    omit: 0, chain: 1, isEmpty: 1};
+
+  // Mix in each Underscore method as a proxy to `Collection#models`.
+
+  _.each([
+    [Collection, collectionMethods, 'models'],
+    [Model, modelMethods, 'attributes']
+  ], function(config) {
+    var Base = config[0],
+        methods = config[1],
+        attribute = config[2];
+
+    Base.mixin = function(obj) {
+      var mappings = _.reduce(_.functions(obj), function(memo, name) {
+        memo[name] = 0;
+        return memo;
+      }, {});
+      addUnderscoreMethods(Base, obj, mappings, attribute);
+    };
+
+    addUnderscoreMethods(Base, _, methods, attribute);
   });
 
   // Backbone.sync
@@ -49628,11 +50482,11 @@ S2.define('jquery.select2',[
 
   // Map from CRUD to HTTP for our default `Backbone.sync` implementation.
   var methodMap = {
-    'create': 'POST',
-    'update': 'PUT',
-    'patch': 'PATCH',
-    'delete': 'DELETE',
-    'read': 'GET'
+    create: 'POST',
+    update: 'PUT',
+    patch: 'PATCH',
+    delete: 'DELETE',
+    read: 'GET'
   };
 
   // Set the default implementation of `Backbone.ajax` to proxy through to `$`.
@@ -49648,6 +50502,7 @@ S2.define('jquery.select2',[
   // matched. Creating a new one sets its `routes` hash, if not set statically.
   var Router = Backbone.Router = function(options) {
     options || (options = {});
+    this.preinitialize.apply(this, arguments);
     if (options.routes) this.routes = options.routes;
     this._bindRoutes();
     this.initialize.apply(this, arguments);
@@ -49662,6 +50517,10 @@ S2.define('jquery.select2',[
 
   // Set up all inheritable **Backbone.Router** properties and methods.
   _.extend(Router.prototype, Events, {
+
+    // preinitialize is an empty function by default. You can override it with a function
+    // or object.  preinitialize will run before any instantiation logic is run in the Router.
+    preinitialize: function(){},
 
     // Initialize is an empty function by default. Override it with your own
     // initialization logic.
@@ -49720,11 +50579,11 @@ S2.define('jquery.select2',[
     // against the current location hash.
     _routeToRegExp: function(route) {
       route = route.replace(escapeRegExp, '\\$&')
-                   .replace(optionalParam, '(?:$1)?')
-                   .replace(namedParam, function(match, optional) {
-                     return optional ? match : '([^/?]+)';
-                   })
-                   .replace(splatParam, '([^?]*?)');
+        .replace(optionalParam, '(?:$1)?')
+        .replace(namedParam, function(match, optional) {
+          return optional ? match : '([^/?]+)';
+        })
+        .replace(splatParam, '([^?]*?)');
       return new RegExp('^' + route + '(?:\\?([\\s\\S]*))?$');
     },
 
@@ -49752,7 +50611,7 @@ S2.define('jquery.select2',[
   // falls back to polling.
   var History = Backbone.History = function() {
     this.handlers = [];
-    this.checkUrl = _.bind(this.checkUrl, this);
+    this.checkUrl = this.checkUrl.bind(this);
 
     // Ensure that `History` can be used outside of the browser.
     if (typeof window !== 'undefined') {
@@ -49993,11 +50852,14 @@ S2.define('jquery.select2',[
       }
       var url = rootPath + fragment;
 
-      // Strip the hash and decode for matching.
-      fragment = this.decodeFragment(fragment.replace(pathStripper, ''));
+      // Strip the fragment of the query and hash for matching.
+      fragment = fragment.replace(pathStripper, '');
 
-      if (this.fragment === fragment) return;
-      this.fragment = fragment;
+      // Decode for matching.
+      var decodedFragment = this.decodeFragment(fragment);
+
+      if (this.fragment === decodedFragment) return;
+      this.fragment = decodedFragment;
 
       // If pushState is available, we use it to set the fragment as a real URL.
       if (this._usePushState) {
@@ -50180,10 +51042,10 @@ S2.define('jquery.select2',[
 
   function queryStringToParams (qs) {
     var kvp, k, v, ls, params = {}, decode = decodeURIComponent;
-    var kvps = qs.split('&');
+    var kvps = qs.split("&");
     for (var i = 0, l = kvps.length; i < l; i++) {
       var param = kvps[i];
-      kvp = param.split('='), k = kvp[0], v = kvp[1];
+      kvp = param.split("="), k = kvp[0], v = kvp[1];
       if (v == null) v = true;
       k = decode(k), v = decode(v), ls = params[k];
       if (_isArray(ls)) ls.push(v);
@@ -50591,7 +51453,7 @@ S2.define('jquery.select2',[
             }
             else if (removedIndex >= pageStart && removedIndex < pageEnd) {
               if (nextModel = fullCol.at(pageEnd - 1)) {
-                runOnceAtLastHandler(pageCol, event, function() {
+                runOnceAtLastHandler(pageCol, event, function () {
                   pageCol.push(nextModel, {onRemove: true});
                 });
               }
@@ -50666,6 +51528,8 @@ S2.define('jquery.select2',[
 
        @private
 
+       @param {Object} state
+
        @throws {TypeError} If `totalRecords`, `pageSize`, `currentPage` or
        `firstPage` is not a finite integer.
 
@@ -50714,7 +51578,7 @@ S2.define('jquery.select2',[
           throw new RangeError("`currentPage` must be firstPage <= currentPage " +
                                (firstPage ? "<" : "<=") +
                                " totalPages if " + firstPage + "-based. Got " +
-                               currentPage + '.');
+                               currentPage + ".");
         }
       }
 
@@ -51025,6 +51889,7 @@ S2.define('jquery.select2',[
        current page of this collection to the page for the provided item offset
        in client mode.
 
+       @param {number} offset
        @param {Object} options {@linkPageableCollection#getPage} options.
 
        @chainable
@@ -51096,12 +51961,12 @@ S2.define('jquery.select2',[
         var relations = ["first", "prev", "next"];
         _each(linkHeader.split(","), function (linkValue) {
           var linkParts = linkValue.split(";");
-          var url = linkParts[0].replace(URL_TRIM_RE, '');
+          var url = linkParts[0].replace(URL_TRIM_RE, "");
           var params = linkParts.slice(1);
           _each(params, function (param) {
             var paramParts = param.split("=");
-            var key = paramParts[0].replace(PARAM_TRIM_RE, '');
-            var value = paramParts[1].replace(PARAM_TRIM_RE, '');
+            var key = paramParts[0].replace(PARAM_TRIM_RE, "");
+            var value = paramParts[1].replace(PARAM_TRIM_RE, "");
             if (key == "rel" && _contains(relations, value)) links[value] = url;
           });
         });
@@ -51142,7 +52007,7 @@ S2.define('jquery.select2',[
        @fires PageableCollection#pageable:state:change
 
        @param {Object} resp The deserialized response data from the server.
-       @param {Object} the options for the ajax request
+       @param {Object} options The options for the ajax request
 
        @return {Array.<Object>} An array of model objects
     */
@@ -51268,7 +52133,7 @@ S2.define('jquery.select2',[
       // dedup query params
       var url = options.url || this.url || "";
       if (_isFunction(url)) url = url.call(this);
-      var qsi = url.indexOf('?');
+      var qsi = url.indexOf("?");
       if (qsi != -1) {
         _extend(data, queryStringToParams(url.slice(qsi + 1)));
         url = url.slice(0, qsi);
@@ -51378,6 +52243,8 @@ S2.define('jquery.select2',[
        @param {(function(Backbone.Model, string): Object) | string} sortValue -
        See PageableCollection#setSorting.
 
+       @return {function(Backbone.Model, string): number}
+
        See [Backbone.Collection.comparator](http://backbonejs.org/#Collection-comparator).
     */
     _makeComparator: function (sortKey, order, sortValue) {
@@ -51388,9 +52255,11 @@ S2.define('jquery.select2',[
 
       if (!sortKey || !order) return;
 
-      if (!sortValue) sortValue = function (model, attr) {
-        return model.get(attr);
-      };
+      if (!sortValue) {
+        sortValue = function (model, attr) {
+          return model.get(attr);
+        };
+      }
 
       return function (left, right) {
         var l = sortValue(left, sortKey), r = sortValue(right, sortKey), t;
@@ -51426,6 +52295,8 @@ S2.define('jquery.select2',[
        `"client"`, `"server"` otherwise.
        @param {boolean} options.full = true
        @param {(function(Backbone.Model, string): Object) | string} options.sortValue
+
+       @return {PageableCollection} this
     */
     setSorting: function (sortKey, order, options) {
 
@@ -57230,7 +58101,7 @@ var Grid = Backgrid.Grid = Backbone.View.extend({
           }
         }
       });
-
+      
       // Add data attribute to column cells
       if (view.grid.header.headerRows) {
        _.each(view.grid.header.headerRows, function(row) {
@@ -57381,7 +58252,7 @@ var Grid = Backgrid.Grid = Backbone.View.extend({
             var startX = Math.round($resizeHandler.offset().left);
             var $doc = $(document);
             var handlerNonDragSize = $resizeHandler.outerWidth();
-            
+
             // Set class
             $resizeHandler.addClass("grid-draggable");
             $resizeHandlerHelper.show();
@@ -57496,7 +58367,7 @@ var Grid = Backgrid.Grid = Backbone.View.extend({
           view.render();
         });
       });
-
+      
       this.resizeEvtHandler = _.debounce(_.bind(view.updateHandlerPosition, view), 250);
       $(window).on("resize", this.resizeEvtHandler);
     },
@@ -57602,7 +58473,7 @@ var Grid = Backgrid.Grid = Backbone.View.extend({
        return cell.el;
      });
     },
-
+    
     remove: function() {
       $(window).off("resize", this.resizeEvtHandler);
       Backbone.View.prototype.remove.call(this);
@@ -58772,34 +59643,30 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Loop state
 	  var ordered = false;
+	  _.each(this.state, function(columnState) {
+	    // Find column
+	    var column = self.columns.findWhere({
+	      name: columnState.name
+	    });
 
+	    if (_.has(columnState, "renderable")) {
+	      column.set("renderable", columnState.renderable);
+	    }
+	    if (_.has(columnState, "width")) {
+	      var oldWidth = column.get("width");
+	      column.set("width", columnState.width, {silent: true});
+	      if (oldWidth !== columnState.width) {
+	        column.trigger("resize", column, columnState.width, oldWidth);
+	      }
+	    }
 
-			_.each(this.state, function (columnState) {
-				// Find column
-				var column = self.columns.findWhere({
-					name: columnState.name
-				});
-
-					if (_.has(columnState, "renderable")) {
-						column.set("renderable", columnState.renderable);
-					}
-					if (_.has(columnState, "width")) {
-						var oldWidth = column.get("width");
-						column.set("width", columnState.width, {silent: true});
-						if (oldWidth !== columnState.width) {
-							column.trigger("resize", column, columnState.width, oldWidth);
-						}
-					}
-
-					if (_.has(columnState, "displayOrder")) {
-						if (columnState.displayOrder !== column.get("displayOrder")) {
-							ordered = true;
-						}
-						column.set("displayOrder", columnState.displayOrder, {silent: true});
-					}
-
-			});
-
+	    if (_.has(columnState, "displayOrder")) {
+	      if (columnState.displayOrder !== column.get("displayOrder")) {
+	        ordered = true;
+	      }
+	      column.set("displayOrder", columnState.displayOrder, {silent: true});
+	    }
+	  });
 
 	  if (ordered) {
 	    self.columns.sort();
@@ -59343,7 +60210,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ ])
 });
 ;
-
 /*
  backgrid-sizeable-columns
  https://github.com/WRidder/backgrid-sizeable-columns
@@ -60019,7 +60885,6 @@ var BackgridHeaderRenderMethod = function () {
     if (selectAllHeaderCell) {
       var selectedModels = selectAllHeaderCell.selectedModels;
       var collection = this.collection.fullCollection || this.collection;
-      
       for (var modelId in selectedModels) {
         result.push(collection.get(modelId));
       }

@@ -69,6 +69,8 @@ class ProjectsController extends BaseController
             function ($value) {
                 if (is_string($value)) {
                     $value = \urldecode($value);
+                } elseif($value === null){
+                    $value = '';
                 }
 
                 return $value;
@@ -82,12 +84,15 @@ class ProjectsController extends BaseController
                     $value = \urldecode($value);
                 } elseif (is_array($value)) {
                     $value = join(',', $value);
+                } elseif($value === null){
+                    $value = '';
                 }
 
                 return $value;
             },
             $request->only($project->getFillable())
         );
+
         $success = $project->createProjectScope($requestData, $project, $projectModelData);
 
         if (!isset($success)) {
