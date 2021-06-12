@@ -52,10 +52,11 @@ class SpringIntoActionMainAppController extends BaseController
 
     public function index(Request $request)
     {
-        if ($_SERVER['REMOTE_ADDR'] === '66.190.13.203') {
-            $this->parseBackups();
+        if ($_SERVER['REMOTE_ADDR'] === '66.190.11.41') {
+            //$this->parseBackups();
+            $this->testGroup();
         }
-        $this->testGroup();
+
 
         /*echo '<pre>' .
              \Illuminate\Support\Str::replaceArray('?', $projectScope->getBindings(), $projectScope->toSql()) .

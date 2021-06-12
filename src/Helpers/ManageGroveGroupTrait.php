@@ -554,7 +554,7 @@ trait ManageGroveGroupTrait
         $testVolunteerId = $saraVolunteerId;
         $testGroup = GroveApi::GROVE_GROUP_NAME_LIAISONS;
         //$testGroupId = $this->getGroupIdByGroupName($testGroup);
-\Dhayakawa\SpringIntoAction\Controllers\GroveController::runImport('lifegroup');
+//\Dhayakawa\SpringIntoAction\Controllers\GroveController::runImport('lifegroup');
 //       $response= $g->individual_groups(1675);
 //        echo "<pre>" . print_r($response, true) . '</pre>';
 //        $apiresponse = $this->getGroupParticipants($testGroup);
